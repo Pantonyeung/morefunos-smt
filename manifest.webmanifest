@@ -1,0 +1,10 @@
+{
+  "name": "磨飯 SMT",
+  "short_name": "磨飯 SMT",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#fffaf4",
+  "theme_color": "#17120f",
+  "icons": []
+}
