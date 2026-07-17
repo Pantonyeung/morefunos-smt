@@ -24,3 +24,9 @@ test('all planned runtime modules exist', async () => {
     await assert.doesNotReject(() => text(file), file);
   }
 });
+
+test('accessibility helpers do not disturb the existing layout', async () => {
+  const css = await text('accessibility.css');
+  assert.match(css, /\.skip-link/);
+  assert.match(css, /\.sr-only/);
+});
