@@ -81,3 +81,14 @@ test('store dispatch notifies subscribers and persists the new state', () => {
   assert.equal(observed.action.at, 123);
   assert.ok(data.has(STORAGE_KEY));
 });
+
+
+test('legacy demo cart rows without the v2 line schema are not loaded as broken items', () => {
+  const storage = {
+    getItem(key) {
+      return key === 'morefun-smt-state' ? JSON.stringify({cart:[{line:'old',productId:'f4',qty:1}]}) : null;
+    },
+    setItem() {}
+  };
+  assert.deepEqual(loadState(storage).cart, []);
+});

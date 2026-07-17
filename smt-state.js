@@ -58,7 +58,7 @@ export function migrate(raw = {}) {
       open: Boolean(raw.query?.trim?.()),
       query: raw.query?.trim?.() ?? ''
     },
-    cart: Array.isArray(raw.cart) ? raw.cart : [],
+    cart: Array.isArray(raw.cart) ? raw.cart.filter(item => item && item.lineId && Number.isFinite(item.unitPrice)) : [],
     orders: Array.isArray(raw.orders) ? raw.orders : [],
     incomingOrders: Array.isArray(raw.newOrders) ? raw.newOrders : []
   };
