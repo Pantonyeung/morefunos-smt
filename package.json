@@ -1,0 +1,9 @@
+{
+  "name": "morefun-smt-web-core",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:smoke": "node --test tests/smoke.test.mjs"
+  }
+}
