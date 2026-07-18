@@ -53,3 +53,55 @@ jobs:
             echo '收銀 Runtime 不得包含 OpenAI API key 或客戶端 API 呼叫。'
             exit 1
           fi
+
+      - name: Build verified RC package
+        shell: bash
+        run: |
+          set -euo pipefail
+          package='MoreFun_SMT_Slice1_RC1_20260718'
+          root="dist/$package"
+          mkdir -p "$root"
+          cp \
+            index.html \
+            styles.css \
+            slice1-readability-fixes.css \
+            accessibility.css \
+            app.js \
+            smt-data.js \
+            smt-copy.js \
+            smt-domain.js \
+            smt-state.js \
+            smt-icons.js \
+            smt-motion.js \
+            smt-views.js \
+            manifest.webmanifest \
+            service-worker.js \
+            package.json \
+            README.md \
+            "$root/"
+          cp -R tests android-qa docs .github "$root/"
+          {
+            echo "package=$package"
+            echo "tested_commit=$GITHUB_SHA"
+            echo "source_branch=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+            echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "images_included=no"
+          } > "$root/VERSION.txt"
+          (
+            cd "$root"
+            find . -type f ! -name SHA256SUMS.txt -print0 \
+              | sort -z \
+              | xargs -0 sha256sum > SHA256SUMS.txt
+          )
+          (
+            cd dist
+            zip -qr "../$package.zip" "$package"
+          )
+
+      - name: Upload verified RC package
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoreFun_SMT_Slice1_RC1_20260718
+          path: MoreFun_SMT_Slice1_RC1_20260718.zip
+          if-no-files-found: error
+          retention-days: 7
