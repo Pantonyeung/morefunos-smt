@@ -48,7 +48,7 @@ export const initialCart=[
 ];
 
 export const pendingOrders=[
-{id:'A512',source:'磨飯 App',customer:'小米粒',itemCount:3,total:168,payment:'平台已付款',items:['紫米飯團 A 餐 ×1','自選便當 ×1','凍檸茶 ×1']},
+{id:'A512',source:'磨飯 App',customer:'小米粒',itemCount:3,total:168,payment:'平台已付款',items:['紫米飯團 A 餐 ×1','自選便當 ×1','凍檸茶 ×1'],coupon:{id:'memory-50',name:'記憶券 $10',discountAmount:10,expiresAt:'2026-08-01T23:59:59+08:00',selectedByCustomer:true}},
 {id:'A513',source:'磨飯 App',customer:'陳小姐',itemCount:2,total:104,payment:'平台已付款',items:['泡菜豬肉便當 ×2']},
 {id:'A514',source:'磨飯 App',customer:'黃先生',itemCount:4,total:207,payment:'待核對',items:['飯團套餐 ×2','小食 ×2']},
 {id:'A515',source:'磨飯 App',customer:'李小姐',itemCount:1,total:48,payment:'平台已付款',items:['紫米能量沙律 ×1']},
@@ -138,4 +138,22 @@ export function describeLine(line){
   const missing=Math.max(0,(line.drinkSlots||0)-(line.drinkAssignments||[]).length);
   if(missing)parts.push(`尚欠飲品 ${missing} 份`);
   return parts.length?parts.join(' · '):(line.detail||line.code||'標準');
+}
+
+export const DRAFT_STORAGE_KEY='morefun:smt:preview:drafts:v1';
+export const INCOMING_ORDER_STORAGE_KEY='morefun:smt:preview:incoming-order:v1';
+
+export function createDraft(cart,{label='暫存單',createdAt=new Date().toISOString(),id=`draft-${Date.now()}`}={}){
+  const safeCart=clone(Array.isArray(cart)?cart:[]);
+  return {id,label,createdAt,itemCount:getCartItemCount(safeCart),total:getCartTotal(safeCart),cart:safeCart};
+}
+export function restoreDraft(draft){return clone(Array.isArray(draft?.cart)?draft.cart:[])}
+export function normalizeIncomingAppCoupon(order){
+  const coupon=order?.coupon;
+  if(order?.source!=='磨飯 App'||!coupon?.selectedByCustomer||!coupon?.id)return null;
+  return {id:String(coupon.id),name:String(coupon.name||'磨飯優惠券'),discountAmount:Math.max(0,Number(coupon.discountAmount)||0),expiresAt:coupon.expiresAt||null,selectedByCustomer:true,source:'磨飯 App',status:'applied',returnedAt:null,returnReason:null};
+}
+export function returnAppCoupon(coupon,reason='order_cancelled',returnedAt=new Date().toISOString()){
+  if(!coupon)return null;
+  return {...clone(coupon),status:'returned',returnedAt,returnReason:reason,expiresAt:coupon.expiresAt||null};
 }
