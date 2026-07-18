@@ -7,8 +7,7 @@ if(window.top!==window.self){
 
 const DESIGN_WIDTH=1920;
 const DESIGN_HEIGHT=1080;
-const BUILD_ID='v13-20260719';
-const LEGACY_RESET_KEY='morefun-smt-preview-cache-reset-v13';
+const BUILD_ID='v14-20260719';
 
 const routes=Object.freeze({
   boot:'pages/boot/index.html',
@@ -30,10 +29,8 @@ let readyTimer=0;
 let lastGeometry='';
 
 export async function resetLegacyPreviewCaches(){
-  let hadController=false;
   try{
     if('serviceWorker' in navigator){
-      hadController=Boolean(navigator.serviceWorker.controller);
       const registrations=await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map(registration=>registration.unregister()));
     }
@@ -42,13 +39,6 @@ export async function resetLegacyPreviewCaches(){
       await Promise.all(keys.filter(key=>key.startsWith('morefun-smt-')).map(key=>caches.delete(key)));
     }
   }catch(error){console.warn('Preview cache reset skipped',error)}
-  let resetDone=false;
-  try{resetDone=sessionStorage.getItem(LEGACY_RESET_KEY)==='done'}catch{}
-  if(hadController&&!resetDone){
-    try{sessionStorage.setItem(LEGACY_RESET_KEY,'done')}catch{}
-    location.reload();
-    return true;
-  }
   return false;
 }
 
@@ -74,14 +64,14 @@ function fitStage(){
 
 function routeFromHash(){return normalizedRoute(location.hash||'#/order')}
 function hidePageError(){pageError.hidden=true;pageError.innerHTML=''}
-function showPageError(route){
+function showPageError(route,message=''){
   pageError.hidden=false;
-  pageError.innerHTML=`<section class="page-error-card"><strong>頁面暫時未能載入</strong><p>${route==='checkout'?'結帳頁載入失敗，訂單仍保存在本機。':'此頁載入失敗，現有資料沒有被刪除。'}</p><div><button data-error-action="retry">重新載入此頁</button><button data-error-action="order">返回點單</button></div></section>`;
+  pageError.innerHTML=`<section class="page-error-card"><strong>頁面暫時未能載入</strong><p>${message|| (route==='checkout'?'結帳頁載入失敗，訂單仍保存在本機。':'此頁載入失敗，現有資料沒有被刪除。')}</p><div><button data-error-action="retry">重新載入此頁</button><button data-error-action="order">返回點單</button></div></section>`;
   pageError.querySelector('[data-error-action="retry"]').addEventListener('click',()=>loadRoute(route,{force:true}));
   pageError.querySelector('[data-error-action="order"]').addEventListener('click',()=>navigate('order'));
   status.textContent=`page-error:${route}`;
 }
-function armReadyTimeout(route){clearTimeout(readyTimer);readyTimer=window.setTimeout(()=>showPageError(route),9000)}
+function armReadyTimeout(route){clearTimeout(readyTimer);readyTimer=window.setTimeout(()=>showPageError(route),12000)}
 function navigate(route,{replace=false}={}){
   const next=normalizedRoute(route);
   const hash=`#/${next}`;
@@ -113,6 +103,10 @@ window.addEventListener('message',event=>{
     hidePageError();
     status.textContent=`已載入${activeRoute}`;
   }
+  if(data.type==='morefun:page-runtime-error'){
+    status.textContent=`runtime-error:${data.page||activeRoute}`;
+    console.error('Child page runtime error',data.message||'unknown');
+  }
 });
 frame.addEventListener('error',()=>showPageError(activeRoute||routeFromHash()));
 window.addEventListener('hashchange',()=>loadRoute(routeFromHash()));
@@ -124,8 +118,7 @@ window.MoreFunSMTRouter=Object.freeze({navigate,fitStage,routes,DESIGN_WIDTH,DES
 
 async function bootstrap(){
   fitStage();
-  const reloading=await resetLegacyPreviewCaches();
-  if(reloading)return;
+  await resetLegacyPreviewCaches();
   if(!location.hash)navigate('order',{replace:true});
   else loadRoute(routeFromHash());
 }
