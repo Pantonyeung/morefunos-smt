@@ -1,0 +1,15 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const root=new URL('../',import.meta.url);const text=path=>readFile(new URL(path,root),'utf8');
+const replicaCssFiles=['replica-css/replica-base.css','replica-css/replica-topbar.css','replica-css/replica-nav.css','replica-css/replica-components.css','replica-css/replica-order.css','replica-css/replica-orders.css','replica-css/replica-dine.css','replica-css/replica-sold.css','replica-css/replica-more.css','replica-css/replica-overlays.css'];
+const allReplicaCss=async()=> (await Promise.all(replicaCssFiles.map(text))).join('\n');
+
+test('runtime keeps state, domain and view modules',async()=>{const js=await text('app.js');assert.match(js,/from '\.\/smt-state\.js'/);assert.match(js,/from '\.\/smt-domain\.js'/);assert.match(js,/from '\.\/smt-views\.js'/);assert.doesNotMatch(js,/function currentNo\(\)\{return 'P0056'\}/);});
+test('runtime keeps readable image fallback',async()=>{const js=await text('app.js');assert.match(js,/餐點圖片暫未提供/);});
+test('replica token stylesheet locks readable type and touch sizes',async()=>{const css=await text('replica-css/replica-base.css');for(const token of ['--text-secondary:14px','--text-body:16px','--touch-normal:48px','--touch-quick:56px','--icon-size:24px'])assert.ok(css.includes(token));});
+test('replica styles cover SMT-00 through SMT-16 screen systems',async()=>{const css=await allReplicaCss();for(const selector of ['.order-workspace','.orders-page','.dine-page','.sold-page','.more-page','.checkout-modal','.product-drawer','.gate-grid','.replica-topbar','.replica-bottom-nav'])assert.match(css,new RegExp(selector.replace('.','\\.')));assert.match(css,/prefers-reduced-motion/);});
+test('index loads every replica style module and runtime fix',async()=>{const html=await text('index.html');let last=-1;for(const file of replicaCssFiles){const pos=html.indexOf(file);assert.ok(pos>last,`${file} order`);last=pos;}assert.ok(html.indexOf('accessibility.css')>last);assert.match(html,/app\.js[\s\S]*replica-runtime-fixes\.js/);});
+test('service worker caches complete replica runtime',async()=>{const sw=await text('service-worker.js');assert.match(sw,/morefun-smt-concept-replica-v3/);for(const file of [...replicaCssFiles,'accessibility.css','replica-runtime-fixes.js','smt-data.js','smt-copy.js','smt-domain.js','smt-state.js','smt-icons.js','smt-motion.js','smt-views.js'])assert.match(sw,new RegExp(file.replaceAll('.','\\.')));});
+test('replica runtime keeps top new-order control actionable',async()=>{const js=await text('replica-runtime-fixes.js');assert.match(js,/incoming-open/);assert.match(js,/disabled = false/);});
+test('Android QA and OpenAI safety boundaries remain present',async()=>{const readme=await text('android-qa/README.md');assert.match(readme,/1920×1080/);assert.match(readme,/Android 9/);const runtime=(await Promise.all(['app.js','smt-domain.js','smt-state.js','smt-views.js'].map(text))).join('\n');assert.doesNotMatch(runtime,/OPENAI_API_KEY|api\.openai\.com|sk-proj-/);});
