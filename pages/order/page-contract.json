@@ -1,0 +1,1 @@
+{"page":"order","slides":["SMT-02","SMT-03"],"canvas":{"width":1920,"height":1080,"aspect":"16:9","reflow":false},"routes":{"checkout":"checkout","nav":["order","orders","dine","supply","more"]},"files":["index.html","page.css","page-data.js","page.js"]}

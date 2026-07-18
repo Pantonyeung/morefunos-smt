@@ -8,12 +8,14 @@ async function text(path) {
   return readFile(new URL(path, root), 'utf8');
 }
 
-test('index uses Traditional Chinese and exposes app and live region mounts', async () => {
+test('index uses Traditional Chinese and exposes the fixed-canvas loader mounts', async () => {
   const html = await text('index.html');
   assert.match(html, /<html lang="zh-HK">/);
-  assert.match(html, /id="app"/);
-  assert.match(html, /id="live-region"/);
-  assert.match(html, /type="module" src="app\.js"/);
+  assert.match(html, /id="viewport"/);
+  assert.match(html, /id="t2-stage"/);
+  assert.match(html, /id="page-frame"/);
+  assert.match(html, /id="route-status"/);
+  assert.match(html, /type="module" src="app-loader\.js"/);
 });
 
 test('all planned runtime modules exist', async () => {

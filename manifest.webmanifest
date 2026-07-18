@@ -1,11 +1,10 @@
 {
-  "name": "磨飯 SMT 店舖操作台",
-  "short_name": "磨飯 SMT",
-  "lang": "zh-HK",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "landscape",
-  "background_color": "#f7f3ed",
-  "theme_color": "#2d241f"
+  "name":"磨飯 SMT T2 固定比例預覽",
+  "short_name":"磨飯 SMT",
+  "start_url":"./#/order",
+  "display":"standalone",
+  "orientation":"landscape",
+  "background_color":"#000000",
+  "theme_color":"#000000",
+  "lang":"zh-HK"
 }
