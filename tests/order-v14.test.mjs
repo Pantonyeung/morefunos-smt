@@ -48,7 +48,7 @@ test('order runtime includes quantity modal, serial badges and product fallback 
 
 test('preview loader clears legacy cache without a reload loop',async()=>{
   const loader=await read('../app-loader.js');
-  assert.match(loader,/BUILD_ID='v14-20260719'/);
+  assert.match(loader,/BUILD_ID='v16-20260719'/);
   const resetBlock=loader.slice(loader.indexOf('export async function resetLegacyPreviewCaches'),loader.indexOf('function normalizedRoute'));
   assert.doesNotMatch(resetBlock,/location\.reload\(/);
 });
