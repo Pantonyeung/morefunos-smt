@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/smt-intuitive-ui-slice-1
+      - feat/smt-seven-day-theme-v3
   pull_request:
     branches:
       - main
@@ -52,6 +53,10 @@ jobs:
         continue-on-error: true
         run: node --test tests/smoke.test.mjs
 
+      - name: Diagnose seven-day theme tests
+        continue-on-error: true
+        run: node --test tests/seven-day-theme.test.mjs
+
       - name: Run complete automated test suite
         run: npm test
 
@@ -66,6 +71,7 @@ jobs:
             smt-icons.js \
             smt-motion.js \
             smt-views.js \
+            seven-day-theme.js \
             service-worker.js
           do
             node --check "$file"
