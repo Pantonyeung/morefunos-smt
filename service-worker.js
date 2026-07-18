@@ -3,6 +3,7 @@ const CORE_ASSETS = [
   './',
   './index.html',
   './styles.css',
+  './slice1-readability-fixes.css',
   './accessibility.css',
   './app.js',
   './smt-data.js',
