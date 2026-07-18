@@ -42,10 +42,10 @@ test('1024px layout does not force fixed-width cart actions beyond the panel', a
   assert.match(css, /@media \(max-width: 1100px\)/);
 });
 
-test('service worker caches every runtime module and uses a new slice cache version', async () => {
+test('service worker caches every runtime module and uses the seven-day theme cache version', async () => {
   const sw = await text('service-worker.js');
-  assert.match(sw, /morefun-smt-slice1-v2/);
-  for (const file of ['accessibility.css','slice1-readability-fixes.css','smt-data.js','smt-copy.js','smt-domain.js','smt-state.js','smt-icons.js','smt-motion.js','smt-views.js']) {
+  assert.match(sw, /morefun-smt-seven-day-v3/);
+  for (const file of ['accessibility.css','slice1-readability-fixes.css','seven-day-theme.css','smt-data.js','smt-copy.js','smt-domain.js','smt-state.js','smt-icons.js','smt-motion.js','smt-views.js','seven-day-theme.js']) {
     assert.match(sw, new RegExp(file.replace('.', '\\.')));
   }
 });
