@@ -1,0 +1,77 @@
+name: Apply SMT Iteration 2 delta
+
+on:
+  push:
+    branches:
+      - feat/smt-lock-iteration2
+    paths:
+      - .smt-delta/READY
+
+permissions:
+  contents: write
+
+jobs:
+  apply-delta:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/smt-lock-iteration2
+          fetch-depth: 0
+
+      - name: Rebuild and verify delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .smt-delta/chunk-* > /tmp/smt-delta.b85
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64
+          Path('/tmp/smt-delta.tar.xz').write_bytes(base64.b85decode(Path('/tmp/smt-delta.b85').read_bytes()))
+          PY
+          echo "a5d0a9de561bfc444d8bd194dbc349b4c0c93917b96fb7d7aeca0f52c74883d1  /tmp/smt-delta.tar.xz" | sha256sum -c -
+          xz -t /tmp/smt-delta.tar.xz
+
+      - name: Apply delta snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -xJf /tmp/smt-delta.tar.xz -C .
+          rm -rf replica-css
+          rm -f replica-runtime-fixes.js
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('.github/workflows/smt-slice1-ci.yml')
+          text = p.read_text(encoding='utf-8')
+          marker = '      - feat/smt-intuitive-ui-slice-1\n'
+          branch = '      - feat/smt-lock-iteration2\n'
+          if branch not in text:
+              text = text.replace(marker, marker + branch)
+          p.write_text(text, encoding='utf-8')
+          PY
+
+          rm -rf .smt-delta
+          rm -f .github/workflows/smt-iteration2-delta.yml
+          git add -A
+
+      - name: Verify source
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm test
+          for file in app.js smt-data.js smt-copy.js smt-domain.js smt-state.js smt-icons.js smt-motion.js smt-views.js service-worker.js; do
+            node --check "$file"
+          done
+          sha256sum -c SHA256SUMS.txt
+
+      - name: Commit applied delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "feat: apply SMT Lock Iteration 2"
+          git push origin HEAD:feat/smt-lock-iteration2
