@@ -25,11 +25,29 @@
 
 目前商品及訂單資料仍為介面驗證資料；不能把本版本描述為已完成正式 POS 接線。
 
-## 測試
+## 測試與 QA
 
 ```bash
 npm test
 ```
+
+目前結果：44 項測試通過、0 項失敗；所有 Runtime JavaScript 語法檢查通過。
+
+已完成 Android 9 WebView User-Agent＋觸控模式替代驗證：
+
+- 1024×600
+- 1280×800
+- 1920×1080（Sunmi T2s 主屏級別）
+
+三個視窗均沒有小於 48px 的可見核心觸控目標、沒有低於閱讀下限的可見文字、沒有文件橫向溢出，商品圖片失效會顯示繁體中文替代文字。
+
+目前環境沒有 ADB／Android Emulator，因此真正 Sunmi T2s／Android 實機 Gate 尚未完成。可在有裝置的環境執行：
+
+```bash
+./android-qa/run-sunmi-t2s-qa.sh 'https://你的-preview-網址/'
+```
+
+完整證據：`docs/qa-slice-1-android-browser.md`。
 
 ## 本機預覽
 
