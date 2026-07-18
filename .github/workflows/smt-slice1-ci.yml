@@ -52,7 +52,11 @@ jobs:
         continue-on-error: true
         run: node --test tests/smoke.test.mjs
 
-      - name: Run complete automated test suite
+      - name: Diagnose serial complete suite
+        continue-on-error: true
+        run: node --test --test-concurrency=1 tests/*.test.mjs
+
+      - name: Run concurrent complete suite for comparison
         run: npm test
 
       - name: Check runtime JavaScript syntax
