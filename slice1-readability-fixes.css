@@ -1,0 +1,52 @@
+/* Slice 1 final readability and Android touch-target gate. */
+.quiet-danger,
+.category-button,
+.search-toggle,
+.search-field button,
+.card-detail-button,
+.quantity-stepper button,
+.quantity-stepper span,
+.remove-button,
+.close-button,
+.toast button {
+  min-height: var(--touch);
+}
+
+.hot-label,
+.quantity-badge,
+.nav-item em {
+  font-size: var(--text-secondary);
+}
+
+.checkout-drawer {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+@media (min-width: 1600px) and (min-height: 900px) {
+  :root {
+    --text-secondary: 16px;
+    --text-body: 18px;
+    --text-strong: 21px;
+    --text-number: 28px;
+    --text-display: 38px;
+    --touch-normal: 56px;
+    --touch-quick: 64px;
+    --icon-size: 28px;
+  }
+
+  .app-shell { grid-template-rows: 92px minmax(0, 1fr) 92px; }
+  .brand-lockup strong { font-size: 25px; }
+  .brand-seed { width: 46px; height: 46px; }
+  .order-number { font-size: 34px; }
+  .panel-heading { padding-block: 18px; }
+  .panel-heading h1 { font-size: 28px; }
+  .catalog-panel { padding: 16px 18px 18px; }
+  .product-grid { grid-auto-rows: minmax(198px, 1fr); gap: 14px; }
+  .product-main { height: calc(100% - var(--touch)); min-height: 148px; padding: 16px; }
+  .product-code { font-size: 22px; }
+  .product-copy strong { font-size: 20px; }
+  .product-image { max-height: 144px; }
+  .drawer { width: min(720px, 52vw); }
+  .drawer-header h2 { font-size: 30px; }
+  .modal-card { width: min(700px, 68vw); }
+}

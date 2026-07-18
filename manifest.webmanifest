@@ -1,10 +1,11 @@
 {
-  "name": "磨飯 SMT",
+  "name": "磨飯 SMT 店舖操作台",
   "short_name": "磨飯 SMT",
+  "lang": "zh-HK",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "landscape",
-  "background_color": "#fffaf4",
-  "theme_color": "#17120f",
-  "icons": []
+  "background_color": "#f7f3ed",
+  "theme_color": "#2d241f"
 }

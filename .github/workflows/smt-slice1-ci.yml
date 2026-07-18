@@ -1,0 +1,89 @@
+name: SMT Slice 1 CI
+
+on:
+  push:
+    branches:
+      - feat/smt-intuitive-ui-slice-1
+      - feat/smt-seven-day-theme-v3
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Diagnose copy and icon tests
+        continue-on-error: true
+        run: node --test tests/copy-readability.test.mjs
+
+      - name: Diagnose domain tests
+        continue-on-error: true
+        run: node --test tests/domain.test.mjs
+
+      - name: Diagnose motion tests
+        continue-on-error: true
+        run: node --test tests/motion.test.mjs
+
+      - name: Diagnose state tests
+        continue-on-error: true
+        run: node --test tests/state.test.mjs
+
+      - name: Diagnose view tests
+        continue-on-error: true
+        run: node --test tests/views.test.mjs
+
+      - name: Diagnose runtime and release gates
+        continue-on-error: true
+        run: node --test tests/runtime-contract.test.mjs
+
+      - name: Diagnose smoke tests
+        continue-on-error: true
+        run: node --test tests/smoke.test.mjs
+
+      - name: Diagnose seven-day theme tests
+        continue-on-error: true
+        run: node --test tests/seven-day-theme.test.mjs
+
+      - name: Run complete automated test suite
+        run: npm test
+
+      - name: Check runtime JavaScript syntax
+        run: |
+          for file in \
+            app.js \
+            smt-data.js \
+            smt-copy.js \
+            smt-domain.js \
+            smt-state.js \
+            smt-icons.js \
+            smt-motion.js \
+            smt-views.js \
+            seven-day-theme.js \
+            service-worker.js
+          do
+            node --check "$file"
+          done
+
+      - name: Check Android QA script syntax
+        run: bash -n android-qa/run-sunmi-t2s-qa.sh
+
+      - name: Block client-side OpenAI secrets
+        run: |
+          if grep -RInE 'OPENAI_API_KEY|api\.openai\.com|sk-proj-' \
+            --include='*.js' --include='*.html' --include='*.css' .; then
+            echo '收銀 Runtime 不得包含 OpenAI API key 或客戶端 API 呼叫。'
+            exit 1
+          fi
