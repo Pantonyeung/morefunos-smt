@@ -1,0 +1,56 @@
+:root {
+  --color-bg:#f4efe7;
+  --color-surface:#fffdf9;
+  --color-surface-soft:#f8f2e9;
+  --color-ink:#211d19;
+  --color-muted:#75695f;
+  --color-line:#e4d8cc;
+  --color-line-strong:#cfbca9;
+  --color-primary:#f26322;
+  --color-primary-dark:#c74710;
+  --color-primary-soft:#fff0e4;
+  --color-success:#3d8a59;
+  --color-success-soft:#e9f6ec;
+  --color-warning:#d98911;
+  --color-warning-soft:#fff3dc;
+  --color-danger:#d94134;
+  --color-danger-soft:#fff0ee;
+  --color-info:#3d74a8;
+  --color-info-soft:#edf5fd;
+  --shadow-soft:0 8px 24px rgba(80,54,30,.08);
+  --shadow-float:0 24px 80px rgba(45,36,31,.24);
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:18px;
+  --text-secondary:14px;
+  --text-body:16px;
+  --text-strong:18px;
+  --text-number:24px;
+  --text-display:32px;
+  --touch-normal:48px;
+  --touch-quick:56px;
+  --touch:var(--touch-normal);
+  --icon-size:24px;
+  --motion-touch:90ms;
+  --motion-update:150ms;
+  --motion-page:170ms;
+  --motion-drawer:240ms;
+  --motion-modal:220ms;
+  --motion-toast:180ms;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  color:var(--color-ink);
+  background:var(--color-bg);
+}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--color-bg)}
+body{min-width:960px;font-size:var(--text-body);-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit}
+button{min-height:var(--touch);cursor:pointer;color:inherit}
+button:disabled{cursor:not-allowed;opacity:.44}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #2c6db0;outline-offset:2px}
+h1,h2,h3,p{margin-top:0}
+.icon{width:var(--icon-size);height:var(--icon-size);flex:0 0 auto}
+.app-shell{height:100dvh;display:grid;grid-template-rows:72px minmax(0,1fr) 70px;background:var(--color-bg)}
+.app-shell.is-quick{--touch:var(--touch-quick)}
+.workspace{min-height:0;overflow:hidden;animation:page-in var(--motion-page) ease-out}
+.replica-page{height:100%;min-height:0}
