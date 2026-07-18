@@ -8,7 +8,7 @@
 .product .meta small{display:block!important;color:var(--muted)!important}
 .product .meta strong{display:block!important;color:var(--text)!important}
 .image-shell{position:relative;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,#fff7ef,#f0e3d7)}
-.product-image-fallback{display:grid;place-items:center;width:100%;height:100%;color:#9b735c;font-weight:850;background:linear-gradient(145deg,#fff7ef,#ead9ca)}
+.product-image-fallback{display:grid;place-items:center;width:100%;height:100%;font-size:0;color:transparent;background:#f2e4d8 url('../../assets/products/placeholder.svg') center/cover no-repeat}
 .cart-row{grid-template-columns:34px 78px 1fr auto!important;position:relative}
 .cart-seq{width:28px;height:28px;border-radius:999px;background:#ead8c8;color:#805a43;display:grid;place-items:center;font-size:13px;font-weight:950;align-self:start;margin-top:4px}
 .cart-image{width:78px;height:78px;border-radius:13px}.cart-image img{width:100%;height:100%;object-fit:cover}.cart-copy{min-width:0}.cart-copy h3{white-space:normal}
