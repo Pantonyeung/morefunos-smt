@@ -24,39 +24,7 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Diagnose copy and icon tests
-        continue-on-error: true
-        run: node --test tests/copy-readability.test.mjs
-
-      - name: Diagnose domain tests
-        continue-on-error: true
-        run: node --test tests/domain.test.mjs
-
-      - name: Diagnose motion tests
-        continue-on-error: true
-        run: node --test tests/motion.test.mjs
-
-      - name: Diagnose state tests
-        continue-on-error: true
-        run: node --test tests/state.test.mjs
-
-      - name: Diagnose view tests
-        continue-on-error: true
-        run: node --test tests/views.test.mjs
-
-      - name: Diagnose runtime and release gates
-        continue-on-error: true
-        run: node --test tests/runtime-contract.test.mjs
-
-      - name: Diagnose smoke tests
-        continue-on-error: true
-        run: node --test tests/smoke.test.mjs
-
-      - name: Diagnose serial complete suite
-        continue-on-error: true
-        run: node --test --test-concurrency=1 tests/*.test.mjs
-
-      - name: Run concurrent complete suite for comparison
+      - name: Run automated tests
         run: npm test
 
       - name: Check runtime JavaScript syntax
