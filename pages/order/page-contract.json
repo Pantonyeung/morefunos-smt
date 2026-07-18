@@ -1,1 +1,10 @@
-{"page":"order","slides":["SMT-02","SMT-03"],"canvas":{"width":1920,"height":1080,"aspect":"16:9","reflow":false},"routes":{"checkout":"checkout","nav":["order","orders","dine","supply","more"]},"behaviors":{"normalMode":"required products configure before add; products without required add directly","quickMode":"all products add directly; missing required enters pending area","quickDrinkLimit":"equals current unfilled combo drink slots","pendingBadge":"derived from cart state","pendingOrders":"rows open detail and show item count plus total"},"runtime":{"data":"page-data-v11.js","script":"page-v11.js","style":"page-v11.css"}}
+{
+  "page":"order",
+  "version":"1.2",
+  "slides":["SMT-02","SMT-03"],
+  "canvas":{"width":1920,"height":1080,"aspect":"16:9","reflow":false},
+  "layout":{"cartColumn":"34%","editCard":"adjacent_to_cart","pendingCard":"below_pending_top_button"},
+  "routes":{"checkout":"checkout","nav":["order","orders","dine","supply","more"]},
+  "behaviors":{"normalMode":"required products configure before add; products without required add directly","quickMode":"all products add directly; missing required enters pending area","quickDrinkLimit":"equals current unfilled combo drink slots","pendingBadge":"derived from cart state","pendingOrders":"rows open detail and show item count plus total","draft":"non-empty cart saves and clears; empty cart opens stored drafts","overlayDismiss":"blank backdrop closes; dirty state requires confirmation; backdrop blocks product clicks","editCard":"cart row opens a cloned edit draft and only save applies changes"},
+  "files":["index.html","page.css","page-data.js","page.js","page-contract.json"]
+}
