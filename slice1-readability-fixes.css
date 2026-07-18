@@ -1,22 +1,15 @@
 /* Slice 1 final readability and Android touch-target gate. */
-.quiet-danger,
-.category-button,
-.search-toggle,
-.search-field button,
-.card-detail-button,
-.quantity-stepper button,
-.quantity-stepper span,
-.remove-button,
-.close-button,
-.toast button {
-  min-height: var(--touch);
-}
+.quiet-danger { min-height: var(--touch); }
+.category-button, .search-toggle { min-height: var(--touch); }
+.search-field button { min-height: var(--touch); }
+.card-detail-button { min-height: var(--touch); }
+.quantity-stepper button, .quantity-stepper span { min-height: var(--touch); }
+.remove-button { min-height: var(--touch); }
+.close-button { min-height: var(--touch); }
+.toast button { min-height: var(--touch); }
 
-.hot-label,
-.quantity-badge,
-.nav-item em {
-  font-size: var(--text-secondary);
-}
+.hot-label, .quantity-badge { font-size: var(--text-secondary); }
+.nav-item em { font-size: var(--text-secondary); }
 
 .checkout-drawer {
   grid-template-rows: auto minmax(0, 1fr) auto;
