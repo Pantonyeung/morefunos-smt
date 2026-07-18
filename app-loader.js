@@ -7,8 +7,8 @@ if(window.top!==window.self){
 
 const DESIGN_WIDTH=1920;
 const DESIGN_HEIGHT=1080;
-const BUILD_ID='v12-20260718';
-const LEGACY_RESET_KEY='morefun-smt-preview-cache-reset-v12';
+const BUILD_ID='v13-20260719';
+const LEGACY_RESET_KEY='morefun-smt-preview-cache-reset-v13';
 
 const routes=Object.freeze({
   boot:'pages/boot/index.html',
