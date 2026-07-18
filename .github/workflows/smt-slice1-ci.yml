@@ -24,30 +24,8 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Capture automated test output
-        id: tests
-        shell: bash
-        run: |
-          set +e
-          npm test > test-output.txt 2>&1
-          code=$?
-          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      - name: Upload automated test output
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: smt-test-output
-          path: test-output.txt
-          if-no-files-found: error
-          retention-days: 3
-
-      - name: Enforce automated test result
-        shell: bash
-        run: |
-          cat test-output.txt
-          test "${{ steps.tests.outputs.exit_code }}" = "0"
+      - name: Run automated tests
+        run: npm test
 
       - name: Check runtime JavaScript syntax
         run: |
