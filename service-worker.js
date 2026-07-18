@@ -1,8 +1,8 @@
-const CACHE = 'morefun-smt-concept-replica-v1';
+const CACHE = 'morefun-smt-concept-replica-v2';
 const CORE_ASSETS = [
-  './','./index.html','./styles.css','./accessibility.css','./app.js',
-  './smt-data.js','./smt-copy.js','./smt-domain.js','./smt-state.js',
-  './smt-icons.js','./smt-motion.js','./smt-views.js','./manifest.webmanifest'
+  './','./index.html','./styles.css','./accessibility.css',
+  './replica-css/replica-base.css','./replica-css/replica-topbar.css','./replica-css/replica-nav.css','./replica-css/replica-components.css','./replica-css/replica-order.css','./replica-css/replica-orders.css','./replica-css/replica-dine.css','./replica-css/replica-sold.css','./replica-css/replica-more.css','./replica-css/replica-overlays.css',
+  './app.js','./smt-data.js','./smt-copy.js','./smt-domain.js','./smt-state.js','./smt-icons.js','./smt-motion.js','./smt-views.js','./manifest.webmanifest'
 ];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE_ASSETS)));self.skipWaiting();});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
