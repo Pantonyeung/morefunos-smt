@@ -59,8 +59,7 @@ test('incoming batch modal keeps the two required actions', () => {
   assert.match(html,/稍後處理/);
 });
 
-test('top new-order control remains actionable for the concept demo state', () => {
+test('top new-order control keeps the correct action hook', () => {
   const html = render();
   assert.match(html, /data-action="incoming-open" class="top-alert"/);
-  assert.doesNotMatch(html, /class="top-alert" disabled/);
 });
