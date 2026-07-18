@@ -1,4 +1,4 @@
-const CACHE = 'morefun-smt-slice1-v1';
+const CACHE = 'morefun-smt-slice1-v2';
 const CORE_ASSETS = [
   './',
   './index.html',
