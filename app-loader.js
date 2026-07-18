@@ -7,7 +7,7 @@ if(window.top!==window.self){
 
 const DESIGN_WIDTH=1920;
 const DESIGN_HEIGHT=1080;
-const BUILD_ID='v14-20260719';
+const BUILD_ID='v16-20260719';
 
 const routes=Object.freeze({
   boot:'pages/boot/index.html',
@@ -66,7 +66,7 @@ function routeFromHash(){return normalizedRoute(location.hash||'#/order')}
 function hidePageError(){pageError.hidden=true;pageError.innerHTML=''}
 function showPageError(route,message=''){
   pageError.hidden=false;
-  pageError.innerHTML=`<section class="page-error-card"><strong>頁面暫時未能載入</strong><p>${message|| (route==='checkout'?'結帳頁載入失敗，訂單仍保存在本機。':'此頁載入失敗，現有資料沒有被刪除。')}</p><div><button data-error-action="retry">重新載入此頁</button><button data-error-action="order">返回點單</button></div></section>`;
+  pageError.innerHTML=`<section class="page-error-card"><strong>頁面暫時未能載入</strong><p>${message||(route==='checkout'?'結帳頁載入失敗，訂單仍保存在本機。':'此頁載入失敗，現有資料沒有被刪除。')}</p><div><button data-error-action="retry">重新載入此頁</button><button data-error-action="order">返回點單</button></div></section>`;
   pageError.querySelector('[data-error-action="retry"]').addEventListener('click',()=>loadRoute(route,{force:true}));
   pageError.querySelector('[data-error-action="order"]').addEventListener('click',()=>navigate('order'));
   status.textContent=`page-error:${route}`;
