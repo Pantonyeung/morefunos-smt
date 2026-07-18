@@ -1,10 +1,11 @@
-const CACHE = 'morefun-smt-slice1-v2';
+const CACHE = 'morefun-smt-seven-day-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
   './styles.css',
   './slice1-readability-fixes.css',
   './accessibility.css',
+  './seven-day-theme.css',
   './app.js',
   './smt-data.js',
   './smt-copy.js',
@@ -13,6 +14,7 @@ const CORE_ASSETS = [
   './smt-icons.js',
   './smt-motion.js',
   './smt-views.js',
+  './seven-day-theme.js',
   './manifest.webmanifest'
 ];
 
