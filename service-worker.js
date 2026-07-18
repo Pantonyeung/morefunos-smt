@@ -1,4 +1,4 @@
-const CACHE='morefun-smt-page-folders-preview-v3';
+const CACHE='morefun-smt-page-folders-preview-v4';
 const SHELL=['./','./index.html','./app-shell.css','./app-loader.js','./manifest.webmanifest'];
 const scopePath=new URL(self.registration.scope).pathname;
 
