@@ -1,0 +1,55 @@
+name: Build V16 Master14 Combine
+on:
+  push:
+    branches: [feat/smt-v16-master14-combine]
+    paths:
+      - scripts/build-v16-master14-combine.py
+      - .github/workflows/build-v16-master14-combine.yml
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build exact combined five-root runtime
+        run: python3 scripts/build-v16-master14-combine.py
+      - name: Verify JavaScript
+        run: |
+          node --check smt-app.js
+          node --check smt-data.js
+          node --check smt-api-client.js
+          grep -q 'quick-drink-popover' smt-app.js
+          grep -q '快速模式' smt-app.js
+          grep -q 'width:25%' smt-app.css
+          ! grep -Eq '/pages/|/shared/|app-loader|service-worker|manifest.webmanifest' index.html
+      - name: Remove legacy runtime and temporary builder
+        run: |
+          rm -rf pages shared .combine-tmp
+          rm -f app-loader.js app-shell.css service-worker.js manifest.webmanifest
+          rm -f scripts/build-v16-master14-combine.py .github/workflows/build-v16-master14-combine.yml
+      - name: Record provenance
+        run: |
+          cat > COMBINE_PROVENANCE.md <<'EOF'
+          # SMT V16 × Master 1.4 Combine
+
+          - Main V16 baseline: `5b986636a199d4143738c8a07e62495415c20d84`
+          - Quick-mode switch/card: `bd3d9b38deb4d3ebeef6023efe24c376f4d138d5`
+          - Master 1.4 popup/card behavior: `5adb2e2a81a661dec7a7229a546e2af026524628`
+          - Quick-drink popup: `0ed468dd30c3ab4222de3b0801173450153736a0`
+
+          Runtime is restricted to five root files: `index.html`, `smt-app.js`, `smt-app.css`, `smt-data.js`, `smt-api-client.js`.
+          EOF
+      - name: Commit combined runtime
+        run: |
+          git config user.name 'MoreFun Build Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'feat: combine V16 with Master 1.4 popup locks'
+          git push
