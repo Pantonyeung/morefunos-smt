@@ -15,16 +15,9 @@ export function createRenderQueue(renderFn){
     rendering=true;
     try{renderFn();}
     catch(error){window.dispatchEvent(new CustomEvent('morefun:runtime-error',{detail:error}));}
-    finally{
-      rendering=false;
-      if(pending){pending=false;schedule();}
-    }
+    finally{rendering=false;if(pending){pending=false;schedule();}}
   };
-  const schedule=function(){
-    if(scheduled)return;
-    scheduled=true;
-    requestAnimationFrame(run);
-  };
+  const schedule=function(){if(scheduled)return;scheduled=true;requestAnimationFrame(run);};
   return {schedule:schedule,flush:run};
 }
 
@@ -33,30 +26,15 @@ export function createStore(initialState,options){
   let state=options.normalize?options.normalize(initialState):safeClone(initialState);
   const listeners=new Set();
   function get(){return state;}
-  function persist(){
-    if(!options.storageKey)return;
-    try{localStorage.setItem(options.storageKey,JSON.stringify(state));}catch(error){console.warn('STORE_PERSIST_FAILED',error);}
-  }
-  function set(updater){
-    const draft=safeClone(state);
-    const next=typeof updater==='function'?updater(draft):updater;
-    state=options.normalize?options.normalize(next):next;
-    persist();
-    listeners.forEach(function(fn){fn(state);});
-  }
+  function persist(){if(!options.storageKey)return;try{localStorage.setItem(options.storageKey,JSON.stringify(state));}catch(error){console.warn('STORE_PERSIST_FAILED',error);}}
+  function set(updater){const draft=safeClone(state);const next=typeof updater==='function'?updater(draft):updater;state=options.normalize?options.normalize(next):next;persist();listeners.forEach(function(fn){fn(state);});}
   function subscribe(fn){listeners.add(fn);return function(){listeners.delete(fn);};}
   return {get:get,set:set,subscribe:subscribe,persist:persist};
 }
 
 export function createOverlayManager(){
   let overlay=null;
-  function close(){
-    if(!overlay)return;
-    overlay.scrim.remove();
-    overlay.panel.remove();
-    if(overlay.onClose)overlay.onClose();
-    overlay=null;
-  }
+  function close(){if(!overlay)return;overlay.scrim.remove();overlay.panel.remove();if(overlay.onClose)overlay.onClose();overlay=null;}
   function open(options){
     close();
     const anchor=options.anchor;
@@ -71,11 +49,13 @@ export function createOverlayManager(){
     overlay={scrim:scrim,panel:panel,onClose:options.onClose||null};
     function position(){
       const rect=anchor.getBoundingClientRect();
-      const width=Math.min(420,Math.max(260,rect.width));
+      const width=Math.min(420,Math.max(340,Number(options.width)||360));
       panel.style.width=width+'px';
       const left=Math.max(12,Math.min(window.innerWidth-width-12,rect.left+(rect.width-width)/2));
       panel.style.left=left+'px';
-      panel.style.top=Math.max(12,rect.top-panel.offsetHeight-10)+'px';
+      const preferredTop=rect.top-panel.offsetHeight-12;
+      panel.style.top=Math.max(12,preferredTop)+'px';
+      panel.dataset.anchorPosition='above';
     }
     requestAnimationFrame(position);
     scrim.addEventListener('click',close,{once:true});
@@ -86,11 +66,7 @@ export function createOverlayManager(){
 
 export function installErrorBoundary(options){
   options=options||{};
-  function handle(error){
-    console.error('MORE_FUN_RUNTIME_ERROR',error);
-    if(options.toast)options.toast('操作未完成，資料已保留，請再試一次');
-    if(options.report)options.report(error);
-  }
+  function handle(error){console.error('MORE_FUN_RUNTIME_ERROR',error);if(options.toast)options.toast('操作未完成，資料已保留，請再試一次');if(options.report)options.report(error);}
   window.addEventListener('error',function(event){event.preventDefault();handle(event.error||event.message);});
   window.addEventListener('unhandledrejection',function(event){event.preventDefault();handle(event.reason);});
   return handle;
