@@ -1,10 +1,1 @@
-{
-  "name":"磨飯 SMT T2 固定比例預覽",
-  "short_name":"磨飯 SMT",
-  "start_url":"./#/order",
-  "display":"standalone",
-  "orientation":"landscape",
-  "background_color":"#000000",
-  "theme_color":"#000000",
-  "lang":"zh-HK"
-}
+{"name":"磨飯 SMT","short_name":"磨飯 SMT","start_url":"./#/order","scope":"./","display":"standalone","orientation":"landscape","background_color":"#000000","theme_color":"#000000","lang":"zh-HK","description":"磨飯現場點單、接單及收銀控制端"}
