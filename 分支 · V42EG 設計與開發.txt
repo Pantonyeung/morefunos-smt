@@ -1,0 +1,31 @@
+Health 測試通過：
+
+- API：`1.2.9`
+- Sync：`0.2`
+- 單一 API：正常
+- Schema：READY
+- 密碼模式：`SHA256_FAST`
+- 自動鎖定：已關閉
+- 禁止項目：未使用
+
+現在執行：
+
+```text id="kgw8i5"
+TEST_WORK03_UNIFIED_LOGIN
+```
+
+測試帳號：
+
+```text id="zpmk2u"
+帳號：morefun
+密碼：morefun
+裝置：dev-smt-main
+模式：smt
+```
+
+執行完成後，把完整結果貼上。
+
+**已完成**：Install、Health  
+**目前進行**：Staff Login  
+**下一步**：Session／Bootstrap  
+**尚未開始**：Push、Pull、Heartbeat、Fallback
