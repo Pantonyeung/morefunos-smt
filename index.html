@@ -1,1 +1,31 @@
-<!doctype html><html lang="zh-HK"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>磨飯 SMT Master V1.0</title><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="app-shell.css?v=master-v14"></head><body><main id="viewport"><section id="stage"><iframe id="page" title="磨飯 SMT"></iframe></section><section id="orientation-lock" aria-live="polite"><div><strong>請旋轉至橫屏使用</strong><p>SMT iPhone 版只支援橫屏操作。</p></div></section></main><script type="module" src="app-loader.js?v=master-v14"></script></body></html>
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#f7f1e8">
+  <title>磨飯 SMT</title>
+  <link rel="stylesheet" href="./smt-app.css?v=v16-5root-baseline">
+</head>
+<body>
+  <div id="orientation-gate" aria-live="polite">
+    <div class="orientation-card">
+      <strong>請將裝置橫向使用</strong>
+      <span>SMT 工作台只支援橫屏。</span>
+    </div>
+  </div>
+
+  <div id="smt-stage">
+    <main id="app" aria-live="polite">
+      <div class="app-loading">
+        <strong>磨飯 SMT</strong>
+        <span>正在載入點單工作台…</span>
+      </div>
+    </main>
+  </div>
+
+  <script src="./smt-data.js?v=v16-5root-baseline"></script>
+  <script src="./smt-api-client.js?v=v16-5root-baseline"></script>
+  <script src="./smt-app.js?v=v16-5root-baseline"></script>
+</body>
+</html>
