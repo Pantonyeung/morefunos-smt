@@ -1,7 +1,7 @@
 export const categories=['全部','人氣推薦','飯團','飯團套餐','便當','紫米沙律','薯角餐','小食','飲品','湯品','甜品','加購','更多','搜尋'];
 export const products=[
 {id:'f4',code:'F4',name:'蜜糖雞絲＋鹽酥雞',description:'招牌雙拼紫米飯團，可組合套餐',price:45,category:'人氣推薦',image:'../../assets/products/f4.webp',required:[],combinable:true},
-{id:'a1',code:'A1',name:'紫米飯團 A 餐',description:'飯團＋小食＋飲品',price:59,category:'飯團套餐',image:'../../assets/products/f4.webp',required:['drink'],drinkSlots:1},
+{id:'a1',code:'A1',name:'紫米飯團 A 餐',description:'飯團＋小食＋飲品',price:59,category:'飯團套餐',image:'../../assets/products/f4.webp',required:['snack','drink'],drinkSlots:1},
 {id:'custom-riceball-set',code:'AC',name:'自選紫米飯團餐',description:'自選飯團、小食及飲品',price:59,category:'飯團套餐',image:'../../assets/products/f3.webp',required:['snack','drink'],drinkSlots:1},
 {id:'b1',code:'B1',name:'自選便當',description:'自選飯底及配搭',price:48,category:'便當',image:'../../assets/products/b1.webp',required:['rice','drink'],drinkSlots:1},
 {id:'b2',code:'B2',name:'泡菜豬肉便當',description:'泡菜豬肉配自選飯底',price:52,category:'便當',image:'../../assets/products/b2.webp',required:['rice','drink'],drinkSlots:1},

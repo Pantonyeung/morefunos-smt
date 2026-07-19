@@ -3,13 +3,8 @@ export const orderPageConfig={
   catalog:{defaultTemplate:'large',showCode:true,showDescription:true,productOverrides:{}},
   cart:{mergeMode:'same_config',showSequence:true},
   quickDrinks:{
-    mode:'custom',
-    showImages:true,
-    quickAssist:true,
-    cardWidthPx:92,
-    cardHeightPx:58,
-    imageSizePx:34,
-    maxRatioToLargeCard:0.6667,
+    mode:'custom',showImages:true,quickAssist:true,
+    widthRatioToLargeCard:0.6667,heightPx:72,
     order:['iced-lemon-tea','taiwan-milk-tea','iced-lemon-water','cola','genmaicha','puer','limited-tea','sparkling-water','wintermelon-lemon','americano','latte']
   }
 };
