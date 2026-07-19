@@ -1,5 +1,5 @@
 export const ORDER_STORAGE_KEY='morefun:smt:v16:order';
-export const SETTINGS_STORAGE_KEY='morefun:smt:v16:settings';
+export const SETTINGS_STORAGE_KEY='morefun:smt:v16c:settings';
 export const DRAFT_STORAGE_KEY='morefun:smt:v16:drafts';
 
 export function readJSON(key,fallback){
