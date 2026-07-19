@@ -1,0 +1,29 @@
+name: Apply V16 card and quick-mode fix
+on:
+  push:
+    branches: [feat/smt-v16-5root-full-port]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/smt-v16-5root-full-port
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python scripts/apply-v16-card-fix.py
+      - run: |
+          node --check smt-app.js
+          node --check smt-data.js
+          node --check smt-api-client.js
+      - run: |
+          rm -f scripts/apply-v16-card-fix.py .github/workflows/apply-v16-card-fix.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "fix: restore locked card and quick-mode behavior"
+          git push origin HEAD:feat/smt-v16-5root-full-port
