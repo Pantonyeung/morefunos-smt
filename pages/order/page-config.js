@@ -5,9 +5,10 @@ export const orderPageConfig={
   quickDrinks:{
     mode:'custom',
     showImages:true,
-    cardWidthPx:168,
-    cardHeightPx:78,
-    imageSizePx:46,
+    quickAssist:true,
+    cardWidthPx:92,
+    cardHeightPx:58,
+    imageSizePx:34,
     maxRatioToLargeCard:0.6667,
     order:['iced-lemon-tea','taiwan-milk-tea','iced-lemon-water','cola','genmaicha','puer','limited-tea','sparkling-water','wintermelon-lemon','americano','latte']
   }
