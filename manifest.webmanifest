@@ -1,10 +1,1 @@
-{
-  "name":"磨飯 SMT T2 固定比例預覽",
-  "short_name":"磨飯 SMT",
-  "start_url":"./#/order",
-  "display":"standalone",
-  "orientation":"landscape",
-  "background_color":"#000000",
-  "theme_color":"#000000",
-  "lang":"zh-HK"
-}
+{"name":"磨飯 SMT V16","short_name":"磨飯 SMT","start_url":"./#/order","display":"fullscreen","background_color":"#111111","theme_color":"#ef5218","orientation":"any"}
