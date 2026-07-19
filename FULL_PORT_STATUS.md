@@ -58,3 +58,18 @@ The execution environment blocks Chromium navigation to both localhost and `file
 
 ## Current status
 Implementation and repository verification are complete on `feat/smt-v16-5root-full-port`. `main` and `feat/smt-v16-5root-rebuild` remain unchanged and available for rollback.
+
+## V1.1 locked-card and quick-mode correction
+- All edit, pending-completion, quick, pending-order, health, status and display-setting cards use the same vertical span as the cart and a fixed 25% width.
+- Every side card uses one full-stage frosted scrim that blocks background interaction and supports tap-outside close.
+- Quick mode is independent from the quick-drink strip. When enabled, tapping any product immediately adds an incomplete line; required items are completed later in the pending area.
+- Cart edit uses the 25% side-card system; new-product detail retains the locked central 68/32 detail layout.
+- Pending card no longer overrides width to 31% or height to 50%.
+
+## Remaining verified gaps against 23df1f6 and a3a9ab0
+- Custom numeric keypad is still represented by the browser prompt rather than the locked in-app keypad.
+- Draft restore/list UI is not yet exposed even though draft persistence exists.
+- Quick-drink ordering/reordering UI is not yet restored.
+- Pending-order upper/lower independent scroll behavior is only partially restored.
+- Anchored arrow positioning from Master V1 is not yet restored for contextual cards.
+- Product-specific menu rules remain fixture-level and are not yet the complete production menu-rule engine.
