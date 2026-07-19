@@ -55,7 +55,7 @@ function load(){
   const key=route();
   if(key===current)return;
   current=key;
-  frame.src=routes[key]+'?build=master-v12';
+  frame.src=routes[key]+'?build=master-v13';
 }
 frame.addEventListener('error',()=>showLoaderError('子頁載入失敗，資料仍保存在本機。'));
 addEventListener('hashchange',load);
