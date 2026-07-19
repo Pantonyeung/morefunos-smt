@@ -105,29 +105,42 @@ export function positionAnchoredElement(card,anchor,{side='auto',gap=16,viewport
 
 export function createOverlayManager(){
   let overlay=null;
-  function close(){
+  function forceClose(){
     if(!overlay)return;
-    overlay.scrim.remove();
-    overlay.panel.remove();
-    if(overlay.onClose)overlay.onClose();
+    const current=overlay;
     overlay=null;
+    current.scrim.remove();
+    current.panel.remove();
+    if(current.onClose)current.onClose();
   }
-  function open({anchor,content='',className='anchored-popover',side='auto',gap=14,onClose=null}={}){
-    close();
+  function requestClose(){
+    if(!overlay)return;
+    if(overlay.isDirty?.()){
+      const message=overlay.confirmMessage||'你已經作出選擇，確定離開而不套用？';
+      if(!window.confirm(message))return;
+    }
+    forceClose();
+  }
+  function open({anchor,content='',className='anchored-popover',side='auto',gap=14,onClose=null,isDirty=null,confirmMessage=''}={}){
+    forceClose();
     const scrim=document.createElement('button');
     scrim.className='overlay-scrim';
-    scrim.setAttribute('aria-label','返回');
+    scrim.type='button';
+    scrim.setAttribute('aria-label','關閉浮卡');
     const panel=document.createElement('section');
     panel.className=className;
     panel.innerHTML=content;
+    panel.setAttribute('role','dialog');
+    panel.setAttribute('aria-modal','true');
     document.body.append(scrim,panel);
-    overlay={scrim,panel,onClose};
+    overlay={scrim,panel,onClose,isDirty,confirmMessage};
     const position=()=>positionAnchoredElement(panel,anchor,{side,gap});
     requestAnimationFrame(()=>requestAnimationFrame(position));
-    scrim.addEventListener('click',close,{once:true});
-    return {panel,close,position};
+    scrim.addEventListener('click',requestClose);
+    panel.addEventListener('click',event=>event.stopPropagation());
+    return {panel,close:forceClose,requestClose,position};
   }
-  return {open,close,get panel(){return overlay?.panel||null;}};
+  return {open,close:forceClose,requestClose,get panel(){return overlay?.panel||null;}};
 }
 
 export function installErrorBoundary(options={}){
