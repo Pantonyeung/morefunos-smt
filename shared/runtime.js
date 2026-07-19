@@ -1,37 +1,55 @@
-const queued = new Set();
-let frame = 0;
+const renderQueue = new Set();
+let renderFrame = 0;
 
 export function safeClone(value) {
   if (typeof structuredClone === 'function') {
     try { return structuredClone(value); } catch {}
   }
+  if (value === undefined) return undefined;
   return JSON.parse(JSON.stringify(value));
 }
 
 export function queueRender(task) {
   if (typeof task !== 'function') return;
-  queued.add(task);
-  if (frame) return;
-  frame = requestAnimationFrame(() => {
-    frame = 0;
-    const tasks = [...queued];
-    queued.clear();
-    for (const fn of tasks) {
-      try { fn(); } catch (error) { reportRuntimeError(error); }
+  renderQueue.add(task);
+  if (renderFrame) return;
+  renderFrame = requestAnimationFrame(() => {
+    renderFrame = 0;
+    const tasks = [...renderQueue];
+    renderQueue.clear();
+    for (const current of tasks) {
+      try { current(); } catch (error) { reportRuntimeError(error); }
     }
   });
 }
 
-export function reportRuntimeError(error, mount = document.body) {
-  console.error('[MoreFun SMT]', error);
-  if (!mount || mount.querySelector?.('[data-runtime-error]')) return;
-  const card = document.createElement('section');
-  card.dataset.runtimeError = 'true';
-  card.className = 'runtime-error-card';
-  card.innerHTML = '<strong>系統顯示發生錯誤</strong><p>訂單資料仍保存在本機。請重新載入此頁。</p><button type="button">重新載入</button>';
-  card.querySelector('button').addEventListener('click', () => location.reload());
-  mount.append(card);
+export function showToast(message, {duration = 1600, target = document.getElementById('toast')} = {}) {
+  if (!target) return;
+  target.textContent = String(message || '');
+  target.classList.add('show');
+  window.clearTimeout(Number(target.dataset.timer || 0));
+  const timer = window.setTimeout(() => target.classList.remove('show'), duration);
+  target.dataset.timer = String(timer);
 }
 
-window.addEventListener('error', event => reportRuntimeError(event.error || new Error(event.message)));
-window.addEventListener('unhandledrejection', event => reportRuntimeError(event.reason instanceof Error ? event.reason : new Error(String(event.reason))));
+export function createErrorBoundary({mount = document.body, preserve = () => {}} = {}) {
+  let shown = false;
+  return error => {
+    console.error('[MoreFun SMT]', error);
+    try { preserve(); } catch {}
+    if (shown || !mount) return;
+    shown = true;
+    const card = document.createElement('section');
+    card.className = 'runtime-error-card';
+    card.dataset.runtimeError = 'true';
+    card.innerHTML = '<strong>系統顯示發生錯誤</strong><p>訂單及暫存資料仍保存在本機。請重新載入此頁。</p><button type="button" data-action="runtime-reload">重新載入</button>';
+    card.querySelector('[data-action="runtime-reload"]').addEventListener('click', () => location.reload());
+    mount.append(card);
+  };
+}
+
+const globalBoundary = typeof document === 'undefined' ? null : createErrorBoundary();
+if (typeof window !== 'undefined' && globalBoundary) {
+  window.addEventListener('error', event => globalBoundary(event.error || new Error(event.message)));
+  window.addEventListener('unhandledrejection', event => globalBoundary(event.reason instanceof Error ? event.reason : new Error(String(event.reason))));
+}
