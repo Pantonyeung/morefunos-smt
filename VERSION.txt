@@ -1,3 +1,4 @@
-MoreFun SMT Master V1.3 Temporary Lock
-Build: master-v13
+MoreFun SMT Master V1.4 Consolidated Fix
+Build: master-v14
 Branch target: feat/smt-master-v1
+Status: temporary lock candidate
