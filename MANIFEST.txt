@@ -1,5 +1,21 @@
-index.html
-smt-api-client.js
-smt-app.css
-smt-app.js
-smt-data.js
+MoreFun SMT V16.1.2 Full Integrated
+
+Runtime Root Files:
+- index.html
+- smt-app.js
+- smt-app.css
+- smt-data.js
+- smt-api-client.js
+
+Documentation:
+- CHANGELOG_V16.1.2.md
+- MANIFEST.txt
+- SHA256SUMS.txt
+
+Runtime structure rule:
+- No /pages/
+- No /shared/
+- No app-loader.js
+- No app-shell.css
+- No service-worker.js
+- No manifest.webmanifest
