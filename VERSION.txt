@@ -1,0 +1,3 @@
+MoreFun SMT Master V1.2 Fixed
+Build: master-v12
+Branch target: feat/smt-master-v1
