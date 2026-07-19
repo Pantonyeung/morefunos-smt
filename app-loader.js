@@ -1,25 +1,70 @@
-const ROOT_LOADER_RECURSION_GUARD='ROOT_LOADER_RECURSION_GUARD';
-if(window.top!==window.self){document.documentElement.innerHTML='<!doctype html><html lang="zh-HK"><body style="font-family:sans-serif;display:grid;place-items:center;min-height:100vh"><strong>Root Loader 被錯誤載入，已停止。</strong></body></html>';throw new Error(ROOT_LOADER_RECURSION_GUARD);}
-const DESIGN_WIDTH=1920,DESIGN_HEIGHT=1080,BUILD_ID='smt-master-v1.1-20260719';
-const routes=Object.freeze({boot:'pages/boot/index.html',order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/placeholder/index.html?page=orders&label=訂單',dine:'pages/placeholder/index.html?page=dine&label=堂食',supply:'pages/placeholder/index.html?page=supply&label=售罄',more:'pages/placeholder/index.html?page=more&label=更多'});
-const viewport=document.getElementById('viewport'),stage=document.getElementById('t2-stage'),frame=document.getElementById('page-frame'),status=document.getElementById('route-status'),pageError=document.getElementById('page-error');
-let activeRoute='',readyTimer=0,lastGeometry='',lastOrientation=screen.orientation?.type||(innerWidth>innerHeight?'landscape':'portrait');
-export async function resetLegacyPreviewCaches(){try{if('serviceWorker'in navigator){for(const registration of await navigator.serviceWorker.getRegistrations())await registration.unregister();}if('caches'in window){for(const key of await caches.keys())if(key.startsWith('morefun-smt-'))await caches.delete(key);}}catch(error){console.warn('Cache reset skipped',error);}return false;}
-const normalizedRoute=value=>{const route=String(value||'').replace(/^#\/?/,'').replace(/^\//,'').split(/[?&]/)[0];return routes[route]?route:'order';};
-export function fitStage(reason='manual'){const width=viewport.clientWidth,height=viewport.clientHeight,scale=Math.min(1,width/DESIGN_WIDTH,height/DESIGN_HEIGHT),left=Math.max(0,(width-DESIGN_WIDTH*scale)/2),top=Math.max(0,(height-DESIGN_HEIGHT*scale)/2),geometry=`${scale.toFixed(6)}|${left.toFixed(2)}|${top.toFixed(2)}`;if(geometry===lastGeometry&&reason!=='force')return;lastGeometry=geometry;stage.style.transform=`scale(${scale})`;stage.style.left=`${left}px`;stage.style.top=`${top}px`;stage.dataset.scale=scale.toFixed(6);}
-const routeFromHash=()=>normalizedRoute(location.hash||'#/order');
-function showPageError(route){pageError.hidden=false;pageError.innerHTML=`<section class="page-error-card"><strong>頁面暫時未能載入</strong><p>訂單資料仍保存在本機。</p><div><button data-error-action="retry">重新載入此頁</button><button data-error-action="order">返回點單</button></div></section>`;pageError.querySelector('[data-error-action="retry"]').onclick=()=>loadRoute(route,{force:true});pageError.querySelector('[data-error-action="order"]').onclick=()=>navigate('order');}
-function hidePageError(){pageError.hidden=true;pageError.innerHTML='';}
-function armReadyTimeout(route){clearTimeout(readyTimer);readyTimer=setTimeout(()=>showPageError(route),9000);}
-export function navigate(route,{replace=false}={}){const next=normalizedRoute(route),hash=`#/${next}`;if(replace)history.replaceState(null,'',hash);else if(location.hash!==hash)location.hash=hash;loadRoute(next);}
-function loadRoute(route,{force=false}={}){const next=normalizedRoute(route);if(!force&&activeRoute===next&&frame.dataset.ready==='true')return;activeRoute=next;hidePageError();frame.dataset.ready='false';frame.src=`${routes[next]}${routes[next].includes('?')?'&':'?'}build=${BUILD_ID}`;status.textContent=`正在載入${next}`;armReadyTimeout(next);}
-function handleOrientationChange(){const orientation=screen.orientation?.type||(innerWidth>innerHeight?'landscape':'portrait');if(orientation===lastOrientation)return;lastOrientation=orientation;requestAnimationFrame(()=>fitStage('orientationchange'));}
-window.addEventListener('message',event=>{if(event.source!==frame.contentWindow||!event.data)return;if(event.data.type==='morefun:navigate')navigate(event.data.route);if(event.data.type==='morefun:page-ready'){clearTimeout(readyTimer);frame.dataset.ready='true';hidePageError();status.textContent=`已載入${activeRoute}`;}if(event.data.type==='morefun:page-runtime-error')showPageError(activeRoute);});
-frame.addEventListener('error',()=>showPageError(activeRoute||routeFromHash()));
-window.addEventListener('hashchange',()=>loadRoute(routeFromHash()));
-window.addEventListener('pageshow',event=>{if(event.persisted)requestAnimationFrame(()=>fitStage('pageshow'));},{passive:true});
-window.addEventListener('orientationchange',handleOrientationChange,{passive:true});
-screen.orientation?.addEventListener?.('change',handleOrientationChange);
-window.MoreFunSMTRouter=Object.freeze({navigate,fitStage,routes,DESIGN_WIDTH,DESIGN_HEIGHT,BUILD_ID});
-async function bootstrap(){fitStage('bootstrap');await resetLegacyPreviewCaches();if(!location.hash)navigate('order',{replace:true});else loadRoute(routeFromHash());}
-bootstrap();
+const stage=document.getElementById('stage');
+const frame=document.getElementById('page');
+const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html'};
+const CANVAS_WIDTH=1920;
+const CANVAS_HEIGHT=1080;
+let current='';
+let fitToken=0;
+
+function viewportSize(){
+  const viewport=window.visualViewport;
+  return {
+    width:Math.round(viewport?.width||window.innerWidth),
+    height:Math.round(viewport?.height||window.innerHeight)
+  };
+}
+function applyFit(size){
+  const scale=Math.min(size.width/CANVAS_WIDTH,size.height/CANVAS_HEIGHT);
+  const fittedWidth=CANVAS_WIDTH*scale;
+  const fittedHeight=CANVAS_HEIGHT*scale;
+  stage.style.left=Math.max(0,(size.width-fittedWidth)/2)+'px';
+  stage.style.top=Math.max(0,(size.height-fittedHeight)/2)+'px';
+  stage.style.transform='scale('+scale+')';
+  stage.dataset.scale=scale.toFixed(6);
+  stage.dataset.profile='iphone-landscape-fit';
+  stage.dataset.fitted='1';
+}
+function fitStableLandscape(){
+  const token=++fitToken;
+  let previous='';
+  let stableCount=0;
+  let attempts=0;
+  function sample(){
+    if(token!==fitToken)return;
+    const size=viewportSize();
+    const landscape=size.width>size.height;
+    document.documentElement.dataset.orientation=landscape?'landscape':'portrait';
+    if(!landscape){stage.dataset.fitted='0';return;}
+    const key=size.width+'x'+size.height;
+    stableCount=key===previous?stableCount+1:0;
+    previous=key;
+    attempts+=1;
+    if(stableCount>=2||attempts>=12){applyFit(size);return;}
+    setTimeout(sample,120);
+  }
+  sample();
+}
+function route(){
+  const key=(location.hash.replace(/^#\/?/,'')||'order').split('?')[0];
+  return routes[key]?key:'order';
+}
+function showLoaderError(message){
+  frame.srcdoc='<!doctype html><html lang="zh-HK"><meta charset="UTF-8"><style>body{margin:0;display:grid;place-items:center;height:100vh;font-family:-apple-system,BlinkMacSystemFont,"PingFang HK",sans-serif;background:#fff8f3;color:#382b24}.card{padding:28px;border:1px solid #ead9ce;border-radius:16px;background:#fff;text-align:center}.card strong{display:block;font-size:24px;color:#e84b12;margin-bottom:10px}</style><body><section class="card"><strong>頁面未能載入</strong><p>'+String(message||'請重新整理後再試')+'</p></section></body></html>';
+}
+function load(){
+  const key=route();
+  if(key===current)return;
+  current=key;
+  frame.src=routes[key]+'?build=v16h';
+}
+frame.addEventListener('error',()=>showLoaderError('子頁載入失敗，資料仍保存在本機。'));
+addEventListener('hashchange',load);
+addEventListener('pageshow',fitStableLandscape,{once:true});
+addEventListener('orientationchange',()=>{stage.dataset.fitted='0';setTimeout(fitStableLandscape,180);},{passive:true});
+addEventListener('message',event=>{
+  if(event.source!==frame.contentWindow)return;
+  if(event.data?.type==='morefun:navigate')location.hash='#/'+event.data.route;
+  if(event.data?.type==='morefun:page-runtime-error')console.error(event.data);
+});
+fitStableLandscape();
+load();

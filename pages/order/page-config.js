@@ -1,17 +1,15 @@
-export const ORDER_PAGE_CONFIG = Object.freeze({
-  schemaVersion: 4,
-  workspaceRatio: '25/75',
-  workspaceRatios: Object.freeze(['25/75','30/70','35/65']),
-  categoryColumns: 7,
-  categoryRows: 2,
-  searchAlwaysVisible: true,
-  productCardMode: 'large',
-  productCardModes: Object.freeze(['large','compact','text']),
-  mergeMode: 'same-config',
-  mergeModes: Object.freeze(['never','same-product','same-config']),
-  quickDrinkLimit: 12,
-  showQuickDrinks: true,
-  clearConfirmation: true
-});
-
-export const ratioToCartPercent = ratio => ({'25/75':25,'30/70':30,'35/65':35}[ratio] || 25);
+export const orderPageConfig={
+  canvas:{width:1920,height:1080,reflow:false,profile:'iphone-landscape-fit'},
+  catalog:{defaultTemplate:'large',showCode:true,showDescription:true,productOverrides:{}},
+  cart:{mergeMode:'same_config',showSequence:true},
+  quickDrinks:{
+    mode:'custom',
+    showImages:true,
+    cardWidthRatio:0.56,
+    cardWidthPx:168,
+    maxCardWidthPx:168,
+    cardHeightPx:78,
+    imageSizePx:46,
+    order:['iced-lemon-tea','taiwan-milk-tea','iced-lemon-water','cola','genmaicha','puer','limited-tea','sparkling-water','wintermelon-lemon','americano','latte']
+  }
+};

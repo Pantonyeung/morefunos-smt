@@ -1,5 +1,2 @@
-const CACHE='morefun-smt-master-v1-1-20260719';
-const SHELL=['./','./index.html','./app-shell.css','./app-loader.js','./manifest.webmanifest','./shared/page-base.css','./shared/page-bridge.js','./shared/runtime.js','./shared/store.js','./shared/components.js','./pages/order/index.html','./pages/order/page.css','./pages/order/page.js','./pages/order/page-data.js','./pages/order/page-config.js'];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));self.skipWaiting();});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
-self.addEventListener('fetch',event=>{const request=event.request;if(request.method!=='GET')return;const url=new URL(request.url);if(url.origin!==self.location.origin)return;if(request.mode==='navigate'){event.respondWith(fetch(request,{cache:'no-store'}).catch(async()=>{const cached=await caches.match(request);return cached||new Response('頁面暫時離線，請返回後重試。',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});}));return;}event.respondWith(fetch(request,{cache:'no-store'}).catch(()=>caches.match(request)));});
+// V16 intentionally does not register a service worker during preview.
+// This file is retained for deployment compatibility and future controlled offline support.
