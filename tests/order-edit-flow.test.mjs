@@ -135,7 +135,18 @@ test('drink editor supports multiple configuration groups without forced images'
 test('completion exposes automatic, specified, and demo link-up flows', () => {
   assert.match(page,/一鍵自動組合/);
   assert.match(page,/指定配對/);
-  assert.match(page,/載入組合測試/);
+  assert.doesNotMatch(page,/載入組合測試/);
+});
+
+test('large product grid reserves complete rows and never overlaps cards', () => {
+  assert.match(css,/\.products-large\s*\{[^}]*grid-auto-rows:\s*max-content/);
+  assert.match(css,/\.product-card\.large\s*\{[^}]*min-height:/);
+});
+
+test('collapsed quick drinks use the approved centred pill above navigation', () => {
+  assert.match(page,/快捷飲品<\/span><em>待補/);
+  assert.match(css,/\.quick-drawer-handle\s*\{[^}]*left:\s*50%[^}]*transform:\s*translateX\(-50%\)/);
+  assert.match(css,/\.quick-drawer-panel\s*\{[^}]*position:\s*absolute[^}]*bottom:\s*44px/);
 });
 
 test('operational surfaces include sold-out preview and new-order toast', () => {
