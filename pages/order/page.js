@@ -12,6 +12,7 @@ const snackProducts=products.filter(item=>item.linkRole==='snack');
 const drinkProducts=products.filter(item=>item.linkRole==='drink');
 let modal=null;
 let confirmState=null;
+let newOrderNotice={id:'A516',source:'磨飯 App',items:3,amount:104,visible:true};
 const pendingOrders={
   online:[{id:'A512',source:'磨飯 App',contact:'陳小姐',items:5,amount:168,wait:'2 分鐘'},{id:'W331',source:'網頁',contact:'梁先生',items:3,amount:62,wait:'1 分鐘'}],
   queue:[{id:'T1824',source:'電話',contact:'電話尾號 1824',items:2,amount:96,wait:'4 分鐘'},{id:'T6631',source:'WhatsApp',contact:'WhatsApp 尾號 6631',items:1,amount:59,wait:'6 分鐘'}]
@@ -122,7 +123,7 @@ const initialCart=saved&&Array.isArray(saved.cart)?saved.cart:[
   makeLine('b1',3,{options:{rice:'肉燥飯'},drinkAssignments:[drinkSelection('taiwan-milk-tea'),drinkSelection('taiwan-milk-tea'),drinkSelection('taiwan-milk-tea')]})
 ];
 const defaultHealth={api:{ok:false,label:'API',detail:'未連接'},printer:{ok:false,label:'打印機',detail:'未連接'},sync:{ok:false,label:'同步',detail:'等待 API'},backup:{ok:true,label:'備份',detail:'本機資料正常'}};
-const store=createStore({category:'全部',cart:normalizeCart(initialCart),settings,operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false},health:defaultHealth},{storageKey:ORDER_STORAGE_KEY,normalize:state=>({...state,cart:normalizeCart(state.cart||[]),settings:{...settings,...(state.settings||{}),catalog:{...settings.catalog,...(state.settings?.catalog||{})},cart:{...settings.cart,...(state.settings?.cart||{})},quickDrinks:{...settings.quickDrinks,...(state.settings?.quickDrinks||{})}},operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false,...(state.operations||{})},health:{...defaultHealth,...(state.health||{})}})});
+const store=createStore({category:'全部',cart:normalizeCart(initialCart),settings,quickDrawerOpen:false,operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false},health:defaultHealth},{storageKey:ORDER_STORAGE_KEY,normalize:state=>({...state,quickDrawerOpen:Boolean(state.quickDrawerOpen),cart:normalizeCart(state.cart||[]),settings:{...settings,...(state.settings||{}),catalog:{...settings.catalog,...(state.settings?.catalog||{})},cart:{...settings.cart,...(state.settings?.cart||{})},quickDrinks:{...settings.quickDrinks,...(state.settings?.quickDrinks||{})}},operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false,...(state.operations||{})},health:{...defaultHealth,...(state.health||{})}})});
 const queue=createRenderQueue(render);store.subscribe(()=>queue.schedule());
 installErrorBoundary({toast:showToast,report:error=>window.parent?.postMessage?.({type:'morefun:page-runtime-error',page:'order',message:String(error?.message||error)},'*')});
 
@@ -145,22 +146,23 @@ function productCard(p){
 }
 function cartRows(){
   const state=store.get(),cart=state.cart,showImages=state.settings.cart.showImages!==false;if(!cart.length)return '<div class="empty">購物車未有餐點</div>';
-  return cart.map((line,index)=>'<article class="cart-row '+(showImages?'':'no-image')+'" data-line-id="'+line.lineId+'"><span class="seq">'+(index+1)+'</span>'+(showImages?imageBlock(line.image,line.name,'cart-img'):'')+'<span class="cart-copy"><strong>'+line.name+'</strong><small>'+describe(line)+'</small><b>'+money(line.total)+'</b></span><span class="cart-actions"><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="-1" aria-label="減少 '+line.name+'">−</button><strong>'+line.qty+'</strong><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="1" aria-label="增加 '+line.name+'">＋</button><button class="edit-button" data-action="edit-line" data-id="'+line.lineId+'">修改</button></span></article>').join('');
+  const grouped=new Map();cart.forEach((line,index)=>{const category=productMap.get(line.productId)?.category||'其他';if(!grouped.has(category))grouped.set(category,[]);grouped.get(category).push({line,index});});
+  return [...grouped].map(([category,rows])=>'<section class="cart-category"><header><strong>'+escapeHtml(category)+'</strong><span>'+rows.reduce((n,x)=>n+x.line.qty,0)+' 件</span></header>'+rows.map(({line,index})=>'<article class="cart-row '+(showImages?'':'no-image')+'" data-line-id="'+line.lineId+'"><span class="seq">'+(index+1)+'</span>'+(showImages?imageBlock(line.image,line.name,'cart-img'):'')+'<span class="cart-copy"><strong>'+line.name+'</strong><small>'+describe(line)+'</small><b>'+money(line.total)+'</b></span><span class="cart-actions"><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="-1" aria-label="減少 '+line.name+'">−</button><strong>'+line.qty+'</strong><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="1" aria-label="增加 '+line.name+'">＋</button><button class="edit-button" data-action="edit-line" data-id="'+line.lineId+'">修改</button></span></article>').join('')+'</section>').join('');
 }
 function pendingArea(){
   const state=store.get();const required=pendingSummary(state.cart);const link=linkUpSummary(state.cart);
-  return '<section class="pending-area '+(!required.total?'complete':'')+'"><button class="pending-receipt" data-action="open-completion"><strong>待補區</strong><span>'+(required.total?'必須完成 '+required.total+' 項':'必選已完成')+'</span>'+(link.count?'<span>可組合 '+link.count+' 份套餐</span>':'<span>可補選／可組合</span>')+'<b>整理</b></button></section>';
+  return '<section class="pending-area '+(!required.total?'complete':'')+'"><button class="pending-receipt" data-action="open-completion"><strong>必選補齊</strong><span>'+(required.total?'必須完成 '+required.total+' 項':'必選已完成')+'</span><b>整理</b></button><button data-action="linkup-all" data-count="'+link.count+'" '+(link.count?'':'disabled')+'>一鍵自動組合 '+link.count+'</button><button data-action="open-specified-link">指定配對</button><button data-action="load-link-demo">載入組合測試</button></section>';
 }
 function quickDrinks(){
   const state=store.get();if(state.settings.quickDrinks.visible===false)return '';
   const order=state.settings.quickDrinks.order||drinks.map(d=>d.id);
-  return '<section class="quick-strip"><button class="quick-label" data-action="open-quick-settings"><span>快選</span><span>飲品</span></button><div>'+order.map(id=>drinkMap.get(id)).filter(Boolean).map(d=>drinkChoiceCard(d,'quick-drink')).join('')+'</div></section>';
+  return '<section class="quick-drawer '+(state.quickDrawerOpen?'open':'')+'"><button class="quick-drawer-handle" data-action="toggle-quick-drawer"><span>快捷飲品</span><b>'+(state.quickDrawerOpen?'收起 ↓':'展開 ↑')+'</b></button>'+(state.quickDrawerOpen?'<div class="quick-drawer-panel">'+order.map(id=>drinkMap.get(id)).filter(Boolean).map(d=>drinkChoiceCard(d,'quick-drink')).join('')+'</div>':'')+'</section>';
 }
 function operationLabel(state){if(state.operations.immediateStopped||!state.operations.acceptingOrders)return '已停止接單';if(state.operations.scheduledClose)return '接單至 '+state.operations.scheduledClose;return '接單中';}
 function healthIssueCount(state){return Object.values(state.health).filter(item=>!item.ok).length;}
 function topbar(){
   const state=store.get();const issues=healthIssueCount(state);
-  return '<header class="topbar"><div class="brand">磨飯 SMT</div><button class="online-state '+(state.operations.acceptingOrders&&!state.operations.immediateStopped?'is-online':'is-offline')+'" data-action="open-status"><span></span>'+operationLabel(state)+'</button><div class="order-number">訂單：<strong>10248</strong></div><div class="spacer"></div><button class="top-btn" data-action="toggle-pending-panel">待處理 <span class="badge">8</span></button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'系統異常 '+issues:'系統正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button></header>';
+  return '<header class="topbar"><div class="brand">磨飯 SMT</div><button class="online-state '+(state.operations.acceptingOrders&&!state.operations.immediateStopped?'is-online':'is-offline')+'" data-action="open-status"><span>⌁</span>'+operationLabel(state)+'</button><div class="order-number">訂單：<strong>10248</strong></div><div class="spacer"></div><button class="top-btn" data-action="toggle-pending-panel">▤ 待處理 <span class="badge">8</span></button><button class="top-btn" data-action="open-soldout">⊗ 售罄 2</button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button></header>';
 }
 function pendingPanel(){
   const rows=list=>list.map(x=>'<button data-action="process-pending-order" data-id="'+x.id+'"><span><strong>'+x.id+' · '+x.source+'</strong><small>'+x.contact+'</small></span><b>'+x.items+' 件 · '+money(x.amount)+'</b><small>等待 '+x.wait+' · 按下處理</small></button>').join('');
@@ -173,7 +175,8 @@ function pendingDetailModal(){
 function modalScrim(){return modal?'<div class="modal-scrim" aria-hidden="true"></div>':'';}
 function quickSettingsModal(){
   const state=store.get();const q=state.settings.quickDrinks;
-  return '<aside class="side-card modal-card quick-mode-card"><header><strong>快捷模式</strong><button data-action="dismiss-modal">×</button></header><div class="setting-block"><strong>點單模式</strong><div class="segmented"><button class="'+(!state.quickMode?'active':'')+'" data-action="set-order-mode" data-value="normal">普通模式</button><button class="'+(state.quickMode?'active':'')+'" data-action="set-order-mode" data-value="quick">快捷模式</button></div><small>快捷模式：點產品直接加入購物籃</small></div><div class="setting-row"><div><strong>快捷飲品列</strong><small>只控制底部飲品列顯示</small></div><button class="switch '+(q.visible!==false?'on':'')+'" data-action="toggle-quick-drink-strip"><i></i></button></div><div class="setting-block"><strong>飲品卡顯示</strong><div class="segmented"><button class="'+(q.showImages!==false?'active':'')+'" data-action="quick-display" data-value="image">圖片</button><button class="'+(q.showImages===false?'active':'')+'" data-action="quick-display" data-value="text">純文字</button></div><div class="quick-preview">'+(q.order||[]).slice(0,6).map(id=>drinkMap.get(id)).filter(Boolean).map(d=>drinkChoiceCard(d,'noop')).join('')+'</div></div><div class="setting-row"><div><strong>快捷補選</strong><small>只控制待補飲品快捷套用</small></div><button class="switch '+(q.quickAssist!==false?'on':'')+'" data-action="toggle-quick-assist"><i></i></button></div></aside>';
+  const order=q.order||drinks.map(d=>d.id);
+  return '<aside class="side-card modal-card quick-mode-card"><header><strong>快捷模式</strong><button data-action="dismiss-modal">×</button></header><div class="card-scroll"><div class="setting-block"><strong>點單模式</strong><div class="segmented"><button class="'+(!state.quickMode?'active':'')+'" data-action="set-order-mode" data-value="normal">普通模式</button><button class="'+(state.quickMode?'active':'')+'" data-action="set-order-mode" data-value="quick">快捷模式</button></div><small>快捷模式：點產品直接加入購物籃</small></div><div class="setting-row"><div><strong>快捷飲品抽屜</strong><small>平時收起，按下向上展開</small></div><button class="switch '+(q.visible!==false?'on':'')+'" data-action="toggle-quick-drink-strip"><i></i></button></div><div class="setting-block"><strong>飲品卡顯示</strong><div class="segmented"><button class="'+(q.showImages!==false?'active':'')+'" data-action="quick-display" data-value="image">圖片</button><button class="'+(q.showImages===false?'active':'')+'" data-action="quick-display" data-value="text">純文字</button></div></div><div class="setting-block"><strong>飲品排列</strong><div class="quick-order-list">'+order.map((id,index)=>{const d=drinkMap.get(id);return d?'<div><span><b>'+(index+1)+'</b>'+escapeHtml(d.name)+'</span><span><button data-action="move-quick-drink" data-id="'+id+'" data-delta="-1" '+(!index?'disabled':'')+'>↑</button><button data-action="move-quick-drink" data-id="'+id+'" data-delta="1" '+(index===order.length-1?'disabled':'')+'>↓</button></span></div>':'';}).join('')+'</div></div><div class="setting-row"><div><strong>快捷補選</strong><small>只控制待補飲品快捷套用</small></div><button class="switch '+(q.quickAssist!==false?'on':'')+'" data-action="toggle-quick-assist"><i></i></button></div></div></aside>';
 }
 function settingsModal(){
   const state=store.get();const c=state.settings.catalog,w=Number(state.settings.cart.widthPercent||32);
@@ -185,6 +188,13 @@ function healthModal(){
 function statusModal(){
   const state=store.get(),ops=state.operations;
   return '<aside class="side-card modal-card"><header><strong>今日接單狀態</strong><button data-action="dismiss-modal">×</button></header><div class="setting-row"><div><strong>接受網絡／預約訂單</strong><small>'+operationLabel(state)+'</small></div><button class="switch '+(ops.acceptingOrders&&!ops.immediateStopped?'on':'')+'" data-action="toggle-accepting"><i></i></button></div><div class="setting-block"><label>今日停止接單時間</label><div class="time-row"><input id="scheduled-close" type="time" value="'+(ops.scheduledClose||'')+'"><button data-action="save-close-time">儲存</button></div></div><div class="setting-block"><button class="danger wide" data-action="immediate-stop">即時停止接單</button><button class="wide" data-action="resume-orders">恢復接單</button></div></aside>';
+}
+function soldoutModal(){
+  return '<aside class="side-card modal-card soldout-preview"><header><strong>售罄列表</strong><button data-action="dismiss-modal">×</button></header><div class="status-list"><div><span><b>F2 紫菜吞拿魚飯團</b><small>今日售罄</small></span><em>售罄</em></div><div><span><b>B3 照燒雞扒便當</b><small>暫停至今日收舖</small></span><em>停售</em></div></div><footer class="right-action"><button data-action="dismiss-modal">返回</button></footer></aside>';
+}
+function specifiedLinkModal(){
+  const available=store.get().cart.filter(line=>!line.linkedComboId);
+  return '<aside class="side-card modal-card specified-link-card"><header><strong>指定配對</strong><button data-action="dismiss-modal">×</button></header><div class="card-scroll"><p>依次選擇飯團、小食、飲品；每次確認建立一組套餐。</p>'+['飯團','小食','飲品'].map((label,index)=>'<section><strong>'+(index+1)+'. '+label+'</strong><div class="link-candidates">'+available.filter(line=>index===0?line.combinable:index===1?line.linkRole==='snack':line.linkRole==='drink').map(line=>'<button data-action="select-link-item" data-role="'+index+'" data-id="'+line.lineId+'" class="'+(modal.draft[index]===line.lineId?'selected':'')+'">'+escapeHtml(line.name)+' ×'+line.qty+'</button>').join('')+'</div></section>').join('')+'</div><footer class="single-action"><button data-action="dismiss-modal">返回</button><button class="primary" data-action="apply-specified-link" '+(modal.draft.filter(Boolean).length===3?'':'disabled')+'>確認組合</button></footer></aside>';
 }
 function completionModal(){
   const state=store.get(),required=pendingSummary(state.cart),link=linkUpSummary(state.cart),assist=state.settings.quickDrinks.quickAssist!==false;
@@ -215,7 +225,9 @@ function productDetailModal(){
 }
 function drinkModifierModal(){
   const d=drinkMap.get(modal.drinkId),draft=modal.draft;
-  return '<aside class="modifier-card modal-card"><header><strong>'+d.name+'</strong><button data-action="dismiss-modal">×</button></header><div class="drink-drawer-hero">'+imageBlock(d.image,d.name,'drink-drawer-image')+'<div><strong>'+d.name+'</strong><small>不選甜度／冰量即為正常</small></div></div><div class="qty-row"><span>修改份數</span><button data-action="modifier-qty" data-delta="-1">−</button><strong>'+draft.qty+'</strong><button data-action="modifier-qty" data-delta="1">＋</button></div>'+(d.sweet?'<section><strong>甜度 <small>不選即正常</small></strong>'+optionButtons('sweetness',['多甜','少甜','走甜'],draft.sweetness||'')+'</section>':'')+(d.ice?'<section><strong>冰量 <small>不選即正常</small></strong>'+optionButtons('ice',['少冰','多冰'],draft.ice||'')+'</section>':'')+'<button class="primary wide" data-action="apply-drink">套用 '+draft.qty+' 份</button></aside>';
+  const showImage=store.get().settings.quickDrinks.showImages!==false;
+  const groups=draft.groups||[{qty:draft.qty,sweetness:draft.sweetness||'',ice:draft.ice||''}];
+  return '<aside class="modifier-card modal-card"><header><strong>'+d.name+'</strong><button data-action="dismiss-modal">×</button></header>'+(showImage?'<div class="drink-drawer-hero">'+imageBlock(d.image,d.name,'drink-drawer-image')+'<div><strong>'+d.name+'</strong><small>不選甜度／冰量即為正常</small></div></div>':'<div class="drink-text-hero"><strong>'+d.name+'</strong><small>不選即正常</small></div>')+'<div class="drink-groups">'+groups.map((g,index)=>'<section class="drink-group"><header><strong>設定 '+(index+1)+'</strong><span><button data-action="group-qty" data-index="'+index+'" data-delta="-1">−</button><b>'+g.qty+'</b><button data-action="group-qty" data-index="'+index+'" data-delta="1">＋</button></span></header>'+(d.sweet?optionButtons('group-sweetness-'+index,['多甜','少甜','走甜'],g.sweetness||''):'')+(d.ice?optionButtons('group-ice-'+index,['少冰','多冰'],g.ice||''):'')+'</section>').join('')+'</div><button data-action="add-drink-group" class="add-group">＋ 新增另一組調整</button><button class="primary wide" data-action="apply-drink">套用 '+groups.reduce((n,g)=>n+g.qty,0)+' 份</button></aside>';
 }
 function bulkOptionModal(){
   const values=optionSets[modal.group]||[];
@@ -223,8 +235,9 @@ function bulkOptionModal(){
   return '<aside class="modifier-card modal-card"><header><strong>統一補'+label+'</strong><button data-action="dismiss-modal">×</button></header><section><strong>選擇'+label+' <small>套用到所有未完成項目</small></strong>'+optionButtons('bulk',values,modal.draft.value||'')+'</section><button class="primary wide" data-action="apply-bulk" '+(modal.draft.value?'':'disabled')+'>確認套用</button></aside>';
 }
 function customConfirm(){
-  if(!confirmState)return '';
-  return '<div class="confirm-layer"><section class="confirm-card"><strong>'+confirmState.title+'</strong><p>'+confirmState.message+'</p><div><button data-action="confirm-cancel">繼續修改</button><button class="danger" data-action="confirm-discard">放棄修改</button></div></section></div>';
+  const notice=newOrderNotice?.visible?'<aside class="new-order-toast"><div><small>'+newOrderNotice.source+' 新訂單</small><strong>'+newOrderNotice.id+'</strong><span>'+newOrderNotice.items+' 件 · '+money(newOrderNotice.amount)+'</span></div><button data-action="later-new-order">稍後處理</button><button class="primary" data-action="process-new-order">立即處理</button></aside>':'';
+  if(!confirmState)return notice;
+  return notice+'<div class="confirm-layer"><section class="confirm-card"><strong>'+confirmState.title+'</strong><p>'+confirmState.message+'</p><div><button data-action="confirm-cancel">繼續修改</button><button class="danger" data-action="confirm-discard">放棄修改</button></div></section></div>';
 }
 function activeModal(){
   if(!modal)return '';
@@ -232,6 +245,8 @@ function activeModal(){
   if(modal.type==='settings')return settingsModal();
   if(modal.type==='health')return healthModal();
   if(modal.type==='status')return statusModal();
+  if(modal.type==='soldout')return soldoutModal();
+  if(modal.type==='specified-link')return specifiedLinkModal();
   if(modal.type==='completion')return completionModal();
   if(modal.type==='product')return productDetailModal();
   if(modal.type==='drink')return drinkModifierModal();
@@ -244,6 +259,8 @@ function anchorRect(button){const r=button?.getBoundingClientRect?.();return r?{
 function positionActiveCard(){
   const card=document.querySelector('.side-card,.product-settings-card,.modifier-card,.pending-panel');const a=modal?.anchor;if(!card||!a)return;
   const topbarRect=document.querySelector('.topbar')?.getBoundingClientRect(),bottomNavRect=document.querySelector('.bottom-nav')?.getBoundingClientRect();
+  const cartRect=document.querySelector('.cart')?.getBoundingClientRect();
+  if(modal?.type==='pending'&&cartRect)card.style.maxHeight=Math.min(cartRect.height,(bottomNavRect?.top||innerHeight)-(topbarRect?.bottom||0)-32)+'px';
   const gap=14,w=card.offsetWidth,h=card.offsetHeight,margin=16,minTop=(topbarRect?.bottom||0)+margin,maxBottom=(bottomNavRect?.top||innerHeight)-margin;
   const room={top:a.top-minTop,bottom:maxBottom-a.bottom,left:a.left-margin,right:innerWidth-margin-a.right};
   let side,left,top;
@@ -287,7 +304,7 @@ function changeCartQuantity(lineId,delta){
     return state;
   });
 }
-function openDrink(drinkId,context,maxQty=1,anchor=null){modal={type:'drink',drinkId,context,maxQty,anchor,dirty:false,draft:{qty:1,sweetness:'',ice:''}};render();}
+function openDrink(drinkId,context,maxQty=1,anchor=null){modal={type:'drink',drinkId,context,maxQty,anchor,dirty:false,draft:{qty:1,sweetness:'',ice:'',groups:[{qty:1,sweetness:'',ice:''}]}};render();}
 function applyProduct(){
   const editing=Boolean(modal.editLineId);
   const p=productMap.get(modal.productId),d=modal.draft,options={...d.options};if(d.note)options.note=d.note;
@@ -301,11 +318,12 @@ function applyProduct(){
   modal=null;render();showToast(editing?'已更新產品':'已加入購物車');
 }
 function applyDrink(){
-  const d=drinkSelection(modal.drinkId,modal.draft.sweetness,modal.draft.ice),qty=modal.draft.qty,context=modal.context;
+  const groups=modal.draft.groups||[{qty:modal.draft.qty,sweetness:modal.draft.sweetness,ice:modal.draft.ice}];
+  const selections=groups.flatMap(group=>Array.from({length:group.qty},()=>drinkSelection(modal.drinkId,group.sweetness,group.ice))),qty=selections.length,context=modal.context;
   if(context==='detail'){
-    const productModal=modal.parent;productModal.draft.drink=d;productModal.dirty=true;modal=productModal;render();return;
+    const productModal=modal.parent;productModal.draft.drink=selections[0];productModal.dirty=true;modal=productModal;render();return;
   }
-  store.set(state=>{let left=qty;state.cart=state.cart.map(line=>{if(!left)return line;const miss=Math.max(0,line.drinkSlots-line.drinkAssignments.length);const take=Math.min(left,miss);left-=take;return take?{...line,drinkAssignments:line.drinkAssignments.concat(Array.from({length:take},()=>safeClone(d)))}:line;});return state;});
+  store.set(state=>{let remaining=selections.slice();state.cart=state.cart.map(line=>{if(!remaining.length)return line;const miss=Math.max(0,line.drinkSlots-line.drinkAssignments.length);const taken=remaining.splice(0,miss);return taken.length?{...line,drinkAssignments:line.drinkAssignments.concat(taken)}:line;});return state;});
   modal=null;render();showToast('已補選飲品');
 }
 function handle(button){
@@ -320,6 +338,10 @@ function handle(button){
   else if(action==='open-settings'){modal={type:'settings',anchor:anchorRect(button),dirty:false};render();}
   else if(action==='open-health'){modal={type:'health',anchor:anchorRect(button),dirty:false};render();}
   else if(action==='open-status'){modal={type:'status',anchor:anchorRect(button),dirty:false};render();}
+  else if(action==='open-soldout'){modal={type:'soldout',anchor:anchorRect(button),dirty:false};render();}
+  else if(action==='toggle-quick-drawer')store.set(state=>({...state,quickDrawerOpen:!state.quickDrawerOpen}));
+  else if(action==='move-quick-drink')updateSettings(s=>{const order=s.quickDrinks.order.slice(),from=order.indexOf(button.dataset.id),to=Math.max(0,Math.min(order.length-1,from+Number(button.dataset.delta)));if(from>=0&&from!==to)[order[from],order[to]]=[order[to],order[from]];s.quickDrinks.order=order;});
+  else if(action==='ui-scale')window.parent?.postMessage?.({type:'morefun:set-ui-scale',value:Number(button.dataset.value)},'*');
   else if(action==='dismiss-modal')requestDismiss();
   else if(action==='confirm-cancel'){confirmState=null;render();}
   else if(action==='confirm-discard'){modal=confirmState?.returnModal||null;confirmState=null;render();}
@@ -343,13 +365,15 @@ function handle(button){
     if(modal.type==='drink'){
       if(g==='sweetness')modal.draft.sweetness=modal.draft.sweetness===v?'':v;
       if(g==='ice')modal.draft.ice=modal.draft.ice===v?'':v;
+      if(g.startsWith('group-sweetness-')){const x=Number(g.split('-').pop()),group=modal.draft.groups[x];group.sweetness=group.sweetness===v?'':v;}
+      if(g.startsWith('group-ice-')){const x=Number(g.split('-').pop()),group=modal.draft.groups[x];group.ice=group.ice===v?'':v;}
     }else if(modal.type==='bulk'){
       modal.draft.value=modal.draft.value===v?'':v;
     }else if(multi){const arr=modal.draft.options[g]||[];modal.draft.options[g]=arr.includes(v)?arr.filter(x=>x!==v):arr.concat(v);}else modal.draft.options[g]=modal.draft.options[g]===v?'':v;
     render();
   }
   else if(action==='detail-drink'){
-    const parent=modal;modal={type:'drink',drinkId:button.dataset.id,context:'detail',maxQty:parent.draft.qty,parent,anchor:anchorRect(button),dirty:false,draft:{qty:parent.draft.qty,sweetness:'',ice:''}};render();
+    const parent=modal;modal={type:'drink',drinkId:button.dataset.id,context:'detail',maxQty:parent.draft.qty,parent,anchor:anchorRect(button),dirty:false,draft:{qty:parent.draft.qty,sweetness:'',ice:'',groups:[{qty:parent.draft.qty,sweetness:'',ice:''}]}};render();
   }
   else if(action==='detail-qty'){markDirty();modal.draft.qty=Math.max(1,modal.draft.qty+Number(button.dataset.delta));render();}
   else if(action==='toggle-keypad'){modal.draft.keypad=!modal.draft.keypad;render();}
@@ -359,6 +383,8 @@ function handle(button){
   }
   else if(action==='apply-product')applyProduct();
   else if(action==='modifier-qty'){markDirty();modal.draft.qty=Math.max(1,Math.min(modal.maxQty,modal.draft.qty+Number(button.dataset.delta)));render();}
+  else if(action==='group-qty'){markDirty();const g=modal.draft.groups[Number(button.dataset.index)];const used=modal.draft.groups.reduce((n,x)=>n+x.qty,0);g.qty=Math.max(1,Math.min(g.qty+Number(button.dataset.delta),modal.maxQty-used+g.qty));render();}
+  else if(action==='add-drink-group'){markDirty();const used=modal.draft.groups.reduce((n,x)=>n+x.qty,0);if(used<modal.maxQty)modal.draft.groups.push({qty:1,sweetness:'',ice:''});else showToast('已達可補數量');render();}
   else if(action==='apply-drink')applyDrink();
   else if(action==='quick-drink'){
     if(store.get().settings.quickDrinks.quickAssist===false){showToast('快捷補選已關閉');return;}
@@ -375,9 +401,16 @@ function handle(button){
     modal={type:'completion',dirty:false};render();showToast('已統一補選 '+value);
   }
   else if(action==='linkup-all')applyLinkUp(Number(button.dataset.count)||0);
+  else if(action==='open-specified-link'){modal={type:'specified-link',anchor:anchorRect(button),dirty:false,draft:['','','']};render();}
+  else if(action==='select-link-item'){modal.draft[Number(button.dataset.role)]=button.dataset.id;render();}
+  else if(action==='apply-specified-link'){const ids=modal.draft,comboId=stableId('combo');store.set(state=>{state.cart=state.cart.map(line=>ids.includes(line.lineId)?{...line,linkedComboId:comboId,linkedQty:1}:line);return state;});modal=null;render();showToast('已建立指定套餐');}
+  else if(action==='load-link-demo'){store.set(state=>{state.cart=normalizeCart([makeLine('f4'),makeLine('f1'),makeLine('s1',2),makeLine('d1',2),makeLine('d2')]);return state;});showToast('已載入組合測試');}
+  else if(action==='later-new-order'){newOrderNotice.visible=false;render();}
+  else if(action==='process-new-order'){newOrderNotice.visible=false;modal={type:'pending',anchor:null,dirty:false};render();}
   else if(action==='clear-cart'){if(window.confirm('清空後不可恢復，確定清空整張購物車？'))store.set(state=>({...state,cart:[]}));}
   else if(action==='checkout'){if(pendingSummary(store.get().cart).total){showToast('請先完成必選項目');return;}window.parent?.postMessage?.({type:'morefun:navigate',route:'checkout'},'*');}
 }
 app.addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});
 app.addEventListener('input',event=>{if(event.target.matches('[data-action="detail-note"]')&&modal?.type==='product'){modal.draft.note=event.target.value;markDirty();}});
 render();
+setTimeout(()=>{if(newOrderNotice?.visible){newOrderNotice.visible=false;render();}},3000);
