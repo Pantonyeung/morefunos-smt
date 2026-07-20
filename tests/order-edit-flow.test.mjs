@@ -51,3 +51,26 @@ test('checkout call to action shows the payable total', () => {
   assert.ok(page.includes("結帳 '+money(cartTotal(state.cart))+'"));
   assert.doesNotMatch(page,/>先處理</);
 });
+
+test('quick order mode, drink strip, and quick assist are independent settings', () => {
+  assert.match(page,/data-action="set-order-mode"/);
+  assert.match(page,/data-action="toggle-quick-drink-strip"/);
+  assert.match(page,/quickDrinks\.visible/);
+  assert.match(page,/quickDrinks\.quickAssist/);
+});
+
+test('display settings include the three cart ratios', () => {
+  assert.match(page,/購物籃比例/);
+  assert.match(page,/\[25,30,32\]/);
+  assert.match(page,/data-action="cart-width"/);
+});
+
+test('cards are positioned from the pressed control and expose a pointer side', () => {
+  assert.match(page,/function anchorRect/);
+  assert.match(page,/function positionActiveCard/);
+  assert.match(css,/data-pointer-side/);
+});
+
+test('pending orders use a vertical split', () => {
+  assert.match(css,/\.pending-split\{display:flex;flex-direction:column/);
+});
