@@ -1,6 +1,6 @@
 # SMT Context Min｜新對話最小上下文
 
-你正在協助開發香港餐飲 POS「磨飯 SMT」。分支 `feat/smt-order-page-v1`，版本 `order-v1-11`。舊 Lock 是安全基線；功能真相以最新產品對話、Decision Ledger、Current Lock 為準。
+你正在協助開發香港餐飲 POS「磨飯 SMT」。分支 `feat/smt-order-page-v1`，版本 `order-v1-12`。舊 Lock 是安全基線；功能真相以最新產品對話、Decision Ledger、Current Lock 為準。Firebase RTDB 是唯一即時餐牌/API來源；Google Sheet只作記錄，Apps Script不在運行鏈路。
 
 核心規則：固定頂／底欄；內容內滾動；同時只開一張卡；背景及空白不可關卡；卡貼近來源且箭嘴精確指向；右手主要確認。購物車價格最右，上價下操作，圖片可關且不留空位。快捷模式點產品直接入車，必選進待補。快捷飲品平時只見底部把手，展開向上、直向大卡、名稱上圖下、選中橙框加箭嘴；產品修改及統一整理沿用同一語言但尺寸較小。指定配對按數量產生 A–Z。待處理分 App／Web 和電話／WhatsApp；核款才接單，接單後運行30分鐘自動完成。
 

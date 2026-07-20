@@ -21,7 +21,8 @@
 
 - 產品：磨飯 SMT 餐飲 POS
 - 分支：`feat/smt-order-page-v1`
-- 程式標籤：`order-v1-11`
+- 程式標籤：`order-v1-12`
+- 資料架構：Firebase RTDB 為唯一即時餐牌/API來源；Google Sheet只作記錄投影；Apps Script已退出SMT運行鏈路。
 - 目標：先完成可運作點單垂直鏈路
 - 自動測試基準：42/42
 - 實機：iPad／Sunmi T2S 最終 Lock 未完成

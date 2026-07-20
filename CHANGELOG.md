@@ -1,6 +1,13 @@
 # CHANGELOG｜More Fun SMT Master V1.0 Fixed
 
-## 2026-07-20 — order-v1-11 真實餐牌接線
+## 2026-07-21 — order-v1-12 Firebase 正式資料架構
+
+- SMT 改為直接 GET Firebase RTDB `public/catalogV1`，不再經 Apps Script。
+- 支援 Firebase keyed object 的分類、產品及售罄資料，保留 Firebase→快取→內置餐牌三級回退。
+- Google Sheet 定位為記錄／報表投影，不參與即時餐牌、計價及售罄判斷。
+- 加入禁止 Apps Script 回歸測試；完整測試共 48 項。
+
+## 2026-07-20 — order-v1-11 真實餐牌接線（已由 order-v1-12 取代）
 
 - 接入客戶端既有 `menu.read` Apps Script 合約，讀取 Firebase 餐牌來源。
 - 真實分類、產品名稱、價格、圖片及售罄狀態映射到 SMT 點單頁。

@@ -21,9 +21,10 @@
 | D-015 | OPEN | 真實訂單、付款、打印、設備 API 格式 | 需後台／硬件 |
 | D-016 | OPEN | iPad及T2S最終視覺 Lock | 需實機證據 |
 | D-017 | SUPERSEDED | `order-v1-10` 是飯團套餐父項基準 | VERSION／Status §18 |
-| D-018 | CURRENT | `order-v1-11` 接入客戶端既有 `menu.read`；API→快取→內置餐牌三級回退，餐牌資料不得阻止本機點單 | `pages/order/menu-api.js`／47 tests |
+| D-018 | SUPERSEDED | `order-v1-11` 接入客戶端既有 `menu.read` | D-021取代 |
 | D-018 | LOCKED | 飯團套餐必須是一張父項；可欠飲品但阻止結帳 | Current Lock §17 |
 | D-019 | LOCKED | 快捷飲品可直接嵌入套餐，不必先進購物車 | Current Lock §17 |
 | D-020 | LOCKED | 套餐可拆開，並按單品價重新計算 | Current Lock §17 |
+| D-021 | CURRENT | `order-v1-12` 以 Firebase RTDB `public/catalogV1` 作唯一即時餐牌/API來源；Firebase→快取→內置餐牌三級回退。Google Sheet只作記錄投影，Apps Script不得進入SMT運行鏈路 | `pages/order/menu-api.js`／menu API tests |
 
 新增決策不得改寫舊行；新增一行並把被取代項標 `SUPERSEDED`。

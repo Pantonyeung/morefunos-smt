@@ -1,4 +1,4 @@
-MoreFun SMT Order Page V1.11
-Build: order-v1-11
+MoreFun SMT Order Page V1.12
+Build: order-v1-12
 Branch target: feat/smt-order-page-v1
-Status: live menu.read catalog, offline cache, sold-out sync and reversible riceball combo implemented; device acceptance pending
+Status: direct Firebase RTDB catalog, offline cache, sold-out sync and reversible riceball combo implemented; device acceptance pending

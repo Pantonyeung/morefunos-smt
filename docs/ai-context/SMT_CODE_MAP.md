@@ -11,7 +11,7 @@
 | `pages/order/page.css` | 工作區、定位及視覺 | page.js class names |
 | `pages/order/order-domain.js` | 純資料操作 | 無DOM |
 | `pages/order/page-data.js` | catalog、drink、pending示範資料 | page.js |
-| `pages/order/menu-api.js` | `menu.read`、正規化、SMT規則合併、快取及離線回退 | Apps Script API、page-data後備 |
+| `pages/order/menu-api.js` | Firebase RTDB餐牌讀取、正規化、SMT規則合併、快取及離線回退 | `public/catalogV1`、page-data後備 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
 | `tests/menu-api.test.mjs` | 真實餐牌合約、映射及離線回歸 | menu-api |
@@ -35,7 +35,7 @@
 
 ## 資料流
 
-1. 啟動 → `menu.read` → API餐牌／上次快取／內置後備 → SMT規則合併 → `render`。
+1. 啟動 → Firebase RTDB `public/catalogV1` → Firebase餐牌／上次快取／內置後備 → SMT規則合併 → `render`。
 2. 點產品 → 普通 `openProduct`／快捷 `quickAddProduct` → store cart → `render`。
 3. 購物車修改 → `openProduct(lineId)` → draft → `applyProduct`。
 4. 快捷飲品 → `openDrink` → adjustment groups → `applyDrink`。

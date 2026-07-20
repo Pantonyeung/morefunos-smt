@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "morefunos-smt",
-  "baseline": "order-v1-11",
-  "generatedAt": "2026-07-20",
+  "baseline": "order-v1-12",
+  "generatedAt": "2026-07-21",
   "evidenceTypes": ["EXTRACTED", "INFERRED"],
   "nodes": [
     {"id":"doc.current-lock","type":"document","label":"Order Page Current Lock","path":"docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md"},

@@ -1,10 +1,10 @@
 export const MENU_CACHE_KEY='morefun.smt.menu.cache.v1';
-export const MENU_API_URLS=[
-  'https://script.google.com/macros/s/AKfycbzp2OzaZFFGpvtA0-DJwo2TjKa_4FG0grTH4gLJpNyQsIqHfpbjqUmgfUIVQmDDNFY0pA/exec',
-  'https://script.google.com/macros/s/AKfycbzeCzRBI3dnG9TS9-hb3q2j9cfxUJlEpVY8ybjDO-RTkVFNGlAh2EKfKjHerRVWPQrlig/exec'
-];
+export const FIREBASE_DATABASE_URL='https://morefunposos-default-rtdb.asia-southeast1.firebasedatabase.app';
+export const FIREBASE_CATALOG_PATH='public/catalogV1';
+export const FIREBASE_CATALOG_URL=`${FIREBASE_DATABASE_URL}/${FIREBASE_CATALOG_PATH}.json`;
 
 const array=value=>Array.isArray(value)?value:[];
+const records=value=>Array.isArray(value)?value:value&&typeof value==='object'?Object.values(value):[];
 const truthy=(value,fallback=true)=>value===undefined||value===null||value===''?fallback:!['false','0','no','off'].includes(String(value).toLowerCase());
 const moneyNumber=value=>Number(String(value??0).replace(/[^0-9.-]/g,''))||0;
 const key=value=>String(value??'').trim().toLowerCase().replace(/\s+/g,'');
@@ -22,10 +22,10 @@ function unwrap(payload){
 export function normalizeMenuPayload(payload){
   const value=unwrap(payload);
   return {
-    categories:array(value.categories||value.category_list||value.menu_categories),
-    products:array(value.products||value.items||value.menu_items),
-    availability:array(value.product_availability||value.availability||value.availability_status),
-    productRules:array(value.product_rules),
+    categories:records(value.categories||value.category_list||value.menu_categories),
+    products:records(value.products||value.items||value.menu_items),
+    availability:records(value.product_availability||value.availability||value.availability_status),
+    productRules:records(value.product_rules),
     raw:value
   };
 }
@@ -84,7 +84,7 @@ async function fetchMenu(url,fetchImpl,timeoutMs){
   const controller=typeof AbortController==='function'?new AbortController():null;
   const timer=controller?setTimeout(()=>controller.abort(),timeoutMs):null;
   try{
-    const response=await fetchImpl(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'menu.read',payload:{},context:{client:'morefun-smt',page:'order'}}),signal:controller?.signal});
+    const response=await fetchImpl(url,{method:'GET',headers:{Accept:'application/json'},signal:controller?.signal});
     if(!response?.ok)throw new Error('MENU_HTTP_'+(response?.status||0));
     const payload=await response.json();
     const normalized=normalizeMenuPayload(payload);
@@ -93,16 +93,14 @@ async function fetchMenu(url,fetchImpl,timeoutMs){
   }finally{if(timer)clearTimeout(timer);}
 }
 
-export async function loadMenuCatalog({fetchImpl=globalThis.fetch?.bind(globalThis),storage=globalThis.localStorage,fallback,urls=MENU_API_URLS,timeoutMs=8000}={}){
+export async function loadMenuCatalog({fetchImpl=globalThis.fetch?.bind(globalThis),storage=globalThis.localStorage,fallback,url=FIREBASE_CATALOG_URL,timeoutMs=8000}={}){
   let lastError=null;
   if(fetchImpl){
-    for(const url of urls){
-      try{
-        const catalog=mapMenuToOrderCatalog(await fetchMenu(url,fetchImpl,timeoutMs),fallback);
-        storage?.setItem?.(MENU_CACHE_KEY,JSON.stringify(catalog));
-        return {...catalog,source:'api',apiUrl:url};
-      }catch(error){lastError=error;}
-    }
+    try{
+      const catalog=mapMenuToOrderCatalog(await fetchMenu(url,fetchImpl,timeoutMs),fallback);
+      storage?.setItem?.(MENU_CACHE_KEY,JSON.stringify(catalog));
+      return {...catalog,source:'firebase',apiUrl:url};
+    }catch(error){lastError=error;}
   }
   try{
     const cached=JSON.parse(storage?.getItem?.(MENU_CACHE_KEY)||'null');

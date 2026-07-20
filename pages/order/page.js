@@ -492,7 +492,7 @@ async function bootstrapLiveMenu(){
     if(!categories.includes(state.category))state.category='全部';
     const existing=state.settings.quickDrinks.order||[];
     state.settings.quickDrinks.order=[...existing.filter(id=>drinkMap.has(id)),...drinks.map(item=>item.id).filter(id=>!existing.includes(id))];
-    state.health.catalog={ok:catalog.source!=='fallback',label:'餐牌',detail:catalog.source==='api'?'已連接 Firebase 餐牌來源':catalog.source==='cache'?'離線模式：使用上次餐牌':'API 未連接：使用內置後備餐牌'};
+    state.health.catalog={ok:catalog.source!=='fallback',label:'餐牌',detail:catalog.source==='firebase'?'已連接 Firebase 餐牌來源':catalog.source==='cache'?'離線模式：使用上次餐牌':'Firebase 未連接：使用內置後備餐牌'};
     state.health.sync={...state.health.sync,detail:catalog.source==='api'?'餐牌同步正常':'餐牌等待重新連線'};
     return state;
   });

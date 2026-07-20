@@ -32,7 +32,7 @@
 - PWA manifest及service worker
 
 ## 未接入
-- 真實 Firebase／Cloudflare Worker／Admin Catalog
+- Firebase 寫入端／Admin Catalog 管理介面（公開餐牌讀取已接入）
 - Room／SQLite原生層
 - 五部打印機原生服務
 - 真實付款核實、退款、日結及備份資料層

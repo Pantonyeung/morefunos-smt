@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {mapMenuToOrderCatalog,normalizeMenuPayload,loadMenuCatalog} from '../pages/order/menu-api.js';
+import {readFile} from 'node:fs/promises';
+import {FIREBASE_CATALOG_URL,mapMenuToOrderCatalog,normalizeMenuPayload,loadMenuCatalog} from '../pages/order/menu-api.js';
 
 const fallback={
   categories:['全部','飯團','飲品'],
@@ -11,8 +12,8 @@ const fallback={
   drinks:[{id:'iced-lemon-tea',code:'D1',name:'手打檸檬茶',price:18,image:'drink.webp',sweet:true,ice:true}]
 };
 
-test('menu payload unwraps action API data and availability',()=>{
-  const menu=normalizeMenuPayload({ok:true,data:{categories:[{category_id:'riceball',category_name:'飯團',is_visible:true}],products:[{product_id:'remote-f1',product_code:'F1',product_name:'原味紫米飯團',category_id:'riceball',price:'$45',is_visible:true}],product_availability:[{product_id:'remote-f1',is_sold_out:true}]}});
+test('Firebase keyed catalog normalizes categories, products and availability',()=>{
+  const menu=normalizeMenuPayload({categories:{riceball:{category_id:'riceball',category_name:'飯團',is_visible:true}},products:{'remote-f1':{product_id:'remote-f1',product_name:'原味紫米飯團',category_id:'riceball',base_price:45,is_visible:true}},availability:{'remote-f1':{product_id:'remote-f1',is_sold_out:true}}});
   assert.equal(menu.products[0].product_id,'remote-f1');
   assert.equal(menu.availability[0].is_sold_out,true);
 });
@@ -37,10 +38,20 @@ test('live drink products become quick drinks and retain modifier capabilities',
 test('menu loader caches a successful response and falls back to cache offline',async()=>{
   const memory=new Map();
   const storage={getItem:key=>memory.get(key)||null,setItem:(key,value)=>memory.set(key,value)};
-  const response={ok:true,json:async()=>({data:{categories:[{category_id:'riceball',category_name:'飯團'}],products:[{product_id:'remote-f1',product_code:'F1',product_name:'原味紫米飯團',category_id:'riceball',price:45,is_visible:true}]}})};
-  const first=await loadMenuCatalog({fetchImpl:async()=>response,storage,fallback,urls:['https://api.test/menu']});
-  assert.equal(first.source,'api');
-  const second=await loadMenuCatalog({fetchImpl:async()=>{throw new Error('offline');},storage,fallback,urls:['https://api.test/menu']});
+  let request;
+  const response={ok:true,json:async()=>({categories:{riceball:{category_id:'riceball',category_name:'飯團'}},products:{'remote-f1':{product_id:'remote-f1',product_name:'原味紫米飯團',category_id:'riceball',base_price:45,is_visible:true}},availability:{}})};
+  const first=await loadMenuCatalog({fetchImpl:async(...args)=>(request=args,response),storage,fallback,url:'https://firebase.test/public/catalogV1.json'});
+  assert.equal(first.source,'firebase');
+  assert.equal(request[0],'https://firebase.test/public/catalogV1.json');
+  assert.equal(request[1].method,'GET');
+  assert.equal(request[1].body,undefined);
+  const second=await loadMenuCatalog({fetchImpl:async()=>{throw new Error('offline');},storage,fallback,url:'https://firebase.test/public/catalogV1.json'});
   assert.equal(second.source,'cache');
   assert.equal(second.products[0].id,'remote-f1');
+});
+
+test('runtime uses Firebase RTDB and contains no Apps Script transport',async()=>{
+  assert.match(FIREBASE_CATALOG_URL,/firebasedatabase\.app\/public\/catalogV1\.json$/);
+  const source=await readFile(new URL('../pages/order/menu-api.js',import.meta.url),'utf8');
+  assert.doesNotMatch(source,/script\.google\.com|menu\.read/);
 });
