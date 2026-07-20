@@ -3,6 +3,7 @@ import {ORDER_STORAGE_KEY,SETTINGS_STORAGE_KEY,readJSON,writeJSON,stableId} from
 import {money,imageBlock,bindImageFallbacks,showToast,escapeHtml} from '../../shared/components.js';
 import {orderPageConfig as defaults} from './page-config.js';
 import {categories,products,drinks,optionSets} from './page-data.js';
+import {updateCartLineQuantity} from './order-domain.js';
 
 const app=document.getElementById('app');
 const productMap=new Map(products.map(item=>[item.id,item]));
@@ -130,15 +131,16 @@ function drinkChoiceCard(d,action='select-drink',selected=false){
 }
 function productCard(p){
   const template=productTemplate();const showCode=store.get().settings.catalog.showCode;const showDescription=store.get().settings.catalog.showDescription;
+  const action=store.get().quickMode?'quick-add-product':'open-product';
   const code=showCode?'<small class="product-code">'+p.code+'</small>':'';
-  if(template==='text')return '<button class="product-card text" data-action="open-product" data-id="'+p.id+'"><span class="product-copy">'+code+'<strong>'+p.name+'</strong></span><b class="product-price">'+money(p.price)+'</b></button>';
-  if(template==='small')return '<button class="product-card small" data-action="open-product" data-id="'+p.id+'">'+imageBlock(p.image,p.name,'product-thumb')+'<span class="product-copy">'+code+'<strong>'+p.name+'</strong></span><b class="product-price">'+money(p.price)+'</b></button>';
+  if(template==='text')return '<button class="product-card text" data-action="'+action+'" data-id="'+p.id+'"><span class="product-copy">'+code+'<strong>'+p.name+'</strong></span><b class="product-price">'+money(p.price)+'</b></button>';
+  if(template==='small')return '<button class="product-card small" data-action="'+action+'" data-id="'+p.id+'">'+imageBlock(p.image,p.name,'product-thumb')+'<span class="product-copy">'+code+'<strong>'+p.name+'</strong></span><b class="product-price">'+money(p.price)+'</b></button>';
   const description=showDescription&&p.description?'<p class="product-description">'+p.description+'</p>':'';
-  return '<button class="product-card large" data-action="open-product" data-id="'+p.id+'">'+imageBlock(p.image,p.name,'product-hero')+'<div class="product-info"><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+description+'</span><b class="product-price">'+money(p.price)+'</b></div></button>';
+  return '<button class="product-card large" data-action="'+action+'" data-id="'+p.id+'">'+imageBlock(p.image,p.name,'product-hero')+'<div class="product-info"><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+description+'</span><b class="product-price">'+money(p.price)+'</b></div></button>';
 }
 function cartRows(){
   const cart=store.get().cart;if(!cart.length)return '<div class="empty">購物車未有餐點</div>';
-  return cart.map((line,index)=>'<button class="cart-row" data-action="edit-line" data-id="'+line.lineId+'"><span class="seq">'+(index+1)+'</span>'+imageBlock(line.image,line.name,'cart-img')+'<span><strong>'+line.name+'</strong><small>'+describe(line)+'</small></span><b>x'+line.qty+'<br>'+money(line.total)+'</b></button>').join('');
+  return cart.map((line,index)=>'<article class="cart-row" data-line-id="'+line.lineId+'"><span class="seq">'+(index+1)+'</span>'+imageBlock(line.image,line.name,'cart-img')+'<span class="cart-copy"><strong>'+line.name+'</strong><small>'+describe(line)+'</small><b>'+money(line.total)+'</b></span><span class="cart-actions"><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="-1" aria-label="減少 '+line.name+'">−</button><strong>'+line.qty+'</strong><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="1" aria-label="增加 '+line.name+'">＋</button><button class="edit-button" data-action="edit-line" data-id="'+line.lineId+'">修改</button></span></article>').join('');
 }
 function pendingArea(){
   const state=store.get();const required=pendingSummary(state.cart);const link=linkUpSummary(state.cart);
@@ -160,7 +162,7 @@ function pendingPanel(){
   const incoming=[['磨飯 App','5'],['電話／WhatsApp','3']];
   return '<aside class="pending-panel modal-card"><header><strong>待處理訂單</strong><button data-action="toggle-pending-panel">×</button></header><div class="pending-split"><section><h3>新訂單</h3><div class="pending-scroll">'+incoming.map((x,i)=>'<button><span>'+x[0]+'</span><b>'+x[1]+' 張</b><small>#10'+(249+i)+'｜剛剛收到</small></button>').join('')+'</div></section><section><h3>已接單／待完成</h3><div class="pending-scroll">'+Array.from({length:6},(_,i)=>'<button><span>訂單 #'+(10240+i)+'</span><b>'+(i+6)+' 分鐘</b><small>按下可開啟訂單</small></button>').join('')+'</div></section></div></aside>';
 }
-function modalScrim(){return modal?'<button class="modal-scrim" data-action="dismiss-modal" aria-label="關閉"></button>':'';}
+function modalScrim(){return modal?'<div class="modal-scrim" aria-hidden="true"></div>':'';}
 function quickSettingsModal(){
   const state=store.get();const q=state.settings.quickDrinks;
   return '<aside class="side-card modal-card quick-mode-card"><header><strong>快捷模式</strong><button data-action="dismiss-modal">×</button></header><div class="setting-row"><div><strong>快捷飲品列</strong><small>顯示底部快捷飲品</small></div><button class="switch '+(state.quickMode?'on':'')+'" data-action="toggle-quick-mode"><i></i></button></div><div class="setting-block"><strong>飲品卡顯示</strong><div class="segmented"><button class="'+(q.showImages!==false?'active':'')+'" data-action="quick-display" data-value="image">圖片</button><button class="'+(q.showImages===false?'active':'')+'" data-action="quick-display" data-value="text">純文字</button></div><div class="quick-preview">'+(q.order||[]).slice(0,6).map(id=>drinkMap.get(id)).filter(Boolean).map(d=>drinkChoiceCard(d,'noop')).join('')+'</div></div><div class="setting-row"><div><strong>快捷補選</strong><small>獨立控制，唔受快捷飲品列影響</small></div><button class="switch '+(q.quickAssist!==false?'on':'')+'" data-action="toggle-quick-assist"><i></i></button></div></aside>';
@@ -201,7 +203,7 @@ function productDetailModal(){
   const {productId,draft}=modal;const p=productMap.get(productId);const missing=[];
   p.required.forEach(group=>{if(group==='drink'){if(!draft.drink)missing.push('飲品');}else if(!draft.options[group])missing.push(group==='rice'?'飯底':group==='sauce'?'醬汁':'小食');});
   const subtotal=p.price*draft.qty;
-  return '<aside class="product-detail modal-card"><header class="detail-head">'+imageBlock(p.image,p.name,'detail-image')+'<div><small>'+p.code+'</small><h2>'+p.name+'</h2><strong>'+money(p.price)+'</strong></div><button data-action="dismiss-modal">×</button></header><div class="detail-layout"><div class="detail-options">'+detailGroups(p,draft)+'</div><aside class="detail-control"><div class="qty-row"><span>數量</span><button data-action="detail-qty" data-delta="-1">−</button><strong>'+draft.qty+'</strong><button data-action="detail-qty" data-delta="1">＋</button><button class="keypad-toggle" data-action="toggle-keypad">小鍵盤</button></div><div class="price-summary"><span>單價 <b>'+money(p.price)+'</b></span><span>加購／升級 <b>$0</b></span><strong>小計 <b>'+money(subtotal)+'</b></strong></div>'+(draft.keypad?'<div class="mini-keypad">'+['1','2','3','4','5','6','7','8','9','←','0','完成'].map(key=>'<button data-action="keypad" data-key="'+key+'">'+key+'</button>').join('')+'</div>':'')+'<div class="detail-actions"><button data-action="dismiss-modal">取消</button><button class="primary" data-action="apply-product" '+(missing.length?'disabled':'')+'>'+(modal.editLineId?'確認修改':'加入購物車')+' '+money(subtotal)+'</button></div>'+(missing.length?'<p class="missing-hint">還欠：'+missing.join('、')+'</p>':'')+'</aside></div></aside>';
+  return '<aside class="product-settings-card modal-card" data-editing="'+Boolean(modal.editLineId)+'"><header class="settings-product-head"><div><small>'+(modal.editLineId?'修改產品':'新增產品')+'</small><h2>'+p.name+'</h2><strong>'+money(p.price)+'</strong></div><button data-action="dismiss-modal" aria-label="返回">×</button></header><div class="product-settings-body"><div class="qty-row"><span>數量</span><button data-action="detail-qty" data-delta="-1">−</button><strong>'+draft.qty+'</strong><button data-action="detail-qty" data-delta="1">＋</button></div>'+detailGroups(p,draft)+'</div><footer class="product-settings-actions"><button data-action="dismiss-modal">返回</button><button class="primary" data-action="apply-product" '+(missing.length?'disabled':'')+'>確認 '+money(subtotal)+'</button></footer>'+(missing.length?'<p class="missing-hint">還欠：'+missing.join('、')+'</p>':'')+'</aside>';
 }
 function drinkModifierModal(){
   const d=drinkMap.get(modal.drinkId),draft=modal.draft;
@@ -247,6 +249,18 @@ function openProduct(productId,lineId=''){
   modal={type:'product',productId,editLineId:lineId,dirty:false,draft:{qty:line?.qty||1,options:safeClone(line?.options||{}),drink:line?.drinkAssignments?.[0]||null,note:line?.options?.note||'',keypad:false,keypadValue:''}};
   render();
 }
+function quickAddProduct(productId){
+  const p=productMap.get(productId);if(!p)return;
+  const line=makeLine(productId);
+  store.set(state=>{state.cart=mergeCart(state.cart.concat(line),state.settings.cart.mergeMode);return state;});
+  showToast('已加入 '+p.name);
+}
+function changeCartQuantity(lineId,delta){
+  store.set(state=>{
+    state.cart=updateCartLineQuantity(state.cart,lineId,delta,Object.fromEntries(products.map(p=>[p.id,p.drinkSlots||0])));
+    return state;
+  });
+}
 function openDrink(drinkId,context,maxQty=1){modal={type:'drink',drinkId,context,maxQty,dirty:false,draft:{qty:1,sweetness:'',ice:''}};render();}
 function applyProduct(){
   const editing=Boolean(modal.editLineId);
@@ -272,6 +286,8 @@ function handle(button){
   const action=button.dataset.action;
   if(action==='category')store.set(state=>({...state,category:button.dataset.value}));
   else if(action==='open-product')openProduct(button.dataset.id);
+  else if(action==='quick-add-product')quickAddProduct(button.dataset.id);
+  else if(action==='cart-qty')changeCartQuantity(button.dataset.id,Number(button.dataset.delta)||0);
   else if(action==='edit-line'){const line=store.get().cart.find(x=>x.lineId===button.dataset.id);if(line)openProduct(line.productId,line.lineId);}
   else if(action==='open-completion'){modal={type:'completion',dirty:false};render();}
   else if(action==='open-quick-settings'){modal={type:'quick',dirty:false};render();}
