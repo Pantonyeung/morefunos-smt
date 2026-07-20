@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "project": "morefunos-smt",
+  "branch": "feat/smt-order-page-v1",
+  "baseline": "order-v1-10",
+  "requiredFiles": [
+    "AGENTS.md",
+    "SMT_AI_START_HERE.md",
+    "SMT_CONTEXT_MIN.md",
+    "SMT_AI_CONTEXT_PACK.md",
+    "docs/ai-context/SMT_KNOWLEDGE_GRAPH.json",
+    "docs/ai-context/SMT_CODE_MAP.md",
+    "docs/ai-context/SMT_DECISION_LEDGER.md",
+    "docs/ai-context/SMT_IMPLEMENTATION_STATUS.md",
+    "docs/ai-context/SMT_CHANGE_IMPACT.md",
+    "docs/ai-context/SMT_CHAT_HANDOFF_PROTOCOL.md"
+  ]
+}

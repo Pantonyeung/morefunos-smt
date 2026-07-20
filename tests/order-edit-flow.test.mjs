@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import test from 'node:test';
-import {acceptPendingOrder,completeExpiredOrders,createWhatsAppLink,updateCartLineQuantity} from '../pages/order/order-domain.js';
+import {acceptPendingOrder,combineRiceballSet,dissolveRiceballSet,completeExpiredOrders,createWhatsAppLink,updateCartLineQuantity} from '../pages/order/order-domain.js';
 
 const page = await readFile(new URL('../pages/order/page.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../pages/order/page.css', import.meta.url), 'utf8');
@@ -226,4 +226,63 @@ test('all drink selection surfaces share the same vertical card language',()=>{
   assert.match(css,/\.drink-card--drawer\s*\{[^}]*height:\s*240px/);
   assert.match(css,/\.drink-card--detail/);
   assert.match(css,/\.drink-card--completion/);
+});
+
+test('riceball and snack can become one pending-drink combo without a cart drink',()=>{
+  const cart=[
+    {lineId:'main-1',productId:'f1',name:'原味紫米飯團',image:'f1.webp',qty:1,unitPrice:41,total:41,combinable:true,linkRole:'',options:{}},
+    {lineId:'snack-1',productId:'s1',name:'香脆雞翼（2件）',image:'s1.webp',qty:1,unitPrice:18,total:18,linkRole:'snack',options:{}}
+  ];
+  const result=combineRiceballSet(cart,{mainLineId:'main-1',snackLineId:'snack-1'},{comboId:'combo-a',lineId:'combo-line',comboPrice:59});
+  assert.equal(result.length,1);
+  assert.equal(result[0].lineType,'combo');
+  assert.equal(result[0].name,'飯糰套餐');
+  assert.equal(result[0].total,59);
+  assert.equal(result[0].combo.components.length,2);
+  assert.deepEqual(result[0].combo.missingRoles,['drink']);
+  assert.equal(result[0].drinkSlots,1);
+});
+
+test('quick drink embeds inside combo without first becoming a cart line',()=>{
+  const cart=[
+    {lineId:'main-1',productId:'f1',name:'原味紫米飯團',qty:1,unitPrice:41,total:41,combinable:true,options:{}},
+    {lineId:'snack-1',productId:'s1',name:'香脆雞翼（2件）',qty:1,unitPrice:18,total:18,linkRole:'snack',options:{}}
+  ];
+  const quickDrink={productId:'taiwan-milk-tea',name:'台式奶茶',unitPrice:16,image:'d2.webp',selection:{drinkId:'taiwan-milk-tea',name:'台式奶茶',sweetness:'',ice:''}};
+  const result=combineRiceballSet(cart,{mainLineId:'main-1',snackLineId:'snack-1',quickDrink},{comboId:'combo-b',lineId:'combo-line',comboPrice:59});
+  assert.equal(result.length,1);
+  assert.deepEqual(result[0].combo.missingRoles,[]);
+  assert.equal(result[0].drinkAssignments[0].drinkId,'taiwan-milk-tea');
+  assert.equal(result[0].combo.components.find(x=>x.role==='drink').source,'quick');
+});
+
+test('cart drink can be consumed into a combo and remaining quantity stays standalone',()=>{
+  const cart=[
+    {lineId:'main-1',productId:'f1',name:'原味紫米飯團',qty:1,unitPrice:41,total:41,combinable:true,options:{}},
+    {lineId:'snack-1',productId:'s1',name:'香脆雞翼（2件）',qty:1,unitPrice:18,total:18,linkRole:'snack',options:{}},
+    {lineId:'drink-1',productId:'d1',name:'手打檸檬茶',qty:2,unitPrice:18,total:36,linkRole:'drink',options:{}}
+  ];
+  const result=combineRiceballSet(cart,{mainLineId:'main-1',snackLineId:'snack-1',drinkLineId:'drink-1'},{comboId:'combo-c',lineId:'combo-line',comboPrice:59});
+  assert.equal(result.length,2);
+  assert.equal(result.find(x=>x.lineType==='combo').combo.components.find(x=>x.role==='drink').source,'cart');
+  assert.equal(result.find(x=>x.productId==='d1').qty,1);
+});
+
+test('dissolving a combo restores standalone components at single prices',()=>{
+  const combined=combineRiceballSet([
+    {lineId:'main-1',productId:'f1',name:'原味紫米飯團',qty:1,unitPrice:41,total:41,combinable:true,options:{}},
+    {lineId:'snack-1',productId:'s1',name:'香脆雞翼（2件）',qty:1,unitPrice:18,total:18,linkRole:'snack',options:{}}
+  ],{mainLineId:'main-1',snackLineId:'snack-1'},{comboId:'combo-d',lineId:'combo-line',comboPrice:59});
+  const result=dissolveRiceballSet(combined,'combo-line',{idFactory:role=>'restored-'+role});
+  assert.equal(result.length,2);
+  assert.equal(result.reduce((sum,line)=>sum+line.total,0),59);
+  assert.ok(result.every(line=>line.lineType!=='combo'));
+});
+
+test('specified pairing offers quick drinks and accepts main plus snack before drink',()=>{
+  assert.match(page,/快捷飲品/);
+  assert.match(page,/data-source="quick"/);
+  assert.match(page,/group\.main&&group\.snack/);
+  assert.match(page,/拆開套餐/);
+  assert.match(page,/dissolveRiceballSet/);
 });

@@ -1,4 +1,4 @@
-MoreFun SMT Master V1.4 + Order Page Design Lock V1.0
-Build: master-v14
-Branch target: feat/smt-master-v1
-Status: runnable baseline bundled with 2026-07-20 confirmed design specification; new design implementation pending
+MoreFun SMT Order Page V1.10
+Build: order-v1-10
+Branch target: feat/smt-order-page-v1
+Status: parent riceball combo, direct quick-drink pairing, combo editing and reversible dismantling implemented; device acceptance pending

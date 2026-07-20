@@ -2,13 +2,22 @@
 
 基於《MoreFun SMT Web UI Slide Master Lock V1.0》建立的可操作 Web Core 第一版。
 
+> AI／Work 模式必須先讀 [`AGENTS.md`](./AGENTS.md)。只用手機或新 Chat 接力時，上載 [`SMT_AI_CONTEXT_PACK.md`](./SMT_AI_CONTEXT_PACK.md) 及最新 repository zip；毋須重新貼整段歷史對話。
+
+## 現行狀態入口
+
+- 一頁式現在真相：[`SMT_AI_START_HERE.md`](./SMT_AI_START_HERE.md)
+- Chat 最小上下文：[`SMT_CONTEXT_MIN.md`](./SMT_CONTEXT_MIN.md)
+- 程式、決策、狀態及影響圖：[`docs/ai-context/`](./docs/ai-context/)
+- 完整點單功能鎖：[`docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`](./docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md)
+
 ## 2026-07-20 點單頁設計鎖
 
 最新確認的點單頁第一層規格、Decision Log、驗收清單及效果圖位於：
 
 `docs/design-lock-v1/`
 
-請注意：該資料夾是新一輪設計鎖；下列「已實作」只描述目前程式基線。設計鎖內新增的套餐組合卡、統一訂單整理、線上接單卡等功能，必須在下一階段逐條垂直鏈路實作與驗收，不得因效果圖存在而視為完成。
+請注意：「已實作」「自動測試通過」「實機通過」「產品最終 Lock」是不同狀態。最新壓縮狀態以 `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 為準；不得因效果圖或程式存在而視為實機完成。
 
 ## 已實作
 - 橫屏 SMT Shell、頂部全局狀態、底部五項導航

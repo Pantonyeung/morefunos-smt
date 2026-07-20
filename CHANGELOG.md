@@ -1,5 +1,21 @@
 # CHANGELOG｜More Fun SMT Master V1.0 Fixed
 
+## 2026-07-20 — order-v1-10 飯團套餐父項
+
+- 指定配對改為飯團＋小食即可建立，飲品可用快捷列、購物車或稍後補選。
+- 組合後改成一張套餐父項並套用套餐價，不再保留三張獨立連結列。
+- 新增套餐修改：可更換飯團、小食及飲品。
+- 新增可逆拆開及單品價重算確認。
+- 新增 domain 回歸測試及 Context OS 狀態更新。
+
+## 2026-07-20 — SMT Context OS
+
+- 新增 Work 模式入口 `AGENTS.md`。
+- 新增手機／Chat 單檔接力包及低 token 最小上下文。
+- 新增知識圖、程式地圖、決策帳、現行狀態及變更影響圖。
+- 新增 Context OS 自動驗證及三項回歸測試。
+- 建立 token 接近上限時的固定 checkpoint 接力協議。
+
 日期：2026-07-19
 基準：使用者上載 `morefunos-smt-feat-smt-master-v1.zip`
 目標分支：`feat/smt-master-v1`

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "project": "morefunos-smt",
+  "baseline": "order-v1-10",
+  "generatedAt": "2026-07-20",
+  "evidenceTypes": ["EXTRACTED", "INFERRED"],
+  "nodes": [
+    {"id":"doc.current-lock","type":"document","label":"Order Page Current Lock","path":"docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md"},
+    {"id":"doc.context-pack","type":"document","label":"Chat Context Pack","path":"SMT_AI_CONTEXT_PACK.md"},
+    {"id":"code.order-ui","type":"code","label":"Order UI","path":"pages/order/page.js"},
+    {"id":"code.order-css","type":"code","label":"Order CSS","path":"pages/order/page.css"},
+    {"id":"code.domain","type":"code","label":"Order Domain","path":"pages/order/order-domain.js"},
+    {"id":"test.order","type":"test","label":"Order Flow Tests","path":"tests/order-edit-flow.test.mjs"},
+    {"id":"feature.fixed-shell","type":"feature","label":"Fixed shell and internal scrolling"},
+    {"id":"feature.single-modal","type":"feature","label":"Single anchored modal"},
+    {"id":"feature.cart","type":"feature","label":"Cart layout and controls"},
+    {"id":"feature.drinks","type":"feature","label":"Shared drink-card language"},
+    {"id":"feature.pairing","type":"feature","label":"Dynamic A-Z pairing"},
+    {"id":"feature.pending","type":"feature","label":"Pending order review"},
+    {"id":"feature.order-state","type":"feature","label":"Pending-running-complete state"},
+    {"id":"external.real-api","type":"external","label":"Real order and payment APIs"},
+    {"id":"external.device-qa","type":"external","label":"iPad and Sunmi T2S acceptance"}
+  ],
+  "edges": [
+    {"from":"doc.current-lock","to":"feature.fixed-shell","relation":"SPECIFIES","evidence":"EXTRACTED"},
+    {"from":"doc.current-lock","to":"feature.single-modal","relation":"SPECIFIES","evidence":"EXTRACTED"},
+    {"from":"doc.current-lock","to":"feature.cart","relation":"SPECIFIES","evidence":"EXTRACTED"},
+    {"from":"doc.current-lock","to":"feature.drinks","relation":"SPECIFIES","evidence":"EXTRACTED"},
+    {"from":"doc.current-lock","to":"feature.pairing","relation":"SPECIFIES","evidence":"EXTRACTED"},
+    {"from":"code.order-ui","to":"feature.cart","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"code.order-ui","to":"feature.drinks","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"code.order-ui","to":"feature.pairing","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"code.order-ui","to":"feature.pending","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"code.order-css","to":"feature.fixed-shell","relation":"STYLES","evidence":"EXTRACTED"},
+    {"from":"code.order-css","to":"feature.single-modal","relation":"STYLES","evidence":"EXTRACTED"},
+    {"from":"code.domain","to":"feature.order-state","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"test.order","to":"code.order-ui","relation":"VERIFIES","evidence":"EXTRACTED"},
+    {"from":"test.order","to":"code.domain","relation":"VERIFIES","evidence":"EXTRACTED"},
+    {"from":"feature.pending","to":"external.real-api","relation":"REQUIRES_FOR_PRODUCTION","evidence":"INFERRED"},
+    {"from":"feature.fixed-shell","to":"external.device-qa","relation":"REQUIRES_ACCEPTANCE","evidence":"EXTRACTED"},
+    {"from":"doc.context-pack","to":"doc.current-lock","relation":"COMPRESSES","evidence":"EXTRACTED"}
+  ]
+}
