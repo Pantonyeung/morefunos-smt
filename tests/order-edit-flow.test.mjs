@@ -20,7 +20,7 @@ test('cart rows expose separate quantity and edit controls', () => {
 test('product editor is a compact anchored card with explicit confirmation', () => {
   assert.match(page, /product-settings-card/);
   assert.match(page, /修改產品/);
-  assert.match(css, /width:min\(25vw/);
+  assert.match(css, /width:\s*min\(25vw/);
   assert.match(page, /data-action="apply-product"/);
 });
 
@@ -42,8 +42,8 @@ test('cart quantity updates totals, trims drink assignments, and removes zero ro
 });
 
 test('order shell keeps the bottom navigation inside the fixed canvas', () => {
-  assert.match(css,/main\{[^}]*height:100%[^}]*display:flex[^}]*flex-direction:column/);
-  assert.match(css,/\.workspace\{flex:1;min-height:0/);
+  assert.match(css,/main\s*\{[^}]*height:\s*100%[^}]*display:\s*flex[^}]*flex-direction:\s*column/);
+  assert.match(css,/\.workspace\s*\{[^}]*flex:\s*1[^}]*min-height:\s*0/);
   assert.doesNotMatch(css,/\.workspace\{height:calc\(100% - 78px\)/);
 });
 
@@ -72,7 +72,7 @@ test('cards are positioned from the pressed control and expose a pointer side', 
 });
 
 test('pending orders use a vertical split', () => {
-  assert.match(css,/\.pending-split\{display:flex;flex-direction:column/);
+  assert.match(css,/\.pending-split\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/);
 });
 
 test('every expanded card is owned by the single modal controller', () => {
@@ -107,7 +107,41 @@ test('quick drink opens as an image-led anchored drawer', () => {
 
 test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', async () => {
   const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
-  assert.match(loader,/CANVAS_HEIGHT=1080/);
-  assert.match(loader,/Math\.min\(size\.width\/CANVAS_WIDTH,size\.height\/CANVAS_HEIGHT\)/);
-  assert.doesNotMatch(loader,/logicalHeight/);
+  assert.match(loader,/logicalHeight/);
+  assert.match(loader,/morefun-smt-ui-scale/);
+  assert.match(loader,/morefun:set-ui-scale/);
+});
+
+test('root height chain and scroll regions keep both bars fixed', async () => {
+  const base=await readFile(new URL('../shared/page-base.css',import.meta.url),'utf8');
+  assert.match(base,/#app\{width:1920px;height:100%;min-height:0;overflow:hidden\}/);
+  assert.match(css,/\.cart-list\{[^}]*min-height:0[^}]*overflow-y:auto/);
+  assert.match(css,/\.products\{[^}]*min-height:0[^}]*overflow-y:auto/);
+});
+
+test('quick drinks are a collapsed upward drawer with reorder controls', () => {
+  assert.match(page,/quickDrawerOpen/);
+  assert.match(page,/toggle-quick-drawer/);
+  assert.match(page,/quick-drawer-panel/);
+  assert.match(page,/move-quick-drink/);
+});
+
+test('drink editor supports multiple configuration groups without forced images', () => {
+  assert.match(page,/draft\.groups/);
+  assert.match(page,/add-drink-group/);
+  assert.match(page,/showImages!==false/);
+});
+
+test('completion exposes automatic, specified, and demo link-up flows', () => {
+  assert.match(page,/一鍵自動組合/);
+  assert.match(page,/指定配對/);
+  assert.match(page,/載入組合測試/);
+});
+
+test('operational surfaces include sold-out preview and new-order toast', () => {
+  assert.match(page,/售罄列表/);
+  assert.match(page,/soldout-preview/);
+  assert.match(page,/new-order-toast/);
+  assert.match(page,/稍後處理/);
+  assert.match(page,/立即處理/);
 });
