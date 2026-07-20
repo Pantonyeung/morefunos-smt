@@ -493,10 +493,10 @@ async function bootstrapLiveMenu(){
     const existing=state.settings.quickDrinks.order||[];
     state.settings.quickDrinks.order=[...existing.filter(id=>drinkMap.has(id)),...drinks.map(item=>item.id).filter(id=>!existing.includes(id))];
     state.health.catalog={ok:catalog.source!=='fallback',label:'餐牌',detail:catalog.source==='firebase'?'已連接 Firebase 餐牌來源':catalog.source==='cache'?'離線模式：使用上次餐牌':'Firebase 未連接：使用內置後備餐牌'};
-    state.health.sync={...state.health.sync,detail:catalog.source==='api'?'餐牌同步正常':'餐牌等待重新連線'};
+    state.health.sync={...state.health.sync,detail:catalog.source==='firebase'?'餐牌同步正常':'餐牌等待重新連線'};
     return state;
   });
-  showToast(catalog.source==='api'?'餐牌已同步':catalog.source==='cache'?'網絡未連接，已載入上次餐牌':'餐牌 API 未連接，現正使用後備餐牌');
+  showToast(catalog.source==='firebase'?'餐牌已同步':catalog.source==='cache'?'網絡未連接，已載入上次餐牌':'Firebase 未連接，現正使用後備餐牌');
 }
 bootstrapLiveMenu().catch(error=>{console.error('MENU_BOOTSTRAP_FAILED',error);showToast('餐牌連接失敗，已保留本機點單');});
 setTimeout(()=>{if(newOrderNotice?.visible){newOrderNotice.visible=false;render();}},3000);
