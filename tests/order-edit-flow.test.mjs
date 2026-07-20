@@ -203,3 +203,27 @@ test('specified pairing candidates use a three-column text-card grid',()=>{
   assert.match(css,/\.link-candidates\s*\{[^}]*grid-template-columns:\s*repeat\(3/);
   assert.match(css,/\.specified-link-card/);
 });
+
+test('cart keeps price flush right and actions aligned with the image',()=>{
+  assert.match(css,/\.cart-price\s*\{[^}]*justify-self:\s*end/);
+  assert.match(css,/grid-template-areas:\s*"seq image copy price"\s*"seq image copy actions"/);
+  assert.match(css,/\.cart-copy strong\s*\{[^}]*font-size:/);
+});
+
+test('specified pairing creates dynamic labelled groups',()=>{
+  assert.match(page,/function pairingGroupCount/);
+  assert.match(page,/pairing-group-tabs/);
+  assert.match(page,/String\.fromCharCode\(65\+index\)/);
+  assert.match(page,/data-action="select-pairing-group"/);
+  assert.match(page,/draft:\{groups,active:0\}/);
+});
+
+test('all drink selection surfaces share the same vertical card language',()=>{
+  assert.match(page,/drinkChoiceCard\(d,'quick-drink'.*'drawer'\)/);
+  assert.match(page,/drinkChoiceCard\(d,'detail-drink'.*'detail'\)/);
+  assert.match(page,/drinkChoiceCard\(d,'completion-drink'.*'completion'\)/);
+  assert.match(page,/<span>.*<\/span>'\+\(imageMode\?imageBlock/);
+  assert.match(css,/\.drink-card--drawer\s*\{[^}]*height:\s*240px/);
+  assert.match(css,/\.drink-card--detail/);
+  assert.match(css,/\.drink-card--completion/);
+});
