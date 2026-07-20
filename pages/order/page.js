@@ -151,12 +151,13 @@ function cartRows(){
 }
 function pendingArea(){
   const state=store.get();const required=pendingSummary(state.cart);const link=linkUpSummary(state.cart);
-  return '<section class="pending-area '+(!required.total?'complete':'')+'"><button class="pending-receipt" data-action="open-completion"><strong>必選補齊</strong><span>'+(required.total?'必須完成 '+required.total+' 項':'必選已完成')+'</span><b>整理</b></button><button data-action="linkup-all" data-count="'+link.count+'" '+(link.count?'':'disabled')+'>一鍵自動組合 '+link.count+'</button><button data-action="open-specified-link">指定配對</button><button data-action="load-link-demo">載入組合測試</button></section>';
+  return '<section class="pending-area '+(!required.total?'complete':'')+'"><button class="pending-receipt" data-action="open-completion"><strong>必選補齊</strong><span>'+(required.total?'尚欠 '+required.total+' 項':'全部完成')+'</span><b>整理</b></button><button data-action="linkup-all" data-count="'+link.count+'" '+(link.count?'':'disabled')+'>一鍵自動組合 '+link.count+'</button><button data-action="open-specified-link">指定配對</button></section>';
 }
 function quickDrinks(){
   const state=store.get();if(state.settings.quickDrinks.visible===false)return '';
   const order=state.settings.quickDrinks.order||drinks.map(d=>d.id);
-  return '<section class="quick-drawer '+(state.quickDrawerOpen?'open':'')+'"><button class="quick-drawer-handle" data-action="toggle-quick-drawer"><span>快捷飲品</span><b>'+(state.quickDrawerOpen?'收起 ↓':'展開 ↑')+'</b></button>'+(state.quickDrawerOpen?'<div class="quick-drawer-panel">'+order.map(id=>drinkMap.get(id)).filter(Boolean).map(d=>drinkChoiceCard(d,'quick-drink')).join('')+'</div>':'')+'</section>';
+  const missing=pendingSummary(state.cart).drink;
+  return '<section class="quick-drawer '+(state.quickDrawerOpen?'open':'')+'"><button class="quick-drawer-handle" data-action="toggle-quick-drawer"><span>快捷飲品</span><em>待補 '+missing+'</em><b>'+(state.quickDrawerOpen?'⌄':'⌃')+'</b></button>'+(state.quickDrawerOpen?'<div class="quick-drawer-panel"><header><strong>快捷飲品｜待補 '+missing+'</strong><button data-action="toggle-quick-drawer">×</button></header><div>'+order.map(id=>drinkMap.get(id)).filter(Boolean).map(d=>drinkChoiceCard(d,'quick-drink')).join('')+'</div></div>':'')+'</section>';
 }
 function operationLabel(state){if(state.operations.immediateStopped||!state.operations.acceptingOrders)return '已停止接單';if(state.operations.scheduledClose)return '接單至 '+state.operations.scheduledClose;return '接單中';}
 function healthIssueCount(state){return Object.values(state.health).filter(item=>!item.ok).length;}
@@ -404,7 +405,6 @@ function handle(button){
   else if(action==='open-specified-link'){modal={type:'specified-link',anchor:anchorRect(button),dirty:false,draft:['','','']};render();}
   else if(action==='select-link-item'){modal.draft[Number(button.dataset.role)]=button.dataset.id;render();}
   else if(action==='apply-specified-link'){const ids=modal.draft,comboId=stableId('combo');store.set(state=>{state.cart=state.cart.map(line=>ids.includes(line.lineId)?{...line,linkedComboId:comboId,linkedQty:1}:line);return state;});modal=null;render();showToast('已建立指定套餐');}
-  else if(action==='load-link-demo'){store.set(state=>{state.cart=normalizeCart([makeLine('f4'),makeLine('f1'),makeLine('s1',2),makeLine('d1',2),makeLine('d2')]);return state;});showToast('已載入組合測試');}
   else if(action==='later-new-order'){newOrderNotice.visible=false;render();}
   else if(action==='process-new-order'){newOrderNotice.visible=false;modal={type:'pending',anchor:null,dirty:false};render();}
   else if(action==='clear-cart'){if(window.confirm('清空後不可恢復，確定清空整張購物車？'))store.set(state=>({...state,cart:[]}));}
