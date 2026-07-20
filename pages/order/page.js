@@ -215,7 +215,7 @@ function productDetailModal(){
 }
 function drinkModifierModal(){
   const d=drinkMap.get(modal.drinkId),draft=modal.draft;
-  return '<aside class="modifier-card modal-card"><header><strong>'+d.name+'</strong><button data-action="dismiss-modal">×</button></header><div class="qty-row"><span>修改份數</span><button data-action="modifier-qty" data-delta="-1">−</button><strong>'+draft.qty+'</strong><button data-action="modifier-qty" data-delta="1">＋</button></div>'+(d.sweet?'<section><strong>甜度 <small>不選即正常</small></strong>'+optionButtons('sweetness',['多甜','少甜','走甜'],draft.sweetness||'')+'</section>':'')+(d.ice?'<section><strong>冰量 <small>不選即正常</small></strong>'+optionButtons('ice',['少冰','多冰'],draft.ice||'')+'</section>':'')+'<button class="primary wide" data-action="apply-drink">套用 '+draft.qty+' 份</button></aside>';
+  return '<aside class="modifier-card modal-card"><header><strong>'+d.name+'</strong><button data-action="dismiss-modal">×</button></header><div class="drink-drawer-hero">'+imageBlock(d.image,d.name,'drink-drawer-image')+'<div><strong>'+d.name+'</strong><small>不選甜度／冰量即為正常</small></div></div><div class="qty-row"><span>修改份數</span><button data-action="modifier-qty" data-delta="-1">−</button><strong>'+draft.qty+'</strong><button data-action="modifier-qty" data-delta="1">＋</button></div>'+(d.sweet?'<section><strong>甜度 <small>不選即正常</small></strong>'+optionButtons('sweetness',['多甜','少甜','走甜'],draft.sweetness||'')+'</section>':'')+(d.ice?'<section><strong>冰量 <small>不選即正常</small></strong>'+optionButtons('ice',['少冰','多冰'],draft.ice||'')+'</section>':'')+'<button class="primary wide" data-action="apply-drink">套用 '+draft.qty+' 份</button></aside>';
 }
 function bulkOptionModal(){
   const values=optionSets[modal.group]||[];
