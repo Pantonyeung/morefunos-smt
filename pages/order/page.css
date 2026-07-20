@@ -169,7 +169,7 @@ button:active,
 .cart-row {
   width: 100%;
   display: grid;
-  grid-template-columns: 32px 64px minmax(0, 1fr);
+  grid-template-columns: 32px 72px minmax(0, 1fr) auto;
   gap: 11px;
   align-items: center;
   border-bottom: 1px solid #eee;
@@ -188,13 +188,12 @@ button:active,
   font-weight: 950;
 }
 .cart-img {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 11px;
 }
 .cart-copy {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px 8px;
   min-width: 0;
 }
@@ -206,16 +205,17 @@ button:active,
   color: var(--muted);
   white-space: normal;
 }
-.cart-copy > b {
-  font-size: 20px;
-}
+.cart-price { grid-column: 4; align-self: start; font-size: 24px; white-space: nowrap; }
 .cart-actions {
-  grid-column: 3;
+  grid-column: 4;
   display: grid;
   grid-template-columns: 38px 36px 38px 1fr;
   gap: 7px;
   align-items: center;
 }
+.cart-row.no-image { grid-template-columns: 32px minmax(0,1fr) auto; }
+.cart-row.no-image .cart-copy { grid-column: 2; }
+.cart-row.no-image .cart-price,.cart-row.no-image .cart-actions { grid-column: 3; }
 .cart-actions button {
   height: 36px;
   border: 1px solid var(--line);
@@ -474,6 +474,19 @@ button:active,
     inset 0 0 0 1px #f0a578,
     var(--lift);
 }
+.quick-drawer-panel .drink-choice-card { width: 150px; min-width: 150px; height: 190px; padding: 10px; position: relative; }
+.quick-drawer-panel .drink-choice-card.is-image { grid-template-columns: 1fr; grid-template-rows: auto 1fr; text-align: center; }
+.quick-drawer-panel .drink-choice-card .drink-choice-img { width: 100%; height: 130px; object-fit: cover; }
+.quick-drawer-panel .drink-choice-card.selected::after { content:""; position:absolute; left:50%; bottom:-12px; transform:translateX(-50%); border:7px solid transparent; border-top-color:var(--orange); }
+.link-candidates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.link-candidates button { min-height:64px; border:1px solid var(--line); border-radius:10px; background:#fff; font-weight:850; padding:8px; }
+.link-candidates button.selected { border-color:var(--orange); background:var(--orange-soft); color:var(--orange); }
+.specified-link-card { width:min(25vw,520px); }
+.drink-base-qty { display:flex; justify-content:space-between; align-items:center; padding:14px; border-bottom:1px solid var(--line); }
+.drink-base-qty > span:last-child,.drink-group header > span { display:grid; grid-template-columns:42px 38px 42px; align-items:center; text-align:center; gap:6px; }
+.drink-base-qty button,.drink-group header > span button { height:38px; border:1px solid var(--line); border-radius:9px; background:#fff; font-weight:900; }
+.group-summary { border:0; background:transparent; text-align:left; font-weight:900; }
+.adjustment-options { padding-top:10px; }
 .drink-choice-img {
   width: var(--drink-image-size);
   height: var(--drink-image-size);
@@ -1251,12 +1264,11 @@ button:active,
   border-radius: 0 0 15px 15px;
 }
 .cart-row.no-image {
-  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-columns: 32px minmax(0, 1fr) auto;
 }
-.cart-row.no-image .cart-copy,
-.cart-row.no-image .cart-actions {
-  grid-column: 2;
-}
+.cart-row.no-image .cart-copy { grid-column: 2; }
+.cart-row.no-image .cart-price,
+.cart-row.no-image .cart-actions { grid-column: 3; }
 .pending-panel {
   z-index: 72;
   max-height: calc(100vh - 174px);

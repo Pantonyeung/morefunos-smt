@@ -100,9 +100,11 @@ test('cart image visibility is configurable', () => {
   assert.match(page,/showImages/);
 });
 
-test('quick drink opens as an image-led anchored drawer', () => {
-  assert.match(page,/drink-drawer-hero/);
-  assert.match(page,/imageBlock\(d\.image,d\.name,'drink-drawer-image'\)/);
+test('quick drink adjustment stays compact without repeating its image', () => {
+  assert.doesNotMatch(page,/drink-drawer-hero/);
+  assert.doesNotMatch(page,/imageBlock\(d\.image,d\.name,'drink-drawer-image'\)/);
+  assert.match(css,/\.quick-drawer-panel \.drink-choice-card\s*\{/);
+  assert.match(css,/\.drink-choice-card\.selected::after/);
 });
 
 test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', async () => {
@@ -183,4 +185,21 @@ test('pending verification uses start review then confirm order wording', () => 
   assert.doesNotMatch(page,/確認處理/);
   assert.match(page,/付款證明/);
   assert.match(page,/WhatsApp QR Code/);
+});
+
+test('cart locks price and quantity-edit controls into dedicated regions',()=>{
+  assert.match(page,/cart-price/);assert.match(page,/cart-actions/);
+  assert.match(css,/\.cart-price\s*\{/);assert.match(css,/\.cart-actions\s*\{/);
+  assert.match(page,/相同配置合併/);assert.match(page,/逐項顯示/);
+});
+
+test('drink adjustment starts compact and expands only after add adjustment',()=>{
+  assert.match(page,/新增調整/);assert.match(page,/toggle-drink-adjustment/);
+  assert.doesNotMatch(page,/設定 '\+\(index\+1\)/);
+  assert.match(page,/groups:\[\]/);
+});
+
+test('specified pairing candidates use a three-column text-card grid',()=>{
+  assert.match(css,/\.link-candidates\s*\{[^}]*grid-template-columns:\s*repeat\(3/);
+  assert.match(css,/\.specified-link-card/);
 });
