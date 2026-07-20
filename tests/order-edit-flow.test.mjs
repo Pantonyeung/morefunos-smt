@@ -74,3 +74,35 @@ test('cards are positioned from the pressed control and expose a pointer side', 
 test('pending orders use a vertical split', () => {
   assert.match(css,/\.pending-split\{display:flex;flex-direction:column/);
 });
+
+test('every expanded card is owned by the single modal controller', () => {
+  assert.doesNotMatch(page,/pendingExpanded/);
+  assert.match(page,/modal=\{type:'pending'/);
+  assert.match(page,/if\(modal\.type==='pending'\)return pendingPanel\(\)/);
+});
+
+test('pending order card is actionable and grouped by channel', () => {
+  assert.match(page,/磨飯 App／網頁訂單/);
+  assert.match(page,/電話／WhatsApp 排隊單/);
+  assert.match(page,/data-action="process-pending-order"/);
+  assert.match(page,/件 · /);
+});
+
+test('anchored cards support all four pointer directions and stay between fixed bars', () => {
+  assert.match(page,/topbarRect/);
+  assert.match(page,/bottomNavRect/);
+  for (const side of ['top','bottom','left','right']) assert.match(css,new RegExp('data-pointer-side="'+side+'"'));
+});
+
+test('cart image visibility is configurable', () => {
+  assert.match(page,/顯示購物車產品圖片/);
+  assert.match(page,/toggle-cart-images/);
+  assert.match(page,/showImages/);
+});
+
+test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', async () => {
+  const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
+  assert.match(loader,/CANVAS_HEIGHT=1080/);
+  assert.match(loader,/Math\.min\(size\.width\/CANVAS_WIDTH,size\.height\/CANVAS_HEIGHT\)/);
+  assert.doesNotMatch(loader,/logicalHeight/);
+});
