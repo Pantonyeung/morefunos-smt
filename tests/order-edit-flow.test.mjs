@@ -100,6 +100,11 @@ test('cart image visibility is configurable', () => {
   assert.match(page,/showImages/);
 });
 
+test('quick drink opens as an image-led anchored drawer', () => {
+  assert.match(page,/drink-drawer-hero/);
+  assert.match(page,/imageBlock\(d\.image,d\.name,'drink-drawer-image'\)/);
+});
+
 test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', async () => {
   const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
   assert.match(loader,/CANVAS_HEIGHT=1080/);
