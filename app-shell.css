@@ -1,1 +1,77 @@
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f8f6f2;touch-action:manipulation}#viewport{position:fixed;inset:0;overflow:hidden;background:#f8f6f2}#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:top left;background:#f8f6f2;overflow:hidden;will-change:transform}#page{width:1920px;height:1080px;border:0;display:block;background:#f8f6f2}#orientation-lock{display:none;position:fixed;inset:0;z-index:9999;background:#111;color:#fff;place-items:center;text-align:center;padding:32px}#orientation-lock div{max-width:420px}#orientation-lock strong{display:block;font-size:28px;margin-bottom:10px}#orientation-lock p{margin:0;color:#d9d2cc;font-size:18px}@media (orientation:portrait) and (max-width:1024px){#stage{display:none}#orientation-lock{display:grid}}@media (orientation:landscape){#stage{display:block}#orientation-lock{display:none}}
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #f8f6f2;
+  touch-action: manipulation;
+}
+#viewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #f8f6f2;
+}
+#stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+  background: #f8f6f2;
+  overflow: hidden;
+  will-change: transform;
+}
+#page {
+  width: 1920px;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #f8f6f2;
+}
+#orientation-lock {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #111;
+  color: #fff;
+  place-items: center;
+  text-align: center;
+  padding: 32px;
+}
+#orientation-lock div {
+  max-width: 420px;
+}
+#orientation-lock strong {
+  display: block;
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+#orientation-lock p {
+  margin: 0;
+  color: #d9d2cc;
+  font-size: 18px;
+}
+@media (orientation: portrait) and (max-width: 1024px) {
+  #stage {
+    display: none;
+  }
+  #orientation-lock {
+    display: grid;
+  }
+}
+@media (orientation: landscape) {
+  #stage {
+    display: block;
+  }
+  #orientation-lock {
+    display: none;
+  }
+}
