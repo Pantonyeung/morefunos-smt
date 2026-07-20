@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import test from 'node:test';
-import {updateCartLineQuantity} from '../pages/order/order-domain.js';
+import {acceptPendingOrder,completeExpiredOrders,createWhatsAppLink,updateCartLineQuantity} from '../pages/order/order-domain.js';
 
 const page = await readFile(new URL('../pages/order/page.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../pages/order/page.css', import.meta.url), 'utf8');
@@ -155,4 +155,32 @@ test('operational surfaces include sold-out preview and new-order toast', () => 
   assert.match(page,/new-order-toast/);
   assert.match(page,/稍後處理/);
   assert.match(page,/立即處理/);
+});
+
+test('accepting a verified pending order creates a running order with a 30 minute deadline', () => {
+  const acceptedAt=Date.UTC(2026,6,20,12,0,0);
+  const result=acceptPendingOrder({id:'T6631',source:'WhatsApp',contact:'陳小姐',phone:'85291234567',items:1,amount:59},acceptedAt);
+  assert.equal(result.status,'running');
+  assert.equal(result.acceptedAt,acceptedAt);
+  assert.equal(result.autoCompleteAt,acceptedAt+30*60*1000);
+});
+
+test('running orders auto-complete after 30 minutes without intermediate states', () => {
+  const acceptedAt=Date.UTC(2026,6,20,12,0,0);
+  const orders=[{id:'A512',status:'running',acceptedAt,autoCompleteAt:acceptedAt+30*60*1000}];
+  assert.equal(completeExpiredOrders(orders,acceptedAt+29*60*1000)[0].status,'running');
+  assert.equal(completeExpiredOrders(orders,acceptedAt+30*60*1000)[0].status,'completed');
+});
+
+test('WhatsApp QR target opens the customer chat with the preset message', () => {
+  const link=createWhatsAppLink('852 9123-4567','陳小姐，你的磨飯訂單 T6631 需要補充付款證明。');
+  assert.equal(link,'https://wa.me/85291234567?text='+encodeURIComponent('陳小姐，你的磨飯訂單 T6631 需要補充付款證明。'));
+});
+
+test('pending verification uses start review then confirm order wording', () => {
+  assert.match(page,/開始核對/);
+  assert.match(page,/確認接單/);
+  assert.doesNotMatch(page,/確認處理/);
+  assert.match(page,/付款證明/);
+  assert.match(page,/WhatsApp QR Code/);
 });

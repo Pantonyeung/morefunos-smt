@@ -3,7 +3,7 @@ import {ORDER_STORAGE_KEY,SETTINGS_STORAGE_KEY,readJSON,writeJSON,stableId} from
 import {money,imageBlock,bindImageFallbacks,showToast,escapeHtml} from '../../shared/components.js';
 import {orderPageConfig as defaults} from './page-config.js';
 import {categories,products,drinks,optionSets} from './page-data.js';
-import {updateCartLineQuantity} from './order-domain.js';
+import {acceptPendingOrder,completeExpiredOrders,createWhatsAppLink,updateCartLineQuantity} from './order-domain.js';
 
 const app=document.getElementById('app');
 const productMap=new Map(products.map(item=>[item.id,item]));
@@ -13,9 +13,9 @@ const drinkProducts=products.filter(item=>item.linkRole==='drink');
 let modal=null;
 let confirmState=null;
 let newOrderNotice={id:'A516',source:'磨飯 App',items:3,amount:104,visible:true};
-const pendingOrders={
-  online:[{id:'A512',source:'磨飯 App',contact:'陳小姐',items:5,amount:168,wait:'2 分鐘'},{id:'W331',source:'網頁',contact:'梁先生',items:3,amount:62,wait:'1 分鐘'}],
-  queue:[{id:'T1824',source:'電話',contact:'電話尾號 1824',items:2,amount:96,wait:'4 分鐘'},{id:'T6631',source:'WhatsApp',contact:'WhatsApp 尾號 6631',items:1,amount:59,wait:'6 分鐘'}]
+const demoPendingOrders={
+  online:[{id:'A512',source:'磨飯 App',contact:'陳小姐',phone:'85291234567',items:5,amount:168,wait:'2 分鐘',paymentStatus:'已付款，待核對',paymentMethod:'FPS',proof:'../../assets/products/f4.webp',lines:[['蜜糖雞絲＋鹽酥雞',2,90],['台式奶茶',2,32],['香脆雞翼',1,18]]},{id:'W331',source:'網頁',contact:'梁先生',phone:'85262345678',items:3,amount:62,wait:'1 分鐘',paymentStatus:'已付款，待核對',paymentMethod:'PayMe',proof:'../../assets/products/f1.webp',lines:[['原味紫米飯團',1,41],['味噌湯',1,12],['可樂',1,9]]}],
+  queue:[{id:'T1824',source:'電話',contact:'電話尾號 1824',phone:'85261231824',items:2,amount:96,wait:'4 分鐘',paymentStatus:'等候客人付款證明',paymentMethod:'待確認',proof:'',lines:[['自選便當',2,96]]},{id:'T6631',source:'WhatsApp',contact:'WhatsApp 尾號 6631',phone:'85261236631',items:1,amount:59,wait:'6 分鐘',paymentStatus:'等候客人付款證明',paymentMethod:'FPS',proof:'',lines:[['紫米飯團 A 餐',1,59]]}]
 };
 
 const saved=readJSON(ORDER_STORAGE_KEY,null);
@@ -123,7 +123,7 @@ const initialCart=saved&&Array.isArray(saved.cart)?saved.cart:[
   makeLine('b1',3,{options:{rice:'肉燥飯'},drinkAssignments:[drinkSelection('taiwan-milk-tea'),drinkSelection('taiwan-milk-tea'),drinkSelection('taiwan-milk-tea')]})
 ];
 const defaultHealth={api:{ok:false,label:'API',detail:'未連接'},printer:{ok:false,label:'打印機',detail:'未連接'},sync:{ok:false,label:'同步',detail:'等待 API'},backup:{ok:true,label:'備份',detail:'本機資料正常'}};
-const store=createStore({category:'全部',cart:normalizeCart(initialCart),settings,quickDrawerOpen:false,operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false},health:defaultHealth},{storageKey:ORDER_STORAGE_KEY,normalize:state=>({...state,quickDrawerOpen:Boolean(state.quickDrawerOpen),cart:normalizeCart(state.cart||[]),settings:{...settings,...(state.settings||{}),catalog:{...settings.catalog,...(state.settings?.catalog||{})},cart:{...settings.cart,...(state.settings?.cart||{})},quickDrinks:{...settings.quickDrinks,...(state.settings?.quickDrinks||{})}},operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false,...(state.operations||{})},health:{...defaultHealth,...(state.health||{})}})});
+const store=createStore({category:'全部',cart:normalizeCart(initialCart),settings,quickDrawerOpen:false,pendingOrders:safeClone(demoPendingOrders),runningOrders:[],completedOrders:[],operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false},health:defaultHealth},{storageKey:ORDER_STORAGE_KEY,normalize:state=>({...state,quickDrawerOpen:Boolean(state.quickDrawerOpen),cart:normalizeCart(state.cart||[]),pendingOrders:state.pendingOrders||safeClone(demoPendingOrders),runningOrders:Array.isArray(state.runningOrders)?state.runningOrders:[],completedOrders:Array.isArray(state.completedOrders)?state.completedOrders:[],settings:{...settings,...(state.settings||{}),catalog:{...settings.catalog,...(state.settings?.catalog||{})},cart:{...settings.cart,...(state.settings?.cart||{})},quickDrinks:{...settings.quickDrinks,...(state.settings?.quickDrinks||{})}},operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false,...(state.operations||{})},health:{...defaultHealth,...(state.health||{})}})});
 const queue=createRenderQueue(render);store.subscribe(()=>queue.schedule());
 installErrorBoundary({toast:showToast,report:error=>window.parent?.postMessage?.({type:'morefun:page-runtime-error',page:'order',message:String(error?.message||error)},'*')});
 
@@ -162,17 +162,25 @@ function quickDrinks(){
 function operationLabel(state){if(state.operations.immediateStopped||!state.operations.acceptingOrders)return '已停止接單';if(state.operations.scheduledClose)return '接單至 '+state.operations.scheduledClose;return '接單中';}
 function healthIssueCount(state){return Object.values(state.health).filter(item=>!item.ok).length;}
 function topbar(){
-  const state=store.get();const issues=healthIssueCount(state);
-  return '<header class="topbar"><div class="brand">磨飯 SMT</div><button class="online-state '+(state.operations.acceptingOrders&&!state.operations.immediateStopped?'is-online':'is-offline')+'" data-action="open-status"><span>⌁</span>'+operationLabel(state)+'</button><div class="order-number">訂單：<strong>10248</strong></div><div class="spacer"></div><button class="top-btn" data-action="toggle-pending-panel">▤ 待處理 <span class="badge">8</span></button><button class="top-btn" data-action="open-soldout">⊗ 售罄 2</button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button></header>';
+  const state=store.get();const issues=healthIssueCount(state),pendingCount=Object.values(state.pendingOrders).flat().length;
+  return '<header class="topbar"><div class="brand">磨飯 SMT</div><button class="online-state '+(state.operations.acceptingOrders&&!state.operations.immediateStopped?'is-online':'is-offline')+'" data-action="open-status"><span>⌁</span>'+operationLabel(state)+'</button><div class="order-number">訂單：<strong>10248</strong></div><div class="spacer"></div><button class="top-btn" data-action="toggle-pending-panel">▤ 待處理 <span class="badge">'+pendingCount+'</span></button><button class="top-btn" data-action="open-soldout">⊗ 售罄 2</button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button></header>';
 }
 function pendingPanel(){
+  const pendingOrders=store.get().pendingOrders;
   const rows=list=>list.map(x=>'<button data-action="process-pending-order" data-id="'+x.id+'"><span><strong>'+x.id+' · '+x.source+'</strong><small>'+x.contact+'</small></span><b>'+x.items+' 件 · '+money(x.amount)+'</b><small>等待 '+x.wait+' · 按下處理</small></button>').join('');
   return '<aside class="pending-panel modal-card"><header><strong>待處理</strong><button data-action="dismiss-modal">×</button></header><div class="pending-split"><section><h3>磨飯 App／網頁訂單</h3><div class="pending-scroll">'+rows(pendingOrders.online)+'</div></section><section><h3>電話／WhatsApp 排隊單</h3><div class="pending-scroll">'+rows(pendingOrders.queue)+'</div></section></div><footer class="single-action"><button data-action="dismiss-modal">返回</button></footer></aside>';
 }
 function pendingDetailModal(){
   const x=modal.order;
-  return '<aside class="pending-panel modal-card"><header><div><small>'+x.source+'</small><strong>'+x.id+' · '+x.contact+'</strong></div><button data-action="dismiss-modal">×</button></header><div class="pending-order-detail"><span>產品數量 <b>'+x.items+' 件</b></span><span>訂單金額 <b>'+money(x.amount)+'</b></span><span>等候時間 <b>'+x.wait+'</b></span><p>確認資料後可正式接單；電話／WhatsApp 單先核對聯絡資料。</p></div><footer class="single-action"><button data-action="dismiss-modal">返回</button><button class="primary" data-action="accept-pending-order">確認處理</button></footer></aside>';
+  return '<aside class="pending-panel modal-card"><header><div><small>'+x.source+'</small><strong>'+x.id+' · '+x.contact+'</strong></div><button data-action="dismiss-modal">×</button></header><div class="pending-order-detail"><span>產品數量 <b>'+x.items+' 件</b></span><span>訂單金額 <b>'+money(x.amount)+'</b></span><span>等候時間 <b>'+x.wait+'</b></span><span>付款狀態 <b>'+x.paymentStatus+'</b></span><p>開始核對後會顯示完整產品、金額及付款證明；此時仍未正式接單。</p></div><footer class="single-action"><button data-action="dismiss-modal">返回</button><button class="primary" data-action="start-pending-review">開始核對</button></footer></aside>';
 }
+function pendingReviewModal(){
+  const x=modal.order;const whatsapp=createWhatsAppLink(x.phone,(x.contact||'客人')+'，你好。磨飯訂單 '+x.id+' 正在核對中，請回覆或補充付款證明，謝謝。');
+  const lines=(x.lines||[]).map(line=>'<div><span>'+escapeHtml(line[0])+' ×'+line[1]+'</span><b>'+money(line[2])+'</b></div>').join('');
+  const proof=x.proof?'<button class="payment-proof" data-action="enlarge-proof">'+imageBlock(x.proof,'付款證明','payment-proof-image')+'<span>按下放大付款證明</span></button>':'<div class="payment-proof empty"><strong>尚未收到付款證明</strong><span>請用右方 WhatsApp QR Code 聯絡客人</span></div>';
+  return '<aside class="pending-review-card modal-card"><header><div><small>'+x.source+' · 訂單核對</small><strong>'+x.id+' · '+x.contact+'</strong></div><button data-action="dismiss-modal">×</button></header><div class="pending-review-body"><section class="review-order"><div class="review-summary"><span>產品 <b>'+x.items+' 件</b></span><span>總額 <b>'+money(x.amount)+'</b></span><span>付款 <b>'+x.paymentMethod+'</b></span></div><div class="review-lines">'+lines+'</div><div class="payment-status"><span>付款狀態</span><strong>'+x.paymentStatus+'</strong></div>'+proof+'</section><aside class="whatsapp-qr"><strong>WhatsApp QR Code</strong><p>公司電話掃描後，直接開啟客人對話及預設訊息。</p><div class="qr-code" data-qr="'+escapeHtml(whatsapp)+'"></div><a href="'+escapeHtml(whatsapp)+'" target="_blank" rel="noopener">在此裝置開啟 WhatsApp</a></aside></div><footer class="single-action"><button data-action="dismiss-modal">返回</button><button data-action="report-payment-issue">資料有問題</button><button class="primary" data-action="accept-pending-order" '+(x.proof?'':'disabled')+'>確認接單</button></footer></aside>';
+}
+function enlargedProofModal(){const x=modal.order;return '<aside class="proof-lightbox modal-card"><header><strong>'+x.id+' · 付款證明</strong><button data-action="back-to-pending-review">×</button></header>'+imageBlock(x.proof,'付款證明放大圖','proof-full')+'<footer class="right-action"><button data-action="back-to-pending-review">返回核對</button></footer></aside>';}
 function modalScrim(){return modal?'<div class="modal-scrim" aria-hidden="true"></div>':'';}
 function quickSettingsModal(){
   const state=store.get();const q=state.settings.quickDrinks;
@@ -254,11 +262,13 @@ function activeModal(){
   if(modal.type==='bulk')return bulkOptionModal();
   if(modal.type==='pending')return pendingPanel();
   if(modal.type==='pending-detail')return pendingDetailModal();
+  if(modal.type==='pending-review')return pendingReviewModal();
+  if(modal.type==='proof')return enlargedProofModal();
   return '';
 }
 function anchorRect(button){const r=button?.getBoundingClientRect?.();return r?{left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}:null;}
 function positionActiveCard(){
-  const card=document.querySelector('.side-card,.product-settings-card,.modifier-card,.pending-panel');const a=modal?.anchor;if(!card||!a)return;
+  const card=document.querySelector('.side-card,.product-settings-card,.modifier-card,.pending-panel,.pending-review-card,.proof-lightbox');const a=modal?.anchor;if(!card||!a)return;
   const topbarRect=document.querySelector('.topbar')?.getBoundingClientRect(),bottomNavRect=document.querySelector('.bottom-nav')?.getBoundingClientRect();
   const cartRect=document.querySelector('.cart')?.getBoundingClientRect();
   if(modal?.type==='pending'&&cartRect)card.style.maxHeight=Math.min(cartRect.height,(bottomNavRect?.top||innerHeight)-(topbarRect?.bottom||0)-32)+'px';
@@ -278,6 +288,7 @@ function render(){
   app.innerHTML='<main>'+topbar()+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%"><aside class="cart"><header><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2><button data-action="clear-cart">清空</button></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer><button data-action="save">暫存</button><button class="primary" data-action="checkout">結帳 '+money(cartTotal(state.cart))+'</button></footer></aside><section class="catalog"><nav class="categories">'+categories.map(cat=>'<button data-action="category" data-value="'+cat+'" class="'+(cat===state.category?'active':'')+'">'+cat+'</button>').join('')+'</nav><div class="products products-'+template+'">'+filtered.map(productCard).join('')+'</div>'+quickDrinks()+'</section></section></section><nav class="bottom-nav"><button class="active">點餐</button><button>訂單</button><button>堂食</button><button>售罄</button><button>更多</button></nav></main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
   document.body.classList.toggle('has-modal',Boolean(modal));
   bindImageFallbacks(app);
+  document.querySelectorAll('[data-qr]').forEach(node=>{if(typeof window.qrcode!=='function')return;const qr=window.qrcode(0,'M');qr.addData(node.dataset.qr);qr.make();node.innerHTML=qr.createImgTag(5,8,'WhatsApp QR Code');});
   requestAnimationFrame(positionActiveCard);
 }
 function markDirty(){if(modal)modal.dirty=true;}
@@ -347,8 +358,16 @@ function handle(button){
   else if(action==='confirm-cancel'){confirmState=null;render();}
   else if(action==='confirm-discard'){modal=confirmState?.returnModal||null;confirmState=null;render();}
   else if(action==='toggle-pending-panel'){if(modal?.type==='pending')modal=null;else modal={type:'pending',anchor:anchorRect(button),dirty:false};render();}
-  else if(action==='process-pending-order'){const order=[...pendingOrders.online,...pendingOrders.queue].find(x=>x.id===button.dataset.id);if(order){modal={type:'pending-detail',order,anchor:modal?.anchor,dirty:false};showToast('開啟 '+order.id+' 處理流程');render();}}
-  else if(action==='accept-pending-order'){showToast('已確認處理 '+modal.order.id);modal=null;render();}
+  else if(action==='process-pending-order'){const pendingOrders=store.get().pendingOrders;const order=Object.values(pendingOrders).flat().find(x=>x.id===button.dataset.id);if(order){modal={type:'pending-detail',order,anchor:modal?.anchor,dirty:false};showToast('開啟 '+order.id+' 核對流程');render();}}
+  else if(action==='start-pending-review'){modal={type:'pending-review',order:modal.order,anchor:modal.anchor,dirty:false};render();}
+  else if(action==='enlarge-proof'){modal={type:'proof',order:modal.order,anchor:modal.anchor,dirty:false};render();}
+  else if(action==='back-to-pending-review'){modal={type:'pending-review',order:modal.order,anchor:modal.anchor,dirty:false};render();}
+  else if(action==='report-payment-issue'){showToast('請掃描 WhatsApp QR Code 聯絡客人');}
+  else if(action==='accept-pending-order'){
+    const accepted=acceptPendingOrder(modal.order);
+    store.set(state=>{state.pendingOrders={online:state.pendingOrders.online.filter(x=>x.id!==accepted.id),queue:state.pendingOrders.queue.filter(x=>x.id!==accepted.id)};state.runningOrders=state.runningOrders.concat(accepted);return state;});
+    showToast('已接單 '+accepted.id+'；30分鐘後自動完成');modal=null;render();
+  }
   else if(action==='set-order-mode')store.set(state=>({...state,quickMode:button.dataset.value==='quick'}));
   else if(action==='toggle-quick-drink-strip')updateSettings(s=>{s.quickDrinks.visible=s.quickDrinks.visible===false;});
   else if(action==='quick-display')updateSettings(s=>{s.quickDrinks.showImages=button.dataset.value==='image';});
@@ -414,3 +433,4 @@ app.addEventListener('click',event=>{const button=event.target.closest('[data-ac
 app.addEventListener('input',event=>{if(event.target.matches('[data-action="detail-note"]')&&modal?.type==='product'){modal.draft.note=event.target.value;markDirty();}});
 render();
 setTimeout(()=>{if(newOrderNotice?.visible){newOrderNotice.visible=false;render();}},3000);
+setInterval(()=>{store.set(state=>{const next=completeExpiredOrders(state.runningOrders);const completed=next.filter((order,index)=>order.status==='completed'&&state.runningOrders[index]?.status!=='completed');if(!completed.length)return state;state.runningOrders=next.filter(order=>order.status==='running');state.completedOrders=state.completedOrders.concat(completed);return state;});},30000);

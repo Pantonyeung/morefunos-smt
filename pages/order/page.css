@@ -492,6 +492,40 @@ button:active,
   display: flex;
   flex-direction: column;
 }
+.pending-review-card {
+  width: min(760px, 42vw);
+  max-height: calc(100vh - 132px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pending-review-body {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 14px;
+  padding: 16px;
+}
+.review-order { display: grid; gap: 12px; }
+.review-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.review-summary span,.payment-status { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 5px; }
+.review-summary b { font-size: 18px; }
+.review-lines { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+.review-lines div { display: flex; justify-content: space-between; gap: 12px; padding: 11px 12px; border-bottom: 1px solid var(--line); }
+.review-lines div:last-child { border-bottom: 0; }
+.payment-status { grid-template-columns: 1fr auto; align-items: center; background: #fff8f1; }
+.payment-proof { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 10px; display: grid; gap: 8px; text-align: left; }
+.payment-proof-image { width: 100%; height: 170px; border-radius: 9px; object-fit: cover; }
+.payment-proof.empty { min-height: 120px; place-content: center; color: var(--muted); }
+.whatsapp-qr { border-left: 1px solid var(--line); padding-left: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.whatsapp-qr p { margin: 0; color: var(--muted); line-height: 1.45; }
+.qr-code { width: 190px; min-height: 190px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.qr-code img { width: 174px; height: 174px; image-rendering: pixelated; }
+.whatsapp-qr a { color: #16784a; font-weight: 850; }
+.pending-review-card > footer { grid-template-columns: 1fr 1fr 1.35fr; }
+.proof-lightbox { width: min(900px, 68vw); max-height: calc(100vh - 120px); display: flex; flex-direction: column; }
+.proof-full { width: 100%; min-height: 0; max-height: calc(100vh - 250px); object-fit: contain; background: #f3eee8; }
 .pending-panel::before {
   content: "";
   position: absolute;
