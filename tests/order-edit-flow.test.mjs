@@ -286,3 +286,10 @@ test('specified pairing offers quick drinks and accepts main plus snack before d
   assert.match(page,/拆開套餐/);
   assert.match(page,/dissolveRiceballSet/);
 });
+
+test('order page loads the shared live menu contract with offline fallback',()=>{
+  assert.match(page,/loadMenuCatalog/);
+  assert.match(page,/bootstrapLiveMenu/);
+  assert.match(page,/離線模式：使用上次餐牌/);
+  assert.match(page,/products\.filter\(item=>item\.available===false\)/);
+});

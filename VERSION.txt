@@ -1,4 +1,4 @@
-MoreFun SMT Order Page V1.10
-Build: order-v1-10
+MoreFun SMT Order Page V1.11
+Build: order-v1-11
 Branch target: feat/smt-order-page-v1
-Status: parent riceball combo, direct quick-drink pairing, combo editing and reversible dismantling implemented; device acceptance pending
+Status: live menu.read catalog, offline cache, sold-out sync and reversible riceball combo implemented; device acceptance pending

@@ -20,7 +20,8 @@
 | D-014 | SUPERSEDED | 結帳按鈕稱「先處理」 | 改為 `結帳 $金額` |
 | D-015 | OPEN | 真實訂單、付款、打印、設備 API 格式 | 需後台／硬件 |
 | D-016 | OPEN | iPad及T2S最終視覺 Lock | 需實機證據 |
-| D-017 | CURRENT | `order-v1-10` 是現行程式基準 | VERSION／Status §18 |
+| D-017 | SUPERSEDED | `order-v1-10` 是飯團套餐父項基準 | VERSION／Status §18 |
+| D-018 | CURRENT | `order-v1-11` 接入客戶端既有 `menu.read`；API→快取→內置餐牌三級回退，餐牌資料不得阻止本機點單 | `pages/order/menu-api.js`／47 tests |
 | D-018 | LOCKED | 飯團套餐必須是一張父項；可欠飲品但阻止結帳 | Current Lock §17 |
 | D-019 | LOCKED | 快捷飲品可直接嵌入套餐，不必先進購物車 | Current Lock §17 |
 | D-020 | LOCKED | 套餐可拆開，並按單品價重新計算 | Current Lock §17 |

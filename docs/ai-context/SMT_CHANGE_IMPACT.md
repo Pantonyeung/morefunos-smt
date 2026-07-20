@@ -10,5 +10,6 @@
 | 指定配對 | A–Z、餘量、重複、確認 | 5×3→3組；10×10→10組 |
 | 待處理 | 兩渠道、proof、QR、接單、30分鐘 | 有／無proof；WhatsApp實掃 |
 | Store | 舊快取、service worker、合併展示 | 清快取與保留快取重載 |
+| 餐牌 API | category/product欄位、價格、圖片、售罄、CORS、斷線 | API／快取／首次離線三條路 |
 
 實機失敗先更新 Status，再修程式；不得只改 CSS 後直接寫「完成」。
