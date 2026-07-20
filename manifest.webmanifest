@@ -1,10 +1,1 @@
-{
-  "name": "磨飯 SMT",
-  "short_name": "磨飯 SMT",
-  "start_url": "./",
-  "display": "standalone",
-  "orientation": "landscape",
-  "background_color": "#fffaf4",
-  "theme_color": "#17120f",
-  "icons": []
-}
+{"name":"磨飯 SMT V16","short_name":"磨飯 SMT","start_url":"./#/order","display":"fullscreen","background_color":"#111111","theme_color":"#ef5218","orientation":"any"}

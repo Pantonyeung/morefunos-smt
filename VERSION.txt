@@ -1,0 +1,4 @@
+MoreFun SMT Master V1.4 + Order Page Design Lock V1.0
+Build: master-v14
+Branch target: feat/smt-master-v1
+Status: runnable baseline bundled with 2026-07-20 confirmed design specification; new design implementation pending
