@@ -40,3 +40,14 @@ test('cart quantity updates totals, trims drink assignments, and removes zero ro
   assert.equal(decreased[0].drinkAssignments.length,1);
   assert.deepEqual(updateCartLineQuantity(decreased,'l1',-1,{set:1}),[]);
 });
+
+test('order shell keeps the bottom navigation inside the fixed canvas', () => {
+  assert.match(css,/main\{[^}]*height:100%[^}]*display:flex[^}]*flex-direction:column/);
+  assert.match(css,/\.workspace\{flex:1;min-height:0/);
+  assert.doesNotMatch(css,/\.workspace\{height:calc\(100% - 78px\)/);
+});
+
+test('checkout call to action shows the payable total', () => {
+  assert.ok(page.includes("結帳 '+money(cartTotal(state.cart))+'"));
+  assert.doesNotMatch(page,/>先處理</);
+});
