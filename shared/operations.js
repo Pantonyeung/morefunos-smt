@@ -20,7 +20,7 @@ function event(type,terminalId,at,extra={}){
   return {type,terminalId:normalizeTerminalId(terminalId),at:Number(at),...extra};
 }
 
-export function createDraftRecord({cart,terminalId,drafts=[],counters={},session=null,now=Date.now()}){
+export function createDraftRecord({cart,terminalId,drafts=[],counters={},session=null,context=null,now=Date.now()}){
   const ownerTerminalId=normalizeTerminalId(terminalId);
   const draftNumber=nextDraftNumber(drafts,ownerTerminalId,counters);
   const previousAudit=clone(session?.audit||[]);
@@ -36,6 +36,7 @@ export function createDraftRecord({cart,terminalId,drafts=[],counters={},session
     createdAt:Number(now),
     updatedAt:Number(now),
     status:'saved',
+    context:context?clone(context):null,
     audit:previousAudit.concat(event(type,ownerTerminalId,now,{draftNumber,originDraftNumber}))
   };
 }
@@ -50,6 +51,7 @@ export function restoreDraftForTerminal(draft,terminalId,now=Date.now()){
   }
   return {
     cart:clone(draft?.cart||[]),
+    context:draft?.context?clone(draft.context):null,
     session:{
       originDraftNumber:draft?.originDraftNumber||draft?.draftNumber||null,
       sourceDraftNumber:draft?.draftNumber||null,

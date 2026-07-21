@@ -1,7 +1,7 @@
 # 磨飯 SMT｜AI Start Here
 
-更新：2026-07-21｜分支：`feat/smt-order-page-v1`｜程式：`order-v1-19`
-最新自動驗證：100/100 通過｜產品狀態：堂食及結帳介面待 iPad／Sunmi T2S 實機驗收
+更新：2026-07-21｜分支：`feat/smt-order-page-v1`｜程式：`order-v1-20`
+最新自動驗證：104/104 通過｜產品狀態：堂食及結帳介面待 iPad／Sunmi T2S 實機驗收
 
 ## 目標
 

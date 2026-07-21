@@ -1,6 +1,7 @@
 const TABLE_IDS=['1','2','3','4','5','6','7','8','戶外'];
 
 const clone=value=>JSON.parse(JSON.stringify(value));
+const terminal=value=>String(value||'SMT').trim().toUpperCase().replace(/[^A-Z0-9]/g,'')||'SMT';
 
 export function createInitialDineState(now=Date.now()){
   return {
@@ -25,6 +26,30 @@ export function tableView(table,now=Date.now()){
 export function openTable(table,now=Date.now()){
   if(table.status==='occupied')return clone(table);
   return {...clone(table),status:'occupied',openedAt:now,session:{id:`DINE-${table.id}-${now}`,items:[],orderBatches:[],pendingSubmissions:[],payments:[]}};
+}
+
+export function commitTableOrder(state,context,cart,{terminalId='SMT',now=Date.now()}={}){
+  if(!context?.tableId)throw new Error('未有指定堂食枱號');
+  if(!Array.isArray(cart)||!cart.length)throw new Error('購物車未有餐品');
+  const next=clone(state),index=next.tables.findIndex(table=>table.id===String(context.tableId));
+  if(index<0)throw new Error('找不到指定堂食枱');
+  let table=next.tables[index];
+  if(table.status!=='occupied')table=openTable(table,now);
+  if(context.sessionId&&table.session?.id!==context.sessionId)throw new Error('堂食會話已失效，請重新開啟枱位');
+  const batchId=`STAFF-${table.id}-${now}-${table.session.orderBatches.length+1}`;
+  const items=clone(cart).map((item,itemIndex)=>({
+    ...item,
+    lineId:item.lineId||`${batchId}-${itemIndex+1}`,
+    qty:Math.max(1,Number(item.qty)||1),
+    unitPrice:Number(item.unitPrice??(Number(item.total||0)/Math.max(1,Number(item.qty)||1)))||0,
+    paidQty:Number(item.paidQty||0),
+    batchId
+  }));
+  table.session.items.push(...items);
+  table.session.orderBatches.push({id:batchId,source:'STAFF',terminalId:terminal(terminalId),createdAt:now,items:clone(items)});
+  next.tables[index]=table;
+  next.selectedTableId=table.id;
+  return next;
 }
 
 export function applyItemPayment(session,selections,method,now=Date.now()){

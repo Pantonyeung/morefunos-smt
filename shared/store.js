@@ -4,6 +4,7 @@ export const DRAFT_STORAGE_KEY='morefun:smt:v16:drafts';
 export const DRAFT_COUNTER_STORAGE_KEY='morefun:smt:v16:draft-counters';
 export const ORDER_HISTORY_STORAGE_KEY='morefun:smt:v16:orders';
 export const TERMINAL_ID_STORAGE_KEY='morefun:smt:terminal-id';
+export const DINE_STORAGE_KEY='morefun-smt-dine-v2';
 
 export function readJSON(key,fallback){
   try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}

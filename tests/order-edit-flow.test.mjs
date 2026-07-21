@@ -48,7 +48,8 @@ test('order shell keeps the bottom navigation inside the fixed canvas', () => {
 });
 
 test('checkout call to action shows the payable total', () => {
-  assert.ok(page.includes("結帳 '+money(cartTotal(state.cart))+'"));
+  assert.match(page,/const checkoutLabel=state\.dineContext\?'落單到 '/);
+  assert.match(page,/:\s*'結帳 '\+money\(cartTotal\(state\.cart\)\)/);
   assert.doesNotMatch(page,/>先處理</);
 });
 

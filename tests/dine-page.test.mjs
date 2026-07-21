@@ -41,6 +41,38 @@ test('堂食掃碼提交保持待確認，確認後才加入落單記錄',async(
   assert.equal(next.orderBatches.length,1);
 });
 
+test('員工堂食點餐會建立指定枱會話內容，金額及批次由同一批餐品計算',async()=>{
+  const {createInitialDineState,commitTableOrder}=await import('../pages/dine/dine-domain.js');
+  const state=createInitialDineState(1000);
+  const cart=[{lineId:'line-1',name:'自選便當',qty:2,unitPrice:58,total:116}];
+  const next=commitTableOrder(state,{tableId:'3',sessionId:null},cart,{terminalId:'SMM-01',now:2000});
+  const table=next.tables.find(entry=>entry.id==='3');
+  assert.equal(table.status,'occupied');
+  assert.equal(table.session.items.length,1);
+  assert.equal(table.session.orderBatches.length,1);
+  assert.equal(table.session.orderBatches[0].source,'STAFF');
+  assert.equal(table.session.orderBatches[0].terminalId,'SMM01');
+  assert.equal(tableViewForTest(await import('../pages/dine/dine-domain.js'),table,2000).total,116);
+});
+
+test('堂食點餐拒絕寫入已失效的舊會話，避免餐品掛錯枱',async()=>{
+  const {createInitialDineState,openTable,commitTableOrder}=await import('../pages/dine/dine-domain.js');
+  const state=createInitialDineState(1000);
+  state.tables[0]=openTable(state.tables[0],1000);
+  assert.throws(()=>commitTableOrder(state,{tableId:'1',sessionId:'DINE-1-old'},[{lineId:'x',name:'飯團',qty:1,unitPrice:41}],{now:2000}),/堂食會話已失效/);
+});
+
+test('堂食暫存單保留枱號，取單後仍然回到原枱',async()=>{
+  const {createDraftRecord,restoreDraftForTerminal}=await import('../shared/operations.js');
+  const context={mode:'dine',tableId:'6',sessionId:'DINE-6-1000'};
+  const draft=createDraftRecord({cart:[{lineId:'x',qty:1}],terminalId:'SMM-01',context,now:2000});
+  assert.deepEqual(draft.context,context);
+  const restored=restoreDraftForTerminal(draft,'SMT-01',3000);
+  assert.deepEqual(restored.context,context);
+});
+
+function tableViewForTest(domain,table,now){return domain.tableView(table,now);}
+
 test('堂食頁提供簡潔枱詳情、半屏待確認及兩層付款操作',()=>{
   const page=read('pages/dine/page.js');
   const css=read('pages/dine/page.css');
@@ -53,6 +85,13 @@ test('堂食頁提供簡潔枱詳情、半屏待確認及兩層付款操作',()=
   assert.match(page,/選擇餐品付款/);
   assert.match(page,/確認落單/);
   assert.match(css,/\.pending-review-panel[^}]*width:\s*min\(50vw/);
+});
+
+test('正式堂食頁不會自動建立示範枱或示範訂單，掃碼入口標示第二版保留',()=>{
+  const page=read('pages/dine/page.js');
+  assert.doesNotMatch(page,/function demoState/);
+  assert.match(page,/第二版保留/);
+  assert.match(page,/DRAFT_STORAGE_KEY/);
 });
 
 test('現有點餐及訂單底欄可以進入獨立堂食頁',()=>{

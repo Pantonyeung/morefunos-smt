@@ -1,4 +1,4 @@
-MoreFun SMT V1.19
-Build: order-v1-19
+MoreFun SMT V1.20
+Build: order-v1-20
 Branch target: feat/smt-order-page-v1
-Status: independent dine-in page and local dine-in workflow implemented; real order, QR session, payment gateway, printer APIs and device acceptance pending
+Status: staff dine-in table ordering, table-bound drafts, batches and payments implemented locally; QR ordering retained for V2.0; real cloud order, printer APIs and device acceptance pending
