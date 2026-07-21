@@ -12,6 +12,9 @@
 | `pages/order/order-domain.js` | 純資料操作 | 無DOM |
 | `pages/order/page-data.js` | catalog、drink、pending示範資料 | page.js |
 | `pages/order/menu-api.js` | Firebase RTDB餐牌讀取、正規化、SMT規則合併、快取及離線回退 | `public/catalogV1`、page-data後備 |
+| `pages/orders/page.js` | 三渠道訂單總覽、詳情、反結帳載回點單頁 | 訂單記錄、終端ID |
+| `pages/checkout/page.js` | 收款選擇、建立訂單、記錄實際結帳終端 | checkout config、operations |
+| `shared/operations.js` | 暫存流水、跨機接手、再暫存 lineage、結帳稽核 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
 | `tests/menu-api.test.mjs` | 真實餐牌合約、映射及離線回歸 | menu-api |
@@ -32,6 +35,8 @@
 | 卡片定位 | `anchorRect`, `positionActiveCard`, `activeModal` | modal／CSS tests |
 | 顯示設定 | `settingsModal`, `quickSettingsModal` | settings tests |
 | 真實餐牌 | `loadMenuCatalog`, `mapMenuToOrderCatalog`, `bootstrapLiveMenu` | menu API tests |
+| 暫存／取單 | `createDraftRecord`, `restoreDraftForTerminal`, draft modal actions | draft handoff tests |
+| 結帳終端稽核 | `recordCheckoutOperator`, `completeCheckout` | draft／orders UI tests |
 
 ## 資料流
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "project": "morefunos-smt",
-  "baseline": "order-v1-12",
+  "baseline": "order-v1-13",
   "generatedAt": "2026-07-21",
   "evidenceTypes": ["EXTRACTED", "INFERRED"],
   "nodes": [

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "morefunos-smt",
   "branch": "feat/smt-order-page-v1",
-  "baseline": "order-v1-12",
+  "baseline": "order-v1-13",
   "requiredFiles": [
     "AGENTS.md",
     "SMT_AI_START_HERE.md",

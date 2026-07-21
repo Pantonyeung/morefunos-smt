@@ -26,5 +26,8 @@
 | D-019 | LOCKED | 快捷飲品可直接嵌入套餐，不必先進購物車 | Current Lock §17 |
 | D-020 | LOCKED | 套餐可拆開，並按單品價重新計算 | Current Lock §17 |
 | D-021 | CURRENT | `order-v1-12` 以 Firebase RTDB `public/catalogV1` 作唯一即時餐牌/API來源；Firebase→快取→內置餐牌三級回退。Google Sheet只作記錄投影，Apps Script不得進入SMT運行鏈路 | `pages/order/menu-api.js`／menu API tests |
+| D-022 | LOCKED | 暫存按操作終端獨立流水編號；跨機取回保留來源，接手機再次暫存改用接手機新編號 | Current Lock §18／draft tests |
+| D-023 | LOCKED | 結帳訂單必須記錄實際完成結帳的終端及完整暫存交接 audit | Current Lock §18／checkout tests |
+| D-024 | LOCKED | 反結帳並重用直接載回既有點單頁，不在訂單頁重造產品編輯器 | Current Lock §18 |
 
 新增決策不得改寫舊行；新增一行並把被取代項標 `SUPERSEDED`。
