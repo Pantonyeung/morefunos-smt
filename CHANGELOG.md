@@ -1,5 +1,13 @@
 # CHANGELOG｜More Fun SMT Master V1.0 Fixed
 
+## 2026-07-21 — order-v1-13 暫存交接及操作終端稽核
+
+- 加入 SMT／SMM 等終端各自獨立的暫存流水號。
+- 加入跨終端取單、接手 lineage，以及接手機再次暫存時重新編號。
+- 結帳建立本機訂單記錄，保存實際結帳終端與完整 audit。
+- 新增三渠道訂單頁初版及反結帳內容載回既有點單頁接口。
+- 自動驗證增至 59 項；iPad／T2S 及 Firebase 訂單寫入仍待驗收／接入。
+
 ## 2026-07-21 — order-v1-12 Firebase 正式資料架構
 
 - SMT 改為直接 GET Firebase RTDB `public/catalogV1`，不再經 Apps Script。

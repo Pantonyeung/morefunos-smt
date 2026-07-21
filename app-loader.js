@@ -1,6 +1,6 @@
 const stage=document.getElementById('stage');
 const frame=document.getElementById('page');
-const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html'};
+const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html'};
 const CANVAS_WIDTH=1920;
 let current='';
 let fitToken=0;
