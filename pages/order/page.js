@@ -531,3 +531,4 @@ async function bootstrapLiveMenu(){
 }
 bootstrapLiveMenu().catch(error=>{console.error('MENU_BOOTSTRAP_FAILED',error);showToast('餐牌連接失敗，已保留本機點單');});
 setTimeout(()=>{if(newOrderNotice?.visible){newOrderNotice.visible=false;render();}},3000);
+setInterval(()=>{store.set(state=>{const next=completeExpiredOrders(state.runningOrders);const completed=next.filter((order,index)=>order.status==='completed'&&state.runningOrders[index]?.status!=='completed');if(!completed.length)return state;state.runningOrders=next.filter(order=>order.status==='running');state.completedOrders=state.completedOrders.concat(completed);return state;});},30000);
