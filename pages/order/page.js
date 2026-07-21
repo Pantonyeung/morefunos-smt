@@ -1,5 +1,5 @@
 import {createRenderQueue,createStore,installErrorBoundary,safeClone} from '../../shared/runtime.js';
-import {ORDER_STORAGE_KEY,SETTINGS_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,TERMINAL_ID_STORAGE_KEY,DINE_STORAGE_KEY,readJSON,writeJSON,stableId} from '../../shared/store.js';
+import {ORDER_STORAGE_KEY,SETTINGS_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,TERMINAL_ID_STORAGE_KEY,DINE_STORAGE_KEY,SUPPLY_STORAGE_KEY,readJSON,writeJSON,stableId} from '../../shared/store.js';
 import {createDraftRecord,normalizeTerminalId,restoreDraftForTerminal} from '../../shared/operations.js';
 import {money,imageBlock,bindImageFallbacks,showToast,escapeHtml} from '../../shared/components.js';
 import {orderPageConfig as defaults} from './page-config.js';
@@ -20,6 +20,7 @@ function indexCatalog(){
 }
 indexCatalog();
 let modal=null;
+const supplyOverrides=readJSON(SUPPLY_STORAGE_KEY,{})||{};
 let confirmState=null;
 let newOrderNotice={id:'A516',source:'磨飯 App',items:3,amount:104,visible:true};
 const demoPendingOrders={
@@ -149,7 +150,7 @@ function drinkChoiceCard(d,action='select-drink',selected=false,context='default
 function productCard(p){
   const template=productTemplate();const showCode=store.get().settings.catalog.showCode;const showDescription=store.get().settings.catalog.showDescription;
   const action=store.get().quickMode?'quick-add-product':'open-product';
-  const unavailable=p.available===false;
+  const unavailable=p.available===false||['soldout','paused'].includes(supplyOverrides[p.id]?.status);
   const code=showCode?'<small class="product-code">'+p.code+'</small>':'';
   if(template==='text')return '<button class="product-card text '+(unavailable?'sold-out':'')+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+(unavailable?'<em>售罄</em>':'')+'</span><b class="product-price">'+money(p.price)+'</b></button>';
   if(template==='small')return '<button class="product-card small '+(unavailable?'sold-out':'')+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'>'+imageBlock(p.image,p.name,'product-thumb')+'<span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+(unavailable?'<em>售罄</em>':'')+'</span><b class="product-price">'+money(p.price)+'</b></button>';
@@ -175,7 +176,7 @@ function quickDrinks(){
 function operationLabel(state){if(state.operations.immediateStopped||!state.operations.acceptingOrders)return '已停止接單';if(state.operations.scheduledClose)return '接單至 '+state.operations.scheduledClose;return '接單中';}
 function healthIssueCount(state){return Object.values(state.health).filter(item=>!item.ok).length;}
 function topbar(){
-  const state=store.get();const issues=healthIssueCount(state),pendingCount=Object.values(state.pendingOrders).flat().length,soldout=products.filter(item=>item.available===false).length;
+  const state=store.get();const issues=healthIssueCount(state),pendingCount=Object.values(state.pendingOrders).flat().length,soldout=products.filter(item=>item.available===false||['soldout','paused'].includes(supplyOverrides[item.id]?.status)).length;
   return '<header class="topbar"><div class="brand">磨飯 SMT</div><span class="terminal-chip">'+terminalId+'</span>'+(state.dineContext?'<span class="terminal-chip">堂食｜'+escapeHtml(state.dineContext.tableId)+' 號枱</span>':'')+'<button class="online-state '+(state.operations.acceptingOrders&&!state.operations.immediateStopped?'is-online':'is-offline')+'" data-action="open-status"><span>⌁</span>'+operationLabel(state)+'</button><div class="order-number">訂單：<strong>10248</strong></div><div class="spacer"></div><button class="top-btn" data-action="toggle-pending-panel">▤ 待處理 <span class="badge">'+pendingCount+'</span></button><button class="top-btn" data-action="open-soldout">⊗ 售罄 '+soldout+'</button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button></header>';
 }
 function draftRows(selectedId=''){
@@ -335,7 +336,7 @@ function positionActiveCard(){
 function render(){
   const state=store.get();const filtered=state.category==='全部'?products:products.filter(p=>p.category===state.category);const template=productTemplate();
   const checkoutLabel=state.dineContext?'落單到 '+escapeHtml(state.dineContext.tableId)+' 號枱 '+money(cartTotal(state.cart)):'結帳 '+money(cartTotal(state.cart));
-  app.innerHTML='<main>'+topbar()+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%"><aside class="cart"><header><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2><button data-action="clear-cart">清空</button></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer><button data-action="open-hold-panel">掛單</button><button data-action="open-drafts">取單'+(drafts.length?' '+drafts.length:'')+'</button><button class="primary" data-action="checkout">'+checkoutLabel+'</button></footer></aside><section class="catalog"><nav class="categories">'+categories.map(cat=>'<button data-action="category" data-value="'+cat+'" class="'+(cat===state.category?'active':'')+'">'+cat+'</button>').join('')+'</nav><div class="products products-'+template+'">'+filtered.map(productCard).join('')+'</div>'+quickDrinks()+'</section></section></section><nav class="bottom-nav"><button class="active">點餐</button><button data-action="navigate-orders">訂單</button><button data-action="navigate-dine">堂食</button><button>售罄</button><button>更多</button></nav></main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
+  app.innerHTML='<main>'+topbar()+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%"><aside class="cart"><header><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2><button data-action="clear-cart">清空</button></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer><button data-action="open-hold-panel">掛單</button><button data-action="open-drafts">取單'+(drafts.length?' '+drafts.length:'')+'</button><button class="primary" data-action="checkout">'+checkoutLabel+'</button></footer></aside><section class="catalog"><nav class="categories">'+categories.map(cat=>'<button data-action="category" data-value="'+cat+'" class="'+(cat===state.category?'active':'')+'">'+cat+'</button>').join('')+'</nav><div class="products products-'+template+'">'+filtered.map(productCard).join('')+'</div>'+quickDrinks()+'</section></section></section><nav class="bottom-nav"><button class="active">點餐</button><button data-action="navigate-orders">訂單</button><button data-action="navigate-dine">堂食</button><button data-action="navigate-soldout">售罄</button><button>更多</button></nav></main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
   document.body.classList.toggle('has-modal',Boolean(modal));
   bindImageFallbacks(app);
   if(modal?.type==='settings'){const first=document.querySelector('.side-card .setting-row');first?.insertAdjacentHTML('beforebegin','<div class="setting-block"><strong>購物車相同產品</strong><div class="segmented"><button data-action="cart-merge" data-value="same" class="'+(state.settings.cart.mergeMode!=='never'?'active':'')+'">相同配置合併</button><button data-action="cart-merge" data-value="never" class="'+(state.settings.cart.mergeMode==='never'?'active':'')+'">逐項顯示</button></div></div>');}
@@ -410,6 +411,7 @@ function handle(button){
   else if(action==='open-soldout'){modal={type:'soldout',anchor:anchorRect(button),dirty:false};render();}
   else if(action==='navigate-orders')window.parent?.postMessage?.({type:'morefun:navigate',route:'orders'},'*');
   else if(action==='navigate-dine')window.parent?.postMessage?.({type:'morefun:navigate',route:'dine'},'*');
+  else if(action==='navigate-soldout')window.parent?.postMessage?.({type:'morefun:navigate',route:'soldout'},'*');
   else if(action==='open-hold-panel'){if(!store.get().cart.length){showToast('購物車未有餐品');return;}modal={type:'hang',dirty:false};render();}
   else if(action==='select-draft'){modal={...modal,selectedDraftId:button.dataset.id};render();}
   else if(action==='assign-table'){
