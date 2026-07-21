@@ -8,8 +8,8 @@ const read = path => readFile(new URL(path, root), 'utf8');
 test('Work and Chat entries point to current baseline', async () => {
   const [agents, start, compact, pack] = await Promise.all([read('AGENTS.md'), read('SMT_AI_START_HERE.md'), read('SMT_CONTEXT_MIN.md'), read('SMT_AI_CONTEXT_PACK.md')]);
   assert.match(agents, /SMT_AI_START_HERE\.md/);
-  assert.match(start, /order-v1-12/);
-  assert.match(compact, /order-v1-12/);
+  assert.match(start, /order-v1-13/);
+  assert.match(compact, /order-v1-13/);
   assert.match(pack, /SMT CHECKPOINT/);
   assert.match(pack, /token 不足不是阻止開發的理由/);
 });
