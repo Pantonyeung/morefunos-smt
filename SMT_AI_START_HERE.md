@@ -1,6 +1,6 @@
 # 磨飯 SMT｜AI Start Here
 
-更新：2026-07-21｜分支：`feat/channel-payment-reconciliation-v1`｜程式：`order-v1-16`
+更新：2026-07-21｜分支：`feat/smt-order-page-v1`｜程式：`order-v1-17`
 最新自動驗證：85/85 通過｜產品狀態：iPad／Sunmi T2S 最終 Lock 尚未完成
 
 ## 目標

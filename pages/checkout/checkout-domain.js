@@ -71,6 +71,7 @@ export function enterKeypadValue(current,key){
 }
 
 export function buildCheckoutRecord({id,cart,channel,payment,pricing,discount,terminalId,now,audit=[],channelData={},receivedAmount=0}){
+  if(Number(pricing?.payable)<=0)throw new Error('訂單金額必須大於零');
   const policy=getChannelPolicy(channel);
   const deferred=policy.requiresPaymentMethod&&payment==='稍後付款';
   const pending=policy.initialPaymentStatus==='付款待核實'||deferred;

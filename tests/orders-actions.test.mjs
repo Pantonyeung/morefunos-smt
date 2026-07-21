@@ -62,6 +62,26 @@ test('訂單頁待核實入口共用完整核數及通知客戶操作',()=>{
   assert.match(ordersPage,/資料有問題/);
   assert.match(ordersPage,/通知客戶/);
   assert.match(ordersPage,/保留待處理/);
+  assert.match(ordersPage,/付款證明/);
+  assert.match(ordersPage,/data-payment-proof/);
+  assert.match(ordersPage,/WhatsApp QR Code/);
+  assert.match(ordersPage,/data-qr/);
+});
+
+test('問題原因提供快選亦容許留空，唔會卡住待處理流程',()=>{
+  assert.match(ordersPage,/問題快選/);
+  assert.match(ordersPage,/截圖不清楚/);
+  assert.match(ordersPage,/金額不相符/);
+  assert.match(ordersPage,/付款紀錄未找到/);
+  assert.match(ordersPage,/付款資料需要跟進/);
+  assert.doesNotMatch(ordersPage,/if\(!reason\).*請輸入問題原因/);
+});
+
+test('打印異常訂單由職員打開後勾選需要重印的文件',()=>{
+  assert.match(ordersPage,/filter-print/);
+  assert.match(ordersPage,/data-action="reprint"/);
+  assert.match(ordersPage,/name="document"/);
+  assert.match(ordersPage,/confirm-reprint/);
 });
 
 test('部分取消使用商品行內加減及一次確認，不再逐項使用下拉選單',()=>{
