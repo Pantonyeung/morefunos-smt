@@ -20,7 +20,7 @@ test('order page saves numbered drafts and restores them through a take-order ca
 test('checkout persists the completing terminal and order audit',()=>{
   assert.match(checkoutPage,/ORDER_HISTORY_STORAGE_KEY/);
   assert.match(checkoutPage,/TERMINAL_ID_STORAGE_KEY/);
-  assert.match(checkoutPage,/recordCheckoutOperator/);
+  assert.match(checkoutPage,/buildCheckoutRecord/);
   assert.match(checkoutPage,/checkedOutByTerminalId/);
 });
 

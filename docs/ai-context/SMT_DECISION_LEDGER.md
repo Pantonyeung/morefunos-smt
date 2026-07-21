@@ -29,5 +29,6 @@
 | D-022 | LOCKED | 暫存按操作終端獨立流水編號；跨機取回保留來源，接手機再次暫存改用接手機新編號 | Current Lock §18／draft tests |
 | D-023 | LOCKED | 結帳訂單必須記錄實際完成結帳的終端及完整暫存交接 audit | Current Lock §18／checkout tests |
 | D-024 | LOCKED | 反結帳並重用直接載回既有點單頁，不在訂單頁重造產品編輯器 | Current Lock §18 |
+| D-025 | CURRENT | 訂單頁所有可見操作必須有真實資料結果及明確回饋；整單取消保留於歷史，不可刪除原訂單 | Current Lock §19／orders actions tests |
 
 新增決策不得改寫舊行；新增一行並把被取代項標 `SUPERSEDED`。

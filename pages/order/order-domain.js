@@ -30,7 +30,8 @@ function component(role,line,source='cart'){
   return {
     role,source,productId:line.productId||line.drinkId||'',name:line.name||'',image:line.image||'',
     unitPrice:Number(line.unitPrice??line.price??0),options:{...(line.options||{})},selection:line.selection||'',
-    drinkId:line.drinkId||line.productId||''
+    drinkId:line.drinkId||line.productId||'',studentDiscountEligible:line.studentDiscountEligible===true,
+    specialDrinkSurcharge:Number(line.specialDrinkSurcharge)||0
   };
 }
 
@@ -55,7 +56,7 @@ export function combineRiceballSet(cart,selection,options={}){
   const singleTotal=components.reduce((sum,item)=>sum+item.unitPrice,0);
   const comboPrice=Number(options.comboPrice??singleTotal);
   const missingRoles=drink?[]:['drink'];
-  const drinkAssignments=drink?[{drinkId:drink.drinkId||drink.productId,name:drink.name,image:drink.image||'',sweetness:'',ice:'',source:selection.quickDrink?'quick':'cart'}]:[];
+  const drinkAssignments=drink?[{drinkId:drink.drinkId||drink.productId,name:drink.name,image:drink.image||'',sweetness:'',ice:'',source:selection.quickDrink?'quick':'cart',studentDiscountEligible:drink.studentDiscountEligible===true,specialDrinkSurcharge:Number(drink.specialDrinkSurcharge)||0}]:[];
   result.push({
     lineId:options.lineId||'riceball-combo-'+Date.now(),lineType:'combo',productId:'riceball-combo',name:'飯糰套餐',category:'飯團套餐',
     image:mainResult.taken.image||'',qty:1,unitPrice:comboPrice,total:comboPrice,required:['drink'],drinkSlots:1,drinkAssignments,
