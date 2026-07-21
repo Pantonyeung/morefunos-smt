@@ -108,6 +108,8 @@ const groups = [
     ["platform", "外賣平台"],
   ],
   sources = ["現場", "電話／WhatsApp", "磨飯 App", "Keeta", "Foodpanda"];
+const sourceIcon = { "現場": "⌂", "電話／WhatsApp": "☎", "磨飯 App": "✦", Keeta: "K", Foodpanda: "F" };
+const sourceLabel = value => value === "all" ? "全部來源" : `${sourceIcon[value] || "•"} ${value}`;
 const minutes = (o) =>
     Math.max(
       0,
@@ -205,7 +207,7 @@ function modalHtml() {
   if (modal === "payment")
     return overlay(head("更改渠道／付款方式") + paymentModal(o));
   if (modal === "source")
-    return overlay(head("選擇訂單來源") + `<div class="source-picker">${["all", ...sources].map((value) => `<button data-action="choose-source" data-value="${value}" class="${filters.source === value ? "active" : ""}">${value === "all" ? "全部來源" : value}</button>`).join("")}</div><footer><button data-action="close-modal">返回</button></footer>`);
+    return overlay(head("選擇訂單來源") + `<div class="source-picker">${["all", ...sources].map((value) => `<button data-action="choose-source" data-value="${value}" class="${filters.source === value ? "active" : ""}">${sourceLabel(value)}</button>`).join("")}</div><footer><button data-action="close-modal">返回</button></footer>`);
   if (modal === "reconcile") return reconciliationModal(o, head);
   if (modal === "confirm-partial") {
     const s = cancelSummary(o);
@@ -253,6 +255,8 @@ function render() {
     b = orders.filter((o) => !isHistory(o) && o.printStatus === "異常").length,
     h = orders.filter(isHistory).length;
   app.innerHTML = `<main><header class="topbar"><div class="brand">磨飯 SMT</div><span class="terminal">${terminalId}</span><span class="online">● 接單中</span><div class="spacer"></div><button data-action="show-active">進行中 ${orders.filter((o) => !isHistory(o)).length}</button><button data-action="show-history">歷史訂單 ${h}</button></header><section class="workspace"><header class="page-head"><div><h1>訂單</h1><p>所有操作會即時顯示結果並保存紀錄。</p></div><button data-action="cycle-source">來源：${{ all: "全部", onsite: "現場", owned: "自有渠道", platform: "外賣平台" }[filters.source]}</button><button data-action="filter-payment" class="${filters.exception === "payment" ? "active" : ""}">付款待核實 ${p}</button><button data-action="filter-print" class="${filters.exception === "print" ? "active" : ""}">打印異常 ${b}</button><button data-action="clear-filter">清除篩選</button></header><section class="stats"><button data-action="show-active">進行中訂單<b>${orders.filter((o) => !isHistory(o)).length}</b></button><button data-action="filter-payment">付款待核實<b>${p}</b></button><button data-action="filter-print">打印異常<b>${b}</b></button><button data-action="show-history">歷史訂單<b>${h}</b></button></section><section class="orders-layout">${detail()}<div class="lanes">${groups.map((g) => lane(...g)).join("")}</div></section></section><nav class="bottom-nav"><button data-action="navigate-order">點餐</button><button class="active">訂單</button><button>堂食</button><button>售罄</button><button>更多</button></nav></main>${modalHtml()}<div id="toast" class="toast ${notice ? "show" : ""}">${escapeHtml(notice)}</div>`;
+  const sourceButton = document.querySelector('[data-action="cycle-source"]');
+  if (sourceButton) sourceButton.textContent = `來源：${sourceLabel(filters.source)}`;
   if (notice)
     setTimeout(() => {
       notice = "";
