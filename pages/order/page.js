@@ -6,7 +6,7 @@ import {orderPageConfig as defaults} from './page-config.js';
 import {categories as fallbackCategories,products as fallbackProducts,drinks as fallbackDrinks,optionSets} from './page-data.js';
 import {loadMenuCatalog} from './menu-api.js';
 import {acceptPendingOrder,combineRiceballSet,dissolveRiceballSet,completeExpiredOrders,createWhatsAppLink,updateCartLineQuantity} from './order-domain.js';
-import {commitTableOrder} from '../dine/dine-domain.js';
+import {commitTableOrder,createInitialDineState} from '../dine/dine-domain.js';
 
 const app=document.getElementById('app');
 const fallbackCatalog={categories:fallbackCategories,products:fallbackProducts,drinks:fallbackDrinks};
@@ -178,9 +178,19 @@ function topbar(){
   const state=store.get();const issues=healthIssueCount(state),pendingCount=Object.values(state.pendingOrders).flat().length,soldout=products.filter(item=>item.available===false).length;
   return '<header class="topbar"><div class="brand">磨飯 SMT</div><span class="terminal-chip">'+terminalId+'</span>'+(state.dineContext?'<span class="terminal-chip">堂食｜'+escapeHtml(state.dineContext.tableId)+' 號枱</span>':'')+'<button class="online-state '+(state.operations.acceptingOrders&&!state.operations.immediateStopped?'is-online':'is-offline')+'" data-action="open-status"><span>⌁</span>'+operationLabel(state)+'</button><div class="order-number">訂單：<strong>10248</strong></div><div class="spacer"></div><button class="top-btn" data-action="toggle-pending-panel">▤ 待處理 <span class="badge">'+pendingCount+'</span></button><button class="top-btn" data-action="open-soldout">⊗ 售罄 '+soldout+'</button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button></header>';
 }
-function draftsModal(){
-  const context=store.get().dineContext,visible=context?drafts.filter(d=>d.context?.mode==='dine'&&d.context.tableId===context.tableId):drafts.filter(d=>!d.context);const rows=visible.map(d=>'<article class="draft-row"><span><strong>'+escapeHtml(d.draftNumber)+'</strong><small>建立：'+escapeHtml(d.ownerTerminalId)+' · '+d.cart.reduce((n,l)=>n+Number(l.qty||0),0)+' 件 · '+money(cartTotal(d.cart))+'</small></span><button data-action="restore-draft" data-id="'+escapeHtml(d.id)+'">取單</button></article>').join('');
-  return '<aside class="side-card modal-card drafts-card"><header><div><small>目前終端 '+terminalId+'</small><strong>取回暫存單（'+visible.length+'）</strong></div><button data-action="dismiss-modal">×</button></header><div class="card-scroll">'+(rows||'<p class="receipt-empty">目前沒有暫存單</p>')+'</div><footer class="right-action"><button data-action="dismiss-modal">返回</button></footer></aside>';
+function draftRows(selectedId=''){
+  return drafts.map(d=>'<button class="draft-pick '+(selectedId===d.id?'selected':'')+'" data-action="select-draft" data-id="'+escapeHtml(d.id)+'"><strong>'+escapeHtml(d.draftNumber)+'</strong><small>'+new Date(d.createdAt).toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'})+'｜'+d.cart.reduce((n,l)=>n+Number(l.qty||0),0)+' 件｜'+money(cartTotal(d.cart))+'</small></button>').join('')||'<p class="receipt-empty">目前沒有暫存單</p>';
+}
+function tableGrid(){
+  const dine=readJSON(DINE_STORAGE_KEY,null)||createInitialDineState(),tables=dine.tables;
+  return tables.map(table=>{const minutes=table.status==='occupied'&&table.openedAt?Math.floor((Date.now()-table.openedAt)/60000):0;return '<button class="table-pick '+(table.status==='occupied'?'occupied':'free')+'" data-action="assign-table" data-id="'+escapeHtml(table.id)+'"><strong>'+(table.id==='戶外'?'戶外枱':table.id+' 號枱')+'</strong><small>'+(table.status==='occupied'?'使用中 '+minutes+' 分鐘':'未使用｜自動開枱')+'</small></button>';}).join('')||'<p class="receipt-empty">堂食枱資料未建立</p>';
+}
+function hangModal(){return '<aside class="modal-card order-transfer-card"><header><div><small>目前購物車 '+store.get().cart.reduce((n,l)=>n+l.qty,0)+' 件</small><strong>掛單／加入堂食</strong></div><button data-action="dismiss-modal">×</button></header><div class="transfer-grid"><section><h3>一般掛單</h3><div class="transfer-scroll">'+draftRows()+'</div><button class="save-draft-entry" data-action="add-draft">＋ 加入掛單</button></section><section><h3>堂食枱位｜九宮格</h3><p>撳枱號會立即正式落單、出製作單及所需標籤。</p><div class="table-pick-grid">'+tableGrid()+'</div></section></div><footer><button data-action="dismiss-modal">返回</button></footer></aside>'}
+function takeModal(){
+  const selectedDraftId=modal.selectedDraftId||'';
+  const selected=drafts.find(d=>d.id===selectedDraftId);
+  const detail=selected?'<div class="draft-detail-head"><span><small>暫存編號</small><strong>'+escapeHtml(selected.draftNumber)+'</strong></span><span><small>建立時間</small><strong>'+new Date(selected.createdAt).toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'})+'</strong></span><span><small>合計</small><strong>'+money(cartTotal(selected.cart))+'</strong></span></div><div class="draft-detail-lines">'+selected.cart.map((line,index)=>'<article><b>'+(index+1)+'</b><span><strong>'+escapeHtml(line.name)+' ×'+line.qty+'</strong><small>'+escapeHtml(describe(line))+'</small></span><em>'+money(line.total)+'</em></article>').join('')+'</div>':'<div class="draft-empty-detail"><b>請選擇左邊暫存單</b><p>右邊會顯示完整餐點內容，確認後先取回。</p></div>';
+  return '<aside class="modal-card order-transfer-card take-card"><header><div><small>目前終端 '+terminalId+'</small><strong>取單</strong></div><button data-action="dismiss-modal">×</button></header><div class="transfer-grid"><section><h3>暫存單列表</h3><div class="transfer-scroll">'+draftRows(selectedDraftId)+'</div></section><section><h3>暫存單內容</h3>'+detail+'</section></div><footer><button data-action="dismiss-modal">返回</button><span></span><button class="danger" data-action="void-draft" '+(selected?'':'disabled')+'>作廢</button><button class="primary" data-action="restore-draft" data-id="'+escapeHtml(selected?.id||'')+'" '+(selected?'':'disabled')+'>取單</button></footer></aside>';
 }
 function pendingPanel(){
   const pendingOrders=store.get().pendingOrders;
@@ -291,7 +301,8 @@ function activeModal(){
   if(modal.type==='health')return healthModal();
   if(modal.type==='status')return statusModal();
   if(modal.type==='soldout')return soldoutModal();
-  if(modal.type==='drafts')return draftsModal();
+  if(modal.type==='hang')return hangModal();
+  if(modal.type==='take')return takeModal();
   if(modal.type==='specified-link')return specifiedLinkModal();
   if(modal.type==='combo')return comboEditorModal();
   if(modal.type==='completion')return completionModal();
@@ -323,11 +334,8 @@ function positionActiveCard(){
 }
 function render(){
   const state=store.get();const filtered=state.category==='全部'?products:products.filter(p=>p.category===state.category);const template=productTemplate();
-  const visibleDrafts=state.dineContext?drafts.filter(d=>d.context?.mode==='dine'&&d.context.tableId===state.dineContext.tableId):drafts.filter(d=>!d.context);
-  const draftAction=state.cart.length?'save-draft':'open-drafts';
-  const draftLabel=state.cart.length?'暫存':'取單'+(visibleDrafts.length?' '+visibleDrafts.length:'');
   const checkoutLabel=state.dineContext?'落單到 '+escapeHtml(state.dineContext.tableId)+' 號枱 '+money(cartTotal(state.cart)):'結帳 '+money(cartTotal(state.cart));
-  app.innerHTML='<main>'+topbar()+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%"><aside class="cart"><header><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2><button data-action="clear-cart">清空</button></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer><button data-action="'+draftAction+'">'+draftLabel+'</button><button class="primary" data-action="checkout">'+checkoutLabel+'</button></footer></aside><section class="catalog"><nav class="categories">'+categories.map(cat=>'<button data-action="category" data-value="'+cat+'" class="'+(cat===state.category?'active':'')+'">'+cat+'</button>').join('')+'</nav><div class="products products-'+template+'">'+filtered.map(productCard).join('')+'</div>'+quickDrinks()+'</section></section></section><nav class="bottom-nav"><button class="active">點餐</button><button data-action="navigate-orders">訂單</button><button data-action="navigate-dine">堂食</button><button>售罄</button><button>更多</button></nav></main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
+  app.innerHTML='<main>'+topbar()+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%"><aside class="cart"><header><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2><button data-action="clear-cart">清空</button></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer><button data-action="open-hold-panel">掛單</button><button data-action="open-drafts">取單'+(drafts.length?' '+drafts.length:'')+'</button><button class="primary" data-action="checkout">'+checkoutLabel+'</button></footer></aside><section class="catalog"><nav class="categories">'+categories.map(cat=>'<button data-action="category" data-value="'+cat+'" class="'+(cat===state.category?'active':'')+'">'+cat+'</button>').join('')+'</nav><div class="products products-'+template+'">'+filtered.map(productCard).join('')+'</div>'+quickDrinks()+'</section></section></section><nav class="bottom-nav"><button class="active">點餐</button><button data-action="navigate-orders">訂單</button><button data-action="navigate-dine">堂食</button><button>售罄</button><button>更多</button></nav></main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
   document.body.classList.toggle('has-modal',Boolean(modal));
   bindImageFallbacks(app);
   if(modal?.type==='settings'){const first=document.querySelector('.side-card .setting-row');first?.insertAdjacentHTML('beforebegin','<div class="setting-block"><strong>購物車相同產品</strong><div class="segmented"><button data-action="cart-merge" data-value="same" class="'+(state.settings.cart.mergeMode!=='never'?'active':'')+'">相同配置合併</button><button data-action="cart-merge" data-value="never" class="'+(state.settings.cart.mergeMode==='never'?'active':'')+'">逐項顯示</button></div></div>');}
@@ -402,20 +410,31 @@ function handle(button){
   else if(action==='open-soldout'){modal={type:'soldout',anchor:anchorRect(button),dirty:false};render();}
   else if(action==='navigate-orders')window.parent?.postMessage?.({type:'morefun:navigate',route:'orders'},'*');
   else if(action==='navigate-dine')window.parent?.postMessage?.({type:'morefun:navigate',route:'dine'},'*');
-  else if(action==='save-draft'){
+  else if(action==='open-hold-panel'){if(!store.get().cart.length){showToast('購物車未有餐品');return;}modal={type:'hang',dirty:false};render();}
+  else if(action==='select-draft'){modal={...modal,selectedDraftId:button.dataset.id};render();}
+  else if(action==='assign-table'){
+    const current=store.get();if(!current.cart.length){showToast('購物車未有餐品');return;}
+    try{const dineState=readJSON(DINE_STORAGE_KEY,null)||createInitialDineState();const table=dineState.tables.find(entry=>entry.id===button.dataset.id);const context={mode:'dine',tableId:button.dataset.id,sessionId:table?.status==='occupied'?table.session?.id:null};const next=commitTableOrder(dineState,context,current.cart,{terminalId});writeJSON(DINE_STORAGE_KEY,next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));modal=null;render();showToast('已正式加入 '+button.dataset.id+' 號枱及建立打印工作');}catch(error){showToast(error.message||'未能加入堂食枱位');}
+  }
+  else if(action==='add-draft'){
     const state=store.get();if(!state.cart.length)return;
     const draft=createDraftRecord({cart:state.cart,terminalId,drafts,counters:draftCounters,session:state.draftSession||null,context:state.dineContext||null});
     draftCounters={...draftCounters,[terminalId]:Number(draft.draftNumber.split('-').at(-1))};
     writeJSON(DRAFT_COUNTER_STORAGE_KEY,draftCounters);
     drafts=drafts.concat(draft);writeJSON(DRAFT_STORAGE_KEY,drafts);
-    store.set(next=>({...next,cart:[],draftSession:null}));showToast('已暫存 '+draft.draftNumber);
+    store.set(next=>({...next,cart:[],draftSession:null,dineContext:null}));modal=null;render();showToast('已暫存 '+draft.draftNumber);
   }
-  else if(action==='open-drafts'){modal={type:'drafts',anchor:anchorRect(button),dirty:false};render();}
+  else if(action==='open-drafts'){modal={type:'take',selectedDraftId:'',dirty:false};render();}
   else if(action==='restore-draft'){
     const draft=drafts.find(item=>item.id===button.dataset.id);if(!draft)return;
     const restored=restoreDraftForTerminal(draft,terminalId);
     drafts=drafts.filter(item=>item.id!==draft.id);writeJSON(DRAFT_STORAGE_KEY,drafts);
-    store.set(state=>({...state,cart:normalizeCart(restored.cart),draftSession:restored.session,dineContext:restored.context||state.dineContext}));modal=null;render();showToast('已取回 '+draft.draftNumber);
+    store.set(state=>({...state,cart:normalizeCart(restored.cart),draftSession:restored.session,dineContext:null}));modal=null;render();showToast('已取回 '+draft.draftNumber);
+  }
+  else if(action==='void-draft'){
+    const draft=drafts.find(item=>item.id===modal?.selectedDraftId);if(!draft)return;
+    if(!window.confirm('確定作廢 '+draft.draftNumber+'？作廢後不能取回。'))return;
+    drafts=drafts.filter(item=>item.id!==draft.id);writeJSON(DRAFT_STORAGE_KEY,drafts);modal={type:'take',selectedDraftId:'',dirty:false};render();showToast('已作廢 '+draft.draftNumber);
   }
   else if(action==='toggle-quick-drawer')store.set(state=>({...state,quickDrawerOpen:!state.quickDrawerOpen}));
   else if(action==='move-quick-drink')updateSettings(s=>{const order=s.quickDrinks.order.slice(),from=order.indexOf(button.dataset.id),to=Math.max(0,Math.min(order.length-1,from+Number(button.dataset.delta)));if(from>=0&&from!==to)[order[from],order[to]]=[order[to],order[from]];s.quickDrinks.order=order;});

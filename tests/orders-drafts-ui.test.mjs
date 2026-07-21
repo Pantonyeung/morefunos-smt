@@ -7,14 +7,26 @@ const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
 const ordersPage=await readFile(new URL('../pages/orders/page.js',import.meta.url),'utf8');
 const checkoutPage=await readFile(new URL('../pages/checkout/page.js',import.meta.url),'utf8');
 
-test('order page saves numbered drafts and restores them through a take-order card',()=>{
+test('掛單只開左右面板，再由一般掛單或堂食枱號完成操作',()=>{
   assert.match(orderPage,/DRAFT_STORAGE_KEY/);
   assert.match(orderPage,/createDraftRecord/);
   assert.match(orderPage,/restoreDraftForTerminal/);
-  assert.match(orderPage,/save-draft/);
+  assert.match(orderPage,/open-hold-panel/);
+  assert.match(orderPage,/data-action="add-draft"/);
+  assert.match(orderPage,/data-action="assign-table"/);
+  assert.match(orderPage,/堂食枱位/);
+  assert.match(orderPage,/九宮格/);
+  assert.doesNotMatch(orderPage,/data-action="save-draft"/);
+});
+
+test('取單使用左列表右內容，並固定返回、作廢及取單操作',()=>{
   assert.match(orderPage,/open-drafts/);
+  assert.match(orderPage,/select-draft/);
+  assert.match(orderPage,/selectedDraftId/);
+  assert.match(orderPage,/data-action="void-draft"/);
   assert.match(orderPage,/data-action="restore-draft"/);
-  assert.match(orderPage,/draftNumber/);
+  assert.match(orderPage,/請選擇左邊暫存單/);
+  assert.match(orderPage,/作廢/);
 });
 
 test('checkout persists the completing terminal and order audit',()=>{

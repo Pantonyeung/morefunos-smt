@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "morefunos-smt",
   "branch": "feat/channel-payment-reconciliation-v1",
-  "baseline": "order-v1-20",
+  "baseline": "order-v1-21",
   "requiredFiles": [
     "AGENTS.md",
     "SMT_AI_START_HERE.md",

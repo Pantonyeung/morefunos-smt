@@ -20,7 +20,9 @@ export function tableView(table,now=Date.now()){
   const items=session.items||[];
   const total=items.reduce((sum,item)=>sum+Number(item.unitPrice||0)*Number(item.qty||0),0);
   const paid=items.reduce((sum,item)=>sum+Number(item.unitPrice||0)*Number(item.paidQty||0),0);
-  return {...table,status:occupied?'occupied':'free',minutes,isLate:occupied&&minutes>=35,total,paid,unpaid:Math.max(0,total-paid),pendingCount:(session.pendingSubmissions||[]).length};
+  const itemKinds=items.length,itemQty=items.reduce((sum,item)=>sum+Number(item.qty||0),0);
+  const timeStatus=!occupied?'free':minutes>=35?'late':minutes>=30?'near':'normal';
+  return {...table,status:occupied?'occupied':'free',minutes,timeStatus,isLate:timeStatus==='late',isNearLimit:timeStatus==='near',total,paid,unpaid:Math.max(0,total-paid),itemKinds,itemQty,itemPreview:items.slice(0,3),remainingKinds:Math.max(0,itemKinds-3),pendingCount:(session.pendingSubmissions||[]).length};
 }
 
 export function openTable(table,now=Date.now()){
@@ -35,6 +37,7 @@ export function commitTableOrder(state,context,cart,{terminalId='SMT',now=Date.n
   if(index<0)throw new Error('找不到指定堂食枱');
   let table=next.tables[index];
   if(table.status!=='occupied')table=openTable(table,now);
+  table.session.printJobs=Array.isArray(table.session.printJobs)?table.session.printJobs:[];
   if(context.sessionId&&table.session?.id!==context.sessionId)throw new Error('堂食會話已失效，請重新開啟枱位');
   const batchId=`STAFF-${table.id}-${now}-${table.session.orderBatches.length+1}`;
   const items=clone(cart).map((item,itemIndex)=>({
@@ -47,6 +50,9 @@ export function commitTableOrder(state,context,cart,{terminalId='SMT',now=Date.n
   }));
   table.session.items.push(...items);
   table.session.orderBatches.push({id:batchId,source:'STAFF',terminalId:terminal(terminalId),createdAt:now,items:clone(items)});
+  table.session.printJobs.push({id:`PRINT-${batchId}`,batchId,type:'production',document:'製作單',status:'queued',createdAt:now,items:clone(items)});
+  const labelItems=items.filter(item=>String(item.category||'').includes('飯團')||/^F\d+/i.test(String(item.code||'')));
+  if(labelItems.length)table.session.printJobs.push({id:`LABEL-${batchId}`,batchId,type:'label',document:'標籤',status:'queued',createdAt:now,items:clone(labelItems)});
   next.tables[index]=table;
   next.selectedTableId=table.id;
   return next;

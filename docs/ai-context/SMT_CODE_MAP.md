@@ -39,12 +39,12 @@
 | 卡片定位 | `anchorRect`, `positionActiveCard`, `activeModal` | modal／CSS tests |
 | 顯示設定 | `settingsModal`, `quickSettingsModal` | settings tests |
 | 真實餐牌 | `loadMenuCatalog`, `mapMenuToOrderCatalog`, `bootstrapLiveMenu` | menu API tests |
-| 暫存／取單 | `createDraftRecord`, `restoreDraftForTerminal`, draft modal actions | draft handoff tests |
+| 掛單／取單 | `hangModal`, `takeModal`, `createDraftRecord`, `restoreDraftForTerminal` | draft handoff／draft UI tests |
 | 結帳終端稽核 | `recordCheckoutOperator`, `completeCheckout` | draft／orders UI tests |
 | 訂單操作 | `changeOrderPayment`, `partiallyCancelItem`, `cancelOrder`, `queueReprint` | orders actions tests |
 | 渠道付款政策 | `getChannelPolicy`, `buildCheckoutRecord` | checkout actions tests |
 | 付款核數 | `reconcilePayment`, `flagPaymentIssue` | orders actions tests |
-| 堂食 | `tableView`, `acceptQrSubmission`, `applyItemPayment` | dine page tests |
+| 堂食 | `tableView`, `tableCard`, `commitTableOrder`, `acceptQrSubmission`, `applyItemPayment` | dine page tests |
 
 ## 資料流
 
