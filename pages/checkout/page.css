@@ -97,6 +97,18 @@
   background: var(--orange-soft);
   border-color: var(--orange);
 }
+.option-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.45em;
+  height: 1.45em;
+  margin-right: 5px;
+  border-radius: 7px;
+  background: var(--orange-soft);
+  color: var(--orange);
+  font-style: normal;
+  font-weight: 950;
+}
 .summary {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -192,7 +204,8 @@
   gap: 8px;
 }
 .keypad-wrap{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;min-height:0;flex:1}.keypad-wrap .quick-amounts{grid-template-columns:repeat(6,1fr)}
-.keypad-wrap .keypad{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,minmax(54px,1fr))}.keypad-wrap .keypad .clear-key{grid-row:auto}
+.keypad-wrap .keypad{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,minmax(72px,1fr))}.keypad-wrap .keypad .clear-key{grid-row:auto}
+.keypad-wrap .keypad button{font-size:30px;min-height:72px}
 .quick-amounts button {
   min-height: 46px;
   border: 1px solid var(--line);
