@@ -1,6 +1,6 @@
 const activeStatuses=new Set(['running','active','open','']);
 export function channelGroup(source){
-  if(source==='堂食'||source==='現場外賣')return 'onsite';
+  if(source==='現場'||source==='現場外賣'||source==='堂食')return 'onsite';
   if(source==='磨飯 App'||source==='電話／WhatsApp')return 'owned';
   return 'platform';
 }
@@ -10,7 +10,7 @@ export function applyOrderFilters(orders,{source='all',exception='',view='active
   return orders.filter(order=>{
     if(view==='active'&&isHistory(order))return false;
     if(view==='history'&&!isHistory(order))return false;
-    if(source!=='all'&&order.group!==source)return false;
+    if(source!=='all'&&order.source!==source)return false;
     if(exception==='payment'&&!String(order.paymentStatus||'').includes('待'))return false;
     if(exception==='print'&&order.printStatus!=='異常')return false;
     return true;
@@ -18,7 +18,7 @@ export function applyOrderFilters(orders,{source='all',exception='',view='active
 }
 export function changeOrderPayment(order,{source,paymentMethod,channelData={},reason=''},terminalId,at=Date.now()){
   const policy=getChannelPolicy(source);
-  const deferred=policy.requiresPaymentMethod&&paymentMethod==='稍後付款';
+  const deferred=false;
   const pending=policy.initialPaymentStatus==='付款待核實'||deferred;
   const nextMethod=policy.requiresPaymentMethod&&!deferred?paymentMethod:policy.group==='platform'?'平台已付':'待核實';
   const previous={source:order.source,paymentMethod:order.paymentMethod,paymentStatus:order.paymentStatus};

@@ -23,8 +23,8 @@ const terminalId = normalizeTerminalId(
     "SMT",
 );
 localStorage.setItem(TERMINAL_ID_STORAGE_KEY, terminalId);
-let channel = "現場外賣",
-  payment = "現金付款",
+let channel = "現場",
+  payment = "現金",
   receivedInput = "",
   discount = { type: "none" },
   discountPanel = false,
@@ -66,17 +66,20 @@ const fieldLabels = {
   platformOrderId: "平台單號（可略過）",
   note: "備註（可略過）",
 };
+const channelIcon={"現場":"⌂","電話／WhatsApp":"☎","磨飯 App":"✦",Keeta:"K",Foodpanda:"F"};
+const paymentIcon={現金:"$",Alipay:"支", "WeChat Pay":"微",FPS:"閃",PayMe:"P","組合付款":"＋"};
+const labelled=(value,map)=>`<i class="option-icon" aria-hidden="true">${map[value]||"•"}</i><span>${value}</span>`;
 function fieldRows(policy) {
   return policy.fields.length
     ? `<section class="channel-fields"><h3>渠道資料</h3>${policy.fields.map((field) => `<label><span>${fieldLabels[field]}</span>${field === "note" ? `<textarea data-field="${field}" placeholder="可留空">${escapeHtml(channelData[field] || "")}</textarea>` : `<input data-field="${field}" value="${escapeHtml(channelData[field] || "")}" placeholder="可留空">`}</label>`).join("")}</section>`
     : "";
 }
 function keypad(disabled = false) {
-  return `<section class="keypad" aria-label="數字鍵盤">${["7", "8", "9", "4", "5", "6", "1", "2", "3", "00", "0"].map((key) => `<button data-action="keypad" data-key="${key}" ${disabled ? "disabled" : ""}>${key}</button>`).join("")}<button data-action="keypad" data-key="backspace" aria-label="退格" ${disabled ? "disabled" : ""}>⌫</button><button class="clear-key" data-action="keypad" data-key="clear" ${disabled ? "disabled" : ""}>清除</button></section>`;
+  return `<section class="keypad-wrap"><div class="quick-amounts"><button data-action="amount" data-value="${Math.max(0, Number(pricing().payable)||0)}" ${disabled ? "disabled" : ""}>剛剛好</button>${checkoutConfig.quickAmounts.map((value) => `<button data-action="amount" data-value="${value}" ${disabled ? "disabled" : ""}>${value}</button>`).join("")}<button data-action="keypad" data-key="backspace" ${disabled ? "disabled" : ""}>退格</button></div><section class="keypad" aria-label="數字鍵盤">${["1","2","3","4","5","6","7","8","9","00","0","clear"].map((key) => `<button class="${key === "clear" ? "clear-key" : ""}" data-action="keypad" data-key="${key}" ${disabled ? "disabled" : ""}>${key === "clear" ? "清除" : key}</button>`).join("")}</section></section>`;
 }
 function cashControls(result, cash) {
   const received = Number(receivedInput) || 0;
-  return `<section class="cash-controls ${cash ? "is-cash" : "is-locked"}"><div class="received-row"><label>收款金額</label><button class="received-display ${keypadTarget === "received" && cash ? "active" : ""}" data-action="keypad-target" data-value="received" ${cash ? "" : "disabled"}>${cash ? (receivedInput ? money(received) : "請輸入金額") : "此付款方式毋須輸入現金"}</button></div><div class="quick-amounts"><button data-action="amount" data-value="${result.payable}" ${cash ? "" : "disabled"}>剛剛好 ${money(result.payable)}</button>${checkoutConfig.quickAmounts.map((value) => `<button data-action="amount" data-value="${value}" ${cash ? "" : "disabled"}>$${value}</button>`).join("")}</div>${keypad(!cash)}</section>`;
+  return `<section class="cash-controls ${cash ? "is-cash" : "is-locked"}"><div class="received-row"><label>已收</label><button class="received-display ${keypadTarget === "received" && cash ? "active" : ""}" data-action="keypad-target" data-value="received" ${cash ? "" : "disabled"}>${cash ? (receivedInput ? money(received) : "請輸入金額") : "此付款方式毋須輸入現金"}</button></div>${keypad(!cash)}</section>`;
 }
 function discountCard(result) {
   if (!discountPanel) return "";
@@ -87,7 +90,7 @@ function correctionCard() {
   return `<section class="correction-card panel"><header><h3>更正資料</h3><button data-action="correction-close">×</button></header><label>渠道</label><div class="row channels">${checkoutConfig.channels.map((value) => `<button data-action="correction-channel" data-value="${value}" class="${channel === value ? "active" : ""}">${value}</button>`).join("")}</div>${
     policy.requiresPaymentMethod
       ? `<label>付款方式</label><div class="row payments">${policy.paymentMethods
-          .filter((x) => x !== "稍後付款")
+          .filter(Boolean)
           .map(
             (value) =>
               `<button data-action="correction-payment" data-value="${value}" class="${payment === value ? "active" : ""}">${value}</button>`,
@@ -130,7 +133,7 @@ function completeCheckout() {
     received = Number(receivedInput) || 0;
   if (
     policy.requiresPaymentMethod &&
-    payment === "現金付款" &&
+    payment === "現金" &&
     received < result.payable
   ) {
     showToast("收款金額不足");
@@ -172,7 +175,7 @@ function render() {
   const result = pricing(),
     received = Number(receivedInput) || 0,
     policy = getChannelPolicy(channel),
-    cash = policy.requiresPaymentMethod && payment === "現金付款",
+    cash = policy.requiresPaymentMethod && payment === "現金",
     zero = result.payable <= 0;
   app.innerHTML = `<div class="app"><header class="topbar statusbar"><div class="brand">磨飯 SMT</div><span class="status-item">操作終端 ${terminalId}</span><div class="spacer"></div><span class="status-item">● 線上</span></header><main class="checkout"><aside class="checkout-cart panel"><header><h2>訂單詳情</h2><span>${(order.cart || []).reduce((n, line) => n + Number(line.qty || 0), 0)} 件</span></header><div class="cart-lines">${(order.cart || []).map((line, index) => `<article><span class="seq">${index + 1}</span><span><strong>${escapeHtml(line.name)}</strong><small>x${line.qty}</small></span><b>${money(line.total)}</b></article>`).join("")}</div><div class="detail-actions"><button data-action="back">返回訂單</button><button data-action="discount-open" class="${discount.type !== "none" ? "active" : ""}" ${policy.group !== "onsite" ? "disabled" : ""}><span>優惠</span><small>${policy.group === "onsite" ? discountLabel(result) : "非現場渠道不適用"}</small></button></div></aside><section class="checkout-main panel"><div class="row channels">${checkoutConfig.channels.map((value) => `<button data-action="channel" data-value="${value}" class="${channel === value ? "active" : ""}">${value}</button>`).join("")}</div>${policy.requiresPaymentMethod ? `<div class="row payments">${policy.paymentMethods.map((value) => `<button data-action="payment" data-value="${value}" class="${payment === value ? "active" : ""}">${value}</button>`).join("")}</div>` : fieldRows(policy)}<div class="summary"><span>原價 <b>${money(result.subtotal)}</b></span><span>優惠 <b>-${money(result.discountAmount)}</b></span><span>應付 <b>${money(result.payable)}</b></span>${cash ? `<span>已收 <b>${money(received)}</b></span><span>找續 <b>${money(Math.max(0, received - result.payable))}</b></span>` : `<span class="summary-note">狀態 <b>${policy.initialPaymentStatus}</b></span>`}</div>${policy.group === "onsite" ? cashControls(result, cash) : ""}${zero ? '<p class="zero-warning">訂單金額必須大於零，請先加入有效產品或更正優惠。</p>' : ""}<button class="confirm" data-action="confirm" ${zero ? "disabled" : ""}>${policy.initialPaymentStatus === "付款待核實" ? "建立並待核實" : policy.initialPaymentStatus === "平台已付" ? "確認平台訂單" : "確認結帳"} ${money(result.payable)}</button></section></main></div>${discountCard(result)}${completedCard()}<div id="toast" class="toast"></div>`;
   app
@@ -201,8 +204,6 @@ function handle(button) {
     channelData = {};
     receivedInput = "";
     if (policy.group !== "onsite") discount = { type: "none" };
-    if (channel === "堂食" && discount.type === "group")
-      discount = { type: "none" };
   } else if (action === "payment") {
     payment = button.dataset.value;
     receivedInput = "";
@@ -213,10 +214,6 @@ function handle(button) {
   else if (action === "discount-close") discountPanel = false;
   else if (action === "discount-type") {
     const type = button.dataset.value;
-    if (type === "group" && channel === "堂食") {
-      showToast("堂食不提供團體優惠");
-      return;
-    }
     discount =
       type === "student"
         ? { type, studentCount: 0 }
@@ -261,7 +258,7 @@ function handle(button) {
     channel = button.dataset.value;
     payment =
       getChannelPolicy(channel).paymentMethods.filter(
-        (x) => x !== "稍後付款",
+        Boolean,
       )[0] || "";
   } else if (action === "correction-payment") payment = button.dataset.value;
   else if (action === "correction-save") {

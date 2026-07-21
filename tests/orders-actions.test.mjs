@@ -21,17 +21,17 @@ const base={
 
 test('filters can switch between source, payment exception, print exception and history',()=>{
   const rows=[base,{...base,id:'P0055',group:'onsite',status:'cancelled',paymentStatus:'已付款',printStatus:'正常'}];
-  assert.deepEqual(applyOrderFilters(rows,{source:'owned',view:'active'}).map(x=>x.id),['P0054']);
+  assert.deepEqual(applyOrderFilters(rows,{source:'電話／WhatsApp',view:'active'}).map(x=>x.id),['P0054']);
   assert.deepEqual(applyOrderFilters(rows,{exception:'payment',view:'active'}).map(x=>x.id),['P0054']);
   assert.deepEqual(applyOrderFilters(rows,{exception:'print',view:'active'}).map(x=>x.id),['P0054']);
   assert.deepEqual(applyOrderFilters(rows,{view:'history'}).map(x=>x.id),['P0055']);
 });
 
 test('changing channel and payment persists values and audit instead of only showing a toast',()=>{
-  const changed=changeOrderPayment(base,{source:'堂食',paymentMethod:'現金付款'},'SMT',1000);
-  assert.equal(changed.source,'堂食');
+  const changed=changeOrderPayment(base,{source:'現場',paymentMethod:'現金'},'SMT',1000);
+  assert.equal(changed.source,'現場');
   assert.equal(changed.group,'onsite');
-  assert.equal(changed.paymentMethod,'現金付款');
+  assert.equal(changed.paymentMethod,'現金');
   assert.equal(changed.audit.at(-1).type,'order_payment_changed');
 });
 

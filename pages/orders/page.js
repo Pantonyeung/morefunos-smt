@@ -27,12 +27,12 @@ const demo = [
   {
     id: "P0053",
     group: "onsite",
-    source: "現場外賣",
+    source: "現場",
     status: "running",
     acceptedAt: now - 19 * 60000,
     itemCount: 2,
     amount: 88,
-    paymentMethod: "現金付款",
+    paymentMethod: "現金",
     paymentStatus: "已付款",
     printStatus: "正常",
     items: [
@@ -107,14 +107,7 @@ const groups = [
     ["owned", "自有渠道"],
     ["platform", "外賣平台"],
   ],
-  sources = [
-    "堂食",
-    "現場外賣",
-    "磨飯 App",
-    "電話／WhatsApp",
-    "Keeta",
-    "Foodpanda",
-  ];
+  sources = ["現場", "電話／WhatsApp", "磨飯 App", "Keeta", "Foodpanda"];
 const minutes = (o) =>
     Math.max(
       0,
@@ -211,6 +204,8 @@ function modalHtml() {
     );
   if (modal === "payment")
     return overlay(head("更改渠道／付款方式") + paymentModal(o));
+  if (modal === "source")
+    return overlay(head("選擇訂單來源") + `<div class="source-picker">${["all", ...sources].map((value) => `<button data-action="choose-source" data-value="${value}" class="${filters.source === value ? "active" : ""}">${value === "all" ? "全部來源" : value}</button>`).join("")}</div><footer><button data-action="close-modal">返回</button></footer>`);
   if (modal === "reconcile") return reconciliationModal(o, head);
   if (modal === "confirm-partial") {
     const s = cancelSummary(o);
@@ -286,13 +281,11 @@ function handle(b) {
   } else if (a === "show-history") {
     filters.view = "history";
     filters.exception = "";
-  } else if (a === "cycle-source")
-    filters.source = {
-      all: "onsite",
-      onsite: "owned",
-      owned: "platform",
-      platform: "all",
-    }[filters.source];
+  } else if (a === "cycle-source") modal = "source";
+  else if (a === "choose-source") {
+    filters.source = b.dataset.value === "all" ? "all" : b.dataset.value;
+    modal = "";
+  }
   else if (a === "filter-payment") {
     filters.view = "active";
     filters.exception = filters.exception === "payment" ? "" : "payment";

@@ -28,7 +28,7 @@ test('詳情操作固定提供返回訂單及優惠兩欄',()=>{
 test('付款區及現金鍵盤由渠道政策動態控制而非所有渠道全部顯示',()=>{
   assert.match(page,/getChannelPolicy/);
   assert.match(page,/policy\.requiresPaymentMethod/);
-  assert.match(page,/payment\s*===\s*["']現金付款["']/);
+  assert.match(page,/payment\s*===\s*["']現金["']/);
   assert.match(page,/cashControls/);
   assert.match(page,/channel-fields/);
 });

@@ -32,12 +32,18 @@ test('bottom navigation opens the independent orders page',()=>{
 test('orders page uses the three approved channel columns and payment methods',()=>{
   assert.match(ordersPage,/現場/);
   assert.match(ordersPage,/堂食/);
-  assert.match(ordersPage,/現場外賣/);
+  assert.doesNotMatch(ordersPage,/現場外賣/);
   assert.match(ordersPage,/磨飯 App/);
   assert.match(ordersPage,/電話／WhatsApp/);
   assert.match(ordersPage,/外賣平台/);
   assert.match(ordersPage,/付款方式/);
   assert.doesNotMatch(ordersPage,/>Web</);
+});
+
+test('每件產品保存獨立堂食或外賣選擇',()=>{
+  assert.match(orderPage,/service-mode/);
+  assert.match(orderPage,/data-action=\"service-mode\"/);
+  assert.match(orderPage,/serviceMode:line\.serviceMode/);
 });
 
 test('reverse checkout reuse loads the original cart then navigates to the locked ordering page',()=>{

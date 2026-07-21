@@ -1,5 +1,5 @@
-.row.channels{grid-template-columns:repeat(6,1fr)}
-.row.payments{grid-template-columns:repeat(4,1fr)}
+.row.channels{grid-template-columns:repeat(5,1fr)}
+.row.payments{grid-template-columns:repeat(6,1fr)}
 .summary-note{grid-column:span 2}
 .channel-fields{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px}
 .channel-fields h3{grid-column:1/-1;margin:0}
@@ -20,3 +20,4 @@
 .correction-card{position:fixed;z-index:32;width:min(820px,86vw);padding:18px;box-shadow:0 20px 70px #0005}
 .correction-card>label{display:block;margin:12px 0 6px;font-weight:800}
 .correction-card textarea{min-height:76px}
+.option-icon{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:4px;border-radius:7px;background:#fff1e8;color:var(--orange);font-style:normal;font-weight:900}
