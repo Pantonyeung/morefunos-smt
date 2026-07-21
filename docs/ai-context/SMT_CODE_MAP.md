@@ -16,6 +16,8 @@
 | `pages/orders/orders-domain.js` | 渠道／付款狀態、核數、問題通知、取消、重印及篩選 | checkout channel policy |
 | `pages/checkout/page.js` | 渠道分流、WebP 渠道／付款圖標、摘要已收框直接輸入、現場收款、完成核對、更正及建立訂單 | checkout-domain、operations |
 | `pages/checkout/checkout-domain.js` | 渠道政策、優惠、付款狀態、平台佣金及訂單記錄 | 純資料操作 |
+| `pages/dine/page.js` | 九宮格、輪候、枱詳情、掃碼確認、付款及枱碼介面 | dine-domain、QR vendor |
+| `pages/dine/dine-domain.js` | 枱位計時、掃碼確認、全數及逐餐品付款純資料規則 | 無DOM |
 | `shared/operations.js` | 暫存流水、跨機接手、再暫存 lineage、結帳稽核 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
@@ -42,6 +44,7 @@
 | 訂單操作 | `changeOrderPayment`, `partiallyCancelItem`, `cancelOrder`, `queueReprint` | orders actions tests |
 | 渠道付款政策 | `getChannelPolicy`, `buildCheckoutRecord` | checkout actions tests |
 | 付款核數 | `reconcilePayment`, `flagPaymentIssue` | orders actions tests |
+| 堂食 | `tableView`, `acceptQrSubmission`, `applyItemPayment` | dine page tests |
 
 ## 資料流
 

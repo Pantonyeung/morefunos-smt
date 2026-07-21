@@ -21,10 +21,10 @@
 
 - 產品：磨飯 SMT 餐飲 POS
 - 分支：`feat/channel-payment-reconciliation-v1`
-- 程式標籤：`order-v1-18`
+- 程式標籤：`order-v1-19`
 - 資料架構：Firebase RTDB 為唯一即時餐牌/API來源；Google Sheet只作記錄投影；Apps Script已退出SMT運行鏈路。
 - 目標：先完成可運作點單垂直鏈路
-- 自動測試基準：94/94
+- 自動測試基準：100/100
 - 實機：iPad／Sunmi T2S 最終 Lock 未完成
 
 真相順序：當前最新明確確認 → 本文件現行決策 → Current Lock → 最新程式／測試 → 舊 log／效果圖。衝突舊資料標記 `SUPERSEDED`；安全、離線、資料完整及繁中不可跌穿基線。

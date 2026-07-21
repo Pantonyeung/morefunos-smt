@@ -1,4 +1,4 @@
-MoreFun SMT Order Page V1.16
-Build: order-v1-17
-Branch target: feat/channel-payment-reconciliation-v1
-Status: channel-aware checkout, reconciliation, completion correction, inline cancellation and platform commission estimates implemented locally; Firebase order/notification APIs and device acceptance pending
+MoreFun SMT V1.19
+Build: order-v1-19
+Branch target: feat/smt-order-page-v1
+Status: independent dine-in page and local dine-in workflow implemented; real order, QR session, payment gateway, printer APIs and device acceptance pending
