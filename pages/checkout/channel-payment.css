@@ -6,7 +6,7 @@
 .channel-fields label{display:grid;gap:5px}
 .channel-fields input,.channel-fields textarea,.correction-card textarea{width:100%;min-height:48px;padding:10px;border:1px solid var(--line);border-radius:9px;font:inherit}
 .channel-fields textarea{min-height:72px}
-.keypad button{min-height:60px;font-size:25px}
+.keypad button{min-height:92px;font-size:34px}
 .completion-layer{z-index:30}
 .completion-card{width:min(760px,82vw);padding:22px;box-shadow:0 20px 70px #0004}
 .completion-card>header,.correction-card>header{display:flex;justify-content:space-between;align-items:center}
@@ -20,4 +20,4 @@
 .correction-card{position:fixed;z-index:32;width:min(820px,86vw);padding:18px;box-shadow:0 20px 70px #0005}
 .correction-card>label{display:block;margin:12px 0 6px;font-weight:800}
 .correction-card textarea{min-height:76px}
-.option-icon{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:4px;border-radius:7px;background:#fff1e8;color:var(--orange);font-style:normal;font-weight:900}
+.option-icon{display:block;width:36px;height:36px;object-fit:contain}

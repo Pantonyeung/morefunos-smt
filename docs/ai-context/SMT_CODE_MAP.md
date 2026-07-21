@@ -14,7 +14,7 @@
 | `pages/order/menu-api.js` | Firebase RTDB餐牌讀取、正規化、SMT規則合併、快取及離線回退 | `public/catalogV1`、page-data後備 |
 | `pages/orders/page.js` | 三渠道總覽、核數／通知、行內部分取消、歷史及反結帳 | 訂單記錄、orders-domain、終端ID |
 | `pages/orders/orders-domain.js` | 渠道／付款狀態、核數、問題通知、取消、重印及篩選 | checkout channel policy |
-| `pages/checkout/page.js` | 渠道分流、現場收款、完成核對、更正及建立訂單 | checkout-domain、operations |
+| `pages/checkout/page.js` | 渠道分流、WebP 渠道／付款圖標、摘要已收框直接輸入、現場收款、完成核對、更正及建立訂單 | checkout-domain、operations |
 | `pages/checkout/checkout-domain.js` | 渠道政策、優惠、付款狀態、平台佣金及訂單記錄 | 純資料操作 |
 | `shared/operations.js` | 暫存流水、跨機接手、再暫存 lineage、結帳稽核 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |

@@ -86,11 +86,16 @@
 }
 .row button,
 .quick button {
-  min-height: 44px;
+  min-height: 70px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #fff;
   font-weight: 850;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 .row button.active,
 .quick button:active {
@@ -98,31 +103,34 @@
   border-color: var(--orange);
 }
 .option-icon {
-  display: inline-grid;
-  place-items: center;
-  width: 1.45em;
-  height: 1.45em;
-  margin-right: 5px;
-  border-radius: 7px;
-  background: var(--orange-soft);
-  color: var(--orange);
-  font-style: normal;
-  font-weight: 950;
+  display: block;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
 }
 .summary {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
 }
-.summary span {
+.summary > span,
+.summary .received-summary {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 10px;
   display: grid;
   gap: 4px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
 }
 .summary b {
   font-size: 22px;
+}
+.summary .received-summary.active {
+  border: 2px solid var(--orange);
+  background: #fff8f1;
+  box-shadow: 0 0 0 4px rgba(226, 101, 47, .18), 0 0 18px rgba(226, 101, 47, .22);
 }
 .cash-area {
   display: grid;
@@ -184,19 +192,10 @@
 }
 .cash-controls {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 8px;
   min-height: 0;
   flex: 1;
-}
-.received-row {
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  align-items: center;
-  gap: 10px;
-}
-.cash-controls .received-display {
-  min-height: 52px;
 }
 .quick-amounts {
   display: grid;
@@ -204,8 +203,8 @@
   gap: 8px;
 }
 .keypad-wrap{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;min-height:0;flex:1}.keypad-wrap .quick-amounts{grid-template-columns:repeat(6,1fr)}
-.keypad-wrap .keypad{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,minmax(72px,1fr))}.keypad-wrap .keypad .clear-key{grid-row:auto}
-.keypad-wrap .keypad button{font-size:30px;min-height:72px}
+.keypad-wrap .keypad{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,minmax(92px,1fr))}.keypad-wrap .keypad .clear-key{grid-row:auto}
+.keypad-wrap .keypad button{font-size:34px;min-height:92px}
 .quick-amounts button {
   min-height: 46px;
   border: 1px solid var(--line);
