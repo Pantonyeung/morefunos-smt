@@ -1,4 +1,4 @@
-MoreFun SMT Order Page V1.13
-Build: order-v1-13
-Branch target: feat/smt-order-page-v1
-Status: terminal-numbered drafts, cross-terminal handoff audit and checkout-terminal logging implemented locally; Firebase order API and device acceptance pending
+MoreFun SMT Order Page V1.16
+Build: order-v1-16
+Branch target: feat/channel-payment-reconciliation-v1
+Status: channel-aware checkout, reconciliation, completion correction, inline cancellation and platform commission estimates implemented locally; Firebase order/notification APIs and device acceptance pending

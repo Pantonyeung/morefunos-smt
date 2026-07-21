@@ -16,8 +16,22 @@ export function applyOrderFilters(orders,{source='all',exception='',view='active
     return true;
   });
 }
-export function changeOrderPayment(order,{source,paymentMethod},terminalId,at=Date.now()){
-  return {...order,source,group:channelGroup(source),paymentMethod,audit:[...(order.audit||[]),event('order_payment_changed',terminalId,at,{source,paymentMethod})]};
+export function changeOrderPayment(order,{source,paymentMethod,channelData={},reason=''},terminalId,at=Date.now()){
+  const policy=getChannelPolicy(source);
+  const deferred=policy.requiresPaymentMethod&&paymentMethod==='稍後付款';
+  const pending=policy.initialPaymentStatus==='付款待核實'||deferred;
+  const nextMethod=policy.requiresPaymentMethod&&!deferred?paymentMethod:policy.group==='platform'?'平台已付':'待核實';
+  const previous={source:order.source,paymentMethod:order.paymentMethod,paymentStatus:order.paymentStatus};
+  const next={source,group:policy.group,paymentMethod:nextMethod,paymentStatus:pending?'付款待核實':policy.initialPaymentStatus,reconciliationStatus:pending?'pending':policy.group==='platform'?'platform_paid':'not_required',channelData:{...channelData}};
+  return {...order,...next,audit:[...(order.audit||[]),event('order_payment_changed',terminalId,at,{previous,next:{source:next.source,paymentMethod:next.paymentMethod,paymentStatus:next.paymentStatus},reason})]};
+}
+export function reconcilePayment(order,{paymentMethod,paidAmount},terminalId,at=Date.now()){
+  const previous={paymentMethod:order.paymentMethod,paymentStatus:order.paymentStatus,reconciliationStatus:order.reconciliationStatus};
+  return {...order,paymentMethod,paymentStatus:'已付款',reconciliationStatus:'verified',paidAmount:Number(paidAmount)||0,reconciledAt:at,audit:[...(order.audit||[]),event('payment_reconciled',terminalId,at,{previous,paymentMethod,paidAmount:Number(paidAmount)||0})]};
+}
+export function flagPaymentIssue(order,{reason,notifyCustomer=false},terminalId,at=Date.now()){
+  const customerNotification=notifyCustomer?{status:'queued',reason,queuedAt:at}:order.customerNotification;
+  return {...order,paymentStatus:'付款待核實',reconciliationStatus:'issue',reconciliationIssue:reason,customerNotification,audit:[...(order.audit||[]),event('payment_issue_flagged',terminalId,at,{reason,notifyCustomer})]};
 }
 export function partiallyCancelItem(order,itemIndex,quantity,terminalId,at=Date.now()){
   const items=(order.items||[]).map(x=>({...x}));
@@ -34,3 +48,4 @@ export function queueReprint(order,documents,terminalId,at=Date.now()){
   const job={id:'PRINT-'+order.id+'-'+at,documents,status:'queued',terminalId,createdAt:at};
   return {...order,printStatus:'已排隊',printJobs:[...(order.printJobs||[]),job],audit:[...(order.audit||[]),event('order_reprint_queued',terminalId,at,{documents})]};
 }
+import {getChannelPolicy} from '../checkout/checkout-domain.js';

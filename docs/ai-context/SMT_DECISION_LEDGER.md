@@ -30,5 +30,9 @@
 | D-023 | LOCKED | 結帳訂單必須記錄實際完成結帳的終端及完整暫存交接 audit | Current Lock §18／checkout tests |
 | D-024 | LOCKED | 反結帳並重用直接載回既有點單頁，不在訂單頁重造產品編輯器 | Current Lock §18 |
 | D-025 | CURRENT | 訂單頁所有可見操作必須有真實資料結果及明確回饋；整單取消保留於歷史，不可刪除原訂單 | Current Lock §19／orders actions tests |
+| D-026 | LOCKED | 渠道、付款方式、付款狀態、核數狀態及平台結算分開；只有現場外賣／堂食可選付款方式，只有現金顯示鍵盤 | 2026-07-21 已確認渠道付款設計／checkout tests |
+| D-027 | LOCKED | 電話／WhatsApp及磨飯 App 備用單進入付款待核實；Keeta／Foodpanda 為平台已付，只收渠道參考資料 | 2026-07-21 已確認渠道矩陣／orders tests |
+| D-028 | LOCKED | 平台百分之二十五記為佣金預估及預計結算，不可記為客人折扣 | 2026-07-21 已確認平台結算規則／checkout tests |
+| D-029 | LOCKED | 部分取消在商品行內加減，最後只做一次金額確認 | 2026-07-21 已確認取消流程／orders tests |
 
 新增決策不得改寫舊行；新增一行並把被取代項標 `SUPERSEDED`。

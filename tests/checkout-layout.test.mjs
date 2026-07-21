@@ -24,3 +24,26 @@ test('詳情操作固定提供返回訂單及優惠兩欄',()=>{
   assert.match(page,/data-action="discount-open"/);
   assert.match(page,/優惠/);
 });
+
+test('付款區及現金鍵盤由渠道政策動態控制而非所有渠道全部顯示',()=>{
+  assert.match(page,/getChannelPolicy/);
+  assert.match(page,/policy\.requiresPaymentMethod/);
+  assert.match(page,/payment==='現金付款'/);
+  assert.match(page,/cashPayment/);
+  assert.match(page,/channel-fields/);
+});
+
+test('結帳完成保留核對卡並提供有原因的更正資料入口',()=>{
+  assert.match(page,/完成核對/);
+  assert.match(page,/更正資料/);
+  assert.match(page,/correctionReason/);
+  assert.match(page,/checkout_data_corrected/);
+  assert.doesNotMatch(page,/setTimeout\(\(\)=>parent\.postMessage/);
+});
+
+test('非現場渠道有對應的備註、取餐碼、核對碼或平台單號欄位',()=>{
+  assert.match(page,/pickupCode/);
+  assert.match(page,/verificationCode/);
+  assert.match(page,/platformOrderId/);
+  assert.match(page,/note/);
+});

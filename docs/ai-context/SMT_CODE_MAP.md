@@ -12,9 +12,10 @@
 | `pages/order/order-domain.js` | 純資料操作 | 無DOM |
 | `pages/order/page-data.js` | catalog、drink、pending示範資料 | page.js |
 | `pages/order/menu-api.js` | Firebase RTDB餐牌讀取、正規化、SMT規則合併、快取及離線回退 | `public/catalogV1`、page-data後備 |
-| `pages/orders/page.js` | 三渠道總覽、篩選、歷史、操作卡、反結帳載回點單頁 | 訂單記錄、orders-domain、終端ID |
-| `pages/orders/orders-domain.js` | 改渠道／付款、部分／整單取消、重印隊列及篩選 | 純資料操作 |
-| `pages/checkout/page.js` | 收款選擇、建立訂單、記錄實際結帳終端 | checkout config、operations |
+| `pages/orders/page.js` | 三渠道總覽、核數／通知、行內部分取消、歷史及反結帳 | 訂單記錄、orders-domain、終端ID |
+| `pages/orders/orders-domain.js` | 渠道／付款狀態、核數、問題通知、取消、重印及篩選 | checkout channel policy |
+| `pages/checkout/page.js` | 渠道分流、現場收款、完成核對、更正及建立訂單 | checkout-domain、operations |
+| `pages/checkout/checkout-domain.js` | 渠道政策、優惠、付款狀態、平台佣金及訂單記錄 | 純資料操作 |
 | `shared/operations.js` | 暫存流水、跨機接手、再暫存 lineage、結帳稽核 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
@@ -39,6 +40,8 @@
 | 暫存／取單 | `createDraftRecord`, `restoreDraftForTerminal`, draft modal actions | draft handoff tests |
 | 結帳終端稽核 | `recordCheckoutOperator`, `completeCheckout` | draft／orders UI tests |
 | 訂單操作 | `changeOrderPayment`, `partiallyCancelItem`, `cancelOrder`, `queueReprint` | orders actions tests |
+| 渠道付款政策 | `getChannelPolicy`, `buildCheckoutRecord` | checkout actions tests |
+| 付款核數 | `reconcilePayment`, `flagPaymentIssue` | orders actions tests |
 
 ## 資料流
 

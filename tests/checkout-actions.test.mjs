@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {applyCheckoutDiscount,buildCheckoutRecord,enterKeypadValue} from '../pages/checkout/checkout-domain.js';
+import {applyCheckoutDiscount,buildCheckoutRecord,enterKeypadValue,getChannelPolicy} from '../pages/checkout/checkout-domain.js';
 
 const cart=[
   {lineId:'f4',name:'蜜糖雞扒紫米飯團',category:'飯團',qty:1,unitPrice:45,total:45},
@@ -66,4 +66,37 @@ test('完成結帳保存優惠、應付金額及實際操作終端',()=>{
   assert.equal(record.checkoutTerminalId,'SMM');
   assert.equal(record.audit.at(-1).type,'order.checked_out');
   assert.equal(record.audit.some(event=>event.type==='discount.applied'),true);
+});
+
+test('渠道政策只容許現場單選付款方式，其他渠道只收必要參考資料',()=>{
+  assert.deepEqual(getChannelPolicy('現場外賣').paymentMethods,['現金付款','FPS／轉數快','PayMe','AlipayHK','WeChat Pay HK','組合付款','稍後付款']);
+  assert.equal(getChannelPolicy('現場外賣').requiresPaymentMethod,true);
+  assert.equal(getChannelPolicy('電話／WhatsApp').requiresPaymentMethod,false);
+  assert.equal(getChannelPolicy('電話／WhatsApp').initialPaymentStatus,'付款待核實');
+  assert.deepEqual(getChannelPolicy('磨飯 App').fields,['pickupCode','verificationCode','note']);
+  assert.equal(getChannelPolicy('Keeta').initialPaymentStatus,'平台已付');
+  assert.deepEqual(getChannelPolicy('Foodpanda').fields,['platformOrderId','note']);
+});
+
+test('稍後付款正式保存為付款待核實而不是另一個孤立狀態',()=>{
+  const pricing=applyCheckoutDiscount(cart,{type:'none'},'現場外賣');
+  const record=buildCheckoutRecord({id:'P0061',cart,channel:'現場外賣',payment:'稍後付款',pricing,discount:{type:'none'},terminalId:'SMT',now:1000});
+  assert.equal(record.paymentMethod,'待核實');
+  assert.equal(record.paymentStatus,'付款待核實');
+  assert.equal(record.reconciliationStatus,'pending');
+});
+
+test('自有渠道不猜付款方式，平台訂單分開保存佣金及預計結算',()=>{
+  const pricing=applyCheckoutDiscount(cart,{type:'none'},'電話／WhatsApp');
+  const owned=buildCheckoutRecord({id:'P0062',cart,channel:'電話／WhatsApp',payment:'現金付款',pricing,discount:{type:'none'},terminalId:'SMT',now:1000,channelData:{note:'稍後對數'}});
+  assert.equal(owned.paymentMethod,'待核實');
+  assert.equal(owned.paymentStatus,'付款待核實');
+  assert.equal(owned.channelData.note,'稍後對數');
+  const platform=buildCheckoutRecord({id:'P0063',cart,channel:'Keeta',pricing,discount:{type:'none'},terminalId:'SMT',now:1000,channelData:{platformOrderId:'K-123'}});
+  assert.equal(platform.paymentStatus,'平台已付');
+  assert.equal(platform.platformSalesGross,111);
+  assert.equal(platform.platformCommissionRate,.25);
+  assert.equal(platform.estimatedPlatformCommission,27.75);
+  assert.equal(platform.estimatedPlatformSettlement,83.25);
+  assert.equal(platform.discountAmount,0);
 });
