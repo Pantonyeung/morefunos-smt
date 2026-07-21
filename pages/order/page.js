@@ -1,6 +1,6 @@
 import {createRenderQueue,createStore,installErrorBoundary,safeClone} from '../../shared/runtime.js';
 import {ORDER_STORAGE_KEY,SETTINGS_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,TERMINAL_ID_STORAGE_KEY,DINE_STORAGE_KEY,SUPPLY_STORAGE_KEY,readJSON,writeJSON,stableId} from '../../shared/store.js';
-import {createDraftRecord,normalizeTerminalId,restoreDraftForTerminal} from '../../shared/operations.js';
+import {clearExpiredBusinessDayDrafts,createDraftRecord,normalizeTerminalId,restoreDraftForTerminal} from '../../shared/operations.js';
 import {money,imageBlock,bindImageFallbacks,showToast,escapeHtml} from '../../shared/components.js';
 import {orderPageConfig as defaults} from './page-config.js';
 import {categories as fallbackCategories,products as fallbackProducts,drinks as fallbackDrinks,optionSets} from './page-data.js';
@@ -31,6 +31,8 @@ const demoPendingOrders={
 const saved=readJSON(ORDER_STORAGE_KEY,null);
 const savedSettings=readJSON(SETTINGS_STORAGE_KEY,{});
 let drafts=readJSON(DRAFT_STORAGE_KEY,[]);
+const expiredDrafts=clearExpiredBusinessDayDrafts(drafts);
+if(expiredDrafts.voided.length){drafts=expiredDrafts.remaining;writeJSON(DRAFT_STORAGE_KEY,drafts);}
 let draftCounters=readJSON(DRAFT_COUNTER_STORAGE_KEY,{});
 const terminalId=normalizeTerminalId(localStorage.getItem(TERMINAL_ID_STORAGE_KEY)||new URLSearchParams(location.search).get('terminal')||'SMT');
 localStorage.setItem(TERMINAL_ID_STORAGE_KEY,terminalId);

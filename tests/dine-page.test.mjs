@@ -32,6 +32,36 @@ test('逐餐品付款可拆數量並鎖定已付款數量',async()=>{
   assert.throws(()=>applyItemPayment(next,[{lineId:'a',qty:8}],'PayMe'),/超出未付數量/);
 });
 
+test('堂食付款歸零會建立現場歷史訂單並即時清空枱位',async()=>{
+  const {createInitialDineState,commitTableOrder,settleTablePayment}=await import('../pages/dine/dine-domain.js');
+  let state=createInitialDineState(1000);
+  state=commitTableOrder(state,{tableId:'1'},[{lineId:'a',name:'芝士',qty:1,unitPrice:26,total:26}],{terminalId:'SMT',now:2000});
+  const result=settleTablePayment(state,[],{
+    tableId:'1',selections:[{lineId:'a',qty:1}],method:'現金',terminalId:'SMT',now:3000
+  });
+  const table=result.state.tables.find(entry=>entry.id==='1');
+  assert.equal(table.status,'free');
+  assert.equal(table.session,null);
+  assert.equal(result.history.length,1);
+  assert.equal(result.history[0].source,'現場');
+  assert.equal(result.history[0].group,'onsite');
+  assert.equal(result.history[0].status,'completed');
+  assert.equal(result.history[0].amount,26);
+  assert.equal(result.history[0].dineTableId,'1');
+});
+
+test('載入舊資料時會補救已付清但未清枱的堂食會話，且不重複寫歷史',async()=>{
+  const {createInitialDineState,commitTableOrder,applyFullPayment,reconcileSettledTables}=await import('../pages/dine/dine-domain.js');
+  let state=createInitialDineState(1000);
+  state=commitTableOrder(state,{tableId:'2'},[{lineId:'b',name:'飯團',qty:1,unitPrice:45,total:45}],{now:2000});
+  state.tables[1].session=applyFullPayment(state.tables[1].session,'PayMe',3000);
+  const first=reconcileSettledTables(state,[],{terminalId:'SMT',now:4000});
+  const second=reconcileSettledTables(first.state,first.history,{terminalId:'SMT',now:5000});
+  assert.equal(first.state.tables[1].status,'free');
+  assert.equal(first.history.length,1);
+  assert.equal(second.history.length,1);
+});
+
 test('堂食掃碼提交保持待確認，確認後才加入落單記錄',async()=>{
   const {acceptQrSubmission}=await import('../pages/dine/dine-domain.js');
   const session={items:[],orderBatches:[],pendingSubmissions:[{id:'qr-1',items:[{lineId:'b',name:'凍奶茶',qty:1,unitPrice:15,paidQty:0}]}]};

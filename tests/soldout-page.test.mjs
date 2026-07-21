@@ -35,3 +35,8 @@ test('產品詳情只讀而選擇開關獨立',()=>{
 });
 
 test('應用程式路由已接入售罄頁',()=>assert.match(loader,/soldout:'pages\/soldout\/index\.html'/));
+
+test('售罄頁使用正確餐牌後備參數，網絡失敗亦保留可操作頁面',()=>{
+  assert.match(page,/loadMenuCatalog\(\{fallback:fallbackCatalog\}\)/);
+  assert.match(page,/\.catch\(/);
+});

@@ -81,6 +81,47 @@ export function applyFullPayment(session,method,now=Date.now()){
   return applyItemPayment(session,selections,method,now);
 }
 
+function completedOrderId(session,tableId,now){
+  return `D${String(Number(session?.openedAt||now)).slice(-6)}-${String(tableId).replace(/\W/g,'')||'T'}`;
+}
+
+function completedDineOrder(table,{terminalId='SMT',now=Date.now()}={}){
+  const session=table.session||{},view=tableView(table,now),payments=session.payments||[];
+  const methods=[...new Set(payments.map(payment=>payment.method).filter(Boolean))];
+  return {
+    id:completedOrderId(session,table.id,now),dineSessionId:session.id,dineTableId:table.id,
+    group:'onsite',source:'現場',serviceMode:'堂食',status:'completed',
+    acceptedAt:Number(table.openedAt||session.openedAt||now),completedAt:Number(now),
+    itemCount:view.itemQty,amount:view.total,paidAmount:view.paid,
+    paymentMethod:methods.length>1?'組合付款':methods[0]||'已付款',paymentStatus:'已付款',
+    printStatus:(session.printJobs||[]).some(job=>job.status==='failed')?'異常':'正常',
+    checkoutTerminalId:terminal(terminalId),checkedOutByTerminalId:terminal(terminalId),
+    items:(session.items||[]).map(item=>({...clone(item),total:Number(item.unitPrice||0)*Number(item.qty||0)})),
+    payments:clone(payments),orderBatches:clone(session.orderBatches||[]),printJobs:clone(session.printJobs||[]),
+    audit:[{type:'dine.completed',terminalId:terminal(terminalId),at:Number(now),tableId:table.id,sessionId:session.id}]
+  };
+}
+
+export function reconcileSettledTables(state,history=[],options={}){
+  const next=clone(state),orders=clone(Array.isArray(history)?history:[]);
+  for(let index=0;index<next.tables.length;index++){
+    const table=next.tables[index],view=tableView(table,options.now);
+    if(table.status!=='occupied'||!table.session?.items?.length||view.unpaid>0)continue;
+    const existing=orders.some(order=>order.dineSessionId===table.session.id);
+    if(!existing)orders.unshift(completedDineOrder(table,options));
+    next.tables[index]={id:table.id,status:'free',openedAt:null,session:null};
+    if(next.selectedTableId===table.id)next.selectedTableId=null;
+  }
+  return {state:next,history:orders};
+}
+
+export function settleTablePayment(state,history,{tableId,selections,method,terminalId='SMT',now=Date.now()}={}){
+  const next=clone(state),index=next.tables.findIndex(table=>table.id===String(tableId));
+  if(index<0||next.tables[index].status!=='occupied')throw new Error('找不到使用中的堂食枱');
+  next.tables[index].session=applyItemPayment(next.tables[index].session,selections,method,now);
+  return reconcileSettledTables(next,history,{terminalId,now});
+}
+
 export function acceptQrSubmission(session,submissionId,now=Date.now()){
   const next=clone(session);
   const index=next.pendingSubmissions.findIndex(entry=>entry.id===submissionId);

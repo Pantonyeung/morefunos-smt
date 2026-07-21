@@ -36,6 +36,19 @@ test('taking over another terminal draft preserves lineage',()=>{
   assert.equal(restored.session.audit.at(-1).type,'draft.taken_over');
 });
 
+test('日結會清空當時所有草稿，而新營業日草稿不會被誤刪',async()=>{
+  const {clearDraftsForDayClose,clearExpiredBusinessDayDrafts}=await import('../shared/operations.js');
+  const drafts=[{id:'old',createdAt:100},{id:'new',createdAt:200}];
+  const closed=clearDraftsForDayClose(drafts,{terminalId:'SMT',now:300});
+  assert.deepEqual(closed.remaining,[]);
+  assert.deepEqual(closed.voided.map(x=>x.status),['voided','voided']);
+  const boundary=clearExpiredBusinessDayDrafts([
+    {id:'before',createdAt:new Date(2026,6,21,4,59).getTime()},
+    {id:'after',createdAt:new Date(2026,6,21,5,1).getTime()}
+  ],new Date(2026,6,21,6,0).getTime());
+  assert.deepEqual(boundary.remaining.map(x=>x.id),['after']);
+});
+
 test('a taken-over cart is renumbered under the terminal that saves it again',()=>{
   const original=createDraftRecord({cart:[{lineId:'l1',name:'飯團',qty:1}],terminalId:'SMT',drafts:[],now:100});
   const {cart,session}=restoreDraftForTerminal(original,'SMM',200);

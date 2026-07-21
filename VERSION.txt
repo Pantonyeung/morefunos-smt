@@ -1,4 +1,4 @@
-MoreFun SMT V1.22
-Build: order-v1-22
+MoreFun SMT V1.23
+Build: order-v1-23
 Branch target: feat/smt-order-page-v1
-Status: sold-out management page, category product cards, batch confirmation and local supply overrides implemented; real cloud availability write, printer APIs and device acceptance pending
+Status: sold-out loading fallback, paid dine-in history and automatic table clearing, draft void and day-close cleanup implemented; device acceptance pending

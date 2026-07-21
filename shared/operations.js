@@ -61,6 +61,33 @@ export function restoreDraftForTerminal(draft,terminalId,now=Date.now()){
   };
 }
 
+export function clearDraftsForDayClose(drafts,{terminalId='SMT',now=Date.now()}={}){
+  const rows=Array.isArray(drafts)?drafts:[];
+  return {
+    remaining:[],
+    voided:rows.map(draft=>({
+      ...clone(draft),status:'voided',voidReason:'day_close',voidedAt:Number(now),
+      audit:clone(draft?.audit||[]).concat(event('draft.voided_by_day_close',terminalId,now,{draftNumber:draft?.draftNumber||''}))
+    }))
+  };
+}
+
+export function businessDayStart(now=Date.now(),hour=5){
+  const start=new Date(Number(now));
+  start.setHours(hour,0,0,0);
+  if(Number(now)<start.getTime())start.setDate(start.getDate()-1);
+  return start.getTime();
+}
+
+export function clearExpiredBusinessDayDrafts(drafts,now=Date.now()){
+  const start=businessDayStart(now);
+  const rows=Array.isArray(drafts)?drafts:[];
+  const expired=rows.filter(draft=>Number(draft?.createdAt||0)<start);
+  const active=rows.filter(draft=>Number(draft?.createdAt||0)>=start);
+  const cleared=clearDraftsForDayClose(expired,{terminalId:'SYSTEM',now});
+  return {remaining:active,voided:cleared.voided};
+}
+
 export function recordCheckoutOperator(order,terminalId,now=Date.now()){
   const checkoutTerminalId=normalizeTerminalId(terminalId);
   return {

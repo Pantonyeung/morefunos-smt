@@ -16,9 +16,10 @@
 | `pages/orders/orders-domain.js` | 渠道／付款狀態、核數、問題通知、取消、重印及篩選 | checkout channel policy |
 | `pages/checkout/page.js` | 渠道分流、WebP 渠道／付款圖標、摘要已收框直接輸入、現場收款、完成核對、更正及建立訂單 | checkout-domain、operations |
 | `pages/checkout/checkout-domain.js` | 渠道政策、優惠、付款狀態、平台佣金及訂單記錄 | 純資料操作 |
-| `pages/dine/page.js` | 九宮格、輪候、枱詳情、掃碼確認、付款及枱碼介面 | dine-domain、QR vendor |
-| `pages/dine/dine-domain.js` | 枱位計時、掃碼確認、全數及逐餐品付款純資料規則 | 無DOM |
-| `shared/operations.js` | 暫存流水、跨機接手、再暫存 lineage、結帳稽核 | 純資料操作 |
+| `pages/dine/page.js` | 九宮格、輪候、枱詳情、掃碼確認、付款、完成歷史寫入及自動清枱 | dine-domain、訂單歷史、QR vendor |
+| `pages/dine/dine-domain.js` | 枱位計時、掃碼確認、付款、付清結算、歷史訂單及舊會話補救規則 | 無DOM |
+| `pages/soldout/page.js` | 售罄分類、批量操作、只讀詳情及餐牌失敗回退 | menu-api、供應狀態 |
+| `shared/operations.js` | 暫存流水、跨機接手、作廢、日結清理、再暫存 lineage、結帳稽核 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
 | `tests/menu-api.test.mjs` | 真實餐牌合約、映射及離線回歸 | menu-api |
@@ -44,7 +45,9 @@
 | 訂單操作 | `changeOrderPayment`, `partiallyCancelItem`, `cancelOrder`, `queueReprint` | orders actions tests |
 | 渠道付款政策 | `getChannelPolicy`, `buildCheckoutRecord` | checkout actions tests |
 | 付款核數 | `reconcilePayment`, `flagPaymentIssue` | orders actions tests |
-| 堂食 | `tableView`, `tableCard`, `commitTableOrder`, `acceptQrSubmission`, `applyItemPayment` | dine page tests |
+| 堂食 | `tableView`, `tableCard`, `commitTableOrder`, `settleTablePayment`, `reconcileSettledTables` | dine page tests |
+| 草稿日結 | `clearDraftsForDayClose`, `clearExpiredBusinessDayDrafts` | draft handoff tests |
+| 售罄啟動 | `loadMenuCatalog({fallback})`、後備餐牌 catch | soldout page tests |
 
 ## 資料流
 
