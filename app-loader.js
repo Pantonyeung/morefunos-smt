@@ -1,6 +1,6 @@
 const stage=document.getElementById('stage');
 const frame=document.getElementById('page');
-const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html',dine:'pages/dine/index.html'};
+const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html',dine:'pages/dine/index.html',soldout:'pages/soldout/index.html'};
 const CANVAS_WIDTH=1920;
 let current='';
 let fitToken=0;
@@ -60,7 +60,7 @@ function load(){
   const key=route();
   if(key===current)return;
   current=key;
-  frame.src=routes[key]+'?build=order-v1-11';
+  frame.src=routes[key]+'?build=order-v1-22';
 }
 frame.addEventListener('error',()=>showLoaderError('子頁載入失敗，資料仍保存在本機。'));
 addEventListener('hashchange',load);
