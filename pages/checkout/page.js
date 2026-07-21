@@ -34,8 +34,8 @@ let channel = "現場",
   correctionOpen = false,
   correctionReason = "";
 
-const nextOrderId = (history) =>
-  "P" +
+const nextOrderId = (history, source = "現場", cart = []) =>
+  (source === "電話／WhatsApp" ? "T" : source === "磨飯 App" ? "M" : source === "Keeta" ? "K" : source === "Foodpanda" ? "F" : source === "現場" && cart.length && cart.every(line => line.serviceMode === "堂食") ? "" : "P") +
   String(
     history.reduce(
       (max, row) =>
@@ -142,7 +142,7 @@ function completeCheckout() {
   const history = readJSON(ORDER_HISTORY_STORAGE_KEY, []),
     now = Date.now(),
     record = buildCheckoutRecord({
-      id: nextOrderId(history),
+      id: nextOrderId(history, channel, order.cart),
       cart: order.cart,
       channel,
       payment,
@@ -158,6 +158,9 @@ function completeCheckout() {
       ],
     });
   record.reusedFromOrderId = order.reuse?.orderId || null;
+  const dineInOnly = channel === "現場" && order.cart.length > 0 && order.cart.every(line => line.serviceMode === "堂食");
+  record.status = dineInOnly ? "completed" : "running";
+  if (dineInOnly) record.completedAt = now;
   writeJSON(ORDER_HISTORY_STORAGE_KEY, [record, ...history]);
   writeJSON(ORDER_STORAGE_KEY, {
     cart: [],
@@ -178,6 +181,8 @@ function render() {
     cash = policy.requiresPaymentMethod && payment === "現金",
     zero = result.payable <= 0;
   app.innerHTML = `<div class="app"><header class="topbar statusbar"><div class="brand">磨飯 SMT</div><span class="status-item">操作終端 ${terminalId}</span><div class="spacer"></div><span class="status-item">● 線上</span></header><main class="checkout"><aside class="checkout-cart panel"><header><h2>訂單詳情</h2><span>${(order.cart || []).reduce((n, line) => n + Number(line.qty || 0), 0)} 件</span></header><div class="cart-lines">${(order.cart || []).map((line, index) => `<article><span class="seq">${index + 1}</span><span><strong>${escapeHtml(line.name)}</strong><small>x${line.qty}</small></span><b>${money(line.total)}</b></article>`).join("")}</div><div class="detail-actions"><button data-action="back">返回訂單</button><button data-action="discount-open" class="${discount.type !== "none" ? "active" : ""}" ${policy.group !== "onsite" ? "disabled" : ""}><span>優惠</span><small>${policy.group === "onsite" ? discountLabel(result) : "非現場渠道不適用"}</small></button></div></aside><section class="checkout-main panel"><div class="row channels">${checkoutConfig.channels.map((value) => `<button data-action="channel" data-value="${value}" class="${channel === value ? "active" : ""}">${value}</button>`).join("")}</div>${policy.requiresPaymentMethod ? `<div class="row payments">${policy.paymentMethods.map((value) => `<button data-action="payment" data-value="${value}" class="${payment === value ? "active" : ""}">${value}</button>`).join("")}</div>` : fieldRows(policy)}<div class="summary"><span>原價 <b>${money(result.subtotal)}</b></span><span>優惠 <b>-${money(result.discountAmount)}</b></span><span>應付 <b>${money(result.payable)}</b></span>${cash ? `<span>已收 <b>${money(received)}</b></span><span>找續 <b>${money(Math.max(0, received - result.payable))}</b></span>` : `<span class="summary-note">狀態 <b>${policy.initialPaymentStatus}</b></span>`}</div>${policy.group === "onsite" ? cashControls(result, cash) : ""}${zero ? '<p class="zero-warning">訂單金額必須大於零，請先加入有效產品或更正優惠。</p>' : ""}<button class="confirm" data-action="confirm" ${zero ? "disabled" : ""}>${policy.initialPaymentStatus === "付款待核實" ? "建立並待核實" : policy.initialPaymentStatus === "平台已付" ? "確認平台訂單" : "確認結帳"} ${money(result.payable)}</button></section></main></div>${discountCard(result)}${completedCard()}<div id="toast" class="toast"></div>`;
+  app.querySelectorAll('[data-action="channel"]').forEach(button => { button.innerHTML = labelled(button.dataset.value, channelIcon); });
+  app.querySelectorAll('[data-action="payment"]').forEach(button => { button.innerHTML = labelled(button.dataset.value, paymentIcon); });
   app
     .querySelectorAll("[data-action]")
     .forEach((button) => (button.onclick = () => handle(button)));
