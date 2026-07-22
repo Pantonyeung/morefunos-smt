@@ -18,7 +18,7 @@ function prepareCategory(section){
 
 function prepareEditButtons(){
   app.querySelectorAll('.cart-actions .edit-button').forEach(button=>{
-    if(button.textContent.trim()!=='改')button.textContent='改';
+    button.textContent='改';
     button.setAttribute('aria-label','修改產品');
     button.setAttribute('title','修改產品');
   });
@@ -30,40 +30,93 @@ function safeViewport(){
   const height=viewport?.height||window.innerHeight;
   const offsetLeft=viewport?.offsetLeft||0;
   const offsetTop=viewport?.offsetTop||0;
-  return {left:offsetLeft+12,top:offsetTop+68,right:offsetLeft+width-12,bottom:offsetTop+height-76};
+  const topbar=document.querySelector('.topbar')?.getBoundingClientRect();
+  const nav=document.querySelector('.bottom-nav')?.getBoundingClientRect();
+  return {
+    left:offsetLeft+12,
+    top:Math.max(offsetTop+12,(topbar?.bottom||offsetTop)+12),
+    right:offsetLeft+width-12,
+    bottom:Math.min(offsetTop+height-12,(nav?.top||offsetTop+height)-12)
+  };
+}
+
+function choosePlacement(trigger,width,height,safe,gap=12){
+  const spaces={
+    bottom:safe.bottom-trigger.bottom,
+    top:trigger.top-safe.top,
+    right:safe.right-trigger.right,
+    left:trigger.left-safe.left
+  };
+  const candidates=[
+    ['bottom',spaces.bottom>=height+gap],
+    ['top',spaces.top>=height+gap],
+    ['right',spaces.right>=width+gap],
+    ['left',spaces.left>=width+gap]
+  ];
+  const found=candidates.find(([,fits])=>fits);
+  if(found)return found[0];
+  return Object.entries(spaces).sort((a,b)=>b[1]-a[1])[0][0];
 }
 
 function positionPopover(card){
-  if(!card||card.dataset.popoverPositioned==='1')return;
+  if(!card)return;
   const safe=safeViewport();
   const trigger=lastTriggerRect;
-  const preferredWidth=Math.min(card.classList.contains('order-transfer-card')?820:card.classList.contains('product-detail')?960:Math.max(card.offsetWidth||320,280),safe.right-safe.left);
-  const preferredHeight=Math.min(card.scrollHeight||card.offsetHeight||360,safe.bottom-safe.top);
-  let left=trigger?trigger.left:safe.left+(safe.right-safe.left-preferredWidth)/2;
-  let top=trigger?trigger.bottom+8:safe.top+(safe.bottom-safe.top-preferredHeight)/2;
-  if(trigger&&top+preferredHeight>safe.bottom)top=trigger.top-preferredHeight-8;
-  if(trigger&&left+preferredWidth>safe.right)left=trigger.right-preferredWidth;
-  left=Math.max(safe.left,Math.min(left,safe.right-preferredWidth));
-  top=Math.max(safe.top,Math.min(top,safe.bottom-preferredHeight));
+  const isTransfer=card.classList.contains('order-transfer-card');
+  const isProduct=card.classList.contains('product-detail');
+  const maxWidth=safe.right-safe.left;
+  const maxHeight=safe.bottom-safe.top;
+  const width=Math.min(isTransfer?900:isProduct?760:Math.max(card.offsetWidth||320,280),maxWidth);
+  const height=Math.min(card.scrollHeight||card.offsetHeight||360,maxHeight);
+  let side='bottom';
+  let left=safe.left+(maxWidth-width)/2;
+  let top=safe.top+(maxHeight-height)/2;
+  if(trigger){
+    side=choosePlacement(trigger,width,height,safe);
+    if(side==='bottom'){
+      left=trigger.left+trigger.width/2-width/2;
+      top=trigger.bottom+12;
+    }else if(side==='top'){
+      left=trigger.left+trigger.width/2-width/2;
+      top=trigger.top-height-12;
+    }else if(side==='right'){
+      left=trigger.right+12;
+      top=trigger.top+trigger.height/2-height/2;
+    }else{
+      left=trigger.left-width-12;
+      top=trigger.top+trigger.height/2-height/2;
+    }
+  }
+  left=Math.max(safe.left,Math.min(left,safe.right-width));
+  top=Math.max(safe.top,Math.min(top,safe.bottom-height));
   card.classList.add('is-anchored-popover');
   card.style.left=Math.round(left)+'px';
   card.style.top=Math.round(top)+'px';
   card.style.right='auto';
   card.style.bottom='auto';
   card.style.transform='none';
-  card.style.maxWidth=Math.floor(safe.right-safe.left)+'px';
-  card.style.maxHeight=Math.floor(safe.bottom-safe.top)+'px';
+  card.style.width=Math.min(width,maxWidth)+'px';
+  card.style.maxWidth=Math.floor(maxWidth)+'px';
+  card.style.maxHeight=Math.floor(maxHeight)+'px';
+  card.dataset.pointerSide=side;
+  if(trigger){
+    card.style.setProperty('--pointer-x',Math.max(22,Math.min(trigger.left+trigger.width/2-left,width-22))+'px');
+    card.style.setProperty('--pointer-y',Math.max(22,Math.min(trigger.top+trigger.height/2-top,height-22))+'px');
+  }
   card.dataset.popoverPositioned='1';
 }
 
 function preparePopovers(){
-  app.querySelectorAll('.modal-card,.confirm-card').forEach(positionPopover);
+  app.querySelectorAll('.modal-card,.confirm-card').forEach(card=>{
+    card.dataset.popoverPositioned='';
+    positionPopover(card);
+  });
 }
 
 function prepareAll(){
   app.querySelectorAll('.cart-category').forEach(prepareCategory);
   prepareEditButtons();
-  requestAnimationFrame(preparePopovers);
+  requestAnimationFrame(()=>requestAnimationFrame(preparePopovers));
 }
 
 function toggle(section){
@@ -97,12 +150,9 @@ app.addEventListener('keydown',event=>{
   toggle(header.parentElement);
 });
 
-addEventListener('resize',()=>{
-  app.querySelectorAll('.modal-card,.confirm-card').forEach(card=>{
-    card.dataset.popoverPositioned='';
-    positionPopover(card);
-  });
-});
+addEventListener('resize',preparePopovers);
+window.visualViewport?.addEventListener('resize',preparePopovers);
+window.visualViewport?.addEventListener('scroll',preparePopovers);
 
 new MutationObserver(prepareAll).observe(app,{childList:true,subtree:true});
 prepareAll();
