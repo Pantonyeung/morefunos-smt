@@ -33,11 +33,36 @@ test('五個主要頁面全部使用共用狀態欄及底部導航',()=>{
   });
 });
 
-test('底欄高度、選中短線、字體及圖標只由共用樣式控制',()=>{
+test('底欄高度、選中膠囊、字體及圖標只由共用樣式控制',()=>{
   assert.match(baseCss,/\.bottom-nav\s*\{[^}]*height:\s*76px/s);
   assert.match(baseCss,/\.shell-nav-icon/);
-  assert.match(baseCss,/\.shell-nav-button\.active::before/);
+  assert.match(baseCss,/--choice-pill-radius:\s*999px/);
+  assert.match(baseCss,/\.shell-nav-button\s*\{[^}]*border-radius:\s*var\(--choice-pill-radius\)/s);
+  assert.match(baseCss,/\.shell-nav-button\.active\s*\{[^}]*background:\s*var\(--orange-soft\)[^}]*box-shadow:/s);
+  assert.doesNotMatch(baseCss,/\.shell-nav-button\.active::before/);
   pageCss.forEach(css=>assert.doesNotMatch(css,/\.bottom-nav\s*\{[^}]*height:/s));
+});
+
+test('分類、頁籤、分段、付款、來源及模式選擇共用膠囊規則',()=>{
+  for(const selector of [
+    '.category-page',
+    '.category-search',
+    '.categories',
+    '.segmented',
+    '.channels',
+    '.payments',
+    '.option-grid',
+    '.option-chips',
+    '.source-picker',
+    '.tabs',
+    '.status-filter',
+    '.mode-choice',
+    '.issue-quick',
+    '.method-grid',
+    '.theme'
+  ]) assert.ok(baseCss.includes(selector),`${selector} 尚未接入共用膠囊規則`);
+  assert.match(baseCss,/border-radius:\s*var\(--choice-pill-radius\)\s*!important/);
+  assert.match(baseCss,/\.active\s*\{[^}]*background:\s*var\(--orange-soft\)\s*!important[^}]*box-shadow:/s);
 });
 
 test('來源彈窗支援四方向箭嘴並由定位器標記實際方向',()=>{

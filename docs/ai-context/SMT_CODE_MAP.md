@@ -59,7 +59,7 @@
 | 日結盤點及反推 | `syncCashDenomination`、`totalCashBreakdown`、`calculateDayCloseReconciliation`、`createDayClose` | more operations tests |
 | 堂食取消生命週期 | `createDineOrderContext`、`cleanupEmptyDineSessions`、`requestDineCancellation` | dine page tests |
 | 全局觸控動效 | `shared/page-base.css` 共用 focus／press／dialog／drawer／reduced-motion | more page及全量回歸 |
-| 共用介面骨架 | `shared/shell.js`、`renderGlobalStatusBar`、`renderBottomNav` | shell UI tests |
+| 共用介面骨架及選擇膠囊 | `shared/shell.js`、`shared/page-base.css`、`renderGlobalStatusBar`、`renderBottomNav`、`--choice-pill-radius` | shell UI tests |
 | 分類格數及搜尋 | `category-layout.js`、`categoryBar`、更多頁顯示設定 | category layout／order UI tests |
 | 訂單歷史歸檔 | `archiveExpiredOrders`、`archiveAndRender` | orders actions tests |
 | 實物打印資料 | `shouldPrintProductLabel`、`labelDocuments`、`renderPrintDocument` | print core tests |

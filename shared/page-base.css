@@ -11,6 +11,7 @@
   --red: #cf4338;
   --green: #39835a;
   --shadow: 0 12px 36px rgba(76, 46, 28, 0.14);
+  --choice-pill-radius: 999px;
   font-family:
     -apple-system, BlinkMacSystemFont, "PingFang HK", "Noto Sans TC",
     "Microsoft JhengHei", sans-serif;
@@ -108,24 +109,68 @@ button {
   height: 76px;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 7px 16px;
   background: #fff;
   border-top: 1px solid var(--line);
   flex: none;
 }
 .bottom-nav button {
   position: relative;
-  border: 0;
+  border: 1px solid transparent;
   background: #fff;
   font-weight: 850;
   font-size: 17px;
 }
-.bottom-nav .active {
-  color: var(--orange);
-}
-.shell-nav-button{display:grid;grid-template-rows:28px auto;place-content:center;place-items:center;gap:4px;min-width:0;padding:7px 10px}
-.shell-nav-button.active::before{content:"";position:absolute;left:34%;right:34%;top:0;height:4px;border-radius:0 0 999px 999px;background:var(--orange)}
+.shell-nav-button{display:grid;grid-template-rows:25px auto;place-content:center;place-items:center;gap:2px;min-width:0;padding:5px 12px;border-radius:var(--choice-pill-radius)}
+.shell-nav-button.active{background:var(--orange-soft);border-color:color-mix(in srgb,var(--orange) 44%,white);color:var(--orange);box-shadow:0 3px 12px color-mix(in srgb,var(--orange) 15%,transparent)}
 .shell-nav-icon{width:25px;height:25px;display:block}
-.shell-nav-badge{position:absolute;top:7px;left:calc(50% + 10px);min-width:20px;height:20px;padding:0 5px;display:grid;place-items:center;border-radius:999px;background:var(--red);color:#fff;font-size:11px}
+.shell-nav-badge{position:absolute;top:3px;left:calc(50% + 10px);min-width:20px;height:20px;padding:0 5px;display:grid;place-items:center;border-radius:999px;background:var(--red);color:#fff;font-size:11px}
+
+/* 所有文字式單選／篩選控制共用同一套膠囊語言；內容卡仍保留卡片選中框。 */
+:is(
+  .top-btn,
+  .category-page > button,
+  .category-search,
+  .categories > button,
+  .segmented > button,
+  .channels > button,
+  .payments > button,
+  .option-grid > button,
+  .option-chips > button,
+  .source-picker > button,
+  .tabs > button,
+  .status-filter > button,
+  .mode-choice,
+  .issue-quick > button,
+  .method-grid > button,
+  .theme
+) {
+  border-radius: var(--choice-pill-radius) !important;
+}
+:is(
+  .top-btn,
+  .category-page > button,
+  .category-search,
+  .categories > button,
+  .segmented > button,
+  .channels > button,
+  .payments > button,
+  .option-grid > button,
+  .option-chips > button,
+  .source-picker > button,
+  .tabs > button,
+  .status-filter > button,
+  .mode-choice,
+  .issue-quick > button,
+  .method-grid > button,
+  .theme
+).active {
+  background: var(--orange-soft) !important;
+  border-color: color-mix(in srgb,var(--orange) 56%,white) !important;
+  color: var(--orange) !important;
+  box-shadow: 0 3px 11px color-mix(in srgb,var(--orange) 14%,transparent);
+}
 .global-statusbar{height:78px;min-height:78px}
 .shell-brand{display:flex;align-items:center;gap:9px;white-space:nowrap}.shell-brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:var(--orange);color:#fff;font-size:19px}.shell-brand strong{font-size:25px}
 .shell-terminal,.shell-context,.shell-operation{min-height:38px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#fff;font-weight:850;white-space:nowrap}.shell-terminal{background:var(--orange-soft);color:var(--orange)}.shell-operation{gap:8px}.shell-operation i{width:10px;height:10px;border-radius:50%;background:var(--green)}.shell-operation.offline i{background:var(--red)}

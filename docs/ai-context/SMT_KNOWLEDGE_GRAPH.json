@@ -38,7 +38,7 @@
     {"id":"feature.cash-reconciliation","type":"feature","label":"Denomination cash count and day-close reconciliation"},
     {"id":"feature.dine-cancel","type":"feature","label":"Dine order intent and cancellation lifecycle"},
     {"id":"feature.interaction-motion","type":"feature","label":"Shared touch and modal motion language"},
-    {"id":"feature.global-shell","type":"feature","label":"Permanent global status bar and shared navigation"},
+    {"id":"feature.global-shell","type":"feature","label":"Permanent global status bar, shared navigation and selection pills"},
     {"id":"feature.category-search","type":"feature","label":"Configurable category grid and fixed search"},
     {"id":"external.real-api","type":"external","label":"Real order and payment APIs"},
     {"id":"external.android-print","type":"external","label":"Android native print bridge and physical printers"},
