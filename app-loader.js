@@ -3,7 +3,7 @@ const frame=document.getElementById('page');
 const hud=document.getElementById('device-hud');
 const hudDetail=document.getElementById('device-hud-detail');
 const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html',dine:'pages/dine/index.html',soldout:'pages/soldout/index.html',more:'pages/more/index.html'};
-const BUILD='smt-t2s-1280x800-rebuild.2';
+const BUILD='smt-t2s-1280x800-rebuild.3';
 const TARGET_WIDTH=1280;
 const TARGET_HEIGHT=800;
 let current='';
@@ -23,9 +23,8 @@ function isExactTarget(size){
 
 function applyT2SViewport(){
   const size=viewportSize();
-  const landscape=size.width>size.height;
-  document.documentElement.dataset.orientation=landscape?'landscape':'portrait';
-  if(!landscape){stage.dataset.fitted='0';return;}
+  const orientation=size.width>=size.height?'橫屏':'直屏';
+  document.documentElement.dataset.orientation=orientation==='橫屏'?'landscape':'portrait';
 
   const exact=isExactTarget(size);
   const scale=exact?1:Math.min(size.width/TARGET_WIDTH,size.height/TARGET_HEIGHT);
@@ -46,7 +45,7 @@ function applyT2SViewport(){
 
   if(hud&&hudDetail){
     hud.hidden=exact;
-    hudDetail.textContent='實際畫面 '+size.width+'×'+size.height+'｜縮放 '+Math.round(scale*100)+'%｜黑色範圍不屬於 T2S 畫面';
+    hudDetail.textContent='裝置 '+size.width+'×'+size.height+'（'+orientation+'）｜完整框縮放 '+Math.round(scale*100)+'%｜黃色框內固定為 1280×800';
   }
 }
 
@@ -78,7 +77,7 @@ addEventListener('message',event=>{
   if(event.data?.type==='morefun:navigate')location.hash='#/'+event.data.route;
   if(event.data?.type==='morefun:exit-fullscreen'&&document.fullscreenElement)document.exitFullscreen?.();
   if(event.data?.type==='morefun:set-ui-scale'){
-    frame.contentWindow?.postMessage({type:'morefun:ui-scale-disabled',reason:'T2S 使用固定 1280×800 測試框，不再由頁面自行縮放。'},'*');
+    frame.contentWindow?.postMessage({type:'morefun:ui-scale-disabled',reason:'T2S 使用固定 1280×800 測試框；請使用瀏覽器雙指縮放檢查細節。'},'*');
   }
   if(event.data?.type==='morefun:reload-current-page')load({force:true});
   if(event.data?.type==='morefun:page-runtime-error'){
