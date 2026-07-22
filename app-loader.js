@@ -1,7 +1,11 @@
 const stage=document.getElementById('stage');
 const frame=document.getElementById('page');
+const hud=document.getElementById('device-hud');
+const hudDetail=document.getElementById('device-hud-detail');
 const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html',dine:'pages/dine/index.html',soldout:'pages/soldout/index.html',more:'pages/more/index.html'};
-const BUILD='smt-t2s-1280x800-rebuild.1';
+const BUILD='smt-t2s-1280x800-rebuild.2';
+const TARGET_WIDTH=1280;
+const TARGET_HEIGHT=800;
 let current='';
 let childReady=false;
 
@@ -13,14 +17,37 @@ function viewportSize(){
   };
 }
 
-function applyNativeViewport(){
+function isExactTarget(size){
+  return size.width===TARGET_WIDTH&&size.height===TARGET_HEIGHT;
+}
+
+function applyT2SViewport(){
   const size=viewportSize();
   const landscape=size.width>size.height;
   document.documentElement.dataset.orientation=landscape?'landscape':'portrait';
-  stage.dataset.profile=size.width<=1400?'sunmi-t2s-native':'desktop-native';
+  if(!landscape){stage.dataset.fitted='0';return;}
+
+  const exact=isExactTarget(size);
+  const scale=exact?1:Math.min(size.width/TARGET_WIDTH,size.height/TARGET_HEIGHT);
+  const renderedWidth=Math.round(TARGET_WIDTH*scale);
+  const renderedHeight=Math.round(TARGET_HEIGHT*scale);
+
+  stage.style.width=TARGET_WIDTH+'px';
+  stage.style.height=TARGET_HEIGHT+'px';
+  stage.style.left=Math.max(0,Math.round((size.width-renderedWidth)/2))+'px';
+  stage.style.top=Math.max(0,Math.round((size.height-renderedHeight)/2))+'px';
+  stage.style.transform=scale===1?'none':'scale('+scale+')';
+  stage.dataset.profile=exact?'sunmi-t2s-native':'sunmi-t2s-simulator';
   stage.dataset.viewportWidth=String(size.width);
   stage.dataset.viewportHeight=String(size.height);
-  stage.dataset.fitted=landscape?'1':'0';
+  stage.dataset.scale=scale.toFixed(4);
+  stage.dataset.fitted='1';
+  document.documentElement.dataset.previewMode=exact?'native':'simulator';
+
+  if(hud&&hudDetail){
+    hud.hidden=exact;
+    hudDetail.textContent='實際畫面 '+size.width+'×'+size.height+'｜縮放 '+Math.round(scale*100)+'%｜黑色範圍不屬於 T2S 畫面';
+  }
 }
 
 function route(){
@@ -42,16 +69,16 @@ function load({force=false}={}){
 
 frame.addEventListener('error',()=>showLoaderError('子頁載入失敗，資料仍保存在本機。'));
 addEventListener('hashchange',()=>load());
-addEventListener('pageshow',applyNativeViewport);
-addEventListener('resize',applyNativeViewport,{passive:true});
-addEventListener('orientationchange',()=>setTimeout(applyNativeViewport,120),{passive:true});
+addEventListener('pageshow',applyT2SViewport);
+addEventListener('resize',applyT2SViewport,{passive:true});
+addEventListener('orientationchange',()=>setTimeout(applyT2SViewport,120),{passive:true});
 addEventListener('message',event=>{
   if(event.source!==frame.contentWindow)return;
   if(event.data?.type==='morefun:page-ready')childReady=true;
   if(event.data?.type==='morefun:navigate')location.hash='#/'+event.data.route;
   if(event.data?.type==='morefun:exit-fullscreen'&&document.fullscreenElement)document.exitFullscreen?.();
   if(event.data?.type==='morefun:set-ui-scale'){
-    frame.contentWindow?.postMessage({type:'morefun:ui-scale-disabled',reason:'T2S 使用原生 1280×800 排版，不再縮放整頁。'},'*');
+    frame.contentWindow?.postMessage({type:'morefun:ui-scale-disabled',reason:'T2S 使用固定 1280×800 測試框，不再由頁面自行縮放。'},'*');
   }
   if(event.data?.type==='morefun:reload-current-page')load({force:true});
   if(event.data?.type==='morefun:page-runtime-error'){
@@ -60,5 +87,5 @@ addEventListener('message',event=>{
   }
 });
 
-applyNativeViewport();
+applyT2SViewport();
 load();
