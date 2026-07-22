@@ -20,11 +20,11 @@
 ## 專案身份與真相順序
 
 - 產品：磨飯 SMT 餐飲 POS
-- 分支：`feat/smt-order-page-v1`
-- 程式標籤：`order-v1-31`
+- 分支：`test/t2s-display-adaptation`
+- 程式標籤：`order-v1-31-t2s-preview.1`
 - 資料架構：Firebase RTDB 為唯一即時餐牌/API來源；Google Sheet只作記錄投影；Apps Script已退出SMT運行鏈路。
 - 目標：先完成可運作點單垂直鏈路
-- 自動測試基準：220/220；歷史報表、混合付款與正負差額對數、現金找續、audit 異常及三位流水測試通過
+- 自動測試基準：225/225；新增 T2S 公網畫布、裝置闊度、產品圖、四欄卡、快捷飲品及更多頁安全區測試
 - 實機：iPad／Sunmi T2S 最終 Lock 未完成
 
 真相順序：當前最新明確確認 → 本文件現行決策 → Current Lock → 最新程式／測試 → 舊 log／效果圖。衝突舊資料標記 `SUPERSEDED`；安全、離線、資料完整及繁中不可跌穿基線。

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "morefunos-smt",
-  "branch": "feat/smt-order-page-v1",
-  "baseline": "order-v1-31",
+  "branch": "test/t2s-display-adaptation",
+  "baseline": "order-v1-31-t2s-preview.1",
   "requiredFiles": [
     "AGENTS.md",
     "SMT_AI_START_HERE.md",

@@ -1,7 +1,7 @@
 const stage=document.getElementById('stage');
 const frame=document.getElementById('page');
 const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html',dine:'pages/dine/index.html',soldout:'pages/soldout/index.html',more:'pages/more/index.html'};
-const CANVAS_WIDTH=1920;
+const MAX_CANVAS_WIDTH=1920;
 let current='';
 let fitToken=0;
 let childReady=false;
@@ -16,17 +16,19 @@ function viewportSize(){
   };
 }
 function applyFit(size){
-  const scale=(size.width/CANVAS_WIDTH)*uiScale;
+  const logicalWidth=Math.min(MAX_CANVAS_WIDTH,size.width);
+  const scale=Math.min(1,size.width/logicalWidth)*uiScale;
   const logicalHeight=Math.max(720,Math.round(size.height/scale));
-  stage.style.width=CANVAS_WIDTH+'px';
+  stage.style.width=logicalWidth+'px';
   stage.style.height=logicalHeight+'px';
-  frame.style.width=CANVAS_WIDTH+'px';
+  frame.style.width=logicalWidth+'px';
   frame.style.height=logicalHeight+'px';
-  stage.style.left=Math.max(0,(size.width-CANVAS_WIDTH*scale)/2)+'px';
+  stage.style.left=Math.max(0,(size.width-logicalWidth*scale)/2)+'px';
   stage.style.top='0px';
   stage.style.transform='scale('+scale+')';
   stage.dataset.scale=scale.toFixed(6);
-  stage.dataset.profile='sunmi-t2s-safe-width';
+  stage.dataset.profile=logicalWidth<=1400?'sunmi-t2s-responsive':'desktop-safe-width';
+  stage.dataset.logicalWidth=String(logicalWidth);
   stage.dataset.logicalHeight=String(logicalHeight);
   stage.dataset.fitted='1';
 }

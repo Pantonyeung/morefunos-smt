@@ -29,13 +29,13 @@
 html,
 body {
   margin: 0;
-  width: 1920px;
+  width: 100%;
   height: 100%;
   min-height: 0;
   overflow: hidden;
   background: var(--bg);
 }
-#app{width:1920px;height:100%;min-height:0;overflow:hidden}
+#app{width:100%;height:100%;min-height:0;overflow:hidden}
 button,
 input,
 select,
@@ -46,7 +46,7 @@ button {
   cursor: pointer;
 }
 .app {
-  width: 1920px;
+  width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -323,6 +323,27 @@ button {
   height: 100%;
   color: #966f58;
   font-weight: 850;
+}
+
+/* T2S 1280×800：保持原有資訊密度，只收緊結構、留白及控制尺寸。 */
+@media (max-width: 1400px) {
+  .topbar {height:58px;padding:0 10px;gap:6px}
+  .global-statusbar {height:58px;min-height:58px}
+  .shell-brand {gap:7px}
+  .shell-brand-mark {width:30px;height:30px;font-size:15px}
+  .shell-brand strong {font-size:19px}
+  .shell-terminal,
+  .shell-context,
+  .shell-operation {min-height:34px;padding:0 8px;font-size:13px}
+  .shell-last-order {min-width:72px}
+  .shell-last-order strong {font-size:18px}
+  .shell-actions {gap:6px}
+  .top-btn {min-height:38px;padding:6px 9px;font-size:13px}
+  .workspace {padding:6px 8px}
+  .page-statusbar {height:48px;padding:5px 10px}
+  .bottom-nav {height:58px;gap:6px;padding:4px 8px}
+  .shell-nav-button {min-height:48px;grid-template-rows:20px auto;padding:3px 8px;font-size:14px}
+  .shell-nav-icon {width:20px;height:20px}
 }
 
 /* 全局觸控及轉場：短、清楚、適合高峰操作。 */

@@ -1,4 +1,4 @@
-MoreFun SMT V1.31
-Build: order-v1-31
-Branch target: feat/smt-order-page-v1
-Status: historical analytics, split-payment reconciliation and synchronized local three-digit daily sequence implemented; multi-terminal atomic allocator, Android bridge, physical printing and iPad/Sunmi acceptance pending
+MoreFun SMT V1.31 T2S Public Preview 1
+Build: order-v1-31-t2s-preview.1
+Branch target: test/t2s-display-adaptation
+Status: 1280x800 responsive layout and fallback product assets ready for public/device review; Android bridge, physical printing and final iPad/Sunmi acceptance pending

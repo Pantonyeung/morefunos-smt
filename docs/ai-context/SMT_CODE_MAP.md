@@ -27,6 +27,7 @@
 | `shared/order-identity.js` | 同步歷史及活躍堂食每日三位顯示流水、早上五時營業日、舊編號兼容、最新開單及永久訂單識別；跨機原子派號待後台 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
+| `tests/t2s-public-preview.test.mjs` | 1280 公網畫布、六頁裝置闊度、後備產品圖、四欄卡、快捷飲品及更多頁安全區 | shell、order、more、產品圖 |
 | `tests/menu-api.test.mjs` | 真實餐牌合約、映射及離線回歸 | menu-api |
 
 ## 功能到程式

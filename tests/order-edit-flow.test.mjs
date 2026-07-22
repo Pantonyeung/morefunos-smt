@@ -108,7 +108,7 @@ test('quick drink adjustment stays compact without repeating its image', () => {
   assert.match(css,/\.drink-choice-card\.selected::after/);
 });
 
-test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', async () => {
+test('shell keeps the T2S layout inside the viewport and preserves manual scale', async () => {
   const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
   assert.match(loader,/logicalHeight/);
   assert.match(loader,/morefun-smt-ui-scale/);
@@ -117,7 +117,7 @@ test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', asy
 
 test('root height chain and scroll regions keep both bars fixed', async () => {
   const base=await readFile(new URL('../shared/page-base.css',import.meta.url),'utf8');
-  assert.match(base,/#app\{width:1920px;height:100%;min-height:0;overflow:hidden\}/);
+  assert.match(base,/#app\{width:100%;height:100%;min-height:0;overflow:hidden\}/);
   assert.match(css,/\.cart-list\{[^}]*min-height:0[^}]*overflow-y:auto/);
   assert.match(css,/\.products\{[^}]*min-height:0[^}]*overflow-y:auto/);
 });
