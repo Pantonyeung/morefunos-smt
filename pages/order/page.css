@@ -160,6 +160,7 @@ button:active,
   padding: 8px 12px;
   font-weight: 850;
 }
+.cart-header-actions{display:flex;align-items:center;gap:8px}.cart>header .cancel-dine-order{border-color:#e5aaa4;background:#fff7f6;color:var(--danger)}
 .cart-list {
   flex: 1;
   min-height: 0;

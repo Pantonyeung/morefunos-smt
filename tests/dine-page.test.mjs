@@ -111,6 +111,30 @@ test('堂食點餐拒絕寫入已失效的舊會話，避免餐品掛錯枱',asy
   assert.throws(()=>commitTableOrder(state,{tableId:'1',sessionId:'DINE-1-old'},[{lineId:'x',name:'飯團',qty:1,unitPrice:41}],{now:2000}),/堂食會話已失效/);
 });
 
+test('空枱開始點餐只建立意圖，正式提交餐品時才開枱',async()=>{
+  const {createInitialDineState,createDineOrderContext,commitTableOrder}=await import('../pages/dine/dine-domain.js');
+  const state=createInitialDineState(1000);
+  const context=createDineOrderContext(state,'3');
+  assert.equal(context.tableId,'3');
+  assert.equal(context.sessionId,null);
+  assert.equal(context.startedFromFree,true);
+  assert.equal(state.tables[2].status,'free');
+  const next=commitTableOrder(state,context,[{name:'飯團',qty:1,unitPrice:41}],{now:2000});
+  assert.equal(next.tables[2].status,'occupied');
+  assert.equal(next.tables[2].session.items.length,1);
+});
+
+test('舊版本遺留的空堂食會話會安全清理，有餐品的會話不受影響',async()=>{
+  const {createInitialDineState,openTable,cleanupEmptyDineSessions}=await import('../pages/dine/dine-domain.js');
+  const state=createInitialDineState(1000);
+  state.tables[0]=openTable(state.tables[0],1200);
+  state.tables[1]=openTable(state.tables[1],1300);
+  state.tables[1].session.items.push({name:'便當',qty:1,unitPrice:50});
+  const next=cleanupEmptyDineSessions(state);
+  assert.equal(next.tables[0].status,'free');
+  assert.equal(next.tables[1].status,'occupied');
+});
+
 function tableViewForTest(domain,table,now){return domain.tableView(table,now);}
 
 test('堂食頁提供簡潔枱詳情、半屏待確認及兩層付款操作',()=>{
@@ -147,4 +171,14 @@ test('現有點餐及訂單底欄可以進入獨立堂食頁',()=>{
   assert.match(read('app-loader.js'),/dine:\s*'pages\/dine\/index\.html'/);
   assert.match(read('pages/order/page.js'),/navigate-dine/);
   assert.match(read('pages/orders/page.js'),/navigate-dine/);
+});
+
+test('堂食點單提供取消入口並同步清除失效堂食脈絡',()=>{
+  const orderPage=read('pages/order/page.js');
+  const dinePage=read('pages/dine/page.js');
+  assert.match(orderPage,/cancel-dine-order/);
+  assert.match(orderPage,/取消堂食點單/);
+  assert.match(orderPage,/startedFromFree/);
+  assert.match(dinePage,/cleanupEmptyDineSessions/);
+  assert.match(dinePage,/clearOrderDineContext/);
 });

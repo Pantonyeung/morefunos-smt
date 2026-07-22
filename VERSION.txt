@@ -1,4 +1,4 @@
-MoreFun SMT V1.27
-Build: order-v1-27
+MoreFun SMT V1.28
+Build: order-v1-28
 Branch target: feat/smt-order-page-v1
-Status: six local operations workflows and print core implemented; Android bridge, physical printing and device acceptance pending
+Status: day-close cash reconciliation, dine cancellation lifecycle and shared interaction polish implemented; Android bridge, physical printing and iPad/Sunmi device acceptance pending

@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import {
   businessWindow,
   buildOperationalReport,
+  CASH_DENOMINATIONS,
+  syncCashDenomination,
+  totalCashBreakdown,
+  defaultCashDistribution,
+  calculateDayCloseReconciliation,
   createDayClose,
   buildCsvExport,
   createBackupEnvelope,
@@ -36,12 +41,44 @@ test('報表分開淨銷售、付款、平台結算、待核實及打印異常',
   assert.equal(report.summary.netSales,239);
   assert.equal(report.summary.discounts,10);
   assert.equal(report.summary.cashExpected,100);
-  assert.equal(report.summary.electronicExpected,59);
+  assert.equal(report.summary.electronicExpected,0);
+  assert.equal(report.summary.unverifiedDirectTotal,59);
+  assert.equal(report.summary.unverifiedDirectOrders,1);
   assert.equal(report.summary.platformGross,80);
   assert.equal(report.summary.platformSettlement,60);
   assert.equal(report.summary.pendingPayments,1);
   assert.equal(report.summary.printExceptions,1);
   assert.equal(report.products.find(row=>row.name==='鹽酥雞').quantity,2);
+});
+
+test('港幣紙幣及硬幣可以由數量或金額雙向互推並計算總額',()=>{
+  assert.deepEqual(CASH_DENOMINATIONS.map(row=>row.value),[1000,500,100,50,20,10,10,5,2,1,.5,.2,.1]);
+  let breakdown={};
+  breakdown=syncCashDenomination(breakdown,'note-100',{source:'amount',value:1000});
+  breakdown=syncCashDenomination(breakdown,'coin-5',{source:'quantity',value:3});
+  assert.equal(breakdown['note-100'].quantity,10);
+  assert.equal(breakdown['note-100'].amount,1000);
+  assert.equal(breakdown['coin-5'].amount,15);
+  assert.equal(totalCashBreakdown(breakdown),1015);
+  assert.throws(()=>syncCashDenomination(breakdown,'note-100',{source:'amount',value:105}),/面額倍數/);
+});
+
+test('未手動調整前按開工底金建議提取及留底，且不會留多過實點現金',()=>{
+  assert.deepEqual(defaultCashDistribution(1000,300),{cashWithdrawn:700,cashRetained:300});
+  assert.deepEqual(defaultCashDistribution(1000,1200),{cashWithdrawn:0,cashRetained:1000});
+});
+
+test('日結按實點現金反推待核實訂單的現金及非現金部分',()=>{
+  const report=buildOperationalReport(orders,{now});
+  const result=calculateDayCloseReconciliation({report,cashCounted:139,openingFloat:50,cashExpenses:10});
+  assert.equal(result.knownDrawerExpected,140);
+  assert.equal(result.inferredUnverifiedCash,0);
+  assert.equal(result.inferredUnverifiedNonCash,59);
+  assert.equal(result.cashDifference,-1);
+  const withCash=calculateDayCloseReconciliation({report,cashCounted:169,openingFloat:50,cashExpenses:10});
+  assert.equal(withCash.inferredUnverifiedCash,29);
+  assert.equal(withCash.inferredUnverifiedNonCash,30);
+  assert.equal(withCash.cashDifference,0);
 });
 
 test('日結保存現金、支出、差異、版本及稽核而不改寫訂單',()=>{
@@ -57,6 +94,22 @@ test('日結保存現金、支出、差異、版本及稽核而不改寫訂單',
 
 test('超出百分之三差異而沒有原因不可正式日結',()=>{
   assert.throws(()=>createDayClose({orders,now,terminalId:'SMT-01',cashCounted:0,expenses:[]}),/差異原因/);
+});
+
+test('超出百分之三差異必須明確授權，並保存提取及留底現金',()=>{
+  assert.throws(()=>createDayClose({orders,now,terminalId:'SMT-01',cashCounted:0,expenses:[],reason:'已覆核'}),/授權通過/);
+  const close=createDayClose({orders,now,terminalId:'SMT-01',cashCounted:0,expenses:[],reason:'已覆核短款',approvedOverride:true,cashWithdrawn:0,cashRetained:0});
+  assert.equal(close.reviewRequired,true);
+  assert.equal(close.reviewApproval.approved,true);
+  assert.equal(close.reviewApproval.terminalId,'SMT-01');
+  assert.equal(close.cashWithdrawn+close.cashRetained,close.cashCounted);
+});
+
+test('提取及留底現金必須完整分配實點現金',()=>{
+  assert.throws(()=>createDayClose({orders,now,terminalId:'SMT-01',cashCounted:100,expenses:[],cashWithdrawn:80,cashRetained:10}),/提取及留底/);
+  const close=createDayClose({orders,now,terminalId:'SMT-01',cashCounted:100,expenses:[],cashWithdrawn:70,cashRetained:30});
+  assert.equal(close.cashWithdrawn,70);
+  assert.equal(close.cashRetained,30);
 });
 
 test('CSV 匯出包含摘要、訂單及商品明細並正確處理逗號',()=>{
@@ -92,9 +145,9 @@ test('恢復可以只套用設定或完整資料，並拒絕無效備份',()=>{
 });
 
 test('系統診斷清楚分開本機能力、同步積壓及未設定更新來源',()=>{
-  const report=buildDiagnosticReport({version:'order-v1-27',terminalId:'SMT-01',operations:{outbox:[{id:'1'}]},printers:{jobs:[{status:'failed'},{status:'queued'}]},storageKeys:12,updateSource:''},{now});
+  const report=buildDiagnosticReport({version:'order-v1-28',terminalId:'SMT-01',operations:{outbox:[{id:'1'}]},printers:{jobs:[{status:'failed'},{status:'queued'}]},storageKeys:12,updateSource:''},{now});
   assert.equal(report.sync.pending,1);
   assert.equal(report.print.failed,1);
   assert.equal(report.update.status,'not_configured');
-  assert.equal(report.version,'order-v1-27');
+  assert.equal(report.version,'order-v1-28');
 });

@@ -2,6 +2,48 @@ const clone=value=>value===undefined?undefined:JSON.parse(JSON.stringify(value))
 const number=value=>Number.isFinite(Number(value))?Number(value):0;
 const round=value=>Math.round(number(value)*100)/100;
 
+export const CASH_DENOMINATIONS=[
+  {id:'note-1000',kind:'note',label:'$1,000 紙幣',value:1000},
+  {id:'note-500',kind:'note',label:'$500 紙幣',value:500},
+  {id:'note-100',kind:'note',label:'$100 紙幣',value:100},
+  {id:'note-50',kind:'note',label:'$50 紙幣',value:50},
+  {id:'note-20',kind:'note',label:'$20 紙幣',value:20},
+  {id:'note-10',kind:'note',label:'$10 紙幣',value:10},
+  {id:'coin-10',kind:'coin',label:'$10 硬幣',value:10},
+  {id:'coin-5',kind:'coin',label:'$5 硬幣',value:5},
+  {id:'coin-2',kind:'coin',label:'$2 硬幣',value:2},
+  {id:'coin-1',kind:'coin',label:'$1 硬幣',value:1},
+  {id:'coin-0.5',kind:'coin',label:'50¢ 硬幣',value:.5},
+  {id:'coin-0.2',kind:'coin',label:'20¢ 硬幣',value:.2},
+  {id:'coin-0.1',kind:'coin',label:'10¢ 硬幣',value:.1}
+];
+
+export function syncCashDenomination(breakdown,id,{source='quantity',value=0}={}){
+  const denomination=CASH_DENOMINATIONS.find(row=>row.id===id);
+  if(!denomination)throw new Error('找不到現金面額');
+  const input=Math.max(0,number(value));
+  let quantity;
+  if(source==='amount'){
+    quantity=round(input/denomination.value);
+    if(Math.abs(quantity-Math.round(quantity))>.000001)throw new Error('輸入金額必須符合面額倍數');
+    quantity=Math.round(quantity);
+  }else{
+    if(Math.abs(input-Math.round(input))>.000001)throw new Error('紙幣或硬幣數量必須是整數');
+    quantity=Math.round(input);
+  }
+  return {...(breakdown||{}),[id]:{denomination:denomination.value,quantity,amount:round(quantity*denomination.value)}};
+}
+
+export function totalCashBreakdown(breakdown={}){
+  return round(CASH_DENOMINATIONS.reduce((sum,row)=>sum+number(breakdown?.[row.id]?.amount),0));
+}
+
+export function defaultCashDistribution(cashCounted=0,openingFloat=0){
+  const counted=Math.max(0,round(cashCounted));
+  const retained=Math.min(counted,Math.max(0,round(openingFloat)));
+  return {cashWithdrawn:round(counted-retained),cashRetained:retained};
+}
+
 function localDateId(timestamp){
   const date=new Date(timestamp);
   return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
@@ -54,6 +96,8 @@ export function buildOperationalReport(orders,{now=Date.now(),startHour=5}={}){
     netSales:0,
     cashExpected:0,
     electronicExpected:0,
+    unverifiedDirectTotal:0,
+    unverifiedDirectOrders:0,
     platformGross:0,
     platformSettlement:0,
     pendingPayments:0,
@@ -72,8 +116,12 @@ export function buildOperationalReport(orders,{now=Date.now(),startHour=5}={}){
     const pending=/待|pending/i.test(String(order.paymentStatus||order.reconciliationStatus||''));
     if(pending)summary.pendingPayments+=1;
     if(order.printStatus==='異常'||(order.printJobs||[]).some(job=>job.status==='failed'))summary.printExceptions+=1;
-    const payGroup=paymentGroup(order.paymentMethod);
-    if(payGroup==='cash')summary.cashExpected+=net;
+    const unverifiedDirect=pending&&(/電話|WhatsApp|磨飯\s*App|自家\s*App|網頁|Web/i.test(String(order.source||''))||order.group==='owned');
+    const payGroup=unverifiedDirect?'unverified':paymentGroup(order.paymentMethod);
+    if(payGroup==='unverified'){
+      summary.unverifiedDirectTotal+=net;
+      summary.unverifiedDirectOrders+=1;
+    }else if(payGroup==='cash')summary.cashExpected+=net;
     else if(payGroup==='platform'){
       summary.platformGross+=number(order.platformSalesGross??net);
       summary.platformSettlement+=number(order.estimatedPlatformSettlement??net);
@@ -101,21 +149,42 @@ export function buildOperationalReport(orders,{now=Date.now(),startHour=5}={}){
   return {businessWindow:window,orderIds:rows.map(order=>order.id),summary,channels:groupRows(channels),payments:groupRows(payments),products:groupRows(products),hours:groupRows(hours),generatedAt:number(now)};
 }
 
-export function createDayClose({orders=[],now=Date.now(),terminalId='SMT',cashCounted=0,expenses=[],reason='',existing=[],backupId=''}={}){
+export function calculateDayCloseReconciliation({report,cashCounted=0,openingFloat=0,cashExpenses=0}={}){
+  const knownDrawerExpected=round(number(openingFloat)+number(report?.summary?.cashExpected)-number(cashExpenses));
+  const unverifiedTotal=Math.max(0,number(report?.summary?.unverifiedDirectTotal));
+  const inferredUnverifiedCash=round(Math.max(0,Math.min(unverifiedTotal,number(cashCounted)-knownDrawerExpected)));
+  const inferredUnverifiedNonCash=round(unverifiedTotal-inferredUnverifiedCash);
+  const cashExpectedAfterReconciliation=round(knownDrawerExpected+inferredUnverifiedCash);
+  const cashDifference=round(number(cashCounted)-cashExpectedAfterReconciliation);
+  return {knownDrawerExpected,unverifiedTotal,inferredUnverifiedCash,inferredUnverifiedNonCash,cashExpectedAfterReconciliation,cashDifference};
+}
+
+export function createDayClose({orders=[],now=Date.now(),terminalId='SMT',cashCounted=0,cashBreakdown={},openingFloat=0,cashWithdrawn,cashRetained,expenses=[],reason='',approvedOverride=false,existing=[],backupId=''}={}){
   const report=buildOperationalReport(orders,{now});
   const cashExpenses=(Array.isArray(expenses)?expenses:[]).filter(row=>String(row.paymentMethod||'現金')==='現金').reduce((sum,row)=>sum+number(row.amount),0);
-  const cashExpectedAfterExpenses=round(report.summary.cashExpected-cashExpenses);
-  const cashDifference=round(number(cashCounted)-cashExpectedAfterExpenses);
+  const reconciliation=calculateDayCloseReconciliation({report,cashCounted,openingFloat,cashExpenses});
+  const cashExpectedAfterExpenses=reconciliation.cashExpectedAfterReconciliation;
+  const cashDifference=reconciliation.cashDifference;
   const differenceThreshold=round(report.summary.netSales*.03);
-  if(Math.abs(cashDifference)>differenceThreshold&&!String(reason).trim())throw new Error('現金差異超出門檻，必須填寫差異原因');
+  const reviewRequired=Math.abs(cashDifference)>differenceThreshold;
+  if(reviewRequired&&!String(reason).trim())throw new Error('現金差異超出門檻，必須填寫差異原因');
+  if(reviewRequired&&!approvedOverride)throw new Error('現金差異超出門檻，必須由有權人明確授權通過');
+  const withdrawn=cashWithdrawn===undefined?0:round(cashWithdrawn);
+  const retained=cashRetained===undefined?round(cashCounted-withdrawn):round(cashRetained);
+  if(withdrawn<0||retained<0||Math.abs(round(withdrawn+retained)-round(cashCounted))>.001)throw new Error('提取及留底現金必須等於實際點算總額');
   const businessDate=report.businessWindow.id;
   const version=(Array.isArray(existing)?existing:[]).filter(row=>row.businessDate===businessDate).reduce((max,row)=>Math.max(max,number(row.version)),0)+1;
   return {
     id:`DAYCLOSE-${businessDate}-V${version}`,
     businessDate,version,status:'closed',createdAt:number(now),terminalId:String(terminalId||'SMT'),
-    report:clone(report),cashCounted:round(cashCounted),cashExpectedAfterExpenses,cashDifference,differenceThreshold,
+    report:clone(report),cashCounted:round(cashCounted),cashBreakdown:clone(cashBreakdown||{}),openingFloat:round(openingFloat),cashWithdrawn:withdrawn,cashRetained:retained,
+    cashExpectedAfterExpenses,cashDifference,differenceThreshold,reconciliation:clone(reconciliation),reviewRequired,
     expenses:clone(Array.isArray(expenses)?expenses:[]),differenceReason:String(reason||'').trim(),backupId:String(backupId||''),
-    audit:[{type:'day_close.completed',terminalId:String(terminalId||'SMT'),at:number(now),businessDate,version,cashDifference,backupId:String(backupId||'')}]
+    reviewApproval:{approved:reviewRequired?Boolean(approvedOverride):false,terminalId:reviewRequired?String(terminalId||'SMT'):'',at:reviewRequired?number(now):null},
+    audit:[
+      ...(reviewRequired?[{type:'day_close.difference_override_approved',terminalId:String(terminalId||'SMT'),at:number(now),businessDate,cashDifference,differenceThreshold,reason:String(reason||'').trim()}]:[]),
+      {type:'day_close.completed',terminalId:String(terminalId||'SMT'),at:number(now),businessDate,version,cashDifference,backupId:String(backupId||'')}
+    ]
   };
 }
 

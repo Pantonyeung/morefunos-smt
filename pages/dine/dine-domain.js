@@ -30,6 +30,30 @@ export function openTable(table,now=Date.now()){
   return {...clone(table),status:'occupied',openedAt:now,session:{id:`DINE-${table.id}-${now}`,items:[],orderBatches:[],pendingSubmissions:[],payments:[]}};
 }
 
+export function createDineOrderContext(state,tableId){
+  const table=state?.tables?.find(entry=>entry.id===String(tableId));
+  if(!table)throw new Error('找不到指定堂食枱');
+  return {
+    mode:'dine',
+    tableId:table.id,
+    sessionId:table.status==='occupied'?table.session?.id||null:null,
+    startedFromFree:table.status!=='occupied',
+    createdAt:Date.now()
+  };
+}
+
+export function cleanupEmptyDineSessions(state){
+  const next=clone(state);
+  next.tables=next.tables.map(table=>{
+    if(table.status!=='occupied'||!table.session)return table;
+    const session=table.session;
+    const hasOperationalData=(session.items||[]).length||(session.orderBatches||[]).length||(session.pendingSubmissions||[]).length||(session.payments||[]).length||(session.printJobs||[]).length;
+    return hasOperationalData?table:{id:table.id,status:'free',openedAt:null,session:null};
+  });
+  if(next.selectedTableId&&next.tables.find(table=>table.id===next.selectedTableId)?.status==='free')next.selectedTableId=null;
+  return next;
+}
+
 export function commitTableOrder(state,context,cart,{terminalId='SMT',now=Date.now()}={}){
   if(!context?.tableId)throw new Error('未有指定堂食枱號');
   if(!Array.isArray(cart)||!cart.length)throw new Error('購物車未有餐品');

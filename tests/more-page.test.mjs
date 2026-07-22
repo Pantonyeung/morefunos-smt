@@ -72,6 +72,25 @@ test('收銀日結提供點算、支出、差異原因、版本及正式保存',
   assert.match(page,/createBackupEnvelope/);
 });
 
+test('日結提供面額互推、開工底金、提取留底、待核實反推及超額授權',()=>{
+  for(const field of ['opening-float','cash-withdrawn','cash-retained'])assert.match(page,new RegExp(`data-field="${field}"`));
+  assert.match(page,/data-denomination=/);
+  assert.match(page,/denomination-quantity/);
+  assert.match(page,/denomination-amount/);
+  assert.match(page,/待核實現金/);
+  assert.match(page,/待核實非現金/);
+  assert.match(page,/toggle-dayclose-approval/);
+  assert.match(css,/\.cash-count-grid/);
+});
+
+test('全局共用樣式提供觸控回饋、彈窗動效及減少動效模式',()=>{
+  const base=read('shared/page-base.css');
+  assert.match(base,/button:active/);
+  assert.match(base,/@keyframes\s+mf-dialog-in/);
+  assert.match(base,/@media\s*\(prefers-reduced-motion:\s*reduce\)/);
+  assert.match(base,/:focus-visible/);
+});
+
 test('報表四個分頁讀取同一正式報表並可下載 CSV',()=>{
   assert.match(page,/buildOperationalReport/);
   assert.match(page,/buildCsvExport/);
