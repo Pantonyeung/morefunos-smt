@@ -58,7 +58,7 @@ function drinkSelection(id,sweetness='',ice=''){
   const d=drinkMap.get(id);
   return {drinkId:id,name:d?.name||id,unitPrice:d?.price||0,sweetness,ice,studentDiscountEligible:d?.studentDiscountEligible===true,specialDrinkSurcharge:Number(d?.specialDrinkSurcharge)||0};
 }
-function makeLine(productId,qty=1,{options={},drinkAssignments=[],linkedComboId='',linkedQty=0}={}){
+function makeLine(productId,qty=1,{options={},drinkAssignments=[],linkedComboId='',linkedQty=0,serviceMode=store?.get?.().serviceMode||'堂食'}={}){
   const p=productMap.get(productId);
   qty=Math.max(1,Number(qty)||1);
   return {
@@ -67,7 +67,7 @@ function makeLine(productId,qty=1,{options={},drinkAssignments=[],linkedComboId=
     studentDiscountEligible:p.studentDiscountEligible===true,specialDrinkSurcharge:Number(p.specialDrinkSurcharge)||0,
     drinkAssignments:safeClone(drinkAssignments),drinkSlots:(p.drinkSlots||0)*qty,
     required:[...(p.required||[])],combinable:Boolean(p.combinable),linkRole:p.linkRole||'',
-    linkedComboId,linkedQty,createdOrder:Date.now()+Math.random()
+    linkedComboId,linkedQty,serviceMode:serviceMode==='外賣'?'外賣':'堂食',createdOrder:Date.now()+Math.random()
   };
 }
 function normalizeCart(cart){
@@ -153,7 +153,8 @@ if(initialDineContext){
   if(stale){initialDineContext=null;initialCart=[];}
 }
 const defaultHealth={catalog:{ok:false,label:'餐牌',detail:'正在連接'},api:{ok:false,label:'訂單 API',detail:'未連接'},printer:{ok:false,label:'打印機',detail:'未連接'},sync:{ok:false,label:'同步',detail:'等待 API'},backup:{ok:true,label:'備份',detail:'本機資料正常'}};
-const store=createStore({category:'全部',searchQuery:'',cart:normalizeCart(initialCart),dineContext:initialDineContext,settings,quickMode:saved?.quickMode??savedSettings.morePage?.quickMode??false,quickDrawerOpen:false,pendingOrders:safeClone(demoPendingOrders),runningOrders:[],completedOrders:[],operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false},health:defaultHealth},{storageKey:ORDER_STORAGE_KEY,normalize:state=>({...state,searchQuery:String(state.searchQuery||''),dineContext:state.dineContext||null,quickMode:Boolean(state.quickMode),quickDrawerOpen:Boolean(state.quickDrawerOpen),cart:normalizeCart(state.cart||[]),pendingOrders:state.pendingOrders||safeClone(demoPendingOrders),runningOrders:Array.isArray(state.runningOrders)?state.runningOrders:[],completedOrders:Array.isArray(state.completedOrders)?state.completedOrders:[],settings:{...settings,...(state.settings||{}),categoryLayout:normalizeCategoryLayout(state.settings?.categoryLayout||settings.categoryLayout),catalog:{...settings.catalog,...(state.settings?.catalog||{})},cart:{...settings.cart,...(state.settings?.cart||{})},quickDrinks:{...settings.quickDrinks,...(state.settings?.quickDrinks||{})}},operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false,...(state.operations||{})},health:{...defaultHealth,...(state.health||{})}})});
+const initialServiceMode=saved?.serviceMode==='外賣'?'外賣':(initialCart[0]?.serviceMode==='外賣'?'外賣':'堂食');
+const store=createStore({category:'全部',searchQuery:'',cart:normalizeCart(initialCart),serviceMode:initialServiceMode,dineContext:initialDineContext,settings,quickMode:saved?.quickMode??savedSettings.morePage?.quickMode??false,quickDrawerOpen:false,pendingOrders:safeClone(demoPendingOrders),runningOrders:[],completedOrders:[],operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false},health:defaultHealth},{storageKey:ORDER_STORAGE_KEY,normalize:state=>({...state,searchQuery:String(state.searchQuery||''),serviceMode:state.serviceMode==='外賣'?'外賣':'堂食',dineContext:state.dineContext||null,quickMode:Boolean(state.quickMode),quickDrawerOpen:Boolean(state.quickDrawerOpen),cart:normalizeCart(state.cart||[]),pendingOrders:state.pendingOrders||safeClone(demoPendingOrders),runningOrders:Array.isArray(state.runningOrders)?state.runningOrders:[],completedOrders:Array.isArray(state.completedOrders)?state.completedOrders:[],settings:{...settings,...(state.settings||{}),categoryLayout:normalizeCategoryLayout(state.settings?.categoryLayout||settings.categoryLayout),catalog:{...settings.catalog,...(state.settings?.catalog||{})},cart:{...settings.cart,...(state.settings?.cart||{})},quickDrinks:{...settings.quickDrinks,...(state.settings?.quickDrinks||{})}},operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false,...(state.operations||{})},health:{...defaultHealth,...(state.health||{})}})});
 const QUICK_DRAWER_IDLE_MS=8000;
 let quickDrawerTimer=null;
 function scheduleQuickDrawerClose(){
@@ -191,8 +192,7 @@ function productCard(p){
 function cartRows(){
   const state=store.get(),cart=state.cart,showImages=state.settings.cart.showImages!==false;if(!cart.length)return '<div class="empty">購物車未有餐點</div>';
   const grouped=new Map();cart.forEach((line,index)=>{const category=line.category||productMap.get(line.productId)?.category||'其他';if(!grouped.has(category))grouped.set(category,[]);grouped.get(category).push({line,index});});
-  const modeButtons=line=>'<span class="service-mode" role="group" aria-label="'+escapeHtml(line.name)+'用餐方式">'+['堂食','外賣'].map(mode=>'<button class="mode-choice '+(line.serviceMode===mode?'active':'')+'" data-action="service-mode" data-id="'+escapeHtml(line.lineId)+'" data-value="'+mode+'">'+(mode==='堂食'?'⌂':'▣')+' '+mode+'</button>').join('')+'</span>';
-  return [...grouped].map(([category,rows])=>'<section class="cart-category"><header><strong>'+escapeHtml(category)+'</strong><span>'+rows.reduce((n,x)=>n+x.line.qty,0)+' 件</span></header>'+rows.map(({line,index})=>'<article class="cart-row '+(showImages?'':'no-image')+'" data-line-id="'+line.lineId+'"><span class="seq">'+(index+1)+'</span>'+(showImages?imageBlock(line.image,line.name,'cart-img'):'')+'<span class="cart-copy"><strong>'+line.name+'</strong><small>'+describe(line)+'</small>'+modeButtons(line)+'</span><b class="cart-price">'+money(line.total)+'</b><span class="cart-actions"><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="-1">−</button><strong>'+line.qty+'</strong><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="1">＋</button><button class="edit-button" data-action="edit-line" data-id="'+line.lineId+'">修改</button></span></article>').join('')+'</section>').join('');
+  return [...grouped].map(([category,rows])=>'<section class="cart-category"><header><strong>'+escapeHtml(category)+'</strong><span>'+rows.reduce((n,x)=>n+x.line.qty,0)+' 件</span></header>'+rows.map(({line,index})=>'<article class="cart-row '+(showImages?'':'no-image')+' service-'+(line.serviceMode==='外賣'?'takeaway':'dine')+'" data-line-id="'+line.lineId+'"><button class="seq service-seq '+(line.serviceMode==='外賣'?'takeaway':'dine')+'" data-action="toggle-line-service-mode" data-id="'+escapeHtml(line.lineId)+'" aria-label="切換'+escapeHtml(line.name)+'用餐方式"><b>'+(index+1)+'</b><small>'+(line.serviceMode==='外賣'?'外':'堂')+'</small></button>'+(showImages?imageBlock(line.image,line.name,'cart-img'):'')+'<span class="cart-copy"><strong>'+line.name+'</strong><small>'+describe(line)+'</small></span><b class="cart-price">'+money(line.total)+'</b><span class="cart-actions"><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="-1">−</button><strong>'+line.qty+'</strong><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="1">＋</button><button class="edit-button" data-action="edit-line" data-id="'+line.lineId+'">修改</button></span></article>').join('')+'</section>').join('');
 }
 function pendingArea(){
   const state=store.get();const required=pendingSummary(state.cart);const link=linkUpSummary(state.cart);
@@ -380,7 +380,10 @@ function positionActiveCard(){
 function render(){
   const state=store.get();const pendingCount=pendingOrderCount(state);const searchQuery=state.searchQuery.trim().toLocaleLowerCase('zh-HK');const categoryProducts=state.category==='全部'?products:products.filter(product=>product.category===state.category);const filtered=sortPausedLast(categoryProducts.filter(product=>!searchQuery||String(product.name||'').toLocaleLowerCase('zh-HK').includes(searchQuery)||String(product.code||'').toLocaleLowerCase('zh-HK').includes(searchQuery)));const template=productTemplate();
   const checkoutLabel=state.dineContext?'落單到 '+escapeHtml(state.dineContext.tableId)+' 號枱 '+money(cartTotal(state.cart)):'結帳 '+money(cartTotal(state.cart));
-  app.innerHTML='<main>'+topbar()+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%"><aside class="cart"><header><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2><span class="cart-header-actions">'+(state.dineContext?'<button class="cancel-dine-order" data-action="cancel-dine-order">取消堂食點單</button>':'')+'<button data-action="clear-cart">清空</button></span></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer><button data-action="open-hold-panel">掛單</button><button data-action="open-drafts">取單'+(drafts.length?' '+drafts.length:'')+'</button><button class="primary" data-action="checkout">'+checkoutLabel+'</button></footer></aside><section class="catalog">'+categoryBar(state)+'<div class="products products-'+template+'">'+(filtered.length?filtered.map(productCard).join(''):'<div class="empty search-empty">搵唔到符合「'+escapeHtml(state.searchQuery)+'」嘅產品</div>')+'</div>'+quickDrinks()+'</section></section></section>'+renderBottomNav('order',{badges:{orders:pendingCount}})+'</main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
+  const hasCart=state.cart.length>0;
+  const transferButton=hasCart?'<button data-action="open-transfer">掛單</button>':'<button data-action="open-transfer">取單'+(drafts.length?' '+drafts.length:'')+'</button>';
+  const serviceSelector='<span class="cart-service-selector" role="group" aria-label="全單用餐方式"><button data-action="set-cart-service-mode" data-value="堂食" class="'+(state.serviceMode==='堂食'?'active':'')+'">堂食</button><button data-action="set-cart-service-mode" data-value="外賣" class="'+(state.serviceMode==='外賣'?'active':'')+'">外賣</button></span>';
+  app.innerHTML='<main>'+topbar()+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%"><aside class="cart"><header><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2><span class="cart-header-actions">'+(state.dineContext?'<button class="cancel-dine-order" data-action="cancel-dine-order">取消堂食點單</button>':'')+serviceSelector+'<button data-action="clear-cart">清空</button></span></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer>'+transferButton+'<button class="primary" data-action="checkout">'+checkoutLabel+'</button></footer></aside><section class="catalog">'+categoryBar(state)+'<div class="products products-'+template+'">'+(filtered.length?filtered.map(productCard).join(''):'<div class="empty search-empty">搵唔到符合「'+escapeHtml(state.searchQuery)+'」嘅產品</div>')+'</div>'+quickDrinks()+'</section></section></section>'+renderBottomNav('order',{badges:{orders:pendingCount}})+'</main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
   document.body.classList.toggle('has-modal',Boolean(modal));
   bindImageFallbacks(app);
   if(modal?.type==='settings'){const first=document.querySelector('.side-card .setting-row');first?.insertAdjacentHTML('beforebegin','<div class="setting-block"><strong>購物車相同產品</strong><div class="segmented"><button data-action="cart-merge" data-value="same" class="'+(state.settings.cart.mergeMode!=='never'?'active':'')+'">相同配置合併</button><button data-action="cart-merge" data-value="never" class="'+(state.settings.cart.mergeMode==='never'?'active':'')+'">逐項顯示</button></div></div>');}
@@ -480,7 +483,8 @@ function handle(button){
   else if(action==='open-product')openProduct(button.dataset.id,'',anchorRect(button));
   else if(action==='quick-add-product')quickAddProduct(button.dataset.id);
   else if(action==='cart-qty')changeCartQuantity(button.dataset.id,Number(button.dataset.delta)||0);
-  else if(action==='service-mode')store.set(state=>({...state,cart:state.cart.map(line=>line.lineId===button.dataset.id?{...line,serviceMode:button.dataset.value}:line)}));
+  else if(action==='set-cart-service-mode')store.set(state=>{const mode=button.dataset.value==='外賣'?'外賣':'堂食';return {...state,serviceMode:mode,cart:state.cart.map(line=>({...line,serviceMode:mode}))};});
+  else if(action==='toggle-line-service-mode')store.set(state=>({...state,cart:state.cart.map(line=>line.lineId===button.dataset.id?{...line,serviceMode:line.serviceMode==='外賣'?'堂食':'外賣'}:line)}));
   else if(action==='edit-line'){const line=store.get().cart.find(x=>x.lineId===button.dataset.id);if(line?.lineType==='combo'){modal={type:'combo',lineId:line.lineId,anchor:anchorRect(button),dirty:false,draft:{components:safeClone(line.combo?.components||[])}};render();}else if(line)openProduct(line.productId,line.lineId,anchorRect(button));}
   else if(action==='open-completion'){modal={type:'completion',dirty:false};render();}
   else if(action==='open-quick-settings'){modal={type:'quick',anchor:anchorRect(button),dirty:false};render();}
@@ -492,6 +496,7 @@ function handle(button){
   else if(action==='navigate-dine')requestDineCancellation();
   else if(action==='navigate-soldout')window.parent?.postMessage?.({type:'morefun:navigate',route:'soldout'},'*');
   else if(action==='navigate-more')window.parent?.postMessage?.({type:'morefun:navigate',route:'more'},'*');
+  else if(action==='open-transfer'){const state=store.get();modal=state.cart.length?{type:'hang',dirty:false}:{type:'take',selectedDraftId:'',dirty:false};render();}
   else if(action==='open-hold-panel'){if(!store.get().cart.length){showToast('購物車未有餐品');return;}modal={type:'hang',dirty:false};render();}
   else if(action==='select-draft'){modal={...modal,selectedDraftId:button.dataset.id};render();}
   else if(action==='assign-table'){
@@ -574,29 +579,25 @@ function handle(button){
   }
   else if(action==='apply-product')applyProduct();
   else if(action==='modifier-qty'){markDirty();modal.draft.qty=Math.max(0,Math.min(modal.maxQty,modal.draft.qty+Number(button.dataset.delta)));render();}
-  else if(action==='group-qty'){markDirty();const g=modal.draft.groups[Number(button.dataset.index)];const used=modal.draft.qty+modal.draft.groups.reduce((n,x)=>n+x.qty,0);g.qty=Math.max(1,Math.min(g.qty+Number(button.dataset.delta),modal.maxQty-used+g.qty));render();}
-  else if(action==='add-drink-group'){markDirty();const used=modal.draft.qty+modal.draft.groups.reduce((n,x)=>n+x.qty,0);if(used<modal.maxQty)modal.draft.groups.push({qty:1,sweetness:'',ice:'',open:true});else showToast('已達可補數量');render();}
-  else if(action==='toggle-drink-adjustment'){const g=modal.draft.groups[Number(button.dataset.index)];g.open=!g.open;render();}
+  else if(action==='group-qty'){markDirty();const g=modal.draft.groups[Number(button.dataset.index)];const next=Math.max(0,Math.min(modal.maxQty-modal.draft.qty-modal.draft.groups.reduce((n,x)=>n+x.qty,0)+g.qty,g.qty+Number(button.dataset.delta)));g.qty=next;if(!g.qty)modal.draft.groups.splice(Number(button.dataset.index),1);render();}
+  else if(action==='toggle-drink-adjustment'){markDirty();const index=Number(button.dataset.index);modal.draft.groups=modal.draft.groups.map((g,i)=>({...g,open:i===index?!g.open:false}));render();}
+  else if(action==='add-drink-group'){markDirty();const used=modal.draft.qty+modal.draft.groups.reduce((n,g)=>n+g.qty,0);if(used>=modal.maxQty){showToast('已分配全部數量');return;}modal.draft.groups.push({qty:1,sweetness:'',ice:'',open:true});render();}
   else if(action==='apply-drink')applyDrink();
-  else if(action==='quick-drink'){
-    if(store.get().settings.quickDrinks.quickAssist===false){showToast('快捷補選已關閉');return;}
-    const missing=pendingSummary(store.get().cart).drink;if(!missing){showToast('目前沒有待補飲品');return;}openDrink(button.dataset.id,'global',missing,anchorRect(button));
-  }
-  else if(action==='completion-drink')openDrink(button.dataset.id,'global',pendingSummary(store.get().cart).drink,anchorRect(button));
-  else if(action==='complete-group'){
-    const g=button.dataset.group;if(g==='drink'){showToast('請在下方選擇飲品');return;}
-    modal={type:'bulk',group:g,dirty:false,draft:{value:''}};render();
-  }
+  else if(action==='quick-drink')openDrink(button.dataset.id,'cart',pendingSummary(store.get().cart).drink,anchorRect(button));
+  else if(action==='completion-drink')openDrink(button.dataset.id,'cart',pendingSummary(store.get().cart).drink,anchorRect(button));
+  else if(action==='complete-group'){modal={type:'bulk',group:button.dataset.group,draft:{value:''},dirty:false};render();}
   else if(action==='apply-bulk'){
-    const g=modal.group,value=modal.draft.value;
-    store.set(state=>{state.cart=state.cart.map(line=>line.required.includes(g)&&!line.options[g]?{...line,options:{...line.options,[g]:value}}:line);return state;});
-    modal={type:'completion',dirty:false};render();showToast('已統一補選 '+value);
+    const g=modal.group,value=modal.draft.value;if(!value)return;
+    store.set(state=>{state.cart=state.cart.map(line=>line.required.includes(g)&&!line.options[g]?{...line,options:{...line.options,[g]:value}}:line);return state;});modal=null;render();showToast('已補齊 '+({rice:'飯底',sauce:'醬汁',snack:'小食'}[g]||g));
   }
-  else if(action==='linkup-all')applyLinkUp(Number(button.dataset.count)||0);
-  else if(action==='open-specified-link'){const count=pairingGroupCount(store.get().cart),groups=Array.from({length:count},()=>({main:'',snack:'',drink:''}));if(!count){showToast('需要主餐及小食才可指定配對');return;}modal={type:'specified-link',anchor:anchorRect(button),dirty:false,draft:{groups,active:0}};render();}
+  else if(action==='linkup-all'){applyLinkUp(Number(button.dataset.count)||linkUpSummary(store.get().cart).count);modal=null;render();}
+  else if(action==='open-specified-link'){
+    const count=pairingGroupCount(store.get().cart);if(!count){showToast('未有足夠飯團及小食可配對');return;}
+    modal={type:'specified-link',dirty:false,draft:{active:0,groups:Array.from({length:count},()=>({main:'',snack:'',drink:''}))}};render();
+  }
   else if(action==='select-pairing-group'){modal.draft.active=Number(button.dataset.index)||0;render();}
-  else if(action==='select-link-item'){const group=modal.draft.groups[modal.draft.active],role=button.dataset.role;group[role]=group[role]===button.dataset.id?'':button.dataset.id;render();}
-  else if(action==='select-link-drink'){const group=modal.draft.groups[modal.draft.active];group.drink=group.drink===button.dataset.id?'':button.dataset.id;render();}
+  else if(action==='select-link-item'){const g=modal.draft.groups[modal.draft.active];g[button.dataset.role]=button.dataset.id;modal.dirty=true;render();}
+  else if(action==='select-link-drink'){const g=modal.draft.groups[modal.draft.active];g.drink=button.dataset.id;modal.dirty=true;render();}
   else if(action==='apply-specified-link'){
     const groups=safeClone(modal.draft.groups.filter(group=>group.main&&group.snack));
     store.set(state=>{let next=state.cart;groups.forEach(group=>{const quickId=group.drink?.startsWith('quick:')?group.drink.slice(6):'',quick=quickId?drinkMap.get(quickId):null;next=combineRiceballSet(next,{mainLineId:group.main,snackLineId:group.snack,drinkLineId:quickId?'':group.drink,quickDrink:quick?{productId:quick.id,drinkId:quick.id,name:quick.name,image:quick.image,unitPrice:quick.price,selection:drinkSelection(quick.id)}:null},{comboId:stableId('combo'),lineId:stableId('line'),comboPrice:59,source:'specified'});});state.cart=normalizeCart(next);return state;});
