@@ -9,7 +9,6 @@ body {
   height: 100%;
   overflow: hidden;
   background: #050505;
-  touch-action: manipulation;
   overscroll-behavior: none;
 }
 #viewport {
@@ -48,7 +47,7 @@ html[data-preview-mode="native"] #stage {
   left: max(10px, env(safe-area-inset-left));
   top: max(10px, env(safe-area-inset-top));
   z-index: 9000;
-  max-width: min(560px, calc(100vw - 20px));
+  max-width: min(620px, calc(100vw - 20px));
   padding: 8px 11px;
   border: 1px solid rgba(255,255,255,.3);
   border-radius: 9px;
@@ -71,44 +70,15 @@ html[data-preview-mode="native"] #stage {
 #device-hud[hidden] {
   display: none;
 }
-#orientation-lock {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: #111;
-  color: #fff;
-  place-items: center;
-  text-align: center;
-  padding: 32px;
-}
-#orientation-lock div {
-  max-width: 420px;
-}
-#orientation-lock strong {
-  display: block;
-  font-size: 28px;
-  margin-bottom: 10px;
-}
-#orientation-lock p {
-  margin: 0;
-  color: #d9d2cc;
-  font-size: 18px;
-}
-@media (orientation: portrait) {
-  #stage,
+@media (max-width: 600px) {
   #device-hud {
-    display: none;
+    max-width: calc(100vw - 16px);
+    left: max(8px, env(safe-area-inset-left));
+    top: max(8px, env(safe-area-inset-top));
+    padding: 7px 9px;
+    font-size: 11px;
   }
-  #orientation-lock {
-    display: grid;
-  }
-}
-@media (orientation: landscape) {
-  #stage {
-    display: block;
-  }
-  #orientation-lock {
-    display: none;
+  #device-hud strong {
+    font-size: 12px;
   }
 }
