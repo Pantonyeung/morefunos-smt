@@ -4,6 +4,7 @@ const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html
 const CANVAS_WIDTH=1920;
 let current='';
 let fitToken=0;
+let childReady=false;
 const SCALE_KEY='morefun-smt-ui-scale';
 let uiScale=Math.max(.82,Math.min(1,Number(localStorage.getItem(SCALE_KEY)||1)));
 
@@ -60,7 +61,8 @@ function load(){
   const key=route();
   if(key===current)return;
   current=key;
-  frame.src=routes[key]+'?build=order-v1-29';
+  childReady=false;
+  frame.src=routes[key]+'?build=order-v1-30';
 }
 frame.addEventListener('error',()=>showLoaderError('子頁載入失敗，資料仍保存在本機。'));
 addEventListener('hashchange',load);
@@ -68,6 +70,7 @@ addEventListener('pageshow',fitStableLandscape,{once:true});
 addEventListener('orientationchange',()=>{stage.dataset.fitted='0';setTimeout(fitStableLandscape,180);},{passive:true});
 addEventListener('message',event=>{
   if(event.source!==frame.contentWindow)return;
+  if(event.data?.type==='morefun:page-ready')childReady=true;
   if(event.data?.type==='morefun:navigate')location.hash='#/'+event.data.route;
   if(event.data?.type==='morefun:exit-fullscreen'&&document.fullscreenElement)document.exitFullscreen?.();
   if(event.data?.type==='morefun:set-ui-scale'){
@@ -75,7 +78,10 @@ addEventListener('message',event=>{
     localStorage.setItem(SCALE_KEY,String(uiScale));
     fitStableLandscape();
   }
-  if(event.data?.type==='morefun:page-runtime-error')console.error(event.data);
+  if(event.data?.type==='morefun:page-runtime-error'){
+    console.error(event.data);
+    if(!childReady)showLoaderError('點單頁啟動失敗，資料仍保存在本機，請重新整理後再試。');
+  }
 });
 fitStableLandscape();
 load();

@@ -1,6 +1,6 @@
 # SMT Context Min｜新對話最小上下文
 
-你正在協助開發香港餐飲 POS「磨飯 SMT」。現行正式分支 `feat/smt-order-page-v1`，版本 `order-v1-29`。舊 Lock 是安全基線；功能真相以最新產品對話、Decision Ledger、Current Lock 為準。Firebase RTDB 是唯一即時餐牌/API來源；Google Sheet只作記錄，Apps Script不在運行鏈路。
+你正在協助開發香港餐飲 POS「磨飯 SMT」。現行正式分支 `feat/smt-order-page-v1`，版本 `order-v1-30`。舊 Lock 是安全基線；功能真相以最新產品對話、Decision Ledger、Current Lock 為準。Firebase RTDB 是唯一即時餐牌/API來源；Google Sheet只作記錄，Apps Script不在運行鏈路。
 
 `order-v1-29` 起，點單頁基礎狀態欄是所有主要頁永久全域欄，頁面專用狀態只可附加；底部五項導航共用同一元件、尺寸、圖標及完整選中膠囊。分類、頁籤、渠道、付款、來源、模式及主題等文字式選擇亦共用膠囊語言；產品、訂單及飲品內容卡保留卡片選中框。
 

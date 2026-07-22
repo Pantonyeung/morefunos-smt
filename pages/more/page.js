@@ -6,7 +6,7 @@ import {defaultPrinterState,validatePrinter,diagnosePrinterConfiguration,renderP
 import {normalizeCategoryLayout} from '../order/category-layout.js';
 import {renderGlobalStatusBar,renderBottomNav} from '../../shared/shell.js';
 
-const app=document.getElementById('app'),VERSION='order-v1-29';
+const app=document.getElementById('app'),VERSION='order-v1-30';
 const terminalId=localStorage.getItem(TERMINAL_ID_STORAGE_KEY)||'SMT-01';
 let orders=readJSON(ORDER_HISTORY_STORAGE_KEY,[]),orderState=readJSON(ORDER_STORAGE_KEY,{}),settings=readJSON(SETTINGS_STORAGE_KEY,{});
 let operations={dayCloseDraft:null,dayCloses:[],openingCashAdjustments:[],expenses:[],audit:[],outbox:[],updateChecks:[],...readJSON(OPERATIONS_STORAGE_KEY,{})};

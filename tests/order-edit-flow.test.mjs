@@ -259,6 +259,21 @@ test('cart keeps price flush right and actions aligned with the image',()=>{
   assert.match(css,/\.cart-copy strong\s*\{[^}]*font-size:/);
 });
 
+test('首次渲染由共用函數提供待處理數量給頂欄及導航',()=>{
+  assert.match(page,/function pendingOrderCount\(state\)/);
+  assert.match(page,/const pendingCount=pendingOrderCount\(state\)/);
+  assert.doesNotMatch(page,/renderBottomNav\('order',\{badges:\{orders:pendingCount\}\}\)[\s\S]*pendingCount is not defined/);
+});
+
+test('子頁啟動錯誤會顯示可見後備畫面而不是白屏',async()=>{
+  const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
+  assert.match(loader,/morefun:page-runtime-error/);
+  assert.match(loader,/let childReady=false/);
+  assert.match(loader,/morefun:page-ready/);
+  assert.match(loader,/if\(!childReady\)showLoaderError/);
+  assert.match(loader,/showLoaderError\('點單頁啟動失敗/);
+});
+
 test('specified pairing creates dynamic labelled groups',()=>{
   assert.match(page,/function pairingGroupCount/);
   assert.match(page,/pairing-group-tabs/);

@@ -5,9 +5,9 @@
 | 檔案 | 責任 | 主要依賴 |
 |---|---|---|
 | `index.html` | PWA shell入口 | loader、shell CSS |
-| `app-loader.js` | route、viewport、安全縮放、iframe bridge | pages、postMessage |
+| `app-loader.js` | route、viewport、安全縮放、iframe bridge及子頁錯誤可見後備 | pages、postMessage |
 | `pages/order/index.html` | 點單DOM入口 | page.js、page.css |
-| `pages/order/page.js` | 渲染、事件、modal、購物車、飲品、配對、待處理、餐牌啟動、售罄／停售預覽及堂食取消脈絡 | data、menu-api、domain、runtime、供應狀態、dine-domain |
+| `pages/order/page.js` | 渲染、事件、modal、購物車、飲品、配對、待處理、共用待處理數量、餐牌啟動、售罄／停售預覽及堂食取消脈絡 | data、menu-api、domain、runtime、供應狀態、dine-domain |
 | `pages/order/page.css` | 工作區、定位及視覺 | page.js class names |
 | `pages/order/order-domain.js` | 純資料操作 | 無DOM |
 | `pages/order/page-data.js` | catalog、drink、pending示範資料 | page.js |
@@ -63,6 +63,7 @@
 | 分類格數及搜尋 | `category-layout.js`、`categoryBar`、更多頁顯示設定 | category layout／order UI tests |
 | 訂單歷史歸檔 | `archiveExpiredOrders`、`archiveAndRender` | orders actions tests |
 | 實物打印資料 | `shouldPrintProductLabel`、`labelDocuments`、`renderPrintDocument` | print core tests |
+| 點單啟動安全 | `pendingOrderCount`、首次 `render`、`morefun:page-runtime-error` 後備畫面 | order edit flow及首次渲染驗證 |
 
 ## 資料流
 
