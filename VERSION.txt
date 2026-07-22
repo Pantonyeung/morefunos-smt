@@ -1,4 +1,4 @@
-MoreFun SMT V1.26
-Build: order-v1-26
+MoreFun SMT V1.27
+Build: order-v1-27
 Branch target: feat/smt-order-page-v1
-Status: more page, six operational detail panels and four guarded confirmations implemented; device acceptance pending
+Status: six local operations workflows and print core implemented; Android bridge, physical printing and device acceptance pending

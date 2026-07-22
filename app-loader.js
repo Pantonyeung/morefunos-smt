@@ -60,7 +60,7 @@ function load(){
   const key=route();
   if(key===current)return;
   current=key;
-  frame.src=routes[key]+'?build=order-v1-26';
+  frame.src=routes[key]+'?build=order-v1-27';
 }
 frame.addEventListener('error',()=>showLoaderError('子頁載入失敗，資料仍保存在本機。'));
 addEventListener('hashchange',load);

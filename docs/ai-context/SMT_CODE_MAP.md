@@ -19,7 +19,9 @@
 | `pages/dine/page.js` | 九宮格、輪候、枱詳情、掃碼確認、付款、完成歷史寫入及自動清枱 | dine-domain、訂單歷史、QR vendor |
 | `pages/dine/dine-domain.js` | 枱位計時、掃碼確認、付款、付清結算、歷史訂單及舊會話補救規則 | 無DOM |
 | `pages/soldout/page.js` | 售罄獨立分類、停售分類尾排序、批量操作、狀態詳情及餐牌失敗回退 | menu-api、供應狀態 |
-| `pages/more/page.js` | 更多頁六入口、營運狀態、細節面板、日結草稿、顯示設定及高風險二次確認 | 本機訂單歷史、設定、page bridge |
+| `pages/more/page.js` | 更多頁六入口、日結、報表匯出、打印中心、備份／恢復、顯示設定、系統診斷及高風險二次確認 | more-domain、print-domain、本機訂單／設定 |
+| `pages/more/more-domain.js` | 營業日、營運報表、正式日結、CSV、快照校驗／恢復及診斷純資料邏輯 | 無 DOM |
+| `pages/more/print-domain.js` | 五部設備、四款格式、合併統計、打印工作、重試／改送、診斷及安卓橋接封包 | 無 DOM |
 | `pages/more/page.css` | 更多頁主卡、細節彈窗、確認彈窗及固定畫布視覺 | page.js class names |
 | `shared/operations.js` | 暫存流水、跨機接手、作廢、日結清理、再暫存 lineage、結帳稽核 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
@@ -51,7 +53,9 @@
 | 草稿日結 | `clearDraftsForDayClose`, `clearExpiredBusinessDayDrafts` | draft handoff tests |
 | 售罄啟動 | `loadMenuCatalog({fallback})`、後備餐牌 catch | soldout page tests |
 | 售罄／停售一致性 | `statusOf`、`supplyStatus`、`sortPausedLast`、`soldoutModal` | soldout page／order edit flow tests |
-| 更多頁 | `mainPage`、`detailDialog`、`confirmDialog`、`saveDisplay` | more page tests |
+| 更多頁營運 | `createDayClose`、`buildOperationalReport`、`createBackupEnvelope`、`buildDiagnosticReport` | more operations tests |
+| 打印核心 | `validatePrinter`、`renderPrintDocument`、`createPrintJobs`、`buildAndroidPrintPayload` | print core／integration tests |
+| 更多頁介面 | `mainPage`、`detailDialog`、`confirmDialog`、`saveDisplay` | more page tests |
 
 ## 資料流
 
@@ -61,6 +65,7 @@
 4. 快捷飲品 → `openDrink` → adjustment groups → `applyDrink`。
 5. 待處理 → detail → review → `acceptPendingOrder` → running → `completeExpiredOrders`。
 6. 所有主卡 → 單一 `modal` → `activeModal` → `positionActiveCard`。
+7. 完成訂單／堂食／重印 → 中央打印工作 → 格式化文件 → `morefun.print.v1` 安卓橋接 → 實體結果回寫。
 
 ## 修改守則
 

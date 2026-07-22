@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "project": "morefunos-smt",
-  "baseline": "order-v1-26",
+  "baseline": "order-v1-27",
   "generatedAt": "2026-07-22",
   "evidenceTypes": ["EXTRACTED", "INFERRED"],
   "nodes": [
@@ -14,7 +14,11 @@
     {"id":"code.soldout-ui","type":"code","label":"Soldout Management UI","path":"pages/soldout/page.js"},
     {"id":"test.soldout","type":"test","label":"Soldout Page Tests","path":"tests/soldout-page.test.mjs"},
     {"id":"code.more-ui","type":"code","label":"More Operations UI","path":"pages/more/page.js"},
+    {"id":"code.more-domain","type":"code","label":"More Operations Domain","path":"pages/more/more-domain.js"},
+    {"id":"code.print-domain","type":"code","label":"Print Core Domain","path":"pages/more/print-domain.js"},
     {"id":"test.more","type":"test","label":"More Page Tests","path":"tests/more-page.test.mjs"},
+    {"id":"test.more-operations","type":"test","label":"More Operations Tests","path":"tests/more-operations-domain.test.mjs"},
+    {"id":"test.print-core","type":"test","label":"Print Core Tests","path":"tests/print-core.test.mjs"},
     {"id":"feature.fixed-shell","type":"feature","label":"Fixed shell and internal scrolling"},
     {"id":"feature.single-modal","type":"feature","label":"Single anchored modal"},
     {"id":"feature.cart","type":"feature","label":"Cart layout and controls"},
@@ -24,7 +28,9 @@
     {"id":"feature.order-state","type":"feature","label":"Pending-running-complete state"},
     {"id":"feature.supply-state","type":"feature","label":"Shared soldout and paused state"},
     {"id":"feature.more-operations","type":"feature","label":"More page operational details and guarded actions"},
+    {"id":"feature.print-core","type":"feature","label":"Printer configuration, templates and job queue"},
     {"id":"external.real-api","type":"external","label":"Real order and payment APIs"},
+    {"id":"external.android-print","type":"external","label":"Android native print bridge and physical printers"},
     {"id":"external.device-qa","type":"external","label":"iPad and Sunmi T2S acceptance"}
   ],
   "edges": [
@@ -47,7 +53,12 @@
     {"from":"code.soldout-ui","to":"feature.supply-state","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
     {"from":"test.soldout","to":"code.soldout-ui","relation":"VERIFIES","evidence":"EXTRACTED"},
     {"from":"code.more-ui","to":"feature.more-operations","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"code.more-domain","to":"feature.more-operations","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"code.print-domain","to":"feature.print-core","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
     {"from":"test.more","to":"code.more-ui","relation":"VERIFIES","evidence":"EXTRACTED"},
+    {"from":"test.more-operations","to":"code.more-domain","relation":"VERIFIES","evidence":"EXTRACTED"},
+    {"from":"test.print-core","to":"code.print-domain","relation":"VERIFIES","evidence":"EXTRACTED"},
+    {"from":"feature.print-core","to":"external.android-print","relation":"REQUIRES_FOR_PRODUCTION","evidence":"EXTRACTED"},
     {"from":"feature.pending","to":"external.real-api","relation":"REQUIRES_FOR_PRODUCTION","evidence":"INFERRED"},
     {"from":"feature.fixed-shell","to":"external.device-qa","relation":"REQUIRES_ACCEPTANCE","evidence":"EXTRACTED"},
     {"from":"doc.context-pack","to":"doc.current-lock","relation":"COMPRESSES","evidence":"EXTRACTED"}

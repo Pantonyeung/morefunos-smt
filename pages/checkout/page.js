@@ -2,6 +2,7 @@ import {
   ORDER_HISTORY_STORAGE_KEY,
   ORDER_STORAGE_KEY,
   TERMINAL_ID_STORAGE_KEY,
+  PRINTER_STORAGE_KEY,
   readJSON,
   writeJSON,
 } from "../../shared/store.js";
@@ -14,6 +15,7 @@ import {
   getChannelPolicy,
 } from "./checkout-domain.js";
 import { checkoutConfig } from "./page-config.js";
+import {defaultPrinterState,createPrintJobs} from "../more/print-domain.js";
 
 const app = document.getElementById("app"),
   order = readJSON(ORDER_STORAGE_KEY, { cart: [] });
@@ -160,6 +162,13 @@ function completeCheckout() {
   const dineInOnly = channel === "現場" && order.cart.length > 0 && order.cart.every(line => line.serviceMode === "堂食");
   record.status = dineInOnly ? "completed" : "running";
   if (dineInOnly) record.completedAt = now;
+  const currentPrinterState=readJSON(PRINTER_STORAGE_KEY,null)||defaultPrinterState(now),before=currentPrinterState.jobs.length;
+  const nextPrinterState=createPrintJobs(record,currentPrinterState,{now});
+  const newJobs=nextPrinterState.jobs.slice(before);
+  record.printJobs=newJobs;
+  record.printStatus=newJobs.some(job=>job.status==='blocked')?'待設定':'已排隊';
+  record.printBridgeStatus='waiting_bridge';
+  writeJSON(PRINTER_STORAGE_KEY,nextPrinterState);
   writeJSON(ORDER_HISTORY_STORAGE_KEY, [record, ...history]);
   writeJSON(ORDER_STORAGE_KEY, {
     cart: [],

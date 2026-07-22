@@ -2,6 +2,7 @@ import {
   ORDER_HISTORY_STORAGE_KEY,
   ORDER_STORAGE_KEY,
   TERMINAL_ID_STORAGE_KEY,
+  PRINTER_STORAGE_KEY,
   readJSON,
   writeJSON,
 } from "../../shared/store.js";
@@ -18,6 +19,7 @@ import {
   reconcilePayment,
   flagPaymentIssue,
 } from "./orders-domain.js";
+import {defaultPrinterState,importExternalPrintJobs,createPrintJobs} from "../more/print-domain.js";
 const app = document.getElementById("app"),
   terminalId = normalizeTerminalId(
     localStorage.getItem(TERMINAL_ID_STORAGE_KEY) || "SMT",
@@ -119,6 +121,13 @@ const minutes = (o) =>
 function persist(updated, message) {
   orders = orders.map((o) => (o.id === updated.id ? updated : o));
   writeJSON(ORDER_HISTORY_STORAGE_KEY, orders);
+  let printState=readJSON(PRINTER_STORAGE_KEY,null)||defaultPrinterState();
+  const latest=updated.printJobs?.at(-1);
+  if(latest?.documents?.length){
+    const documents=latest.documents.map(value=>String(value).includes('標籤')?'label':String(value).includes('打包')?'packing':String(value).includes('小票')?'receipt':'production');
+    printState=createPrintJobs(updated,printState,{now:latest.createdAt||Date.now(),documents,isReprint:true});
+  }else printState=importExternalPrintJobs(printState,{orders:[updated]});
+  writeJSON(PRINTER_STORAGE_KEY,printState);
   modal = "";
   cancelMode = false;
   cancelDraft = {};

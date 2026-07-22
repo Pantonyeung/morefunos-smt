@@ -416,6 +416,7 @@ button:active,
   align-items: center;
   padding: 13px 15px;
 }
+.product-card.large.no-product-image{grid-template-rows:auto;min-height:110px;height:auto}.product-card.large.no-product-image .product-info{height:auto;min-height:110px;align-items:center}.product-card.small.no-product-image{grid-template-columns:minmax(0,1fr) auto}
 .quick-strip {
   height: 92px;
   display: grid;

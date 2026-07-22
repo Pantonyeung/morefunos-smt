@@ -1,19 +1,16 @@
-# Verification Report｜V1.4
+# Verification Report｜order-v1-27
 
-- [x] 所有 JavaScript 通過 `node --check`
-- [x] UTF-8
-- [x] 產品詳情 68/32 雙欄
-- [x] 小鍵盤按需展開
-- [x] Required／Optional／Link Up 分離
-- [x] A1／自選飯團套餐要求小食＋飲品
-- [x] 單點飯團小食不計欠項
-- [x] Link Up 部分數量拆分
-- [x] 快捷飲品／快捷補選開關獨立
-- [x] 飲品卡按產品大卡約 2/3 動態計算
-- [x] 待處理上下區獨立滾動，最大 50%
-- [x] 即時設定關閉不提示
-- [x] 未套用產品／飲品修改使用品牌確認卡
-- [x] 無舊 `activeCardDirty`／文字攔截／MutationObserver
-- [x] Build `master-v14`
-- [ ] iPhone Safari 實機操作驗收
-- [ ] T2S 實機操作驗收
+日期：2026-07-22
+
+- [x] 更多頁六個入口接到正式本機資料及操作流程
+- [x] 日結、報表／CSV、備份／恢復、顯示及系統診斷領域測試
+- [x] 五部打印機設定、四款格式、合併統計、工作、重試／改送及安卓橋接合約測試
+- [x] 正式結帳、堂食及訂單重印匯入中央打印工作
+- [x] JavaScript 語法檢查
+- [x] Context OS 驗證
+- [x] 完整自動回歸 158／158
+- [x] `git diff --check`
+- [ ] iPad Safari／Sunmi T2S 整體視覺及觸控驗收
+- [ ] APK 安卓橋接及五部實體打印機出紙驗收
+
+排隊、測試工作或診斷通過均不代表實體打印成功；只有安卓橋接回傳 `printed` 才可記作完成。

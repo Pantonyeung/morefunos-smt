@@ -1,5 +1,5 @@
 import {createRenderQueue,createStore,installErrorBoundary,safeClone} from '../../shared/runtime.js';
-import {ORDER_STORAGE_KEY,SETTINGS_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,TERMINAL_ID_STORAGE_KEY,DINE_STORAGE_KEY,SUPPLY_STORAGE_KEY,readJSON,writeJSON,stableId} from '../../shared/store.js';
+import {ORDER_STORAGE_KEY,SETTINGS_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,TERMINAL_ID_STORAGE_KEY,DINE_STORAGE_KEY,SUPPLY_STORAGE_KEY,PRINTER_STORAGE_KEY,readJSON,writeJSON,stableId} from '../../shared/store.js';
 import {clearExpiredBusinessDayDrafts,createDraftRecord,normalizeTerminalId,restoreDraftForTerminal} from '../../shared/operations.js';
 import {money,imageBlock,bindImageFallbacks,showToast,escapeHtml} from '../../shared/components.js';
 import {orderPageConfig as defaults} from './page-config.js';
@@ -7,6 +7,7 @@ import {categories as fallbackCategories,products as fallbackProducts,drinks as 
 import {loadMenuCatalog} from './menu-api.js';
 import {acceptPendingOrder,combineRiceballSet,dissolveRiceballSet,completeExpiredOrders,createWhatsAppLink,updateCartLineQuantity} from './order-domain.js';
 import {commitTableOrder,createInitialDineState} from '../dine/dine-domain.js';
+import {defaultPrinterState,importExternalPrintJobs} from '../more/print-domain.js';
 
 const app=document.getElementById('app');
 const fallbackCatalog={categories:fallbackCategories,products:fallbackProducts,drinks:fallbackDrinks};
@@ -40,10 +41,14 @@ let draftCounters=readJSON(DRAFT_COUNTER_STORAGE_KEY,{});
 const terminalId=normalizeTerminalId(localStorage.getItem(TERMINAL_ID_STORAGE_KEY)||new URLSearchParams(location.search).get('terminal')||'SMT');
 localStorage.setItem(TERMINAL_ID_STORAGE_KEY,terminalId);
 const settings={
-  catalog:{...defaults.catalog,...(savedSettings.catalog||{}),productOverrides:{}},
+  catalog:{...defaults.catalog,showImages:true,...(savedSettings.catalog||{}),productOverrides:{}},
   cart:{...defaults.cart,...(savedSettings.cart||{})},
   quickDrinks:{...defaults.quickDrinks,...(savedSettings.quickDrinks||{})}
 };
+function syncDinePrintJobs(dineState){
+  const current=readJSON(PRINTER_STORAGE_KEY,null)||defaultPrinterState();
+  writeJSON(PRINTER_STORAGE_KEY,importExternalPrintJobs(current,{dine:dineState}));
+}
 
 function drinkSelection(id,sweetness='',ice=''){
   const d=drinkMap.get(id);
@@ -136,7 +141,7 @@ function applyLinkUp(count){
 
 const initialCart=saved&&Array.isArray(saved.cart)?saved.cart:[];
 const defaultHealth={catalog:{ok:false,label:'餐牌',detail:'正在連接'},api:{ok:false,label:'訂單 API',detail:'未連接'},printer:{ok:false,label:'打印機',detail:'未連接'},sync:{ok:false,label:'同步',detail:'等待 API'},backup:{ok:true,label:'備份',detail:'本機資料正常'}};
-const store=createStore({category:'全部',cart:normalizeCart(initialCart),dineContext:saved?.dineContext||null,settings,quickDrawerOpen:false,pendingOrders:safeClone(demoPendingOrders),runningOrders:[],completedOrders:[],operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false},health:defaultHealth},{storageKey:ORDER_STORAGE_KEY,normalize:state=>({...state,dineContext:state.dineContext||null,quickDrawerOpen:Boolean(state.quickDrawerOpen),cart:normalizeCart(state.cart||[]),pendingOrders:state.pendingOrders||safeClone(demoPendingOrders),runningOrders:Array.isArray(state.runningOrders)?state.runningOrders:[],completedOrders:Array.isArray(state.completedOrders)?state.completedOrders:[],settings:{...settings,...(state.settings||{}),catalog:{...settings.catalog,...(state.settings?.catalog||{})},cart:{...settings.cart,...(state.settings?.cart||{})},quickDrinks:{...settings.quickDrinks,...(state.settings?.quickDrinks||{})}},operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false,...(state.operations||{})},health:{...defaultHealth,...(state.health||{})}})});
+const store=createStore({category:'全部',cart:normalizeCart(initialCart),dineContext:saved?.dineContext||null,settings,quickMode:saved?.quickMode??savedSettings.morePage?.quickMode??false,quickDrawerOpen:false,pendingOrders:safeClone(demoPendingOrders),runningOrders:[],completedOrders:[],operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false},health:defaultHealth},{storageKey:ORDER_STORAGE_KEY,normalize:state=>({...state,dineContext:state.dineContext||null,quickMode:Boolean(state.quickMode),quickDrawerOpen:Boolean(state.quickDrawerOpen),cart:normalizeCart(state.cart||[]),pendingOrders:state.pendingOrders||safeClone(demoPendingOrders),runningOrders:Array.isArray(state.runningOrders)?state.runningOrders:[],completedOrders:Array.isArray(state.completedOrders)?state.completedOrders:[],settings:{...settings,...(state.settings||{}),catalog:{...settings.catalog,...(state.settings?.catalog||{})},cart:{...settings.cart,...(state.settings?.cart||{})},quickDrinks:{...settings.quickDrinks,...(state.settings?.quickDrinks||{})}},operations:{acceptingOrders:true,scheduledClose:'',immediateStopped:false,...(state.operations||{})},health:{...defaultHealth,...(state.health||{})}})});
 const queue=createRenderQueue(render);store.subscribe(()=>queue.schedule());
 installErrorBoundary({toast:showToast,report:error=>window.parent?.postMessage?.({type:'morefun:page-runtime-error',page:'order',message:String(error?.message||error)},'*')});
 
@@ -154,14 +159,15 @@ function drinkChoiceCard(d,action='select-drink',selected=false,context='default
 }
 function productCard(p){
   const template=productTemplate();const showCode=store.get().settings.catalog.showCode;const showDescription=store.get().settings.catalog.showDescription;
+  const showProductImages=store.get().settings.catalog.showImages!==false;
   const action=store.get().quickMode?'quick-add-product':'open-product';
   const status=supplyStatus(p),unavailable=status!=='available',statusClass=status==='soldout'?'sold-out':status==='paused'?'paused':'';
   const code=showCode?'<small class="product-code">'+p.code+'</small>':'';
   const state=unavailable?'<em class="product-supply-state">'+supplyLabel(status)+'</em>':'';
   if(template==='text')return '<button class="product-card text '+statusClass+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+state+'</span><b class="product-price">'+money(p.price)+'</b></button>';
-  if(template==='small')return '<button class="product-card small '+statusClass+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'>'+imageBlock(p.image,p.name,'product-thumb')+'<span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+state+'</span><b class="product-price">'+money(p.price)+'</b></button>';
+  if(template==='small')return '<button class="product-card small '+statusClass+' '+(showProductImages?'':'no-product-image')+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'>'+(showProductImages?imageBlock(p.image,p.name,'product-thumb'):'')+'<span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+state+'</span><b class="product-price">'+money(p.price)+'</b></button>';
   const description=showDescription&&p.description?'<p class="product-description">'+p.description+'</p>':'';
-  return '<button class="product-card large '+statusClass+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'>'+imageBlock(p.image,p.name,'product-hero')+'<div class="product-info"><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+description+state+'</span><b class="product-price">'+money(p.price)+'</b></div></button>';
+  return '<button class="product-card large '+statusClass+' '+(showProductImages?'':'no-product-image')+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'>'+(showProductImages?imageBlock(p.image,p.name,'product-hero'):'')+'<div class="product-info"><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+description+state+'</span><b class="product-price">'+money(p.price)+'</b></div></button>';
 }
 function cartRows(){
   const state=store.get(),cart=state.cart,showImages=state.settings.cart.showImages!==false;if(!cart.length)return '<div class="empty">購物車未有餐點</div>';
@@ -423,7 +429,7 @@ function handle(button){
   else if(action==='select-draft'){modal={...modal,selectedDraftId:button.dataset.id};render();}
   else if(action==='assign-table'){
     const current=store.get();if(!current.cart.length){showToast('購物車未有餐品');return;}
-    try{const dineState=readJSON(DINE_STORAGE_KEY,null)||createInitialDineState();const table=dineState.tables.find(entry=>entry.id===button.dataset.id);const context={mode:'dine',tableId:button.dataset.id,sessionId:table?.status==='occupied'?table.session?.id:null};const next=commitTableOrder(dineState,context,current.cart,{terminalId});writeJSON(DINE_STORAGE_KEY,next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));modal=null;render();showToast('已正式加入 '+button.dataset.id+' 號枱及建立打印工作');}catch(error){showToast(error.message||'未能加入堂食枱位');}
+    try{const dineState=readJSON(DINE_STORAGE_KEY,null)||createInitialDineState();const table=dineState.tables.find(entry=>entry.id===button.dataset.id);const context={mode:'dine',tableId:button.dataset.id,sessionId:table?.status==='occupied'?table.session?.id:null};const next=commitTableOrder(dineState,context,current.cart,{terminalId});writeJSON(DINE_STORAGE_KEY,next);syncDinePrintJobs(next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));modal=null;render();showToast('已正式加入 '+button.dataset.id+' 號枱及建立打印工作');}catch(error){showToast(error.message||'未能加入堂食枱位');}
   }
   else if(action==='add-draft'){
     const state=store.get();if(!state.cart.length)return;
@@ -542,7 +548,7 @@ function handle(button){
   else if(action==='clear-cart'){if(window.confirm('清空後不可恢復，確定清空整張購物車？'))store.set(state=>({...state,cart:[]}));}
   else if(action==='checkout'){
     const current=store.get();if(pendingSummary(current.cart).total){showToast('請先完成必選項目');return;}if(!current.cart.length){showToast('購物車未有餐品');return;}
-    if(current.dineContext){try{const dineState=readJSON(DINE_STORAGE_KEY,null);const next=commitTableOrder(dineState,current.dineContext,current.cart,{terminalId});writeJSON(DINE_STORAGE_KEY,next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));window.parent?.postMessage?.({type:'morefun:navigate',route:'dine'},'*');}catch(error){showToast(error.message||'未能加入堂食枱位');}return;}
+    if(current.dineContext){try{const dineState=readJSON(DINE_STORAGE_KEY,null);const next=commitTableOrder(dineState,current.dineContext,current.cart,{terminalId});writeJSON(DINE_STORAGE_KEY,next);syncDinePrintJobs(next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));window.parent?.postMessage?.({type:'morefun:navigate',route:'dine'},'*');}catch(error){showToast(error.message||'未能加入堂食枱位');}return;}
     window.parent?.postMessage?.({type:'morefun:navigate',route:'checkout'},'*');
   }
 }
