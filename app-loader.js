@@ -3,7 +3,7 @@ const frame=document.getElementById('page');
 const hud=document.getElementById('device-hud');
 const hudDetail=document.getElementById('device-hud-detail');
 const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html',dine:'pages/dine/index.html',soldout:'pages/soldout/index.html',more:'pages/more/index.html'};
-const BUILD='smt-t2s-1280x800-rebuild.3';
+const BUILD='smt-t2s-1280x800-rebuild.6';
 const TARGET_WIDTH=1280;
 const TARGET_HEIGHT=800;
 let current='';
@@ -45,7 +45,7 @@ function applyT2SViewport(){
 
   if(hud&&hudDetail){
     hud.hidden=exact;
-    hudDetail.textContent='裝置 '+size.width+'×'+size.height+'（'+orientation+'）｜完整框縮放 '+Math.round(scale*100)+'%｜黃色框內固定為 1280×800';
+    hudDetail.textContent='裝置 '+size.width+'×'+size.height+'（'+orientation+'）｜完整框縮放 '+Math.round(scale*100)+'%｜黃色框內固定為 1280×800｜版本 '+BUILD;
   }
 }
 
