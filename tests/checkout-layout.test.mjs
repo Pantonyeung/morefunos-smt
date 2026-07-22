@@ -85,3 +85,10 @@ test('零元時確認按鈕停用並顯示清楚原因',()=>{
   assert.match(page,/訂單金額必須大於零/);
   assert.match(page,/data-action="confirm"[^>]*disabled/);
 });
+
+test('任何渠道的確認結帳操作永遠固定在付款欄最底',()=>{
+  assert.match(page,/checkout-action-zone/);
+  assert.match(page,/checkout-context/);
+  assert.match(css,/\.checkout-action-zone\s*\{[^}]*margin-top:\s*auto/s);
+  assert.match(css,/\.checkout-action-zone\s+\.confirm\s*\{[^}]*width:\s*100%/s);
+});

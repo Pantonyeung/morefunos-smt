@@ -16,10 +16,12 @@ import {
   partiallyCancelItem,
   queueReprint,
   isHistory,
+  archiveExpiredOrders,
   reconcilePayment,
   flagPaymentIssue,
 } from "./orders-domain.js";
 import {defaultPrinterState,importExternalPrintJobs,createPrintJobs} from "../more/print-domain.js";
+import {renderGlobalStatusBar,renderBottomNav} from "../../shared/shell.js";
 const app = document.getElementById("app"),
   terminalId = normalizeTerminalId(
     localStorage.getItem(TERMINAL_ID_STORAGE_KEY) || "SMT",
@@ -96,6 +98,8 @@ const demo = [
 ];
 let orders = readJSON(ORDER_HISTORY_STORAGE_KEY, []);
 if (!orders.length) orders = demo;
+orders = archiveExpiredOrders(orders, Date.now());
+writeJSON(ORDER_HISTORY_STORAGE_KEY, orders);
 let selectedId = "",
   modal = "",
   notice = "",
@@ -112,6 +116,15 @@ const groups = [
   sources = ["現場", "電話／WhatsApp", "磨飯 App", "Keeta", "Foodpanda"];
 const sourceIcon = { "現場": "⌂", "電話／WhatsApp": "☎", "磨飯 App": "✦", Keeta: "K", Foodpanda: "F" };
 const sourceLabel = value => value === "all" ? "全部來源" : `${sourceIcon[value] || "•"} ${value}`;
+function archiveAndRender(){
+  const next=archiveExpiredOrders(orders,Date.now());
+  const changed=next.some((order,index)=>order!==orders[index]);
+  if(!changed)return;
+  orders=next;
+  writeJSON(ORDER_HISTORY_STORAGE_KEY, orders);
+  render();
+}
+setInterval(archiveAndRender, 60_000);
 const minutes = (o) =>
     Math.max(
       0,
@@ -263,7 +276,9 @@ function render() {
     ).length,
     b = orders.filter((o) => !isHistory(o) && o.printStatus === "異常").length,
     h = orders.filter(isHistory).length;
-  app.innerHTML = `<main><header class="topbar"><div class="brand">磨飯 SMT</div><span class="terminal">${terminalId}</span><span class="online">● 接單中</span><div class="spacer"></div><button data-action="show-active">進行中 ${orders.filter((o) => !isHistory(o)).length}</button><button data-action="show-history">歷史訂單 ${h}</button></header><section class="workspace"><header class="page-head"><div><h1>訂單</h1><p>所有操作會即時顯示結果並保存紀錄。</p></div><button data-action="cycle-source">來源：${{ all: "全部", onsite: "現場", owned: "自有渠道", platform: "外賣平台" }[filters.source]}</button><button data-action="filter-payment" class="${filters.exception === "payment" ? "active" : ""}">付款待核實 ${p}</button><button data-action="filter-print" class="${filters.exception === "print" ? "active" : ""}">打印異常 ${b}</button><button data-action="clear-filter">清除篩選</button></header><section class="stats"><button data-action="show-active">進行中訂單<b>${orders.filter((o) => !isHistory(o)).length}</b></button><button data-action="filter-payment">付款待核實<b>${p}</b></button><button data-action="filter-print">打印異常<b>${b}</b></button><button data-action="show-history">歷史訂單<b>${h}</b></button></section><section class="orders-layout">${detail()}<div class="lanes">${groups.map((g) => lane(...g)).join("")}</div></section></section><nav class="bottom-nav"><button data-action="navigate-order">點餐</button><button class="active">訂單</button><button data-action="navigate-dine">堂食</button><button data-action="navigate-soldout">售罄</button><button data-action="navigate-more">更多</button></nav></main>${modalHtml()}<div id="toast" class="toast ${notice ? "show" : ""}">${escapeHtml(notice)}</div>`;
+  const activeCount=orders.filter((o)=>!isHistory(o)).length;
+  const statusbar=renderGlobalStatusBar({terminalId,operationLabel:"接單中",lastOrder:orders.at(-1)?.id||"—",rightActions:`<button class="top-btn" data-action="show-active">進行中 ${activeCount}</button><button class="top-btn" data-action="show-history">歷史訂單 ${h}</button>`});
+  app.innerHTML = `<main>${statusbar}<section class="workspace"><header class="page-head"><div><h1>訂單</h1><p>所有操作會即時顯示結果並保存紀錄。</p></div><button data-action="cycle-source">來源：${{ all: "全部", onsite: "現場", owned: "自有渠道", platform: "外賣平台" }[filters.source]}</button><button data-action="filter-payment" class="${filters.exception === "payment" ? "active" : ""}">付款待核實 ${p}</button><button data-action="filter-print" class="${filters.exception === "print" ? "active" : ""}">打印異常 ${b}</button><button data-action="clear-filter">清除篩選</button></header><section class="stats"><button data-action="show-active">進行中訂單<b>${activeCount}</b></button><button data-action="filter-payment">付款待核實<b>${p}</b></button><button data-action="filter-print">打印異常<b>${b}</b></button><button data-action="show-history">歷史訂單<b>${h}</b></button></section><section class="orders-layout">${detail()}<div class="lanes">${groups.map((g) => lane(...g)).join("")}</div></section></section>${renderBottomNav("orders",{badges:{orders:activeCount}})}</main>${modalHtml()}<div id="toast" class="toast ${notice ? "show" : ""}">${escapeHtml(notice)}</div>`;
   const sourceButton = document.querySelector('[data-action="cycle-source"]');
   if (sourceButton) sourceButton.textContent = `來源：${sourceLabel(filters.source)}`;
   if (notice)
@@ -282,7 +297,11 @@ function render() {
 function handle(b) {
   const a = b.dataset.action,
     o = orders.find((x) => x.id === selectedId);
-  if (a === "select-order") {
+  if(a==="shell-navigate"){
+    const route=b.dataset.route;
+    if(route!=="orders")parent.postMessage({type:"morefun:navigate",route},"*");
+    return;
+  } else if (a === "select-order") {
     selectedId = b.dataset.id;
     cancelMode = false;
     cancelDraft = {};

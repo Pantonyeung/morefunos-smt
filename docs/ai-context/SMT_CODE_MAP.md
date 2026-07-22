@@ -59,6 +59,10 @@
 | 日結盤點及反推 | `syncCashDenomination`、`totalCashBreakdown`、`calculateDayCloseReconciliation`、`createDayClose` | more operations tests |
 | 堂食取消生命週期 | `createDineOrderContext`、`cleanupEmptyDineSessions`、`requestDineCancellation` | dine page tests |
 | 全局觸控動效 | `shared/page-base.css` 共用 focus／press／dialog／drawer／reduced-motion | more page及全量回歸 |
+| 共用介面骨架 | `shared/shell.js`、`renderGlobalStatusBar`、`renderBottomNav` | shell UI tests |
+| 分類格數及搜尋 | `category-layout.js`、`categoryBar`、更多頁顯示設定 | category layout／order UI tests |
+| 訂單歷史歸檔 | `archiveExpiredOrders`、`archiveAndRender` | orders actions tests |
+| 實物打印資料 | `shouldPrintProductLabel`、`labelDocuments`、`renderPrintDocument` | print core tests |
 
 ## 資料流
 
@@ -71,6 +75,8 @@
 7. 完成訂單／堂食／重印 → 中央打印工作 → 格式化文件 → `morefun.print.v1` 安卓橋接 → 實體結果回寫。
 8. 空枱點餐 → 只寫 `dineContext` → 取消則清除並返回堂食；正式提交餐品 → 校驗會話 → 開枱及建立正式批次。
 9. 日結 → 面額盤點 → 實點現金 → 待核實現金／非現金反推 → 3% 覆核及授權 → 不可覆寫版本稽核。
+10. 任一主要頁 → 共用全域狀態欄／底欄 → 頁面只附加專用狀態；來源操作卡 → 共用定位器 → 四方向箭嘴。
+11. 完成單計時 → 三十分鐘 → 持久完成狀態／完成時間／audit → 歷史訂單。
 
 ## 修改守則
 

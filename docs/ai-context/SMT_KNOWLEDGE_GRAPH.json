@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "project": "morefunos-smt",
-  "baseline": "order-v1-28",
+  "baseline": "order-v1-29",
   "generatedAt": "2026-07-22",
   "evidenceTypes": ["EXTRACTED", "INFERRED"],
   "nodes": [
@@ -19,6 +19,8 @@
     {"id":"code.dine-ui","type":"code","label":"Dine UI","path":"pages/dine/page.js"},
     {"id":"code.dine-domain","type":"code","label":"Dine Domain","path":"pages/dine/dine-domain.js"},
     {"id":"code.shared-css","type":"code","label":"Shared Interaction Styles","path":"shared/page-base.css"},
+    {"id":"code.shared-shell","type":"code","label":"Shared Global Status and Navigation Shell","path":"shared/shell.js"},
+    {"id":"code.category-layout","type":"code","label":"Configurable Category Layout","path":"pages/order/category-layout.js"},
     {"id":"test.more","type":"test","label":"More Page Tests","path":"tests/more-page.test.mjs"},
     {"id":"test.more-operations","type":"test","label":"More Operations Tests","path":"tests/more-operations-domain.test.mjs"},
     {"id":"test.print-core","type":"test","label":"Print Core Tests","path":"tests/print-core.test.mjs"},
@@ -36,6 +38,8 @@
     {"id":"feature.cash-reconciliation","type":"feature","label":"Denomination cash count and day-close reconciliation"},
     {"id":"feature.dine-cancel","type":"feature","label":"Dine order intent and cancellation lifecycle"},
     {"id":"feature.interaction-motion","type":"feature","label":"Shared touch and modal motion language"},
+    {"id":"feature.global-shell","type":"feature","label":"Permanent global status bar and shared navigation"},
+    {"id":"feature.category-search","type":"feature","label":"Configurable category grid and fixed search"},
     {"id":"external.real-api","type":"external","label":"Real order and payment APIs"},
     {"id":"external.android-print","type":"external","label":"Android native print bridge and physical printers"},
     {"id":"external.device-qa","type":"external","label":"iPad and Sunmi T2S acceptance"}
@@ -71,6 +75,8 @@
     {"from":"code.dine-domain","to":"feature.dine-cancel","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
     {"from":"test.dine","to":"feature.dine-cancel","relation":"VERIFIES","evidence":"EXTRACTED"},
     {"from":"code.shared-css","to":"feature.interaction-motion","relation":"STYLES","evidence":"EXTRACTED"},
+    {"from":"code.shared-shell","to":"feature.global-shell","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"code.category-layout","to":"feature.category-search","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
     {"from":"feature.interaction-motion","to":"external.device-qa","relation":"REQUIRES_ACCEPTANCE","evidence":"EXTRACTED"},
     {"from":"feature.print-core","to":"external.android-print","relation":"REQUIRES_FOR_PRODUCTION","evidence":"EXTRACTED"},
     {"from":"feature.pending","to":"external.real-api","relation":"REQUIRES_FOR_PRODUCTION","evidence":"INFERRED"},

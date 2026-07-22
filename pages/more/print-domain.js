@@ -88,17 +88,53 @@ function optionText(options){
 }
 
 function header(order,title){return [`磨飯｜${title}`,`訂單：${order.id||'測試工作'}`,`來源：${order.source||'SMT'}`,`時間：${new Date(number(order.acceptedAt||order.createdAt||Date.now())).toLocaleString('zh-HK')}`];}
+function channelLines(order){
+  const data=order?.channelData||{};
+  return [data.platformOrderId&&`渠道單號：${data.platformOrderId}`,data.phone&&`電話：${data.phone}`,data.contact&&`客人：${data.contact}`,data.pickupTime&&`取餐：${data.pickupTime}`,data.note&&`備註：${data.note}`].filter(Boolean);
+}
 function summaryLines(summary){return ['合併統計',...summary.items.map(row=>`${row.name}：${row.quantity}${row.unit}`),`飲品總杯數：${summary.totals.drinks}`,`飯餐總份數：${summary.totals.riceMeals}`,`飯團總個數：${summary.totals.riceballs}`,`全部產品：${summary.totalUnits}件`];}
 function detailLines(items){return ['逐項明細',...(items||[]).map((item,index)=>`${index+1}. ${item.name} ×${item.qty||item.quantity||0}｜${optionText(item.options)}`)];}
+
+export function shouldPrintProductLabel(item,order={}){
+  const category=String(item?.category||''),name=String(item?.name||''),fulfillment=String(item?.fulfillment||item?.serviceMode||order.fulfillment||order.serviceMode||'');
+  if(category.includes('飯團')||/飯團|紫米餐/.test(name)||item?.labelAlways===true)return true;
+  if(item?.labelRequired===true)return true;
+  return fulfillment==='外賣'&&item?.labelRequired!==false;
+}
+
+function labelDocuments(order){
+  const result=[];
+  for(const item of order?.items||order?.cart||[]){
+    if(!shouldPrintProductLabel(item,order))continue;
+    const total=Math.max(1,number(item.qty||item.quantity)||1);
+    for(let pieceIndex=1;pieceIndex<=total;pieceIndex++)result.push({item,pieceIndex,pieceTotal:total});
+  }
+  return result;
+}
+
+function receiptLines(order){
+  const subtotal=number(order.subtotal??order.amount??order.total),discount=number(order.discountAmount),amount=number(order.amount??order.total),paid=number(order.paidAmount??amount),change=number(order.changeAmount);
+  return [`原價：$${subtotal.toFixed(0)}`,`優惠：-$${discount.toFixed(0)}`,`應付：$${amount.toFixed(0)}`,`付款：${order.paymentMethod||'待核實'}`,`實收：$${paid.toFixed(0)}`,`找續：$${change.toFixed(0)}`];
+}
+
+function labelLines(order,item,pieceIndex,pieceTotal){
+  const name=item?.labelName||[item?.code,item?.name].filter(Boolean).join(' ')||'產品標籤';
+  const fulfillment=item?.fulfillment||item?.serviceMode||order.fulfillment||order.serviceMode||'堂食';
+  const packaging=number(item?.packagingFee);
+  return ['磨飯',`訂單：${order.id||'測試工作'}　${pieceIndex}/${pieceTotal}`,name,fulfillment,optionText(item?.options),item?.note&&`備註：${item.note}`,packaging?`注：外賣盒 $${packaging.toFixed(0)}／盒`:''].filter(Boolean);
+}
 
 export function renderPrintDocument(template,order){
   if(!template||!['receipt','production','packing','label'].includes(template.documentType))throw new Error('打印格式不支援');
   const items=order?.items||order?.cart||[],summary=aggregateProductionSummary(items);
   let lines=[];
-  if(template.documentType==='receipt')lines=[...header(order,'顧客小票'),...detailLines(items),`合計：$${number(order.amount||order.total).toFixed(0)}`,`付款：${order.paymentMethod||'待核實'}`];
-  if(template.documentType==='production')lines=[...header(order,'製作單'),...summaryLines(summary),...detailLines(items),'請按訂單配置製作'];
-  if(template.documentType==='packing')lines=[...header(order,'打包單'),...summaryLines(summary),...detailLines(items),`總袋數：____　餐具：____`];
-  if(template.documentType==='label')lines=[...header(order,'產品標籤'),...items.filter(item=>itemUnit(item)!=='杯').map(item=>`${item.name} ×${item.qty||item.quantity||0}\n${optionText(item.options)}`)];
+  if(template.documentType==='receipt')lines=[...header(order,'顧客小票'),...channelLines(order),...detailLines(items),...receiptLines(order)];
+  if(template.documentType==='production')lines=[...header(order,'製作單'),...channelLines(order),...summaryLines(summary),...detailLines(items),'請按訂單配置製作'];
+  if(template.documentType==='packing')lines=[...header(order,'打包單'),...channelLines(order),...summaryLines(summary),...detailLines(items),`總袋數：____　餐具：____`];
+  if(template.documentType==='label'){
+    const selected=order?.labelItem?{item:order.labelItem,pieceIndex:number(order.labelPieceIndex)||1,pieceTotal:number(order.labelPieceTotal)||1}:labelDocuments(order)[0];
+    lines=selected?labelLines(order,selected.item,selected.pieceIndex,selected.pieceTotal):['磨飯',`訂單：${order.id||'測試工作'}`,'沒有需要打印標籤的產品'];
+  }
   return {templateId:template.id,templateVersion:template.sourceVersion,documentType:template.documentType,paperWidth:template.paperWidth,title:template.name,summary,text:lines.join('\n'),lines};
 }
 
@@ -114,21 +150,26 @@ function jobId(order,type,now,index=0){return `PRINT-${order.id||'TEST'}-${type}
 
 export function createPrintJobs(order,state,{now=Date.now(),documents=['receipt','production','packing','label'],isReprint=false}={}){
   const jobs=[];
-  documents.forEach((type,index)=>{
-    if(type==='label'&&!aggregateProductionSummary(order?.items||order?.cart||[]).totals.riceballs)return;
+  let sequence=0;
+  documents.forEach(type=>{
+    const variants=type==='label'?labelDocuments(order):[null];
+    variants.forEach(variant=>{
     const printer=selectedPrinter(state,type),template=selectedTemplate(state,printer,type);
     const validation=printer?validatePrinter(printer):{ok:false,errors:['未有可用打印機']};
     const errors=[...validation.errors];
     if(!template)errors.push('未有已發佈打印格式');
-    const document=template?renderPrintDocument(template,order):null;
-    const copies=type==='label'?Math.max(1,document?.summary?.totals?.riceballs||1):Math.max(1,number(printer?.copies)||1);
-    const createdAt=number(now)+index;
+    const printOrder=variant?{...order,labelItem:variant.item,labelPieceIndex:variant.pieceIndex,labelPieceTotal:variant.pieceTotal}:order;
+    const document=template?renderPrintDocument(template,printOrder):null;
+    const copies=type==='label'?1:Math.max(1,number(printer?.copies)||1);
+    const createdAt=number(now)+sequence;
     jobs.push({
-      id:jobId(order,type,now,index),orderId:order?.id||'',documentType:type,documentName:template?.name||type,
+      id:jobId(order,type,now,sequence),orderId:order?.id||'',documentType:type,documentName:template?.name||type,
       printerId:printer?.id||'',templateId:template?.id||'',templateVersion:template?.sourceVersion||0,copies,
       status:errors.length?'blocked':'queued',bridgeStatus:errors.length?'not_ready':'waiting_bridge',attempts:0,
       createdAt,updatedAt:createdAt,isReprint:Boolean(isReprint),reprintMark:isReprint?'補印｜不要重複製作':'',
       errors:errors.map(message=>({at:createdAt,message})),history:[{type:'print_job.created',at:createdAt,printerId:printer?.id||'',status:errors.length?'blocked':'queued'}],document
+    });
+    sequence+=1;
     });
   });
   return {...clone(state),jobs:[...(state?.jobs||[]),...jobs],updatedAt:number(now)};

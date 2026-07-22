@@ -74,6 +74,10 @@
   gap: 10px;
   min-height: 0;
 }
+.checkout-context{flex:1;min-height:120px;display:grid;place-content:center;gap:8px;border:1px dashed var(--line);border-radius:12px;background:#fffaf6;text-align:center;color:var(--muted)}
+.checkout-context strong{font-size:28px;color:var(--text)}
+.checkout-action-zone{margin-top:auto;display:grid;gap:8px;flex:0 0 auto}
+.checkout-action-zone .confirm{width:100%}
 .row {
   display: grid;
   gap: 8px;

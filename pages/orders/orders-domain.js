@@ -16,6 +16,18 @@ export function applyOrderFilters(orders,{source='all',exception='',view='active
     return true;
   });
 }
+export function archiveExpiredOrders(orders,now=Date.now()){
+  return (Array.isArray(orders)?orders:[]).map(order=>{
+    if(isHistory(order))return order;
+    const acceptedAt=Number(order.acceptedAt||order.createdAt||0);
+    const deadline=Number(order.autoCompleteAt)||(acceptedAt?acceptedAt+30*60_000:0);
+    if(!deadline||Number(now)<deadline)return order;
+    return {
+      ...order,status:'completed',autoCompleteAt:deadline,completedAt:deadline,
+      audit:[...(order.audit||[]),event('order_auto_completed','SYSTEM',deadline,{deadline})]
+    };
+  });
+}
 export function changeOrderPayment(order,{source,paymentMethod,channelData={},reason=''},terminalId,at=Date.now()){
   const policy=getChannelPolicy(source);
   const deferred=false;

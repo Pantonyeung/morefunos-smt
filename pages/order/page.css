@@ -1179,23 +1179,6 @@ button:active,
   background: #fff;
   font-weight: 900;
 }
-.bottom-nav {
-  height: 64px;
-  flex: none;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  border-top: 1px solid var(--line);
-  background: #fff;
-}
-.bottom-nav button {
-  border: 0;
-  background: #fff;
-  color: #1681d8;
-  font-weight: 900;
-}
-.bottom-nav .active {
-  color: var(--orange);
-}
 .empty {
   height: 100%;
   display: grid;
@@ -1418,6 +1401,29 @@ main{height:100%;min-height:0;overflow:hidden}.workspace{overflow:hidden}.order-
 .drink-card--detail > .drink-choice-img { height: 104px; }
 .drink-card--completion { width: 124px; min-width: 124px; max-width: 124px; height: 170px; grid-template-rows: 38px 1fr; padding: 7px; }
 .drink-card--completion > .drink-choice-img { height: 118px; }
+
+/* V1.29 configurable category grid and fixed search slot */
+.category-shell{position:relative;flex:none;height:calc(var(--category-rows)*50px + (var(--category-rows) - 1)*8px + 26px);overflow:hidden}
+.category-scroll{height:100%;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none}
+.category-scroll::-webkit-scrollbar{display:none}
+.category-page{position:relative;flex:0 0 100%;scroll-snap-align:start;display:grid;grid-template-columns:repeat(var(--category-columns),minmax(0,1fr));grid-template-rows:repeat(var(--category-rows),50px);gap:8px;padding:13px}
+.category-page button,.category-search{min-width:0;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:850;box-shadow:0 2px 6px rgba(69,48,32,.06)}
+.category-page button.active,.category-search.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+.category-search-reserved{grid-column:var(--category-columns);grid-row:var(--category-rows)}
+.category-search{position:absolute;right:13px;bottom:13px;z-index:4;display:grid;place-items:center;align-content:center;flex:none;width:calc(100%/var(--category-columns) - 16px);height:50px;font-size:22px}
+.category-search small{font-size:11px;line-height:1}
+.category-overflow{position:absolute;left:16px;bottom:1px;z-index:3;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.9);color:var(--muted);font-size:11px;pointer-events:none}
+.search-card{width:min(420px,calc(100vw - 32px));padding:16px}
+.search-field{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px}
+.search-field input{min-width:0;min-height:52px;padding:10px 13px;border:2px solid var(--orange);border-radius:10px;font-size:19px}
+.search-field button{min-width:76px;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:900}
+.search-card p{margin:12px 0 0;color:var(--muted)}
+.search-empty{grid-column:1/-1;min-height:180px;display:grid;place-items:center}
+
+.new-order-toast{width:min(420px,calc(100vw - 36px));min-height:320px;grid-template-columns:1fr 1fr;grid-template-rows:1fr auto;align-content:stretch;padding:24px}
+.new-order-toast>div{grid-column:1/-1;align-content:center;gap:12px;text-align:center}
+.new-order-toast>div small{font-size:18px}.new-order-toast>div strong{font-size:42px}.new-order-toast>div span{font-size:24px}
+.new-order-toast button{min-height:62px}
 .drink-card--detail.is-text, .drink-card--completion.is-text, .drink-card--drawer.is-text { grid-template-rows: 1fr; }
 
 /* order-v1-10: parent combo editing and direct quick-drink pairing */

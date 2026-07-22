@@ -7,6 +7,7 @@ import {
   syncCashDenomination,
   totalCashBreakdown,
   defaultCashDistribution,
+  buildOpeningCashState,
   calculateDayCloseReconciliation,
   createDayClose,
   buildCsvExport,
@@ -49,10 +50,12 @@ test('報表分開淨銷售、付款、平台結算、待核實及打印異常',
   assert.equal(report.summary.pendingPayments,1);
   assert.equal(report.summary.printExceptions,1);
   assert.equal(report.products.find(row=>row.name==='鹽酥雞').quantity,2);
+  assert.deepEqual(report.channels.map(row=>[row.name,row.orders,row.amount]),[['現場',1,100],['Keeta',1,80],['磨飯 App',1,59]]);
+  assert.deepEqual(report.payments.map(row=>[row.name,row.orders,row.amount,row.pending]),[['現金',1,100,0],['平台已付',1,80,0],['FPS',1,59,1]]);
 });
 
-test('港幣紙幣及硬幣可以由數量或金額雙向互推並計算總額',()=>{
-  assert.deepEqual(CASH_DENOMINATIONS.map(row=>row.value),[1000,500,100,50,20,10,10,5,2,1,.5,.2,.1]);
+test('港幣盤點只提供店舖實際接收的五款紙幣及三款硬幣',()=>{
+  assert.deepEqual(CASH_DENOMINATIONS.map(row=>[row.kind,row.value]),[['note',500],['note',100],['note',50],['note',20],['note',10],['coin',5],['coin',2],['coin',1]]);
   let breakdown={};
   breakdown=syncCashDenomination(breakdown,'note-100',{source:'amount',value:1000});
   breakdown=syncCashDenomination(breakdown,'coin-5',{source:'quantity',value:3});
@@ -61,6 +64,13 @@ test('港幣紙幣及硬幣可以由數量或金額雙向互推並計算總額',
   assert.equal(breakdown['coin-5'].amount,15);
   assert.equal(totalCashBreakdown(breakdown),1015);
   assert.throws(()=>syncCashDenomination(breakdown,'note-100',{source:'amount',value:105}),/面額倍數/);
+});
+
+test('新營業日沿用上次留底並容許開機時加減調整',()=>{
+  const closes=[{businessDate:'2026-07-21',createdAt:1000,cashRetained:1150}];
+  assert.deepEqual(buildOpeningCashState(closes,[],'2026-07-22'),{businessDate:'2026-07-22',previousRetained:1150,adjustment:0,openingCash:1150,confirmed:false});
+  const adjusted=buildOpeningCashState(closes,[{businessDate:'2026-07-22',adjustment:-150,confirmedAt:2000}],'2026-07-22');
+  assert.deepEqual(adjusted,{businessDate:'2026-07-22',previousRetained:1150,adjustment:-150,openingCash:1000,confirmed:true,confirmedAt:2000});
 });
 
 test('未手動調整前按開工底金建議提取及留底，且不會留多過實點現金',()=>{

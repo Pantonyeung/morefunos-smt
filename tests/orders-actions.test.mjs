@@ -9,6 +9,7 @@ import {
   queueReprint,
   reconcilePayment,
   flagPaymentIssue,
+  archiveExpiredOrders,
 } from '../pages/orders/orders-domain.js';
 
 const ordersPage=await readFile(new URL('../pages/orders/page.js',import.meta.url),'utf8');
@@ -18,6 +19,20 @@ const base={
   paymentMethod:'PayMe',paymentStatus:'付款待核實',printStatus:'異常',
   items:[{name:'叉燒飯',qty:1,total:58},{name:'凍檸茶',qty:2,total:18}],audit:[]
 };
+
+test('運行訂單滿三十分鐘會持久轉入歷史而唔係只改畫面',()=>{
+  const acceptedAt=1_000;
+  const active={...base,acceptedAt,autoCompleteAt:acceptedAt+30*60_000};
+  assert.equal(archiveExpiredOrders([active],acceptedAt+29*60_000)[0].status,'running');
+  const archived=archiveExpiredOrders([active],acceptedAt+48*60_000)[0];
+  assert.equal(archived.status,'completed');
+  assert.equal(archived.completedAt,acceptedAt+30*60_000);
+  assert.equal(archived.audit.at(-1).type,'order_auto_completed');
+  assert.deepEqual(applyOrderFilters([archived],{view:'history'}).map(row=>row.id),['P0054']);
+  assert.match(ordersPage,/archiveExpiredOrders/);
+  assert.match(ordersPage,/writeJSON\(ORDER_HISTORY_STORAGE_KEY, orders\)/);
+  assert.match(ordersPage,/setInterval\(archiveAndRender,\s*60_000\)/);
+});
 
 test('filters can switch between source, payment exception, print exception and history',()=>{
   const rows=[base,{...base,id:'P0055',group:'onsite',status:'cancelled',paymentStatus:'已付款',printStatus:'正常'}];

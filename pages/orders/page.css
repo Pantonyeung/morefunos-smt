@@ -253,23 +253,6 @@ main {
 .bad {
   color: #c83b32;
 }
-.bottom-nav {
-  height: 92px;
-  flex: none;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  border-top: 1px solid var(--line);
-  background: #fff;
-}
-.bottom-nav button {
-  border: 0;
-  border-radius: 0;
-  font-size: 21px;
-}
-.bottom-nav .active {
-  color: var(--orange);
-  border-top: 4px solid var(--orange);
-}
 .scrim {
   position: fixed;
   inset: 0;

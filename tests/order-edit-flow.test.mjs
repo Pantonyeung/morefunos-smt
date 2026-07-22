@@ -160,6 +160,36 @@ test('operational surfaces include sold-out preview and new-order toast', () => 
   assert.match(page,/立即處理/);
 });
 
+test('分類列最右固定搜尋入口並可按名稱或編號篩選產品',()=>{
+  assert.match(page,/categoryLayout/);
+  assert.match(page,/normalizeCategoryLayout/);
+  assert.match(page,/category-scroll/);
+  assert.match(page,/data-action="open-search"/);
+  assert.match(page,/data-action="search-query"/);
+  assert.match(page,/searchQuery/);
+  assert.match(page,/product\.name/);
+  assert.match(page,/product\.code/);
+  assert.match(css,/\.category-search\s*\{[^}]*flex:\s*none/s);
+});
+
+test('分類列讀取後台全局設定並按五六七格及一兩行輸出版面',()=>{
+  assert.match(page,/settings\.categoryLayout/);
+  assert.match(page,/--category-columns/);
+  assert.match(page,/--category-rows/);
+  assert.match(page,/category-overflow/);
+});
+
+test('新單提示最少一張產品卡闊及兩張產品卡高',()=>{
+  assert.match(css,/\.new-order-toast\s*\{[^}]*width:\s*min\(420px/s);
+  assert.match(css,/\.new-order-toast\s*\{[^}]*min-height:\s*320px/s);
+});
+
+test('快捷飲品展開後八秒無操作自動收起並於操作時重時計時',()=>{
+  assert.match(page,/QUICK_DRAWER_IDLE_MS\s*=\s*8000/);
+  assert.match(page,/scheduleQuickDrawerClose/);
+  assert.match(page,/clearTimeout\(quickDrawerTimer\)/);
+});
+
 test('sold-out preview reads the same local supply status as the badge', () => {
   assert.match(page,/function supplyStatus/);
   assert.match(page,/products\.filter\(item=>supplyStatus\(item\)!=='available'\)/);

@@ -6,6 +6,7 @@ const orderPage=await readFile(new URL('../pages/order/page.js',import.meta.url)
 const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
 const ordersPage=await readFile(new URL('../pages/orders/page.js',import.meta.url),'utf8');
 const checkoutPage=await readFile(new URL('../pages/checkout/page.js',import.meta.url),'utf8');
+const shellPage=await readFile(new URL('../shared/shell.js',import.meta.url),'utf8');
 
 test('掛單只開左右面板，再由一般掛單或堂食枱號完成操作',()=>{
   assert.match(orderPage,/DRAFT_STORAGE_KEY/);
@@ -43,7 +44,8 @@ test('bottom navigation opens the independent orders page',()=>{
 
 test('orders page uses the three approved channel columns and payment methods',()=>{
   assert.match(ordersPage,/現場/);
-  assert.match(ordersPage,/堂食/);
+  assert.match(ordersPage,/renderBottomNav\("orders"/);
+  assert.match(shellPage,/堂食/);
   assert.doesNotMatch(ordersPage,/現場外賣/);
   assert.match(ordersPage,/磨飯 App/);
   assert.match(ordersPage,/電話／WhatsApp/);

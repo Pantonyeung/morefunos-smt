@@ -3,19 +3,14 @@ const number=value=>Number.isFinite(Number(value))?Number(value):0;
 const round=value=>Math.round(number(value)*100)/100;
 
 export const CASH_DENOMINATIONS=[
-  {id:'note-1000',kind:'note',label:'$1,000 紙幣',value:1000},
   {id:'note-500',kind:'note',label:'$500 紙幣',value:500},
   {id:'note-100',kind:'note',label:'$100 紙幣',value:100},
   {id:'note-50',kind:'note',label:'$50 紙幣',value:50},
   {id:'note-20',kind:'note',label:'$20 紙幣',value:20},
   {id:'note-10',kind:'note',label:'$10 紙幣',value:10},
-  {id:'coin-10',kind:'coin',label:'$10 硬幣',value:10},
   {id:'coin-5',kind:'coin',label:'$5 硬幣',value:5},
   {id:'coin-2',kind:'coin',label:'$2 硬幣',value:2},
-  {id:'coin-1',kind:'coin',label:'$1 硬幣',value:1},
-  {id:'coin-0.5',kind:'coin',label:'50¢ 硬幣',value:.5},
-  {id:'coin-0.2',kind:'coin',label:'20¢ 硬幣',value:.2},
-  {id:'coin-0.1',kind:'coin',label:'10¢ 硬幣',value:.1}
+  {id:'coin-1',kind:'coin',label:'$1 硬幣',value:1}
 ];
 
 export function syncCashDenomination(breakdown,id,{source='quantity',value=0}={}){
@@ -42,6 +37,23 @@ export function defaultCashDistribution(cashCounted=0,openingFloat=0){
   const counted=Math.max(0,round(cashCounted));
   const retained=Math.min(counted,Math.max(0,round(openingFloat)));
   return {cashWithdrawn:round(counted-retained),cashRetained:retained};
+}
+
+export function buildOpeningCashState(dayCloses=[],adjustments=[],businessDate=''){
+  const closes=Array.isArray(dayCloses)?dayCloses:[];
+  const latest=[...closes]
+    .filter(row=>row.businessDate!==businessDate)
+    .sort((a,b)=>number(b.createdAt)-number(a.createdAt))[0];
+  const previousRetained=round(latest?.cashRetained);
+  const confirmed=[...(Array.isArray(adjustments)?adjustments:[])]
+    .filter(row=>row.businessDate===businessDate&&row.confirmedAt)
+    .sort((a,b)=>number(b.confirmedAt)-number(a.confirmedAt))[0];
+  const adjustment=round(confirmed?.adjustment);
+  return {
+    businessDate:String(businessDate||''),previousRetained,adjustment,
+    openingCash:round(Math.max(0,previousRetained+adjustment)),confirmed:Boolean(confirmed),
+    ...(confirmed?{confirmedAt:number(confirmed.confirmedAt)}:{})
+  };
 }
 
 function localDateId(timestamp){
