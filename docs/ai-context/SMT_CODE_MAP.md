@@ -7,7 +7,7 @@
 | `index.html` | PWA shell入口 | loader、shell CSS |
 | `app-loader.js` | route、viewport、安全縮放、iframe bridge | pages、postMessage |
 | `pages/order/index.html` | 點單DOM入口 | page.js、page.css |
-| `pages/order/page.js` | 渲染、事件、modal、購物車、飲品、配對、待處理、餐牌啟動 | data、menu-api、domain、runtime |
+| `pages/order/page.js` | 渲染、事件、modal、購物車、飲品、配對、待處理、餐牌啟動、售罄／停售預覽及排序 | data、menu-api、domain、runtime、供應狀態 |
 | `pages/order/page.css` | 工作區、定位及視覺 | page.js class names |
 | `pages/order/order-domain.js` | 純資料操作 | 無DOM |
 | `pages/order/page-data.js` | catalog、drink、pending示範資料 | page.js |
@@ -18,7 +18,7 @@
 | `pages/checkout/checkout-domain.js` | 渠道政策、優惠、付款狀態、平台佣金及訂單記錄 | 純資料操作 |
 | `pages/dine/page.js` | 九宮格、輪候、枱詳情、掃碼確認、付款、完成歷史寫入及自動清枱 | dine-domain、訂單歷史、QR vendor |
 | `pages/dine/dine-domain.js` | 枱位計時、掃碼確認、付款、付清結算、歷史訂單及舊會話補救規則 | 無DOM |
-| `pages/soldout/page.js` | 售罄分類、批量操作、只讀詳情及餐牌失敗回退 | menu-api、供應狀態 |
+| `pages/soldout/page.js` | 售罄獨立分類、停售分類尾排序、批量操作、狀態詳情及餐牌失敗回退 | menu-api、供應狀態 |
 | `shared/operations.js` | 暫存流水、跨機接手、作廢、日結清理、再暫存 lineage、結帳稽核 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
@@ -48,6 +48,7 @@
 | 堂食 | `tableView`, `tableCard`, `commitTableOrder`, `settleTablePayment`, `reconcileSettledTables` | dine page tests |
 | 草稿日結 | `clearDraftsForDayClose`, `clearExpiredBusinessDayDrafts` | draft handoff tests |
 | 售罄啟動 | `loadMenuCatalog({fallback})`、後備餐牌 catch | soldout page tests |
+| 售罄／停售一致性 | `statusOf`、`supplyStatus`、`sortPausedLast`、`soldoutModal` | soldout page／order edit flow tests |
 
 ## 資料流
 

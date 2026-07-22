@@ -21,6 +21,9 @@ function indexCatalog(){
 indexCatalog();
 let modal=null;
 const supplyOverrides=readJSON(SUPPLY_STORAGE_KEY,{})||{};
+function supplyStatus(product){return supplyOverrides[product.id]?.status||(product.available===false?'soldout':'available');}
+function supplyLabel(status){return status==='soldout'?'今日售罄':status==='paused'?'暫停供應':'供應中';}
+function sortPausedLast(items){return items.map((item,index)=>({item,index})).sort((a,b)=>Number(supplyStatus(a.item)==='paused')-Number(supplyStatus(b.item)==='paused')||a.index-b.index).map(row=>row.item);}
 let confirmState=null;
 let newOrderNotice={id:'A516',source:'磨飯 App',items:3,amount:104,visible:true};
 const demoPendingOrders={
@@ -152,12 +155,13 @@ function drinkChoiceCard(d,action='select-drink',selected=false,context='default
 function productCard(p){
   const template=productTemplate();const showCode=store.get().settings.catalog.showCode;const showDescription=store.get().settings.catalog.showDescription;
   const action=store.get().quickMode?'quick-add-product':'open-product';
-  const unavailable=p.available===false||['soldout','paused'].includes(supplyOverrides[p.id]?.status);
+  const status=supplyStatus(p),unavailable=status!=='available',statusClass=status==='soldout'?'sold-out':status==='paused'?'paused':'';
   const code=showCode?'<small class="product-code">'+p.code+'</small>':'';
-  if(template==='text')return '<button class="product-card text '+(unavailable?'sold-out':'')+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+(unavailable?'<em>售罄</em>':'')+'</span><b class="product-price">'+money(p.price)+'</b></button>';
-  if(template==='small')return '<button class="product-card small '+(unavailable?'sold-out':'')+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'>'+imageBlock(p.image,p.name,'product-thumb')+'<span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+(unavailable?'<em>售罄</em>':'')+'</span><b class="product-price">'+money(p.price)+'</b></button>';
+  const state=unavailable?'<em class="product-supply-state">'+supplyLabel(status)+'</em>':'';
+  if(template==='text')return '<button class="product-card text '+statusClass+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+state+'</span><b class="product-price">'+money(p.price)+'</b></button>';
+  if(template==='small')return '<button class="product-card small '+statusClass+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'>'+imageBlock(p.image,p.name,'product-thumb')+'<span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+state+'</span><b class="product-price">'+money(p.price)+'</b></button>';
   const description=showDescription&&p.description?'<p class="product-description">'+p.description+'</p>':'';
-  return '<button class="product-card large '+(unavailable?'sold-out':'')+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'>'+imageBlock(p.image,p.name,'product-hero')+'<div class="product-info"><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+description+(unavailable?'<em>售罄</em>':'')+'</span><b class="product-price">'+money(p.price)+'</b></div></button>';
+  return '<button class="product-card large '+statusClass+'" data-action="'+action+'" data-id="'+p.id+'" '+(unavailable?'disabled':'')+'>'+imageBlock(p.image,p.name,'product-hero')+'<div class="product-info"><span class="product-copy">'+code+'<strong>'+p.name+'</strong>'+description+state+'</span><b class="product-price">'+money(p.price)+'</b></div></button>';
 }
 function cartRows(){
   const state=store.get(),cart=state.cart,showImages=state.settings.cart.showImages!==false;if(!cart.length)return '<div class="empty">購物車未有餐點</div>';
@@ -178,7 +182,7 @@ function quickDrinks(){
 function operationLabel(state){if(state.operations.immediateStopped||!state.operations.acceptingOrders)return '已停止接單';if(state.operations.scheduledClose)return '接單至 '+state.operations.scheduledClose;return '接單中';}
 function healthIssueCount(state){return Object.values(state.health).filter(item=>!item.ok).length;}
 function topbar(){
-  const state=store.get();const issues=healthIssueCount(state),pendingCount=Object.values(state.pendingOrders).flat().length,soldout=products.filter(item=>item.available===false||['soldout','paused'].includes(supplyOverrides[item.id]?.status)).length;
+  const state=store.get();const issues=healthIssueCount(state),pendingCount=Object.values(state.pendingOrders).flat().length,soldout=products.filter(item=>supplyStatus(item)!=='available').length;
   return '<header class="topbar"><div class="brand">磨飯 SMT</div><span class="terminal-chip">'+terminalId+'</span>'+(state.dineContext?'<span class="terminal-chip">堂食｜'+escapeHtml(state.dineContext.tableId)+' 號枱</span>':'')+'<button class="online-state '+(state.operations.acceptingOrders&&!state.operations.immediateStopped?'is-online':'is-offline')+'" data-action="open-status"><span>⌁</span>'+operationLabel(state)+'</button><div class="order-number">訂單：<strong>10248</strong></div><div class="spacer"></div><button class="top-btn" data-action="toggle-pending-panel">▤ 待處理 <span class="badge">'+pendingCount+'</span></button><button class="top-btn" data-action="open-soldout">⊗ 售罄 '+soldout+'</button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button></header>';
 }
 function draftRows(selectedId=''){
@@ -229,8 +233,8 @@ function statusModal(){
   return '<aside class="side-card modal-card"><header><strong>今日接單狀態</strong><button data-action="dismiss-modal">×</button></header><div class="setting-row"><div><strong>接受網絡／預約訂單</strong><small>'+operationLabel(state)+'</small></div><button class="switch '+(ops.acceptingOrders&&!ops.immediateStopped?'on':'')+'" data-action="toggle-accepting"><i></i></button></div><div class="setting-block"><label>今日停止接單時間</label><div class="time-row"><input id="scheduled-close" type="time" value="'+(ops.scheduledClose||'')+'"><button data-action="save-close-time">儲存</button></div></div><div class="setting-block"><button class="danger wide" data-action="immediate-stop">即時停止接單</button><button class="wide" data-action="resume-orders">恢復接單</button></div></aside>';
 }
 function soldoutModal(){
-  const items=products.filter(item=>item.available===false);
-  return '<aside class="side-card modal-card soldout-preview"><header><strong>售罄列表</strong><button data-action="dismiss-modal">×</button></header><div class="status-list">'+(items.length?items.map(item=>'<div><span><b>'+escapeHtml([item.code,item.name].filter(Boolean).join(' '))+'</b><small>餐牌即時狀態</small></span><em>售罄</em></div>').join(''):'<div><span><b>目前沒有停售產品</b><small>資料來自餐牌 API</small></span></div>')+'</div><footer class="right-action"><button data-action="dismiss-modal">返回</button></footer></aside>';
+  const items=products.filter(item=>supplyStatus(item)!=='available');
+  return '<aside class="side-card modal-card soldout-preview"><header><strong>售罄列表</strong><button data-action="dismiss-modal">×</button></header><div class="status-list">'+(items.length?items.map(item=>{const status=supplyStatus(item);return '<div class="'+status+'"><span><b>'+escapeHtml([item.code,item.name].filter(Boolean).join(' '))+'</b><small>'+escapeHtml(item.category||'未分類')+'</small></span><em>'+supplyLabel(supplyStatus(item))+'</em></div>';}).join(''):'<div><span><b>目前全部供應中</b><small>售罄管理頁更新後會即時顯示</small></span></div>')+'</div><footer class="right-action"><button data-action="dismiss-modal">返回</button></footer></aside>';
 }
 function pairingGroupCount(cart){
   const available=cart.filter(line=>line.lineType!=='combo'&&!line.linkedComboId),mains=available.filter(line=>line.combinable).reduce((n,line)=>n+line.qty,0),snacks=available.filter(line=>line.linkRole==='snack').reduce((n,line)=>n+line.qty,0);
@@ -336,7 +340,7 @@ function positionActiveCard(){
   card.style.setProperty('--pointer-y',Math.max(24,Math.min(a.top+a.height/2-top,h-24))+'px');card.style.setProperty('--pointer-x',Math.max(24,Math.min(a.left+a.width/2-left,w-24))+'px');
 }
 function render(){
-  const state=store.get();const filtered=state.category==='全部'?products:products.filter(p=>p.category===state.category);const template=productTemplate();
+  const state=store.get();const filtered=sortPausedLast(state.category==='全部'?products:products.filter(p=>p.category===state.category));const template=productTemplate();
   const checkoutLabel=state.dineContext?'落單到 '+escapeHtml(state.dineContext.tableId)+' 號枱 '+money(cartTotal(state.cart)):'結帳 '+money(cartTotal(state.cart));
   app.innerHTML='<main>'+topbar()+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%"><aside class="cart"><header><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2><button data-action="clear-cart">清空</button></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer><button data-action="open-hold-panel">掛單</button><button data-action="open-drafts">取單'+(drafts.length?' '+drafts.length:'')+'</button><button class="primary" data-action="checkout">'+checkoutLabel+'</button></footer></aside><section class="catalog"><nav class="categories">'+categories.map(cat=>'<button data-action="category" data-value="'+cat+'" class="'+(cat===state.category?'active':'')+'">'+cat+'</button>').join('')+'</nav><div class="products products-'+template+'">'+filtered.map(productCard).join('')+'</div>'+quickDrinks()+'</section></section></section><nav class="bottom-nav"><button class="active">點餐</button><button data-action="navigate-orders">訂單</button><button data-action="navigate-dine">堂食</button><button data-action="navigate-soldout">售罄</button><button>更多</button></nav></main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
   document.body.classList.toggle('has-modal',Boolean(modal));

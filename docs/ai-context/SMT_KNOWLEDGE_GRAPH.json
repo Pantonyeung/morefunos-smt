@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "morefunos-smt",
-  "baseline": "order-v1-21",
-  "generatedAt": "2026-07-21",
+  "baseline": "order-v1-25",
+  "generatedAt": "2026-07-22",
   "evidenceTypes": ["EXTRACTED", "INFERRED"],
   "nodes": [
     {"id":"doc.current-lock","type":"document","label":"Order Page Current Lock","path":"docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md"},
@@ -11,6 +11,8 @@
     {"id":"code.order-css","type":"code","label":"Order CSS","path":"pages/order/page.css"},
     {"id":"code.domain","type":"code","label":"Order Domain","path":"pages/order/order-domain.js"},
     {"id":"test.order","type":"test","label":"Order Flow Tests","path":"tests/order-edit-flow.test.mjs"},
+    {"id":"code.soldout-ui","type":"code","label":"Soldout Management UI","path":"pages/soldout/page.js"},
+    {"id":"test.soldout","type":"test","label":"Soldout Page Tests","path":"tests/soldout-page.test.mjs"},
     {"id":"feature.fixed-shell","type":"feature","label":"Fixed shell and internal scrolling"},
     {"id":"feature.single-modal","type":"feature","label":"Single anchored modal"},
     {"id":"feature.cart","type":"feature","label":"Cart layout and controls"},
@@ -18,6 +20,7 @@
     {"id":"feature.pairing","type":"feature","label":"Dynamic A-Z pairing"},
     {"id":"feature.pending","type":"feature","label":"Pending order review"},
     {"id":"feature.order-state","type":"feature","label":"Pending-running-complete state"},
+    {"id":"feature.supply-state","type":"feature","label":"Shared soldout and paused state"},
     {"id":"external.real-api","type":"external","label":"Real order and payment APIs"},
     {"id":"external.device-qa","type":"external","label":"iPad and Sunmi T2S acceptance"}
   ],
@@ -36,6 +39,10 @@
     {"from":"code.domain","to":"feature.order-state","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
     {"from":"test.order","to":"code.order-ui","relation":"VERIFIES","evidence":"EXTRACTED"},
     {"from":"test.order","to":"code.domain","relation":"VERIFIES","evidence":"EXTRACTED"},
+    {"from":"doc.current-lock","to":"feature.supply-state","relation":"SPECIFIES","evidence":"EXTRACTED"},
+    {"from":"code.order-ui","to":"feature.supply-state","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"code.soldout-ui","to":"feature.supply-state","relation":"IMPLEMENTS","evidence":"EXTRACTED"},
+    {"from":"test.soldout","to":"code.soldout-ui","relation":"VERIFIES","evidence":"EXTRACTED"},
     {"from":"feature.pending","to":"external.real-api","relation":"REQUIRES_FOR_PRODUCTION","evidence":"INFERRED"},
     {"from":"feature.fixed-shell","to":"external.device-qa","relation":"REQUIRES_ACCEPTANCE","evidence":"EXTRACTED"},
     {"from":"doc.context-pack","to":"doc.current-lock","relation":"COMPRESSES","evidence":"EXTRACTED"}

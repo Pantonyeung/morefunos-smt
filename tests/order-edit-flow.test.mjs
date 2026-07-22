@@ -160,6 +160,24 @@ test('operational surfaces include sold-out preview and new-order toast', () => 
   assert.match(page,/立即處理/);
 });
 
+test('sold-out preview reads the same local supply status as the badge', () => {
+  assert.match(page,/function supplyStatus/);
+  assert.match(page,/products\.filter\(item=>supplyStatus\(item\)!=='available'\)/);
+  assert.match(page,/supplyLabel\(supplyStatus\(item\)\)/);
+});
+
+test('order cards distinguish sold-out orange from paused red without greying', () => {
+  assert.match(page,/status==='soldout'\?'sold-out':status==='paused'\?'paused'/);
+  assert.match(css,/\.product-card\.sold-out/);
+  assert.match(css,/\.product-card\.paused/);
+  assert.doesNotMatch(css,/\.product-card\.sold-out[^}]*grayscale/);
+});
+
+test('paused products sort to the end of their current order category', () => {
+  assert.match(page,/sortPausedLast/);
+  assert.match(page,/const filtered=sortPausedLast/);
+});
+
 test('accepting a verified pending order creates a running order with a 30 minute deadline', () => {
   const acceptedAt=Date.UTC(2026,6,20,12,0,0);
   const result=acceptPendingOrder({id:'T6631',source:'WhatsApp',contact:'陳小姐',phone:'85291234567',items:1,amount:59},acceptedAt);
@@ -292,5 +310,5 @@ test('order page loads the shared live menu contract with offline fallback',()=>
   assert.match(page,/loadMenuCatalog/);
   assert.match(page,/bootstrapLiveMenu/);
   assert.match(page,/離線模式：使用上次餐牌/);
-  assert.match(page,/products\.filter\(item=>item\.available===false\)/);
+  assert.match(page,/products\.filter\(item=>supplyStatus\(item\)!=='available'\)/);
 });
