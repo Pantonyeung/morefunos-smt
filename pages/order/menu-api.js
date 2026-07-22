@@ -40,6 +40,25 @@ function matchDrink(raw,base,fallback){
   return fallback.drinks.find(item=>(code&&key(item.code)===code)||key(item.name)===name||key(item.id)===key(raw.product_id??raw.id));
 }
 
+function inferRules(category,matched={},raw={}){
+  const categoryText=String(category||'');
+  const explicitRequired=array(raw.required_groups||raw.required_options);
+  const required=explicitRequired.length?[...explicitRequired]:array(matched.required);
+  const add=group=>{if(!required.includes(group))required.push(group);};
+  const drinkMeal=['便當','紫米沙律','沙律','麵餐','拌麵','薯角餐','薯蓉餐'].some(name=>categoryText.includes(name));
+  if(drinkMeal)add('drink');
+  if(categoryText.includes('沙律'))add('sauce');
+  const isRiceball=categoryText.includes('飯團')&&!categoryText.includes('套餐');
+  const isSnack=categoryText.includes('小食');
+  const isDrink=categoryText.includes('飲品');
+  return {
+    required,
+    drinkSlots:required.includes('drink')?Math.max(1,moneyNumber(raw.drink_slots??matched.drinkSlots)):moneyNumber(raw.drink_slots??matched.drinkSlots),
+    combinable:truthy(raw.is_combinable,isRiceball||Boolean(matched.combinable)),
+    linkRole:String(raw.link_role??matched.linkRole??(isDrink?'drink':isSnack?'snack':''))
+  };
+}
+
 export function mapMenuToOrderCatalog(menu,fallback){
   const categoryNames=new Map(array(menu.categories).map((item,index)=>[
     String(item.category_id??item.id??index),
@@ -58,16 +77,15 @@ export function mapMenuToOrderCatalog(menu,fallback){
     const status=availability.get(id)||{};
     const soldOut=truthy(status.is_sold_out,false)||String(status.availability_status??'').toLowerCase()==='sold_out';
     const available=truthy(raw.is_available,true)&&truthy(status.is_available,true)&&!soldOut;
-    const required=array(raw.required_groups||raw.required_options).length?array(raw.required_groups||raw.required_options):array(matched.required);
-    const inferredDrink=category.includes('飲品');
+    const rules=inferRules(category,matched,raw);
     return {
       ...matched,id,code,name,category,
       description:String(raw.product_description??raw.description??raw.subtitle??matched.description??''),
       price:moneyNumber(raw.price??raw.base_price??raw.single_price??raw.display_price??raw.product_price??matched.price),
       image:String(raw.image_url??raw.product_image_url??raw.image??raw.photo_url??matched.image??''),
-      required,drinkSlots:moneyNumber(raw.drink_slots??matched.drinkSlots),
-      combinable:truthy(raw.is_combinable,Boolean(matched.combinable)),
-      linkRole:String(raw.link_role??matched.linkRole??(inferredDrink?'drink':'')),
+      required:rules.required,drinkSlots:rules.drinkSlots,
+      combinable:rules.combinable,
+      linkRole:rules.linkRole,
       available,soldOut,apiRaw:raw
     };
   });
@@ -77,7 +95,7 @@ export function mapMenuToOrderCatalog(menu,fallback){
   });
   const categoryOrder=visibleCategories.map((item,index)=>categoryNames.get(String(item.category_id??item.id??index))).filter(Boolean);
   products.forEach(item=>{if(!categoryOrder.includes(item.category))categoryOrder.push(item.category);});
-  return {categories:['全部',...categoryOrder.filter(name=>name!=='全部')],products,drinks,loadedAt:Date.now()};
+  return {categories:['全部',...categoryOrder.filter(name=>name!=='全部'&&name!=='搜尋')],products,drinks,loadedAt:Date.now()};
 }
 
 async function fetchMenu(url,fetchImpl,timeoutMs){
