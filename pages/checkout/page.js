@@ -1,6 +1,7 @@
 import {
   ORDER_HISTORY_STORAGE_KEY,
   ORDER_STORAGE_KEY,
+  DINE_STORAGE_KEY,
   TERMINAL_ID_STORAGE_KEY,
   PRINTER_STORAGE_KEY,
   readJSON,
@@ -16,6 +17,7 @@ import {
 } from "./checkout-domain.js";
 import { checkoutConfig } from "./page-config.js";
 import {defaultPrinterState,createPrintJobs} from "../more/print-domain.js";
+import {activeDineOrderIdentities,createOrderIdentity,orderDisplayNumber} from "../../shared/order-identity.js";
 
 const app = document.getElementById("app"),
   order = readJSON(ORDER_STORAGE_KEY, { cart: [] });
@@ -36,15 +38,6 @@ let channel = "現場",
   correctionOpen = false,
   correctionReason = "";
 
-const nextOrderId = (history, source = "現場", cart = []) =>
-  (source === "電話／WhatsApp" ? "T" : source === "磨飯 App" ? "M" : source === "Keeta" ? "K" : source === "Foodpanda" ? "F" : source === "現場" && cart.length && cart.every(line => line.serviceMode === "堂食") ? "" : "P") +
-  String(
-    history.reduce(
-      (max, row) =>
-        Math.max(max, Number(String(row?.id || "").replace(/\D/g, "")) || 0),
-      0,
-    ) + 1,
-  ).padStart(4, "0");
 function pricing() {
   try {
     return applyCheckoutDiscount(order.cart, discount, channel);
@@ -102,9 +95,9 @@ function correctionCard() {
 }
 function completedCard() {
   if (!completedRecord) return "";
-  const paid = Number(completedRecord.paidAmount) || 0,
-    change = Math.max(0, paid - Number(completedRecord.amount || 0));
-  return `<div class="modal-scrim completion-layer"><section class="completion-card panel"><header><div><small>訂單 ${escapeHtml(completedRecord.id)}</small><h2>完成核對</h2></div><button data-action="correction-open">更正資料</button></header><div class="completion-status">✓ 結帳完成</div><div class="completion-grid"><span>渠道<b>${escapeHtml(completedRecord.source)}</b></span><span>付款方式<b>${escapeHtml(completedRecord.paymentMethod)}</b></span><span>原價<b>${money(completedRecord.subtotal)}</b></span><span>優惠<b>-${money(completedRecord.discountAmount)}</b></span><span>應付<b>${money(completedRecord.amount)}</b></span><span>實收<b>${money(paid)}</b></span><span>找續<b>${money(change)}</b></span><span>時間<b>${new Date(completedRecord.acceptedAt).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" })}</b></span></div><footer><button data-action="go-orders">完成並返回訂單</button></footer></section>${correctionOpen ? correctionCard() : ""}</div>`;
+  const paid = Number(completedRecord.receivedAmount??completedRecord.paidAmount) || 0,
+    change = Number(completedRecord.changeAmount??Math.max(0, paid - Number(completedRecord.amount || 0)));
+  return `<div class="modal-scrim completion-layer"><section class="completion-card panel"><header><div><small>訂單 ${escapeHtml(orderDisplayNumber(completedRecord))}</small><h2>完成核對</h2></div><button data-action="correction-open">更正資料</button></header><div class="completion-status">✓ 結帳完成</div><div class="completion-grid"><span>渠道<b>${escapeHtml(completedRecord.source)}</b></span><span>付款方式<b>${escapeHtml(completedRecord.paymentMethod)}</b></span><span>原價<b>${money(completedRecord.subtotal)}</b></span><span>優惠<b>-${money(completedRecord.discountAmount)}</b></span><span>應付<b>${money(completedRecord.amount)}</b></span><span>實收<b>${money(paid)}</b></span><span>找續<b>${money(change)}</b></span><span>時間<b>${new Date(completedRecord.acceptedAt).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit" })}</b></span></div><footer><button data-action="go-orders">完成並返回訂單</button></footer></section>${correctionOpen ? correctionCard() : ""}</div>`;
 }
 function saveCompleted(updated) {
   writeJSON(
@@ -142,8 +135,9 @@ function completeCheckout() {
   }
   const history = readJSON(ORDER_HISTORY_STORAGE_KEY, []),
     now = Date.now(),
+    identity = createOrderIdentity([...history,...activeDineOrderIdentities(readJSON(DINE_STORAGE_KEY,null))],{terminalId,now}),
     record = buildCheckoutRecord({
-      id: nextOrderId(history, channel, order.cart),
+      identity,
       cart: order.cart,
       channel,
       payment,
@@ -256,7 +250,7 @@ function handle(button) {
       };
     else receivedInput = enterKeypadValue(receivedInput, key);
   } else if (action === "confirm") {
-    completeCheckout();
+    try { completeCheckout(); } catch (error) { showToast(error.message || "未能建立訂單"); }
     return;
   } else if (action === "go-orders")
     parent.postMessage({ type: "morefun:navigate", route: "orders" }, "*");

@@ -1,3 +1,5 @@
+import {orderDisplayNumber} from '../../shared/order-identity.js';
+
 const clone=value=>value===undefined?undefined:JSON.parse(JSON.stringify(value));
 const number=value=>Number.isFinite(Number(value))?Number(value):0;
 
@@ -87,7 +89,7 @@ function optionText(options){
   return text||'標準';
 }
 
-function header(order,title){return [`磨飯｜${title}`,`訂單：${order.id||'測試工作'}`,`來源：${order.source||'SMT'}`,`時間：${new Date(number(order.acceptedAt||order.createdAt||Date.now())).toLocaleString('zh-HK')}`];}
+function header(order,title){return [`磨飯｜${title}`,`訂單：${orderDisplayNumber(order)==='—'?'測試工作':orderDisplayNumber(order)}`,`來源：${order.source||'SMT'}`,`時間：${new Date(number(order.acceptedAt||order.createdAt||Date.now())).toLocaleString('zh-HK')}`];}
 function channelLines(order){
   const data=order?.channelData||{};
   return [data.platformOrderId&&`渠道單號：${data.platformOrderId}`,data.phone&&`電話：${data.phone}`,data.contact&&`客人：${data.contact}`,data.pickupTime&&`取餐：${data.pickupTime}`,data.note&&`備註：${data.note}`].filter(Boolean);
@@ -113,7 +115,7 @@ function labelDocuments(order){
 }
 
 function receiptLines(order){
-  const subtotal=number(order.subtotal??order.amount??order.total),discount=number(order.discountAmount),amount=number(order.amount??order.total),paid=number(order.paidAmount??amount),change=number(order.changeAmount);
+  const subtotal=number(order.subtotal??order.amount??order.total),discount=number(order.discountAmount),amount=number(order.amount??order.total),paid=number(order.receivedAmount??order.paidAmount??amount),change=number(order.changeAmount);
   return [`原價：$${subtotal.toFixed(0)}`,`優惠：-$${discount.toFixed(0)}`,`應付：$${amount.toFixed(0)}`,`付款：${order.paymentMethod||'待核實'}`,`實收：$${paid.toFixed(0)}`,`找續：$${change.toFixed(0)}`];
 }
 
@@ -121,7 +123,7 @@ function labelLines(order,item,pieceIndex,pieceTotal){
   const name=item?.labelName||[item?.code,item?.name].filter(Boolean).join(' ')||'產品標籤';
   const fulfillment=item?.fulfillment||item?.serviceMode||order.fulfillment||order.serviceMode||'堂食';
   const packaging=number(item?.packagingFee);
-  return ['磨飯',`訂單：${order.id||'測試工作'}　${pieceIndex}/${pieceTotal}`,name,fulfillment,optionText(item?.options),item?.note&&`備註：${item.note}`,packaging?`注：外賣盒 $${packaging.toFixed(0)}／盒`:''].filter(Boolean);
+  return ['磨飯',`訂單：${orderDisplayNumber(order)==='—'?'測試工作':orderDisplayNumber(order)}　${pieceIndex}/${pieceTotal}`,name,fulfillment,optionText(item?.options),item?.note&&`備註：${item.note}`,packaging?`注：外賣盒 $${packaging.toFixed(0)}／盒`:''].filter(Boolean);
 }
 
 export function renderPrintDocument(template,order){
@@ -133,7 +135,7 @@ export function renderPrintDocument(template,order){
   if(template.documentType==='packing')lines=[...header(order,'打包單'),...channelLines(order),...summaryLines(summary),...detailLines(items),`總袋數：____　餐具：____`];
   if(template.documentType==='label'){
     const selected=order?.labelItem?{item:order.labelItem,pieceIndex:number(order.labelPieceIndex)||1,pieceTotal:number(order.labelPieceTotal)||1}:labelDocuments(order)[0];
-    lines=selected?labelLines(order,selected.item,selected.pieceIndex,selected.pieceTotal):['磨飯',`訂單：${order.id||'測試工作'}`,'沒有需要打印標籤的產品'];
+    lines=selected?labelLines(order,selected.item,selected.pieceIndex,selected.pieceTotal):['磨飯',`訂單：${orderDisplayNumber(order)==='—'?'測試工作':orderDisplayNumber(order)}`,'沒有需要打印標籤的產品'];
   }
   return {templateId:template.id,templateVersion:template.sourceVersion,documentType:template.documentType,paperWidth:template.paperWidth,title:template.name,summary,text:lines.join('\n'),lines};
 }

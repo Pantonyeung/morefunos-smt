@@ -1,3 +1,5 @@
+import {createOrderIdentity} from '../../shared/order-identity.js';
+
 const TABLE_IDS=['1','2','3','4','5','6','7','8','戶外'];
 
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -54,7 +56,7 @@ export function cleanupEmptyDineSessions(state){
   return next;
 }
 
-export function commitTableOrder(state,context,cart,{terminalId='SMT',now=Date.now()}={}){
+export function commitTableOrder(state,context,cart,{terminalId='SMT',now=Date.now(),history=[]}={}){
   if(!context?.tableId)throw new Error('未有指定堂食枱號');
   if(!Array.isArray(cart)||!cart.length)throw new Error('購物車未有餐品');
   const next=clone(state),index=next.tables.findIndex(table=>table.id===String(context.tableId));
@@ -63,6 +65,11 @@ export function commitTableOrder(state,context,cart,{terminalId='SMT',now=Date.n
   if(table.status!=='occupied')table=openTable(table,now);
   table.session.printJobs=Array.isArray(table.session.printJobs)?table.session.printJobs:[];
   if(context.sessionId&&table.session?.id!==context.sessionId)throw new Error('堂食會話已失效，請重新開啟枱位');
+  if(!table.session.orderIdentity){
+    const activeIdentities=next.tables.map(entry=>entry.session?.orderIdentity).filter(Boolean);
+    table.session.orderIdentity={...createOrderIdentity([...(Array.isArray(history)?history:[]),...activeIdentities],{terminalId,tableId:table.id,now}),acceptedAt:Number(now)};
+  }
+  const identity=table.session.orderIdentity;
   const batchId=`STAFF-${table.id}-${now}-${table.session.orderBatches.length+1}`;
   const items=clone(cart).map((item,itemIndex)=>({
     ...item,
@@ -73,10 +80,10 @@ export function commitTableOrder(state,context,cart,{terminalId='SMT',now=Date.n
     batchId
   }));
   table.session.items.push(...items);
-  table.session.orderBatches.push({id:batchId,source:'STAFF',terminalId:terminal(terminalId),createdAt:now,items:clone(items)});
-  table.session.printJobs.push({id:`PRINT-${batchId}`,batchId,type:'production',document:'製作單',status:'queued',createdAt:now,items:clone(items)});
+  table.session.orderBatches.push({id:batchId,orderId:identity.id,displayOrderNo:identity.displayOrderNo,source:'STAFF',terminalId:terminal(terminalId),createdAt:now,items:clone(items)});
+  table.session.printJobs.push({id:`PRINT-${batchId}`,orderId:identity.id,displayOrderNo:identity.displayOrderNo,batchId,type:'production',document:'製作單',status:'queued',createdAt:now,items:clone(items)});
   const labelItems=items.filter(item=>String(item.category||'').includes('飯團')||/^F\d+/i.test(String(item.code||'')));
-  if(labelItems.length)table.session.printJobs.push({id:`LABEL-${batchId}`,batchId,type:'label',document:'標籤',status:'queued',createdAt:now,items:clone(labelItems)});
+  if(labelItems.length)table.session.printJobs.push({id:`LABEL-${batchId}`,orderId:identity.id,displayOrderNo:identity.displayOrderNo,batchId,type:'label',document:'標籤',status:'queued',createdAt:now,items:clone(labelItems)});
   next.tables[index]=table;
   next.selectedTableId=table.id;
   return next;
@@ -105,17 +112,14 @@ export function applyFullPayment(session,method,now=Date.now()){
   return applyItemPayment(session,selections,method,now);
 }
 
-function completedOrderId(session,tableId,now){
-  return `D${String(Number(session?.openedAt||now)).slice(-6)}-${String(tableId).replace(/\W/g,'')||'T'}`;
-}
-
-function completedDineOrder(table,{terminalId='SMT',now=Date.now()}={}){
+function completedDineOrder(table,history=[],{terminalId='SMT',now=Date.now()}={}){
   const session=table.session||{},view=tableView(table,now),payments=session.payments||[];
   const methods=[...new Set(payments.map(payment=>payment.method).filter(Boolean))];
+  const identity=session.orderIdentity||{...createOrderIdentity(history,{terminalId,tableId:table.id,now}),acceptedAt:Number(now)};
   return {
-    id:completedOrderId(session,table.id,now),dineSessionId:session.id,dineTableId:table.id,
+    ...identity,dineSessionId:session.id,dineTableId:table.id,
     group:'onsite',source:'現場',serviceMode:'堂食',status:'completed',
-    acceptedAt:Number(table.openedAt||session.openedAt||now),completedAt:Number(now),
+    acceptedAt:Number(identity.acceptedAt||table.openedAt||session.openedAt||now),completedAt:Number(now),
     itemCount:view.itemQty,amount:view.total,paidAmount:view.paid,
     paymentMethod:methods.length>1?'組合付款':methods[0]||'已付款',paymentStatus:'已付款',
     printStatus:(session.printJobs||[]).some(job=>job.status==='failed')?'異常':'正常',
@@ -132,7 +136,10 @@ export function reconcileSettledTables(state,history=[],options={}){
     const table=next.tables[index],view=tableView(table,options.now);
     if(table.status!=='occupied'||!table.session?.items?.length||view.unpaid>0)continue;
     const existing=orders.some(order=>order.dineSessionId===table.session.id);
-    if(!existing)orders.unshift(completedDineOrder(table,options));
+    if(!existing){
+      const activeIdentities=next.tables.map(entry=>entry.session?.orderIdentity).filter(Boolean);
+      orders.unshift(completedDineOrder(table,[...orders,...activeIdentities],options));
+    }
     next.tables[index]={id:table.id,status:'free',openedAt:null,session:null};
     if(next.selectedTableId===table.id)next.selectedTableId=null;
   }

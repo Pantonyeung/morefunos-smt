@@ -1,6 +1,7 @@
 import {
   ORDER_HISTORY_STORAGE_KEY,
   ORDER_STORAGE_KEY,
+  DINE_STORAGE_KEY,
   TERMINAL_ID_STORAGE_KEY,
   PRINTER_STORAGE_KEY,
   readJSON,
@@ -22,6 +23,7 @@ import {
 } from "./orders-domain.js";
 import {defaultPrinterState,importExternalPrintJobs,createPrintJobs} from "../more/print-domain.js";
 import {renderGlobalStatusBar,renderBottomNav} from "../../shared/shell.js";
+import {activeDineOrderIdentities,latestOrderDisplayNumber,orderDisplayNumber} from "../../shared/order-identity.js";
 const app = document.getElementById("app"),
   terminalId = normalizeTerminalId(
     localStorage.getItem(TERMINAL_ID_STORAGE_KEY) || "SMT",
@@ -148,7 +150,7 @@ function persist(updated, message) {
   render();
 }
 function orderCard(o) {
-  return `<button class="order-card ${selectedId === o.id ? "selected" : ""}" data-action="select-order" data-id="${o.id}"><header><span><small>${escapeHtml(o.source)}</small><strong>${escapeHtml(o.id)}</strong></span><b>${isHistory(o) ? statusLabel(o) : minutes(o) + "分鐘"}</b></header><div><span>${o.itemCount} 件</span><strong>${money(o.amount)}</strong></div><footer><span>${escapeHtml(o.paymentMethod)}</span><span class="${o.printStatus === "異常" ? "bad" : "ok"}">打印${escapeHtml(o.printStatus)}</span></footer></button>`;
+  return `<button class="order-card ${selectedId === o.id ? "selected" : ""}" data-action="select-order" data-id="${o.id}"><header><span><small>${escapeHtml(o.source)}</small><strong>${escapeHtml(orderDisplayNumber(o))}</strong></span><b>${isHistory(o) ? statusLabel(o) : minutes(o) + "分鐘"}</b></header><div><span>${o.itemCount} 件</span><strong>${money(o.amount)}</strong></div><footer><span>${escapeHtml(o.paymentMethod)}</span><span class="${o.printStatus === "異常" ? "bad" : "ok"}">打印${escapeHtml(o.printStatus)}</span></footer></button>`;
 }
 const statusLabel = (o) => (o.status === "cancelled" ? "已取消" : "已完成");
 function lane(key, title) {
@@ -181,7 +183,7 @@ function detail() {
   if (!o) return '<aside class="detail empty">請選擇一張訂單</aside>';
   const summary = cancelSummary(o),
     pending = String(o.paymentStatus).includes("待");
-  return `<aside class="detail"><header><div><small>${escapeHtml(o.source)}</small><h2>${escapeHtml(o.id)}</h2></div><span>${isHistory(o) ? statusLabel(o) : minutes(o) + " 分鐘"}</span></header><div class="meta"><span>付款方式<b>${escapeHtml(o.paymentMethod)}</b></span><span>付款狀態<b>${escapeHtml(o.paymentStatus)}</b></span><span>操作終端<b>${escapeHtml(o.checkoutTerminalId || "待同步")}</b></span></div><div class="items">${(o.items || []).map(itemRow).join("")}</div>${cancelMode ? `<div class="cancel-preview"><span>取消 ${summary.count} 件 · ${money(summary.amount)}</span><b>新總額 ${money(summary.newTotal)}</b></div>` : `<div class="total"><span>訂單總額</span><b>${money(o.amount)}</b></div>`}<div class="detail-actions">${isHistory(o) ? '<button data-action="timeline">查看操作紀錄</button>' : cancelMode ? '<button data-action="cancel-mode-exit">返回</button><button class="danger" data-action="cancel-review" ' + (!summary.count ? "disabled" : "") + ">確認取消</button>" : `${pending ? '<button class="primary" data-action="reconcile-open">付款待核實</button>' : ""}<button data-action="change-payment">換渠道／付款方式</button><button data-action="reprint">重印</button><button data-action="partial-cancel">部分取消</button><button class="danger" data-action="reverse-open">反結帳</button>`}</div></aside>`;
+  return `<aside class="detail"><header><div><small>${escapeHtml(o.source)}</small><h2>${escapeHtml(orderDisplayNumber(o))}</h2></div><span>${isHistory(o) ? statusLabel(o) : minutes(o) + " 分鐘"}</span></header><div class="meta"><span>付款方式<b>${escapeHtml(o.paymentMethod)}</b></span><span>付款狀態<b>${escapeHtml(o.paymentStatus)}</b></span><span>操作終端<b>${escapeHtml(o.checkoutTerminalId || "待同步")}</b></span></div><div class="items">${(o.items || []).map(itemRow).join("")}</div>${cancelMode ? `<div class="cancel-preview"><span>取消 ${summary.count} 件 · ${money(summary.amount)}</span><b>新總額 ${money(summary.newTotal)}</b></div>` : `<div class="total"><span>訂單總額</span><b>${money(o.amount)}</b></div>`}<div class="detail-actions">${isHistory(o) ? '<button data-action="timeline">查看操作紀錄</button>' : cancelMode ? '<button data-action="cancel-mode-exit">返回</button><button class="danger" data-action="cancel-review" ' + (!summary.count ? "disabled" : "") + ">確認取消</button>" : `${pending ? '<button class="primary" data-action="reconcile-open">付款待核實</button>' : ""}<button data-action="change-payment">換渠道／付款方式</button><button data-action="reprint">重印</button><button data-action="partial-cancel">部分取消</button><button class="danger" data-action="reverse-open">反結帳</button>`}</div></aside>`;
 }
 const overlay = (content) =>
   `<div class="scrim"></div><section class="reverse-card">${content}</section>`;
@@ -194,7 +196,7 @@ function whatsappLink(o) {
     /\D/g,
     "",
   );
-  const message = `你好，呢度係磨飯。訂單 ${o.id} 嘅付款資料需要你協助核對，麻煩回覆付款截圖或相關資料，謝謝。`;
+  const message = `你好，呢度係磨飯。訂單 ${orderDisplayNumber(o)} 嘅付款資料需要你協助核對，麻煩回覆付款截圖或相關資料，謝謝。`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 function paymentProof(o) {
@@ -220,7 +222,7 @@ function modalHtml() {
   const o = orders.find((x) => x.id === selectedId);
   if (!modal || !o) return "";
   const head = (t) =>
-    `<header><div><small>訂單 ${escapeHtml(o.id)}</small><strong>${t}</strong></div><button data-action="close-modal">×</button></header>`;
+    `<header><div><small>訂單 ${escapeHtml(orderDisplayNumber(o))}</small><strong>${t}</strong></div><button data-action="close-modal">×</button></header>`;
   if (modal === "reverse")
     return overlay(
       head("反結帳") +
@@ -277,7 +279,7 @@ function render() {
     b = orders.filter((o) => !isHistory(o) && o.printStatus === "異常").length,
     h = orders.filter(isHistory).length;
   const activeCount=orders.filter((o)=>!isHistory(o)).length;
-  const statusbar=renderGlobalStatusBar({terminalId,operationLabel:"接單中",lastOrder:orders.at(-1)?.id||"—",rightActions:`<button class="top-btn" data-action="show-active">進行中 ${activeCount}</button><button class="top-btn" data-action="show-history">歷史訂單 ${h}</button>`});
+  const statusbar=renderGlobalStatusBar({terminalId,operationLabel:"接單中",lastOrder:latestOrderDisplayNumber([...orders,...activeDineOrderIdentities(readJSON(DINE_STORAGE_KEY,null))]),rightActions:`<button class="top-btn" data-action="show-active">進行中 ${activeCount}</button><button class="top-btn" data-action="show-history">歷史訂單 ${h}</button>`});
   app.innerHTML = `<main>${statusbar}<section class="workspace"><header class="page-head"><div><h1>訂單</h1><p>所有操作會即時顯示結果並保存紀錄。</p></div><button data-action="cycle-source">來源：${{ all: "全部", onsite: "現場", owned: "自有渠道", platform: "外賣平台" }[filters.source]}</button><button data-action="filter-payment" class="${filters.exception === "payment" ? "active" : ""}">付款待核實 ${p}</button><button data-action="filter-print" class="${filters.exception === "print" ? "active" : ""}">打印異常 ${b}</button><button data-action="clear-filter">清除篩選</button></header><section class="stats"><button data-action="show-active">進行中訂單<b>${activeCount}</b></button><button data-action="filter-payment">付款待核實<b>${p}</b></button><button data-action="filter-print">打印異常<b>${b}</b></button><button data-action="show-history">歷史訂單<b>${h}</b></button></section><section class="orders-layout">${detail()}<div class="lanes">${groups.map((g) => lane(...g)).join("")}</div></section></section>${renderBottomNav("orders",{badges:{orders:activeCount}})}</main>${modalHtml()}<div id="toast" class="toast ${notice ? "show" : ""}">${escapeHtml(notice)}</div>`;
   const sourceButton = document.querySelector('[data-action="cycle-source"]');
   if (sourceButton) sourceButton.textContent = `來源：${sourceLabel(filters.source)}`;
@@ -348,7 +350,7 @@ function handle(b) {
         { source: editSource, paymentMethod: editPayment },
         terminalId,
       ),
-      o.id + " 渠道及付款狀態已更新",
+      orderDisplayNumber(o) + " 渠道及付款狀態已更新",
     );
   else if (a === "reconcile-open") modal = "reconcile";
   else if (a === "reconcile-hold") modal = "";
@@ -365,7 +367,7 @@ function handle(b) {
           { paymentMethod: method, paidAmount: amount },
           terminalId,
         ),
-        o.id + " 已核實付款",
+        orderDisplayNumber(o) + " 已核實付款",
       );
   } else if (a === "reconcile-issue") {
     const reason =
@@ -406,7 +408,7 @@ function handle(b) {
     });
     return persist(
       updated,
-      o.id + " 已部分取消 " + count + " 件；不會自動打印",
+      orderDisplayNumber(o) + " 已部分取消 " + count + " 件；不會自動打印",
     );
   } else if (a === "confirm-reprint") {
     const docs = [
@@ -416,12 +418,12 @@ function handle(b) {
     else
       return persist(
         queueReprint(o, docs, terminalId),
-        o.id + " 已加入打印隊列",
+        orderDisplayNumber(o) + " 已加入打印隊列",
       );
   } else if (a === "cancel-order")
     return persist(
       cancelOrder(o, terminalId),
-      "已取消 " + o.id + "，可在歷史訂單查看",
+      "已取消 " + orderDisplayNumber(o) + "，可在歷史訂單查看",
     );
   else if (a === "reuse-order") {
     writeJSON(ORDER_STORAGE_KEY, {
@@ -450,7 +452,7 @@ function handle(b) {
     });
     persist(
       cancelOrder({ ...o, status: "reopened" }, terminalId),
-      o.id + " 已反結帳並載入點單頁",
+      orderDisplayNumber(o) + " 已反結帳並載入點單頁",
     );
     parent.postMessage({ type: "morefun:navigate", route: "order" }, "*");
     return;
@@ -490,7 +492,7 @@ app.addEventListener("change", (e) => {
         : x,
     );
     writeJSON(ORDER_HISTORY_STORAGE_KEY, orders);
-    notice = order.id + " 已上載付款證明";
+    notice = orderDisplayNumber(order) + " 已上載付款證明";
     modal = "reconcile";
     render();
   };

@@ -68,19 +68,21 @@ export function enterKeypadValue(current,key){
   return decimals.length>2?value:next.slice(0,9);
 }
 
-export function buildCheckoutRecord({id,cart,channel,payment,pricing,discount,terminalId,now,audit=[],channelData={},receivedAmount=0}){
+export function buildCheckoutRecord({id,identity=null,cart,channel,payment,pricing,discount,terminalId,now,audit=[],channelData={},receivedAmount=0}){
   if(Number(pricing?.payable)<=0)throw new Error('訂單金額必須大於零');
   const policy=getChannelPolicy(channel);
   const deferred=false;
   const pending=policy.initialPaymentStatus==='付款待核實'||deferred;
   const paymentMethod=policy.requiresPaymentMethod?(payment||policy.paymentMethods[0]):policy.group==='platform'?'平台已付':'待核實';
   const base={
-    id,group:policy.group,
+    ...(identity||{}),id:identity?.id||id,group:policy.group,
     source:channel,acceptedAt:now,itemCount:(cart||[]).reduce((n,line)=>n+Number(line.qty||0),0),
     subtotal:pricing.subtotal,discountAmount:pricing.discountAmount,amount:pricing.payable,
     discount:{...discount,appliedUnits:pricing.appliedUnits},paymentMethod,paymentStatus:pending?'付款待核實':policy.initialPaymentStatus,
     reconciliationStatus:pending?'pending':policy.group==='platform'?'platform_paid':'not_required',channelData:{...channelData},
-    paidAmount:pending?0:roundMoney(paymentMethod==='現金'?receivedAmount:pricing.payable),printStatus:'正常',
+    paidAmount:pending?0:roundMoney(pricing.payable),
+    receivedAmount:pending?0:roundMoney(paymentMethod==='現金'?receivedAmount:pricing.payable),
+    changeAmount:pending?0:roundMoney(paymentMethod==='現金'?Math.max(0,Number(receivedAmount||0)-Number(pricing.payable||0)):0),printStatus:'正常',
     items:(cart||[]).map(line=>({...line})),cart:(cart||[]).map(line=>({...line})),audit:[...audit]
   };
   if(policy.group==='platform'){

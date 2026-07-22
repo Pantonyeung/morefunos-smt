@@ -19,11 +19,12 @@
 | `pages/dine/page.js` | 九宮格、輪候、枱詳情、掃碼確認、付款、完成歷史、自動清枱及點餐意圖清理 | dine-domain、訂單／點單狀態、QR vendor |
 | `pages/dine/dine-domain.js` | 枱位計時、點餐意圖、空會話清理、掃碼確認、付款、付清結算及歷史訂單規則 | 無DOM |
 | `pages/soldout/page.js` | 售罄獨立分類、停售分類尾排序、批量操作、狀態詳情及餐牌失敗回退 | menu-api、供應狀態 |
-| `pages/more/page.js` | 更多頁六入口、日結、報表匯出、打印中心、備份／恢復、顯示設定、系統診斷及高風險二次確認 | more-domain、print-domain、本機訂單／設定 |
-| `pages/more/more-domain.js` | 營業日、港幣面額盤點、待核實付款反推、3% 授權日結、營運報表、CSV、快照校驗／恢復及診斷純資料邏輯 | 無 DOM |
+| `pages/more/page.js` | 更多頁六入口、歷史日期範圍、營業／渠道／付款／商品／異常分析、訂單下鑽、日結、報表匯出、打印中心、備份／恢復、顯示設定、系統診斷及高風險二次確認 | more-domain、print-domain、本機訂單／設定 |
+| `pages/more/more-domain.js` | 營業日、歷史範圍、港幣面額盤點、待核實付款反推、3% 授權日結、渠道／付款／商品／時段／異常報表、CSV、快照校驗／恢復及診斷純資料邏輯 | 無 DOM |
 | `pages/more/print-domain.js` | 五部設備、四款格式、合併統計、打印工作、重試／改送、診斷及安卓橋接封包 | 無 DOM |
 | `pages/more/page.css` | 更多頁主卡、細節彈窗、確認彈窗及固定畫布視覺 | page.js class names |
 | `shared/operations.js` | 暫存流水、跨機接手、作廢、日結清理、再暫存 lineage、結帳稽核 | 純資料操作 |
+| `shared/order-identity.js` | 同步歷史及活躍堂食每日三位顯示流水、早上五時營業日、舊編號兼容、最新開單及永久訂單識別；跨機原子派號待後台 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
 | `tests/menu-api.test.mjs` | 真實餐牌合約、映射及離線回歸 | menu-api |
@@ -64,6 +65,10 @@
 | 訂單歷史歸檔 | `archiveExpiredOrders`、`archiveAndRender` | orders actions tests |
 | 實物打印資料 | `shouldPrintProductLabel`、`labelDocuments`、`renderPrintDocument` | print core tests |
 | 點單啟動安全 | `pendingOrderCount`、首次 `render`、`morefun:page-runtime-error` 後備畫面 | order edit flow及首次渲染驗證 |
+| 訂單身份 | `createOrderIdentity`、`orderDisplayNumber`、`latestOrderDisplayNumber` | order identity、checkout、dine及 UI tests |
+| 歷史報表 | `buildReportRange`、`ordersForRange`、`analyticsReport`、`reportTabs` | more operations／more page tests |
+| 付款對數 | `paymentLegs`、`buildBreakdownRows`、付款分頁及 `reportDrilldown` | 混合付款、正負差額、別名及 more page tests |
+| 異常操作 | audit event mapping、`anomalyTable`、跨日 `reportDrilldown` | more operations／more page tests |
 
 ## 資料流
 
@@ -78,6 +83,8 @@
 9. 日結 → 面額盤點 → 實點現金 → 待核實現金／非現金反推 → 3% 覆核及授權 → 不可覆寫版本稽核。
 10. 任一主要頁 → 共用全域狀態欄／底欄 → 頁面只附加專用狀態；來源操作卡 → 共用定位器 → 四方向箭嘴。
 11. 完成單計時 → 三十分鐘 → 持久完成狀態／完成時間／audit → 歷史訂單。
+12. 結帳／堂食完成 → `createOrderIdentity` → 每日顯示流水＋永久識別 → 各主頁由同一函數找最新單號。
+13. 更多頁選日期 → `buildReportRange` → 範圍內訂單 → 營業／渠道／付款／商品／異常同源統計及下鑽。
 
 ## 修改守則
 

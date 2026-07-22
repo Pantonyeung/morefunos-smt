@@ -33,6 +33,11 @@ test('五個主要頁面全部使用共用狀態欄及底部導航',()=>{
   });
 });
 
+test('五個主要頁面共用同一最近訂單顯示規則',()=>{
+  pages.forEach((page,index)=>assert.match(page,/latestOrderDisplayNumber/,`第 ${index+1} 頁未共用最近訂單規則`));
+  pages.forEach((page,index)=>assert.match(page,/activeDineOrderIdentities/,`第 ${index+1} 頁未計入活躍堂食流水`));
+});
+
 test('底欄高度、選中膠囊、字體及圖標只由共用樣式控制',()=>{
   assert.match(baseCss,/\.bottom-nav\s*\{[^}]*height:\s*76px/s);
   assert.match(baseCss,/\.shell-nav-icon/);

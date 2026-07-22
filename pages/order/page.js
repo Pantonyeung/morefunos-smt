@@ -1,5 +1,5 @@
 import {createRenderQueue,createStore,installErrorBoundary,safeClone} from '../../shared/runtime.js';
-import {ORDER_STORAGE_KEY,SETTINGS_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,TERMINAL_ID_STORAGE_KEY,DINE_STORAGE_KEY,SUPPLY_STORAGE_KEY,PRINTER_STORAGE_KEY,readJSON,writeJSON,stableId} from '../../shared/store.js';
+import {ORDER_STORAGE_KEY,ORDER_HISTORY_STORAGE_KEY,SETTINGS_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,TERMINAL_ID_STORAGE_KEY,DINE_STORAGE_KEY,SUPPLY_STORAGE_KEY,PRINTER_STORAGE_KEY,readJSON,writeJSON,stableId} from '../../shared/store.js';
 import {clearExpiredBusinessDayDrafts,createDraftRecord,normalizeTerminalId,restoreDraftForTerminal} from '../../shared/operations.js';
 import {money,imageBlock,bindImageFallbacks,showToast,escapeHtml} from '../../shared/components.js';
 import {orderPageConfig as defaults} from './page-config.js';
@@ -10,6 +10,7 @@ import {commitTableOrder,createInitialDineState,cleanupEmptyDineSessions} from '
 import {defaultPrinterState,importExternalPrintJobs} from '../more/print-domain.js';
 import {buildCategoryLayout,normalizeCategoryLayout} from './category-layout.js';
 import {renderGlobalStatusBar,renderBottomNav} from '../../shared/shell.js';
+import {activeDineOrderIdentities,latestOrderDisplayNumber} from '../../shared/order-identity.js';
 
 const app=document.getElementById('app');
 const fallbackCatalog={categories:fallbackCategories,products:fallbackProducts,drinks:fallbackDrinks};
@@ -208,7 +209,7 @@ function healthIssueCount(state){return Object.values(state.health).filter(item=
 function pendingOrderCount(state){return Object.values(state.pendingOrders||{}).flat().length;}
 function topbar(){
   const state=store.get();const issues=healthIssueCount(state),pendingCount=pendingOrderCount(state),soldout=products.filter(item=>supplyStatus(item)!=='available').length;
-  return renderGlobalStatusBar({terminalId,operationLabel:operationLabel(state),operationTone:state.operations.acceptingOrders&&!state.operations.immediateStopped?'online':'offline',lastOrder:'10248',context:state.dineContext?'堂食｜'+state.dineContext.tableId+' 號枱':'',rightActions:'<button class="top-btn" data-action="toggle-pending-panel">待處理 <span class="badge">'+pendingCount+'</span></button><button class="top-btn" data-action="open-soldout">售罄 '+soldout+'</button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button>'});
+  return renderGlobalStatusBar({terminalId,operationLabel:operationLabel(state),operationTone:state.operations.acceptingOrders&&!state.operations.immediateStopped?'online':'offline',lastOrder:latestOrderDisplayNumber([...readJSON(ORDER_HISTORY_STORAGE_KEY,[]),...activeDineOrderIdentities(readJSON(DINE_STORAGE_KEY,null))]),context:state.dineContext?'堂食｜'+state.dineContext.tableId+' 號枱':'',rightActions:'<button class="top-btn" data-action="toggle-pending-panel">待處理 <span class="badge">'+pendingCount+'</span></button><button class="top-btn" data-action="open-soldout">售罄 '+soldout+'</button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button>'});
 }
 function draftRows(selectedId=''){
   return drafts.map(d=>'<button class="draft-pick '+(selectedId===d.id?'selected':'')+'" data-action="select-draft" data-id="'+escapeHtml(d.id)+'"><strong>'+escapeHtml(d.draftNumber)+'</strong><small>'+new Date(d.createdAt).toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'})+'｜'+d.cart.reduce((n,l)=>n+Number(l.qty||0),0)+' 件｜'+money(cartTotal(d.cart))+'</small></button>').join('')||'<p class="receipt-empty">目前沒有暫存單</p>';
@@ -479,7 +480,7 @@ function handle(button){
   else if(action==='select-draft'){modal={...modal,selectedDraftId:button.dataset.id};render();}
   else if(action==='assign-table'){
     const current=store.get();if(!current.cart.length){showToast('購物車未有餐品');return;}
-    try{const dineState=readJSON(DINE_STORAGE_KEY,null)||createInitialDineState();const table=dineState.tables.find(entry=>entry.id===button.dataset.id);const context={mode:'dine',tableId:button.dataset.id,sessionId:table?.status==='occupied'?table.session?.id:null};const next=commitTableOrder(dineState,context,current.cart,{terminalId});writeJSON(DINE_STORAGE_KEY,next);syncDinePrintJobs(next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));modal=null;render();showToast('已正式加入 '+button.dataset.id+' 號枱及建立打印工作');}catch(error){showToast(error.message||'未能加入堂食枱位');}
+    try{const dineState=readJSON(DINE_STORAGE_KEY,null)||createInitialDineState();const table=dineState.tables.find(entry=>entry.id===button.dataset.id);const context={mode:'dine',tableId:button.dataset.id,sessionId:table?.status==='occupied'?table.session?.id:null};const next=commitTableOrder(dineState,context,current.cart,{terminalId,history:readJSON(ORDER_HISTORY_STORAGE_KEY,[])});writeJSON(DINE_STORAGE_KEY,next);syncDinePrintJobs(next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));modal=null;render();showToast('已正式加入 '+button.dataset.id+' 號枱及建立打印工作');}catch(error){showToast(error.message||'未能加入堂食枱位');}
   }
   else if(action==='add-draft'){
     const state=store.get();if(!state.cart.length)return;
@@ -600,7 +601,7 @@ function handle(button){
   else if(action==='cancel-dine-order')requestDineCancellation();
   else if(action==='checkout'){
     const current=store.get();if(pendingSummary(current.cart).total){showToast('請先完成必選項目');return;}if(!current.cart.length){showToast('購物車未有餐品');return;}
-    if(current.dineContext){try{const dineState=readJSON(DINE_STORAGE_KEY,null);const next=commitTableOrder(dineState,current.dineContext,current.cart,{terminalId});writeJSON(DINE_STORAGE_KEY,next);syncDinePrintJobs(next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));window.parent?.postMessage?.({type:'morefun:navigate',route:'dine'},'*');}catch(error){showToast(error.message||'未能加入堂食枱位');}return;}
+    if(current.dineContext){try{const dineState=readJSON(DINE_STORAGE_KEY,null);const next=commitTableOrder(dineState,current.dineContext,current.cart,{terminalId,history:readJSON(ORDER_HISTORY_STORAGE_KEY,[])});writeJSON(DINE_STORAGE_KEY,next);syncDinePrintJobs(next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));window.parent?.postMessage?.({type:'morefun:navigate',route:'dine'},'*');}catch(error){showToast(error.message||'未能加入堂食枱位');}return;}
     window.parent?.postMessage?.({type:'morefun:navigate',route:'checkout'},'*');
   }
 }

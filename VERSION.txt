@@ -1,4 +1,4 @@
-MoreFun SMT V1.30
-Build: order-v1-30
+MoreFun SMT V1.31
+Build: order-v1-31
 Branch target: feat/smt-order-page-v1
-Status: order-page white-screen startup regression fixed with visible runtime fallback; Android bridge, physical printing and iPad/Sunmi device acceptance pending
+Status: historical analytics, split-payment reconciliation and synchronized local three-digit daily sequence implemented; multi-terminal atomic allocator, Android bridge, physical printing and iPad/Sunmi acceptance pending

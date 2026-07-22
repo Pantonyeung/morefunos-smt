@@ -265,6 +265,12 @@ test('首次渲染由共用函數提供待處理數量給頂欄及導航',()=>{
   assert.doesNotMatch(page,/renderBottomNav\('order',\{badges:\{orders:pendingCount\}\}\)[\s\S]*pendingCount is not defined/);
 });
 
+test('點單頁最近訂單讀取共用歷史而不再寫死舊單號',()=>{
+  assert.match(page,/latestOrderDisplayNumber/);
+  assert.match(page,/ORDER_HISTORY_STORAGE_KEY/);
+  assert.doesNotMatch(page,/lastOrder:'10248'/);
+});
+
 test('子頁啟動錯誤會顯示可見後備畫面而不是白屏',async()=>{
   const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
   assert.match(loader,/morefun:page-runtime-error/);

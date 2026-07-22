@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {readFile} from 'node:fs/promises';
 import {applyCheckoutDiscount,buildCheckoutRecord,enterKeypadValue,getChannelPolicy} from '../pages/checkout/checkout-domain.js';
 
 const cart=[
@@ -102,4 +103,25 @@ test('自有渠道不猜付款方式，平台訂單分開保存佣金及預計�
 test('零元訂單不可建立付款紀錄',()=>{
   const zeroPricing={subtotal:0,discountAmount:0,payable:0,appliedUnits:0};
   assert.throws(()=>buildCheckoutRecord({id:'P0064',cart:[{name:'測試產品',qty:1,total:0}],channel:'現場外賣',payment:'現金付款',pricing:zeroPricing,discount:{type:'none'},terminalId:'SMT',now:1000}),/訂單金額必須大於零/);
+});
+
+test('結帳頁使用共用三位每日流水及永久訂單識別',async()=>{
+  const page=await readFile(new URL('../pages/checkout/page.js',import.meta.url),'utf8');
+  assert.match(page,/shared\/order-identity\.js/);
+  assert.match(page,/activeDineOrderIdentities/);
+  assert.match(page,/createOrderIdentity\(\[\.\.\.history,\.\.\.activeDineOrderIdentities\(readJSON\(DINE_STORAGE_KEY,null\)\)\]/);
+  assert.match(page,/identity,/);
+  assert.match(page,/try \{ completeCheckout\(\); \} catch/);
+  assert.doesNotMatch(page,/const nextOrderId/);
+  assert.doesNotMatch(page,/padStart\(4/);
+});
+
+test('結帳紀錄同時保存永久編號及每日顯示流水',()=>{
+  const identity={id:'MF-20260722-120000000-SMT01-P061',displayOrderNo:'P061',dailySequence:61,businessDate:'2026-07-22',createdTerminalId:'SMT01'};
+  const pricing=applyCheckoutDiscount(cart,{type:'none'},'現場');
+  const record=buildCheckoutRecord({identity,cart,channel:'現場',payment:'現金',pricing,discount:{type:'none'},terminalId:'SMT-01',now:1000,receivedAmount:120});
+  assert.equal(record.id,identity.id);
+  assert.equal(record.displayOrderNo,'P061');
+  assert.equal(record.dailySequence,61);
+  assert.equal(record.businessDate,'2026-07-22');
 });

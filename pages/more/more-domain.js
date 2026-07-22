@@ -71,6 +71,54 @@ export function businessWindow(now=Date.now(),startHour=5){
   return {id:localDateId(start.getTime()),start:start.getTime(),end:end.getTime(),startHour};
 }
 
+function dateAtBusinessStart(dateId,startHour=5){
+  const match=String(dateId||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!match)throw new Error('日期格式無效');
+  const date=new Date(Number(match[1]),Number(match[2])-1,Number(match[3]),Number(startHour)||0,0,0,0);
+  if(localDateId(date.getTime())!==dateId)throw new Error('日期格式無效');
+  return date;
+}
+
+function shiftMonthsClamped(date,months){
+  const shifted=new Date(date),day=shifted.getDate();
+  shifted.setDate(1);
+  shifted.setMonth(shifted.getMonth()+Number(months));
+  const lastDay=new Date(shifted.getFullYear(),shifted.getMonth()+1,0).getDate();
+  shifted.setDate(Math.min(day,lastDay));
+  return shifted;
+}
+
+export function buildReportRange(preset='today',{now=Date.now(),startHour=5,startDate='',endDate=''}={}){
+  const today=businessWindow(now,startHour),todayStart=new Date(today.start),todayEnd=new Date(today.end);
+  let start=new Date(todayStart),end=new Date(todayEnd),label='今日';
+  if(preset==='yesterday'){
+    start.setDate(start.getDate()-1);end=new Date(todayStart);label='昨日';
+  }else if(preset==='7d'){
+    start.setDate(start.getDate()-6);label='最近 7 日';
+  }else if(preset==='30d'){
+    start.setDate(start.getDate()-29);label='最近 30 日';
+  }else if(preset==='3m'){
+    start=shiftMonthsClamped(todayStart,-3);label='最近 3 個月';
+  }else if(preset==='6m'){
+    start=shiftMonthsClamped(todayStart,-6);label='最近 6 個月';
+  }else if(preset==='custom'){
+    start=dateAtBusinessStart(startDate,startHour);
+    const inclusiveEnd=dateAtBusinessStart(endDate,startHour);
+    if(inclusiveEnd.getTime()<start.getTime())throw new Error('結束日期不可早於開始日期');
+    if(inclusiveEnd.getTime()>todayStart.getTime())throw new Error('結束日期不可選擇未來營業日');
+    end=new Date(inclusiveEnd);end.setDate(end.getDate()+1);
+    const earliest=shiftMonthsClamped(todayStart,-6);
+    if(start.getTime()<earliest.getTime())throw new Error('SMT 每次最多查詢最近六個月');
+    label=startDate===endDate?startDate:`${startDate} 至 ${endDate}`;
+  }else if(preset!=='today')throw new Error('找不到報表日期範圍');
+  const inclusiveEnd=new Date(end);inclusiveEnd.setDate(inclusiveEnd.getDate()-1);
+  const resolvedStartDate=localDateId(start.getTime()),resolvedEndDate=localDateId(inclusiveEnd.getTime());
+  return {
+    id:preset==='today'?today.id:`${resolvedStartDate}_${resolvedEndDate}`,
+    preset,label,start:start.getTime(),end:end.getTime(),startDate:resolvedStartDate,endDate:resolvedEndDate,startHour
+  };
+}
+
 function orderTime(order){
   return number(order?.completedAt||order?.checkedOutAt||order?.acceptedAt||order?.createdAt||order?.updatedAt);
 }
@@ -83,29 +131,106 @@ export function ordersForWindow(orders,{now=Date.now(),startHour=5}={}){
   });
 }
 
+export function ordersForRange(orders,range){
+  if(!range||!Number.isFinite(Number(range.start))||!Number.isFinite(Number(range.end))||Number(range.end)<=Number(range.start))throw new Error('報表日期範圍無效');
+  return (Array.isArray(orders)?orders:[]).filter(order=>{
+    const time=orderTime(order);
+    return time>=Number(range.start)&&time<Number(range.end);
+  });
+}
+
 function groupRows(map){
   return [...map.values()].sort((a,b)=>b.amount-a.amount||String(a.name).localeCompare(String(b.name),'zh-HK'));
+}
+
+function paymentName(order={}){
+  const text=String(order?.paymentMethod||'未分類').trim();
+  const compact=text.toLowerCase().replaceAll(' ','');
+  if(order?.group==='platform'||/平台已付|平台代收/.test(text))return '平台代收';
+  if(/^現金(?:付款)?$/.test(text))return '現金';
+  if(/alipay|支付寶/.test(compact))return '支付寶';
+  if(/wechat|微信/.test(compact))return '微信支付';
+  if(/fps|轉數快/.test(compact))return '轉數快';
+  if(/payme/.test(compact))return 'PayMe';
+  if(/拍住賞|tap&go|tapngo/.test(compact))return '拍住賞';
+  if(/組合付款/.test(text))return '組合付款';
+  if(/待核實|待確認/.test(text))return '待核實';
+  return '其他';
 }
 
 function paymentGroup(method=''){
   const text=String(method||'未分類');
   if(text==='現金')return 'cash';
-  if(text==='平台已付')return 'platform';
+  if(text==='平台代收')return 'platform';
   return 'electronic';
 }
 
-export function buildOperationalReport(orders,{now=Date.now(),startHour=5}={}){
-  const window=businessWindow(now,startHour);
-  const rows=ordersForWindow(orders,{now,startHour});
+function uniquePush(values,value){if(value&&!values.includes(value))values.push(value)}
+function newBreakdown(name){return {name,orders:0,gross:0,discounts:0,amount:0,expected:0,received:0,refunds:0,difference:0,pending:0,orderIds:[]}}
+function addBreakdown(map,name,order,values){
+  const row=map.get(name)||newBreakdown(name);
+  for(const key of ['gross','discounts','amount','expected','received','refunds'])row[key]+=number(values[key]);
+  row.pending+=values.pending?1:0;
+  uniquePush(row.orderIds,order.id);
+  row.orders=row.orderIds.length;
+  map.set(name,row);
+}
+function finishBreakdowns(map){
+  for(const row of map.values()){
+    for(const key of ['gross','discounts','amount','expected','received','refunds'])row[key]=round(row[key]);
+    row.difference=round(row.expected-row.received);
+    row.averageOrderValue=row.orders?round(row.amount/row.orders):0;
+    row.status=row.pending?'待核實':row.name==='平台代收'&&row.difference?'待平台結算':row.difference>0?'短收':row.difference<0?'多收':'已對數';
+  }
+  return groupRows(map);
+}
+function anomalyRow(map,key,name,order,amount=0){
+  const row=map.get(key)||{key,name,count:0,amount:0,orderIds:[]};
+  row.count+=1;row.amount+=number(amount);uniquePush(row.orderIds,order.id);map.set(key,row);
+}
+
+function hasNumericValue(value){return value!==undefined&&value!==null&&value!==''&&Number.isFinite(Number(value))}
+function paymentLegs(order,net,gross,discount,refund,pending){
+  const detail=(Array.isArray(order?.payments)?order.payments:[]).filter(entry=>number(entry?.amount)>0);
+  const total=detail.reduce((sum,entry)=>sum+number(entry.amount),0);
+  const source=detail.length&&total>0?detail:[{method:order?.paymentMethod,amount:net}];
+  return source.map((entry,index)=>{
+    const ratio=source.length===1?1:number(entry.amount)/total;
+    const name=paymentName({...order,paymentMethod:entry.method||order?.paymentMethod});
+    const platform=name==='平台代收';
+    const expected=platform?number(order?.estimatedPlatformSettlement??net)*ratio:net*ratio;
+    let received;
+    if(pending)received=0;
+    else if(platform)received=number(order?.actualPlatformSettlement??order?.platformSettledAmount)*ratio;
+    else if(detail.length)received=hasNumericValue(entry.receivedAmount??entry.paidAmount)?number(entry.receivedAmount??entry.paidAmount):expected;
+    else if(hasNumericValue(order?.receivedAmount)){
+      received=number(order.receivedAmount);
+      if(name==='現金')received-=number(order?.changeAmount);
+    }else if(hasNumericValue(order?.paidAmount)){
+      received=number(order.paidAmount);
+      if(name==='現金')received=Math.min(received,expected);
+    }else received=expected;
+    return {name,index,group:paymentGroup(name),values:{gross:gross*ratio,discounts:discount*ratio,amount:net*ratio,expected,received,refunds:refund*ratio,pending}};
+  });
+}
+
+export function buildOperationalReport(orders,{now=Date.now(),startHour=5,range=null}={}){
+  const window=range||businessWindow(now,startHour);
+  const allOrders=Array.isArray(orders)?orders:[];
+  const rows=range?ordersForRange(allOrders,range):ordersForWindow(allOrders,{now,startHour});
   const completed=rows.filter(order=>order.status!=='cancelled'&&order.status!=='voided');
   const summary={
     completedOrders:completed.length,
     cancelledOrders:rows.length-completed.length,
+    refundOrders:0,
     itemUnits:0,
     grossSales:0,
     discounts:0,
     refunds:0,
     netSales:0,
+    averageOrderValue:0,
+    outstandingOrders:0,
+    outstandingAmount:0,
     cashExpected:0,
     electronicExpected:0,
     unverifiedDirectTotal:0,
@@ -115,7 +240,21 @@ export function buildOperationalReport(orders,{now=Date.now(),startHour=5}={}){
     pendingPayments:0,
     printExceptions:0
   };
-  const channels=new Map(),payments=new Map(),products=new Map(),hours=new Map();
+  const channels=new Map(),payments=new Map(),products=new Map(),categories=new Map(),hours=new Map(),anomalies=new Map();
+  rows.filter(order=>order.status==='cancelled'||order.status==='voided').forEach(order=>anomalyRow(anomalies,'cancelled','取消／作廢訂單',order,order.amount));
+  const auditAnomalies={
+    order_payment_changed:['payment_changed','更改付款／訂單資料'],checkout_data_corrected:['payment_changed','更改付款／訂單資料'],
+    order_item_partially_cancelled:['partial_cancel','部分取消／退菜'],order_reprint_queued:['reprint','重印單據'],payment_issue_flagged:['payment_issue','付款問題']
+  };
+  const auditDrilldownOrders=[];
+  allOrders.forEach(order=>(order.audit||[]).forEach(entry=>{
+    const definition=auditAnomalies[entry?.type];
+    const eventAt=number(entry?.at);
+    if(definition&&eventAt>=number(window.start)&&eventAt<number(window.end)){
+      anomalyRow(anomalies,definition[0],definition[1],order,entry?.amount??entry?.detail?.amount??0);
+      if(!rows.some(row=>row.id===order.id)&&!auditDrilldownOrders.some(row=>row.id===order.id))auditDrilldownOrders.push(order);
+    }
+  }));
   completed.forEach(order=>{
     const gross=number(order.subtotal??order.amount);
     const discount=number(order.discountAmount);
@@ -124,41 +263,51 @@ export function buildOperationalReport(orders,{now=Date.now(),startHour=5}={}){
     summary.grossSales+=gross;
     summary.discounts+=discount;
     summary.refunds+=refund;
+    if(refund){summary.refundOrders+=1;anomalyRow(anomalies,'refund','退款訂單',order,refund)}
     summary.netSales+=net;
     const pending=/待|pending/i.test(String(order.paymentStatus||order.reconciliationStatus||''));
-    if(pending)summary.pendingPayments+=1;
-    if(order.printStatus==='異常'||(order.printJobs||[]).some(job=>job.status==='failed'))summary.printExceptions+=1;
+    if(pending){summary.pendingPayments+=1;summary.outstandingOrders+=1;summary.outstandingAmount+=net;anomalyRow(anomalies,'payment_pending','付款待核實',order,net)}
+    if(order.printStatus==='異常'||(order.printJobs||[]).some(job=>job.status==='failed')){summary.printExceptions+=1;anomalyRow(anomalies,'print_failed','打印異常',order,net)}
     const unverifiedDirect=pending&&(/電話|WhatsApp|磨飯\s*App|自家\s*App|網頁|Web/i.test(String(order.source||''))||order.group==='owned');
-    const payGroup=unverifiedDirect?'unverified':paymentGroup(order.paymentMethod);
-    if(payGroup==='unverified'){
+    const legs=paymentLegs(order,net,gross,discount,refund,pending);
+    if(unverifiedDirect){
       summary.unverifiedDirectTotal+=net;
       summary.unverifiedDirectOrders+=1;
-    }else if(payGroup==='cash')summary.cashExpected+=net;
-    else if(payGroup==='platform'){
-      summary.platformGross+=number(order.platformSalesGross??net);
-      summary.platformSettlement+=number(order.estimatedPlatformSettlement??net);
-    }else summary.electronicExpected+=net;
-    const channelName=String(order.source||'未分類');
-    const channel=channels.get(channelName)||{name:channelName,orders:0,amount:0};
-    channel.orders+=1;channel.amount+=net;channels.set(channelName,channel);
-    const paymentName=String(order.paymentMethod||'未分類');
-    const payment=payments.get(paymentName)||{name:paymentName,orders:0,amount:0,pending:0};
-    payment.orders+=1;payment.amount+=net;payment.pending+=pending?1:0;payments.set(paymentName,payment);
+    }else for(const leg of legs){
+      if(leg.group==='cash')summary.cashExpected+=leg.values.expected;
+      else if(leg.group==='platform'){
+        summary.platformGross+=number(order.platformSalesGross??net)*(leg.values.amount/(net||1));
+        summary.platformSettlement+=leg.values.expected;
+      }else summary.electronicExpected+=leg.values.expected;
+    }
+    const values={gross,discounts:discount,amount:net,expected:legs.reduce((sum,leg)=>sum+leg.values.expected,0),received:legs.reduce((sum,leg)=>sum+leg.values.received,0),refunds:refund,pending};
+    addBreakdown(channels,String(order.source||'未分類'),order,values);
+    legs.forEach(leg=>addBreakdown(payments,leg.name,order,leg.values));
     const hour=new Date(orderTime(order)).getHours();
     const hourKey=String(hour).padStart(2,'0')+':00';
-    const hourRow=hours.get(hourKey)||{name:hourKey,orders:0,amount:0};
-    hourRow.orders+=1;hourRow.amount+=net;hours.set(hourKey,hourRow);
+    addBreakdown(hours,hourKey,order,values);
     (order.items||order.cart||[]).forEach(item=>{
       const quantity=Math.max(0,number(item.qty||item.quantity));
       const amount=number(item.total??number(item.unitPrice)*quantity);
       const name=String(item.name||item.productName||'未命名商品');
-      const product=products.get(name)||{name,category:String(item.category||'未分類'),quantity:0,amount:0,orders:0};
-      product.quantity+=quantity;product.amount+=amount;product.orders+=1;products.set(name,product);
+      const category=String(item.category||'未分類');
+      const product=products.get(name)||{name,category,quantity:0,amount:0,orders:0,orderIds:[]};
+      product.quantity+=quantity;product.amount+=amount;uniquePush(product.orderIds,order.id);product.orders=product.orderIds.length;products.set(name,product);
+      const categoryRow=categories.get(category)||{name:category,quantity:0,amount:0,orders:0,orderIds:[]};
+      categoryRow.quantity+=quantity;categoryRow.amount+=amount;uniquePush(categoryRow.orderIds,order.id);categoryRow.orders=categoryRow.orderIds.length;categories.set(category,categoryRow);
       summary.itemUnits+=quantity;
     });
   });
+  summary.averageOrderValue=summary.completedOrders?summary.netSales/summary.completedOrders:0;
   Object.keys(summary).forEach(key=>{if(typeof summary[key]==='number')summary[key]=round(summary[key]);});
-  return {businessWindow:window,orderIds:rows.map(order=>order.id),summary,channels:groupRows(channels),payments:groupRows(payments),products:groupRows(products),hours:groupRows(hours),generatedAt:number(now)};
+  for(const map of [products,categories])for(const row of map.values()){row.amount=round(row.amount);row.share=summary.netSales?round(row.amount/summary.netSales*100):0}
+  for(const row of anomalies.values())row.amount=round(row.amount);
+  return {
+    businessWindow:window,range:window,orderIds:rows.map(order=>order.id),orders:clone([...rows,...auditDrilldownOrders]),summary,
+    channels:finishBreakdowns(channels),payments:finishBreakdowns(payments),products:groupRows(products),categories:groupRows(categories),hours:finishBreakdowns(hours),
+    anomalies:[...anomalies.values()].sort((a,b)=>b.count-a.count||String(a.name).localeCompare(String(b.name),'zh-HK')),
+    generatedAt:number(now)
+  };
 }
 
 export function calculateDayCloseReconciliation({report,cashCounted=0,openingFloat=0,cashExpenses=0}={}){

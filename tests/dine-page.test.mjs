@@ -48,6 +48,41 @@ test('堂食付款歸零會建立現場歷史訂單並即時清空枱位',async(
   assert.equal(result.history[0].status,'completed');
   assert.equal(result.history[0].amount,26);
   assert.equal(result.history[0].dineTableId,'1');
+  assert.equal(result.history[0].displayOrderNo,'P001');
+  assert.match(result.history[0].id,/^MF-/);
+  assert.equal(result.history[0].createdTerminalId,'SMT');
+});
+
+test('堂食正式落單即鎖定流水並保存到製作工作，跨營業日付款亦不改號',async()=>{
+  const {createInitialDineState,commitTableOrder,settleTablePayment}=await import('../pages/dine/dine-domain.js');
+  const beforeFive=new Date(2026,6,22,4,59).getTime(),afterFive=new Date(2026,6,22,5,1).getTime();
+  let state=createInitialDineState(beforeFive);
+  state=commitTableOrder(state,{tableId:'1'},[{lineId:'cross',name:'飯團',qty:1,unitPrice:41,total:41}],{terminalId:'SMT-01',now:beforeFive,history:[]});
+  const session=state.tables[0].session;
+  assert.equal(session.orderIdentity.displayOrderNo,'P001');
+  assert.equal(session.orderBatches[0].displayOrderNo,'P001');
+  assert.equal(session.printJobs[0].displayOrderNo,'P001');
+  const result=settleTablePayment(state,[],{tableId:'1',selections:[{lineId:'cross',qty:1}],method:'現金',terminalId:'SMT-01',now:afterFive});
+  assert.equal(result.history[0].displayOrderNo,'P001');
+  assert.equal(result.history[0].businessDate,'2026-07-21');
+});
+
+test('同時使用中的堂食枱亦會佔用每日流水避免撞號',async()=>{
+  const {createInitialDineState,commitTableOrder}=await import('../pages/dine/dine-domain.js');
+  let state=createInitialDineState(1000);
+  state=commitTableOrder(state,{tableId:'1'},[{name:'A',qty:1,unitPrice:10}],{terminalId:'SMT',now:2000,history:[]});
+  state=commitTableOrder(state,{tableId:'2'},[{name:'B',qty:1,unitPrice:10}],{terminalId:'SMT',now:3000,history:[]});
+  assert.deepEqual(state.tables.slice(0,2).map(table=>table.session.orderIdentity.displayOrderNo),['P001','P002']);
+});
+
+test('舊版未有識別的堂食枱直接付款時會避開其他活躍枱流水',async()=>{
+  const {createInitialDineState,openTable,commitTableOrder,settleTablePayment}=await import('../pages/dine/dine-domain.js');
+  let state=createInitialDineState(1000);
+  state=commitTableOrder(state,{tableId:'2'},[{lineId:'new',name:'新單',qty:1,unitPrice:10}],{terminalId:'SMT',now:2000,history:[]});
+  state.tables[0]=openTable(state.tables[0],1500);
+  state.tables[0].session.items.push({lineId:'legacy',name:'舊單',qty:1,paidQty:0,unitPrice:20});
+  const result=settleTablePayment(state,[],{tableId:'1',selections:[{lineId:'legacy',qty:1}],method:'現金',terminalId:'SMT',now:3000});
+  assert.equal(result.history[0].displayOrderNo,'P002');
 });
 
 test('載入舊資料時會補救已付清但未清枱的堂食會話，且不重複寫歷史',async()=>{
@@ -181,4 +216,17 @@ test('堂食點單提供取消入口並同步清除失效堂食脈絡',()=>{
   assert.match(orderPage,/startedFromFree/);
   assert.match(dinePage,/cleanupEmptyDineSessions/);
   assert.match(dinePage,/clearOrderDineContext/);
+});
+
+test('點單頁兩個堂食落單入口都會讀取完成歷史避免重複流水',()=>{
+  const orderPage=read('pages/order/page.js');
+  assert.equal((orderPage.match(/history:readJSON\(ORDER_HISTORY_STORAGE_KEY,\[\]\)/g)||[]).length,2);
+});
+
+test('堂食頁最近訂單使用共用時間排序及三位顯示號碼',()=>{
+  const page=read('pages/dine/page.js');
+  assert.match(page,/latestOrderDisplayNumber/);
+  assert.match(page,/activeDineOrderIdentities\(state\)/);
+  assert.match(page,/try\{handle\(button\)\}catch/);
+  assert.doesNotMatch(page,/\.at\(-1\)\?\.id/);
 });
