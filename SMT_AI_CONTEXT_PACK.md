@@ -21,10 +21,10 @@
 
 - 產品：磨飯 SMT 餐飲 POS
 - 分支：`feat/smt-order-page-v1`
-- 程式標籤：`order-v1-25`
+- 程式標籤：`order-v1-26`
 - 資料架構：Firebase RTDB 為唯一即時餐牌/API來源；Google Sheet只作記錄投影；Apps Script已退出SMT運行鏈路。
 - 目標：先完成可運作點單垂直鏈路
-- 自動測試基準：124/124
+- 自動測試基準：131/131
 - 實機：iPad／Sunmi T2S 最終 Lock 未完成
 
 真相順序：當前最新明確確認 → 本文件現行決策 → Current Lock → 最新程式／測試 → 舊 log／效果圖。衝突舊資料標記 `SUPERSEDED`；安全、離線、資料完整及繁中不可跌穿基線。
@@ -80,6 +80,7 @@
 - 結帳完成顯示核對卡；更正必須有原因及前後值 audit。
 - 部分取消使用商品行內加減，最後只做一次金額確認。
 - 頂部三點是點單視覺設定；底部更多是低頻後台功能。
+- 更多固定六個入口；正式日結、恢復、更新及退出全螢幕均二次確認，不設密碼。硬件／備份／匯出／更新未接通時不得假裝成功。
 
 ## 程式地圖
 
@@ -87,6 +88,7 @@
 - `pages/order/page.css`：固定畫布、定位及視覺。
 - `pages/order/order-domain.js`：數量、接單、30分鐘完成、WhatsApp link。
 - `pages/order/page-data.js`：產品、飲品、待處理示範資料。
+- `pages/more/page.js`／`page.css`：更多頁六入口、細節面板、二次確認及本機顯示設定。
 - `shared/runtime.js`／`shared/store.js`：本機狀態。
 - `app-loader.js`／`app-shell.css`：viewport及縮放。
 - `tests/order-edit-flow.test.mjs`：主要回歸。

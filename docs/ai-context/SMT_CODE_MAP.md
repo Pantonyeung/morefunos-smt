@@ -19,6 +19,8 @@
 | `pages/dine/page.js` | 九宮格、輪候、枱詳情、掃碼確認、付款、完成歷史寫入及自動清枱 | dine-domain、訂單歷史、QR vendor |
 | `pages/dine/dine-domain.js` | 枱位計時、掃碼確認、付款、付清結算、歷史訂單及舊會話補救規則 | 無DOM |
 | `pages/soldout/page.js` | 售罄獨立分類、停售分類尾排序、批量操作、狀態詳情及餐牌失敗回退 | menu-api、供應狀態 |
+| `pages/more/page.js` | 更多頁六入口、營運狀態、細節面板、日結草稿、顯示設定及高風險二次確認 | 本機訂單歷史、設定、page bridge |
+| `pages/more/page.css` | 更多頁主卡、細節彈窗、確認彈窗及固定畫布視覺 | page.js class names |
 | `shared/operations.js` | 暫存流水、跨機接手、作廢、日結清理、再暫存 lineage、結帳稽核 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
@@ -49,6 +51,7 @@
 | 草稿日結 | `clearDraftsForDayClose`, `clearExpiredBusinessDayDrafts` | draft handoff tests |
 | 售罄啟動 | `loadMenuCatalog({fallback})`、後備餐牌 catch | soldout page tests |
 | 售罄／停售一致性 | `statusOf`、`supplyStatus`、`sortPausedLast`、`soldoutModal` | soldout page／order edit flow tests |
+| 更多頁 | `mainPage`、`detailDialog`、`confirmDialog`、`saveDisplay` | more page tests |
 
 ## 資料流
 

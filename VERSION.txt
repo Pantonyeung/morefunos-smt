@@ -1,4 +1,4 @@
-MoreFun SMT V1.25
-Build: order-v1-25
+MoreFun SMT V1.26
+Build: order-v1-26
 Branch target: feat/smt-order-page-v1
-Status: sold-out and paused cards, category placement, small-card layout and shared order-page preview corrected; device acceptance pending
+Status: more page, six operational detail panels and four guarded confirmations implemented; device acceptance pending
