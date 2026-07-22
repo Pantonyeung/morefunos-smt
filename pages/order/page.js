@@ -241,7 +241,7 @@ function pendingReviewModal(){
   return '<aside class="pending-review-card modal-card"><header><div><small>'+x.source+' · 訂單核對</small><strong>'+x.id+' · '+x.contact+'</strong></div><button data-action="dismiss-modal">×</button></header><div class="pending-review-body"><section class="review-order"><div class="review-summary"><span>產品 <b>'+x.items+' 件</b></span><span>總額 <b>'+money(x.amount)+'</b></span><span>付款 <b>'+x.paymentMethod+'</b></span></div><div class="review-lines">'+lines+'</div><div class="payment-status"><span>付款狀態</span><strong>'+x.paymentStatus+'</strong></div>'+proof+'</section><aside class="whatsapp-qr"><strong>WhatsApp QR Code</strong><p>公司電話掃描後，直接開啟客人對話及預設訊息。</p><div class="qr-code" data-qr="'+escapeHtml(whatsapp)+'"></div><a href="'+escapeHtml(whatsapp)+'" target="_blank" rel="noopener">在此裝置開啟 WhatsApp</a></aside></div><footer class="single-action"><button data-action="dismiss-modal">返回</button><button data-action="report-payment-issue">資料有問題</button><button class="primary" data-action="accept-pending-order" '+(x.proof?'':'disabled')+'>確認接單</button></footer></aside>';
 }
 function enlargedProofModal(){const x=modal.order;return '<aside class="proof-lightbox modal-card"><header><strong>'+x.id+' · 付款證明</strong><button data-action="back-to-pending-review">×</button></header>'+imageBlock(x.proof,'付款證明放大圖','proof-full')+'<footer class="right-action"><button data-action="back-to-pending-review">返回核對</button></footer></aside>';}
-function modalScrim(){return modal?'<div class="modal-scrim" aria-hidden="true"></div>':'';}
+function modalScrim(){return modal?'<button class="modal-scrim" data-action="dismiss-modal" aria-label="關閉彈窗"></button>':'';}
 function quickSettingsModal(){
   const state=store.get();const q=state.settings.quickDrinks;
   const order=orderedDrinks();
@@ -335,7 +335,8 @@ function customConfirm(){
   const notice=newOrderNotice?.visible?'<aside class="new-order-toast"><div><small>'+newOrderNotice.source+' 新訂單</small><strong>'+newOrderNotice.id+'</strong><span>'+newOrderNotice.items+' 件 · '+money(newOrderNotice.amount)+'</span></div><button data-action="later-new-order">稍後處理</button><button class="primary" data-action="process-new-order">立即處理</button></aside>':'';
   if(!confirmState)return notice;
   const dissolve=confirmState.kind==='dissolve',dineCancel=confirmState.kind==='dine-cancel';
-  return notice+'<div class="confirm-layer"><section class="confirm-card"><strong>'+confirmState.title+'</strong><p>'+confirmState.message+'</p><div><button data-action="confirm-cancel">'+(dissolve?'返回套餐':dineCancel?'繼續點單':'繼續修改')+'</button><button class="danger" data-action="'+(dissolve?'confirm-dissolve':dineCancel?'confirm-dine-cancel':'confirm-discard')+'">'+(dissolve?'確認拆開':dineCancel?'取消今次點單':'放棄修改')+'</button></div></section></div>';
+  const saveButton=confirmState.canSave?'<button class="primary" data-action="confirm-save">儲存並退出</button>':'';
+  return notice+'<div class="confirm-layer"><section class="confirm-card"><strong>'+confirmState.title+'</strong><p>'+confirmState.message+'</p><div><button data-action="confirm-cancel">'+(dissolve?'返回套餐':dineCancel?'繼續點單':'返回修改')+'</button><button class="danger" data-action="'+(dissolve?'confirm-dissolve':dineCancel?'confirm-dine-cancel':'confirm-discard')+'">'+(dissolve?'確認拆開':dineCancel?'取消今次點單':'不儲存退出')+'</button>'+saveButton+'</div></section></div>';
 }
 function activeModal(){
   if(!modal)return '';
@@ -401,9 +402,24 @@ function markDirty(){if(modal)modal.dirty=true;}
 function requestDismiss(){
   if(!modal)return;
   if(modal.dirty&&['product','drink','bulk'].includes(modal.type)){
-    confirmState={title:'尚未套用修改',message:'返回後今次選擇將不會保存。',returnModal:modal.type==='drink'&&modal.parent?modal.parent:null};render();return;
+    confirmState={title:'儲存今次修改？',message:'你可以儲存後退出、返回繼續修改，或者不儲存退出。',returnModal:modal,canSave:true};render();return;
   }
   modal=modal.type==='drink'&&modal.parent?modal.parent:null;confirmState=null;render();
+}
+function saveAndDismiss(){
+  const pending=confirmState?.returnModal;
+  confirmState=null;
+  if(!pending){render();return;}
+  modal=pending;
+  if(modal.type==='product'){applyProduct();return;}
+  if(modal.type==='drink'){applyDrink();return;}
+  if(modal.type==='bulk'){
+    const g=modal.group,value=modal.draft.value;
+    if(!value){render();return;}
+    store.set(state=>{state.cart=state.cart.map(line=>line.required.includes(g)&&!line.options[g]?{...line,options:{...line.options,[g]:value}}:line);return state;});
+    modal=null;render();showToast('已儲存修改');return;
+  }
+  modal=null;render();
 }
 function openProduct(productId,lineId='',anchor=null){
   const p=productMap.get(productId),line=lineId?store.get().cart.find(x=>x.lineId===lineId):null;
@@ -507,7 +523,8 @@ function handle(button){
   else if(action==='ui-scale')window.parent?.postMessage?.({type:'morefun:set-ui-scale',value:Number(button.dataset.value)},'*');
   else if(action==='dismiss-modal')requestDismiss();
   else if(action==='confirm-cancel'){confirmState=null;render();}
-  else if(action==='confirm-discard'){modal=confirmState?.returnModal||null;confirmState=null;render();}
+  else if(action==='confirm-discard'){const pending=confirmState?.returnModal;modal=pending?.type==='drink'&&pending.parent?pending.parent:null;confirmState=null;render();}
+  else if(action==='confirm-save')saveAndDismiss();
   else if(action==='confirm-dine-cancel')completeDineCancellation();
   else if(action==='confirm-dissolve'){const lineId=confirmState.lineId;store.set(state=>{state.cart=normalizeCart(dissolveRiceballSet(state.cart,lineId,{idFactory:role=>stableId('line-'+role)}));return state;});confirmState=null;modal=null;render();showToast('套餐已拆開並按單品重新計價');}
   else if(action==='toggle-pending-panel'){if(modal?.type==='pending')modal=null;else modal={type:'pending',anchor:anchorRect(button),dirty:false};render();}
@@ -583,10 +600,10 @@ function handle(button){
   else if(action==='apply-specified-link'){
     const groups=safeClone(modal.draft.groups.filter(group=>group.main&&group.snack));
     store.set(state=>{let next=state.cart;groups.forEach(group=>{const quickId=group.drink?.startsWith('quick:')?group.drink.slice(6):'',quick=quickId?drinkMap.get(quickId):null;next=combineRiceballSet(next,{mainLineId:group.main,snackLineId:group.snack,drinkLineId:quickId?'':group.drink,quickDrink:quick?{productId:quick.id,drinkId:quick.id,name:quick.name,image:quick.image,unitPrice:quick.price,selection:drinkSelection(quick.id)}:null},{comboId:stableId('combo'),lineId:stableId('line'),comboPrice:59,source:'specified'});});state.cart=normalizeCart(next);return state;});
-    modal=null;render();showToast('已建立 '+groups.length+' 組指定套餐');
+    modal=null;render();showToast('已建立 '+groups.length+' 份指定套餐');
   }
   else if(action==='select-combo-component'){
-    const role=button.dataset.role,id=button.dataset.id,item=role==='drink'?drinkMap.get(id):productMap.get(id);if(!item)return;
+    const role=button.dataset.role,item=(role==='drink'?drinks:role==='snack'?snackProducts:products).find(entry=>entry.id===button.dataset.id);if(!item)return;
     modal.draft.components=modal.draft.components.filter(component=>component.role!==role).concat({role,source:role==='drink'?'quick':'catalog',productId:item.id,drinkId:role==='drink'?item.id:'',name:item.name,image:item.image||'',unitPrice:Number(item.price||0),options:{}});modal.dirty=true;render();
   }
   else if(action==='clear-combo-component'){modal.draft.components=modal.draft.components.filter(component=>component.role!=='drink');modal.dirty=true;render();}
@@ -606,6 +623,7 @@ function handle(button){
   }
 }
 app.addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});
+addEventListener('keydown',event=>{if(event.key==='Escape'&&modal){event.preventDefault();requestDismiss();}});
 app.addEventListener('pointerdown',event=>{if(event.target.closest('.quick-drawer-panel'))scheduleQuickDrawerClose()});
 app.addEventListener('input',event=>{if(event.target.matches('[data-action="detail-note"]')&&modal?.type==='product'){modal.draft.note=event.target.value;markDirty();return;}if(event.target.matches('[data-action="search-query"]')&&modal?.type==='search'){const value=event.target.value;store.set(state=>({...state,searchQuery:value}));render();requestAnimationFrame(()=>{const input=document.querySelector('[data-action="search-query"]');if(input){input.focus();input.setSelectionRange(value.length,value.length);}});}});
 render();
