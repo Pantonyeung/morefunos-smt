@@ -88,7 +88,7 @@ textarea.modal-input {
   font-weight: 800;
 }
 .reverse-card:has(.reconciliation-layout) {
-  width: min(920px, 88vw);
+  width: min(920px, calc(var(--t2s-width) - 120px));
 }
 .reconciliation-layout {
   display: grid;
