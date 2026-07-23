@@ -19,6 +19,8 @@
 5. 不使用 1920×1080 版面再縮放成 1280×800。
 6. 每次只提交有改動的文件。
 7. 每頁完成後先驗收，再推下一頁。
+8. 所有 page entry 必須使用 `width=1280` viewport。
+9. 所有 page root 必須在 `shared/page-base.css` 以 `--t2s-width:1280px` / `--t2s-height:800px` 鎖定。
 
 ## Patch sources found in rebuild.43
 
@@ -38,9 +40,36 @@
 - `app-loader.js` 只保留 shell orchestration
 - 不再把視覺修正塞入 loader
 
-### 2. Order page CSS
+### 2. Shared page base
 
-`pages/order/t2s-1280.css` 仍含有大量壓縮規則及部分 `!important`。這些是 rebuild.42/43 近似正確畫面的來源，但目前仍屬補丁式內核外掛。
+`shared/page-base.css` 原本仍有 1920px root。已改為唯一 T2S root：
+
+- `--t2s-width: 1280px`
+- `--t2s-height: 800px`
+- `html/body/#app/.app` 全部鎖 1280×800
+
+### 3. Page entries
+
+所有入口已改為 `width=1280`：
+
+- `pages/order/index.html`
+- `pages/checkout/index.html`
+- `pages/orders/index.html`
+- `pages/dine/index.html`
+- `pages/soldout/index.html`
+- `pages/more/index.html`
+
+### 4. Removed external patch stylesheets
+
+已合併或移除以下外掛式 CSS：
+
+- `pages/dine/page-v21.css`
+- `pages/soldout/soldout-enhancements.css`
+- `pages/checkout/channel-payment.css`
+
+### 5. Order page CSS
+
+`pages/order/t2s-1280.css` 仍含有大量壓縮規則及部分 `!important`。這些是 rebuild.42/43 近似正確畫面的來源，但目前仍屬需要整理的頁內 T2S layer。
 
 後續處理方式：
 
@@ -49,7 +78,7 @@
 - 逐步移除不必要 `!important`
 - 所有規則留在該頁正式 CSS，不再由 loader 注入
 
-### 3. Order page JS modal logic
+### 6. Order page JS modal logic
 
 `pages/order/page.js` 內有已驗收互動：
 
@@ -65,7 +94,7 @@
 - 不重做流程
 - 只把臨時狀態、互相遮蓋、指向三角、嵌套 confirm 彈窗，整理成正式 modal manager
 
-### 4. Checkout page
+### 7. Checkout page
 
 `pages/checkout/page.css` 已是 1280×800 固定頁，但結帳頁仍需按參考圖正式重排：
 
@@ -73,10 +102,28 @@
 - 右：來源、付款方式、金額結算、鍵盤、備註、固定確認結帳
 - 移除手動「磨飯優惠券」入口，優惠券由系統自動計算
 
-## First migration done
+## Migration log
+
+### core-rewrite.1
 
 - 新增：`shared/t2s-viewport-core.js`
 - 修改：`app-loader.js`
 - 修改：`index.html`
 
-效果目標：不改畫面，只把 viewport fitting 從 loader 補丁層搬入 shell core。
+### core-rewrite.2
+
+- 鎖定 `shared/page-base.css` 為 1280×800 root。
+- 改所有 page entry viewport 為 1280。
+- 重建 `pages/orders/page.css` 為 1280×800 原生布局。
+
+### core-rewrite.3
+
+- 合併堂食補丁 CSS 入 `pages/dine/page.css`。
+- 合併售罄補丁 CSS 入 `pages/soldout/page.css`。
+- 移除結帳外掛付款 CSS，改由 `pages/checkout/page.css` 承接。
+
+### core-rewrite.4
+
+- 全部 entry cache 統一到 `smt-t2s-1280x800-core-rewrite.4`。
+- 確保所有頁面入口仍然維持 `width=1280`。
+- 下一步：整理 `pages/more/page.css` 與 `pages/order/t2s-1280.css`。
