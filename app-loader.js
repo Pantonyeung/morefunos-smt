@@ -12,13 +12,14 @@ const routes = {
   more: 'pages/more/index.html'
 };
 
-const BUILD = 'smt-t2s-1280x800-rebuild.42';
+const BUILD = 'smt-t2s-1280x800-rebuild.43';
 const TARGET_WIDTH = 1280;
 const TARGET_HEIGHT = 800;
 let current = '';
 let childReady = false;
 let loadSeq = 0;
 let readyTimer = 0;
+let retriedRoute = '';
 
 function viewportSize() {
   const viewport = window.visualViewport;
@@ -65,6 +66,16 @@ function route() {
   return routes[key] ? key : 'order';
 }
 
+function childHasContent() {
+  try {
+    const doc = frame.contentDocument;
+    const app = doc?.getElementById('app');
+    return Boolean(app && (app.children.length || app.textContent.trim().length > 12));
+  } catch (_error) {
+    return false;
+  }
+}
+
 function showLoaderError(message) {
   frame.srcdoc = '<!doctype html><html lang="zh-HK"><meta charset="UTF-8"><meta name="viewport" content="width=1280,initial-scale=1"><style>body{margin:0;display:grid;place-items:center;width:1280px;height:800px;font-family:-apple-system,BlinkMacSystemFont,"PingFang HK",sans-serif;background:#fff8f3;color:#382b24}.card{max-width:520px;padding:28px;border:1px solid #ead9ce;border-radius:16px;background:#fff;text-align:center}.card strong{display:block;font-size:24px;color:#e84b12;margin-bottom:10px}.card button{min-height:48px;margin-top:12px;padding:0 20px;border:0;border-radius:10px;background:#ef5b23;color:#fff;font-weight:800}</style><body><section class="card"><strong>頁面未能載入</strong><p>' + String(message || '請重新整理後再試') + '</p><button onclick="location.reload()">重新載入</button></section></body></html>';
 }
@@ -83,8 +94,14 @@ function load({ force = false } = {}) {
 
   readyTimer = setTimeout(() => {
     if (seq !== loadSeq || childReady) return;
+    if (childHasContent()) {
+      childReady = true;
+      return;
+    }
+    if (retriedRoute === key) return;
+    retriedRoute = key;
     frame.src = routes[key] + '?build=' + encodeURIComponent(BUILD) + '&retry=' + Date.now();
-  }, key === 'more' ? 1200 : 1800);
+  }, key === 'more' ? 2600 : 3200);
 }
 
 frame.addEventListener('error', () => showLoaderError('子頁載入失敗，資料仍保存在本機。'));
@@ -102,6 +119,7 @@ addEventListener('message', event => {
   if (event.source !== frame.contentWindow) return;
   if (event.data?.type === 'morefun:page-ready') {
     childReady = true;
+    retriedRoute = '';
     clearTimeout(readyTimer);
   }
   if (event.data?.type === 'morefun:navigate') {
