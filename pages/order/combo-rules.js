@@ -13,14 +13,7 @@ const comboSnacks=[
   {surcharge:5,names:['古早鹽酥雞','鹽酥雞','魷魚波波','孜味脆雞','海苔多春魚','天神炸雞']}
 ];
 
-export const drinkUpgradeRules={
-  noDrink:-1,
-  servedHot:0,
-  servedIced:3,
-  coldBrewOrSparkling:6,
-  taiwanMilkTea:8,
-  handLemonTea:10
-};
+export const drinkUpgradeRules={noDrink:-1,servedHot:0,servedIced:3,coldBrewOrSparkling:6,taiwanMilkTea:8,handLemonTea:10};
 
 function findByName(groups,name){
   const target=normalize(name);
@@ -46,20 +39,27 @@ export function resolveSnackComboRule(product={}){
   return null;
 }
 
+export function resolveDrinkUpgradeRule(product={}){
+  const name=normalize(product.name);
+  if(name.includes('不需要飲品')||name.includes('無需飲品'))return {role:'combo_drink',specialDrinkSurcharge:-1};
+  if(name.includes('熱水')||name.includes('熱檸水')||name.includes('隨餐熱飲'))return {role:'combo_drink',specialDrinkSurcharge:0};
+  if(name.includes('凍檸茶')||name.includes('凍檸水')||name.includes('轉凍'))return {role:'combo_drink',specialDrinkSurcharge:3};
+  if(name.includes('冷泡')||name.includes('氣泡水'))return {role:'combo_drink',specialDrinkSurcharge:6};
+  if(name.includes('台式奶茶'))return {role:'combo_drink',specialDrinkSurcharge:8};
+  if(name.includes('手打檸檬茶'))return {role:'combo_drink',specialDrinkSurcharge:10};
+  return null;
+}
+
 export function resolveTemporaryComboRule(product={}){
-  return resolveRiceballComboRule(product)||resolveSnackComboRule(product)||null;
+  return resolveRiceballComboRule(product)||resolveSnackComboRule(product)||resolveDrinkUpgradeRule(product)||null;
 }
 
 export function comboPriceFromSelection({main,snack,drink}={}){
   const mainRule=resolveRiceballComboRule(main||{})||{};
   const snackRule=resolveSnackComboRule(snack||{})||{};
+  const drinkRule=resolveDrinkUpgradeRule(drink||{})||{};
   const basePrice=Number(mainRule.comboBasePrice||0);
   const snackSurcharge=Number(snackRule.comboSurcharge||0);
-  const drinkSurcharge=Number(drink?.specialDrinkSurcharge||0);
-  return {
-    basePrice,
-    snackSurcharge,
-    drinkSurcharge,
-    total:basePrice+snackSurcharge+drinkSurcharge
-  };
+  const drinkSurcharge=Number(drink?.specialDrinkSurcharge??drinkRule.specialDrinkSurcharge??0);
+  return {basePrice,snackSurcharge,drinkSurcharge,total:basePrice+snackSurcharge+drinkSurcharge};
 }
