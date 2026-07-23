@@ -80,7 +80,8 @@
 - 不再依賴 1920 或瀏覽器 viewport 作為頁內排版基準。
 - 已拆成正式段落：root / status / cart / category / product grid / quick drinks / anchored modal / pairing / completion overlay。
 - 快捷飲品尺寸已由 T2S CSS 變數控制。
-- 後續逐步移除不必要 `!important`，但不得改變 rebuild.42/43 視覺結果。
+- modifier-card 及 pointer triangle 的大部分 `!important` 已轉回一般 page selector。
+- 只保留 completion / persistent confirm 中需要覆蓋 inline runtime coordinates 的少量 `!important`。
 
 ### 6. Order page JS modal logic
 
@@ -163,4 +164,11 @@
 - `shared/page-base.css` 全局 choice control 已移除 `!important`，避免共享層再壓住各頁原生按鈕形狀。
 - 全部 page entry cache 統一到 `smt-t2s-1280x800-core-rewrite.9`。
 - app-loader / index 已更新到 `smt-t2s-1280x800-core-rewrite.9`。
-- 下一步：處理點單頁剩餘 pointer / completion overlay 必要覆蓋，盡量轉成內核 selector。
+
+### core-rewrite.10
+
+- `pages/order/t2s-1280.css` 的 modifier-card 尺寸、overflow、z-index 已由 `!important` 轉成頁內正常 selector。
+- pointer triangle 方向修正已由 `!important` 轉成同檔後置 selector。
+- 只保留 completion / persistent confirm 中需要覆蓋 inline runtime coordinates 的少量 `!important`。
+- app-loader / index / order entry 已更新到 `smt-t2s-1280x800-core-rewrite.10`。
+- 下一步：全 repo 再檢查 `1920` / `1080` / `100vw` / `100vh` 及剩餘外掛補丁檔案。
