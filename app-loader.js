@@ -14,7 +14,7 @@ const routes = {
   more: 'pages/more/index.html'
 };
 
-const BUILD = 'smt-t2s-1280x800-core-rewrite.3';
+const BUILD = 'smt-t2s-1280x800-core-rewrite.4';
 let current = '';
 let childReady = false;
 let loadSeq = 0;
