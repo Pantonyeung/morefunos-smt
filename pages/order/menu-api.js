@@ -1,4 +1,4 @@
-export const MENU_CACHE_KEY='morefun.smt.menu.cache.v1';
+export const MENU_CACHE_KEY='morefun.smt.menu.cache.v2';
 export const FIREBASE_DATABASE_URL='https://morefunposos-default-rtdb.asia-southeast1.firebasedatabase.app';
 export const FIREBASE_CATALOG_PATH='public/catalogV1';
 export const FIREBASE_CATALOG_URL=`${FIREBASE_DATABASE_URL}/${FIREBASE_CATALOG_PATH}.json`;
@@ -54,8 +54,8 @@ function inferRules(category,matched={},raw={}){
   return {
     required,
     drinkSlots:required.includes('drink')?Math.max(1,moneyNumber(raw.drink_slots??matched.drinkSlots)):moneyNumber(raw.drink_slots??matched.drinkSlots),
-    combinable:truthy(raw.is_combinable,isRiceball||Boolean(matched.combinable)),
-    linkRole:String(raw.link_role??matched.linkRole??(isDrink?'drink':isSnack?'snack':''))
+    combinable:isRiceball||truthy(raw.is_combinable,Boolean(matched.combinable)),
+    linkRole:isDrink?'drink':isSnack?'snack':String(raw.link_role??matched.linkRole??'')
   };
 }
 
