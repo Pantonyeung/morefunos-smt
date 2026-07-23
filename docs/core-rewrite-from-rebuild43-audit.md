@@ -48,6 +48,7 @@
 - `--t2s-width: 1280px`
 - `--t2s-height: 800px`
 - `html/body/#app/.app` 全部鎖 1280×800
+- 全局 choice control 已移除 `!important`，允許各 page 用原生樣式覆蓋，不再以共享層壓住子頁。
 
 ### 3. Page entries
 
@@ -156,4 +157,10 @@
 - `pages/checkout/page.css` 已重新整理成正式 T2S checkout core stylesheet。
 - 結帳頁 modal / discount / completion / correction dialog 已改用 T2S canvas 變數，不再依賴 `vw/vh`。
 - app-loader / index / checkout entry 已更新到 `smt-t2s-1280x800-core-rewrite.8`。
-- 下一步：全 repo 掃描 1920 / 1080 / `vw` / `vh` / 外掛補丁殘留。
+
+### core-rewrite.9
+
+- `shared/page-base.css` 全局 choice control 已移除 `!important`，避免共享層再壓住各頁原生按鈕形狀。
+- 全部 page entry cache 統一到 `smt-t2s-1280x800-core-rewrite.9`。
+- app-loader / index 已更新到 `smt-t2s-1280x800-core-rewrite.9`。
+- 下一步：處理點單頁剩餘 pointer / completion overlay 必要覆蓋，盡量轉成內核 selector。
