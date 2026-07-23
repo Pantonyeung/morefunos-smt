@@ -12,6 +12,8 @@
   --green:#39835a;
   --shadow:0 12px 36px rgba(76,46,28,.14);
   --choice-pill-radius:999px;
+  --t2s-width:1280px;
+  --t2s-height:800px;
   font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Noto Sans TC","Microsoft JhengHei",sans-serif;
   color:var(--text)
 }
@@ -24,30 +26,33 @@
 *{box-sizing:border-box}
 html,body{
   margin:0;
-  width:100%;
-  max-width:100%;
-  min-width:0;
-  height:100%;
-  min-height:0;
+  width:var(--t2s-width);
+  min-width:var(--t2s-width);
+  max-width:var(--t2s-width);
+  height:var(--t2s-height);
+  min-height:var(--t2s-height);
+  max-height:var(--t2s-height);
   overflow:hidden;
   background:var(--bg)
 }
 #app{
-  width:100%;
-  max-width:100%;
-  min-width:0;
-  height:100%;
-  min-height:0;
+  width:var(--t2s-width);
+  min-width:var(--t2s-width);
+  max-width:var(--t2s-width);
+  height:var(--t2s-height);
+  min-height:var(--t2s-height);
+  max-height:var(--t2s-height);
   overflow:hidden
 }
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .app{
-  width:100%;
-  max-width:100%;
-  min-width:0;
-  height:100%;
-  min-height:0;
+  width:var(--t2s-width);
+  min-width:var(--t2s-width);
+  max-width:var(--t2s-width);
+  height:var(--t2s-height);
+  min-height:var(--t2s-height);
+  max-height:var(--t2s-height);
   display:flex;
   flex-direction:column;
   overflow:hidden;
@@ -81,7 +86,7 @@ button{cursor:pointer}
 .btn.danger{background:#b84d42;border-color:#b84d42;color:#fff}
 .btn:disabled{opacity:.4}
 .overlay-scrim{position:fixed;inset:0;border:0;background:rgba(246,242,238,.52);-webkit-backdrop-filter:blur(12px) saturate(.82);backdrop-filter:blur(12px) saturate(.82);z-index:80;cursor:default;touch-action:none}
-.anchored-popover{position:fixed;z-index:81;background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:14px;max-width:calc(100vw - 24px);max-height:calc(100vh - 144px);overflow:auto}
+.anchored-popover{position:fixed;z-index:81;background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:14px;max-width:calc(var(--t2s-width) - 24px);max-height:calc(var(--t2s-height) - 144px);overflow:auto}
 .anchored-popover header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .anchored-popover h2,.anchored-popover h3{margin:0}
 .anchored-card{overflow:visible}
