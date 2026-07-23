@@ -21,6 +21,7 @@
 7. 每頁完成後先驗收，再推下一頁。
 8. 所有 page entry 必須使用 `width=1280` viewport。
 9. 所有 page root 必須在 `shared/page-base.css` 以 `--t2s-width:1280px` / `--t2s-height:800px` 鎖定。
+10. PWA manifest 必須鎖定 landscape，避免實機旋轉回非 T2S 操作比例。
 
 ## Patch sources found in rebuild.43
 
@@ -128,4 +129,10 @@
 - 全部 entry cache 統一到 `smt-t2s-1280x800-core-rewrite.4`。
 - 確保所有頁面入口仍然維持 `width=1280`。
 - `pages/order/t2s-1280.css` 已錨定至原生 T2S canvas，不再用 `100vw/100vh` 作彈窗尺寸基準。
+
+### core-rewrite.5
+
+- PWA manifest 已由 `orientation:any` 改為 `orientation:landscape`。
+- 全部 page entry cache 統一到 `smt-t2s-1280x800-core-rewrite.5`。
+- `pages/orders/order-operations.css` 的核對彈窗已由 `88vw` 改為 `calc(var(--t2s-width) - 120px)`。
 - 下一步：整理 `pages/more/page.css` 與點單頁剩餘 `!important`。
