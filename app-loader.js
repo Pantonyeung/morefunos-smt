@@ -1,3 +1,5 @@
+import { fitT2SStage, getViewportSize, renderT2SHud } from './shared/t2s-viewport-core.js';
+
 const stage = document.getElementById('stage');
 const frame = document.getElementById('page');
 const hud = document.getElementById('device-hud');
@@ -12,53 +14,16 @@ const routes = {
   more: 'pages/more/index.html'
 };
 
-const BUILD = 'smt-t2s-1280x800-rebuild.43';
-const TARGET_WIDTH = 1280;
-const TARGET_HEIGHT = 800;
+const BUILD = 'smt-t2s-1280x800-core-rewrite.1';
 let current = '';
 let childReady = false;
 let loadSeq = 0;
 let readyTimer = 0;
 let retriedRoute = '';
 
-function viewportSize() {
-  const viewport = window.visualViewport;
-  return {
-    width: Math.round(viewport?.width || window.innerWidth),
-    height: Math.round(viewport?.height || window.innerHeight)
-  };
-}
-
-function isExactTarget(size) {
-  return size.width === TARGET_WIDTH && size.height === TARGET_HEIGHT;
-}
-
 function applyT2SViewport() {
-  const size = viewportSize();
-  const orientation = size.width >= size.height ? '橫屏' : '直屏';
-  document.documentElement.dataset.orientation = orientation === '橫屏' ? 'landscape' : 'portrait';
-  const exact = isExactTarget(size);
-  const scale = exact ? 1 : Math.min(size.width / TARGET_WIDTH, size.height / TARGET_HEIGHT);
-  const renderedWidth = Math.round(TARGET_WIDTH * scale);
-  const renderedHeight = Math.round(TARGET_HEIGHT * scale);
-
-  stage.style.width = TARGET_WIDTH + 'px';
-  stage.style.height = TARGET_HEIGHT + 'px';
-  stage.style.left = Math.max(0, Math.round((size.width - renderedWidth) / 2)) + 'px';
-  stage.style.top = Math.max(0, Math.round((size.height - renderedHeight) / 2)) + 'px';
-  stage.style.zoom = '1';
-  stage.style.transform = scale === 1 ? 'none' : 'scale(' + scale + ')';
-  stage.dataset.profile = exact ? 'sunmi-t2s-native' : 'sunmi-t2s-simulator';
-  stage.dataset.viewportWidth = String(size.width);
-  stage.dataset.viewportHeight = String(size.height);
-  stage.dataset.scale = scale.toFixed(4);
-  stage.dataset.fitted = '1';
-  document.documentElement.dataset.previewMode = exact ? 'native' : 'simulator';
-
-  if (hud && hudDetail) {
-    hud.hidden = exact;
-    hudDetail.textContent = '裝置 ' + size.width + '×' + size.height + '（' + orientation + '）｜完整框縮放 ' + Math.round(scale * 100) + '%｜黃色框內固定為 1280×800｜版本 ' + BUILD;
-  }
+  const result = fitT2SStage(stage, getViewportSize());
+  renderT2SHud({ hud, hudDetail, result, build: BUILD });
 }
 
 function route() {
