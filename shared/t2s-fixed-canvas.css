@@ -1,0 +1,35 @@
+/* SMT 子頁固定使用 Sunmi T2S 1280×800 邏輯畫布。
+   裝置適配只由外層 app-shell 等比例縮放，子頁不得跟 iPhone viewport 自適應。 */
+html,
+body,
+#app,
+.app {
+  width: 1280px !important;
+  min-width: 1280px !important;
+  max-width: 1280px !important;
+  height: 800px !important;
+  min-height: 800px !important;
+  max-height: 800px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+body {
+  position: relative;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 防止任何頁面重新用 vw / device-width 收窄主畫布。 */
+.workspace,
+.checkout,
+.orders-layout,
+.dine-workspace,
+.soldout-grid,
+.more-workspace {
+  min-width: 0;
+  max-width: 100%;
+}
