@@ -2,33 +2,43 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.25,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
-  <title>磨飯 SMT｜iPhone T2S Adapter</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+  <title>磨飯 MoreFun OS｜SMT / SMM</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="app-shell.css?v=smt-t2s-iphone-adapter.01">
+  <link rel="stylesheet" href="unified-entry.css?v=unified-smt-smm.01">
 </head>
 <body>
-  <main class="preview-adapter" aria-label="磨飯 SMT iPhone 預覽 adapter">
-    <header class="adapter-hud">
-      <section>
-        <strong>SMT T2S Adapter</strong>
-        <span id="adapter-detail">正在量度畫面…</span>
-      </section>
-      <nav aria-label="預覽控制">
-        <button data-action="fit">適合</button>
-        <button data-action="out">－</button>
-        <button data-action="native">100%</button>
-        <button data-action="in">＋</button>
-        <a href="./pages/order/index.html">真機頁</a>
-      </nav>
-    </header>
+  <main class="entry-shell" aria-label="磨飯 MoreFun OS 統一入口">
+    <section class="entry-hero">
+      <p class="eyebrow">MoreFun OS｜同一網址雙模式</p>
+      <h1>磨飯 SMT / SMM</h1>
+      <p class="lead">一個部署入口，同時檢查 Sunmi T2S 1280×800 收銀機版、iPad/電腦預覽同手機 SMM 管理版。</p>
+      <div id="device-hint" class="device-hint">正在量度裝置…</div>
+    </section>
 
-    <section id="preview-floor" class="preview-floor" aria-label="黑邊檢查區">
-      <div id="frame-box" class="frame-box">
-        <iframe id="t2s-frame" title="磨飯 SMT 1280×800" src="./pages/order/index.html"></iframe>
-      </div>
+    <section class="mode-grid" aria-label="模式入口">
+      <a class="mode-card primary" href="./pages/order/index.html">
+        <small>Sunmi T2S / 收銀機</small>
+        <strong>SMT 真機頁</strong>
+        <span>1280×800 主 POS、點單、收銀、打印 host。</span>
+      </a>
+      <a class="mode-card" href="./smt-preview/index.html">
+        <small>iPhone / iPad 檢查</small>
+        <strong>SMT 黃框預覽</strong>
+        <span>黑邊＋黃框，縮放檢查有冇出界。</span>
+      </a>
+      <a class="mode-card phone" href="./smm/index.html">
+        <small>手機管理 PWA</small>
+        <strong>SMM 手機端</strong>
+        <span>訂單、售罄、列印任務、同步狀態、日結入口。</span>
+      </a>
+    </section>
+
+    <section class="runtime-note">
+      <strong>流水號方向</strong>
+      <p>SMT 同 SMM 已放喺同一 origin。下一步以 shared runtime / backend 作唯一流水號權威，避免兩邊各自產生真假流水。</p>
     </section>
   </main>
-  <script type="module" src="app-loader.js?v=smt-t2s-iphone-adapter.01"></script>
+  <script type="module" src="unified-entry.js?v=unified-smt-smm.01"></script>
 </body>
 </html>
