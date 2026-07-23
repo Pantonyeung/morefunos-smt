@@ -22,6 +22,7 @@
 8. 所有 page entry 必須使用 `width=1280` viewport。
 9. 所有 page root 必須在 `shared/page-base.css` 以 `--t2s-width:1280px` / `--t2s-height:800px` 鎖定。
 10. PWA manifest 必須鎖定 landscape，避免實機旋轉回非 T2S 操作比例。
+11. 如果清理導致畫面偏離 rebuild.42/43，優先恢復視覺一致，再繼續內核整理。
 
 ## Patch sources found in rebuild.43
 
@@ -71,7 +72,7 @@
 
 ### 5. Order page CSS
 
-`pages/order/t2s-1280.css` 仍含有大量壓縮規則及部分 `!important`。這些是 rebuild.42/43 近似正確畫面的來源，但目前仍屬需要整理的頁內 T2S layer。
+`pages/order/t2s-1280.css` 仍含有少量 page-native visual parity locks。這些是為了保留 rebuild.42/43 視覺結果，現階段不可再盲目移除。
 
 處理方式：
 
@@ -80,8 +81,7 @@
 - 不再依賴 1920 或瀏覽器 viewport 作為頁內排版基準。
 - 已拆成正式段落：root / status / cart / category / product grid / quick drinks / anchored modal / pairing / completion overlay。
 - 快捷飲品尺寸已由 T2S CSS 變數控制。
-- modifier-card 及 pointer triangle 的大部分 `!important` 已轉回一般 page selector。
-- 只保留 completion / persistent confirm 中需要覆蓋 inline runtime coordinates 的少量 `!important`。
+- core-rewrite.10 嘗試移除 modifier-card / pointer triangle `!important` 後，實機檢查出現點單頁畫面偏離，因此 core-rewrite.11 已恢復該段 page-native visual parity locks。
 
 ### 6. Order page JS modal logic
 
@@ -167,8 +167,12 @@
 
 ### core-rewrite.10
 
-- `pages/order/t2s-1280.css` 的 modifier-card 尺寸、overflow、z-index 已由 `!important` 轉成頁內正常 selector。
-- pointer triangle 方向修正已由 `!important` 轉成同檔後置 selector。
-- 只保留 completion / persistent confirm 中需要覆蓋 inline runtime coordinates 的少量 `!important`。
-- app-loader / index / order entry 已更新到 `smt-t2s-1280x800-core-rewrite.10`。
-- 下一步：全 repo 再檢查 `1920` / `1080` / `100vw` / `100vh` 及剩餘外掛補丁檔案。
+- `pages/order/t2s-1280.css` 的 modifier-card 尺寸、overflow、z-index 嘗試由 `!important` 轉成頁內正常 selector。
+- pointer triangle 方向修正嘗試由 `!important` 轉成同檔後置 selector。
+- 實機檢查後發現點單頁畫面偏離 rebuild.42/43，因此不採用作 final visual basis。
+
+### core-rewrite.11
+
+- `pages/order/t2s-1280.css` 已恢復 page-native visual parity locks，優先確保點單頁回到 rebuild.42/43 視覺基準。
+- 該恢復只在點單頁原生 CSS 內完成，沒有恢復外掛 CSS、沒有恢復 loader 注入、沒有回到 1920×1080。
+- app-loader / index / order entry 已更新到 `smt-t2s-1280x800-core-rewrite.11`。
