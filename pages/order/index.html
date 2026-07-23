@@ -7,9 +7,9 @@
       content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover"
     />
     <title>磨飯 SMT｜點單 T2S 1280×800</title>
-    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.28" />
-    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.28" />
-    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.28" />
+    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.29" />
+    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.29" />
+    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.29" />
     <style>
       .persistent-pairing-confirm {
         inset: auto 18px 76px auto !important;
@@ -35,13 +35,167 @@
         padding: 5px 10px !important;
         font-size: 11px !important;
       }
+
+      /* 快捷飲品抽屜：內容貼近卡片，不保留無用途底部空白。 */
+      .quick-drawer-panel {
+        height: 126px !important;
+        min-height: 126px !important;
+        max-height: 126px !important;
+      }
+      .quick-drawer-panel > header {
+        height: 28px !important;
+        min-height: 28px !important;
+        padding: 0 8px !important;
+      }
+      .quick-drawer-panel > header button {
+        width: 24px !important;
+        height: 24px !important;
+      }
+      .quick-drawer-panel > div {
+        flex: 1 1 auto !important;
+        height: 96px !important;
+        min-height: 0 !important;
+        padding: 3px 6px 5px !important;
+        align-items: flex-start !important;
+        align-content: flex-start !important;
+      }
+      .quick-drawer-panel .drink-choice-card {
+        height: 88px !important;
+        grid-template-rows: 17px 65px !important;
+        padding: 2px 4px 4px !important;
+      }
+      .quick-drawer-panel .drink-choice-card .drink-choice-img {
+        height: 65px !important;
+      }
+
+      /* 飲品微調窗：外框維持現有比例，控制鍵及選項字體再縮細。 */
+      .modifier-card.is-anchored-popover {
+        width: 190px !important;
+        min-width: 190px !important;
+        max-width: 190px !important;
+        max-height: 165px !important;
+        z-index: 1005 !important;
+      }
+      .modifier-card > header {
+        min-height: 27px !important;
+        padding: 3px 6px !important;
+      }
+      .modifier-card > header strong {
+        font-size: 9px !important;
+      }
+      .modifier-card > header button {
+        width: 20px !important;
+        height: 20px !important;
+        min-height: 20px !important;
+        font-size: 9px !important;
+      }
+      .modifier-card > .drink-base-qty {
+        margin: 2px 4px !important;
+        padding: 2px 3px !important;
+        min-height: 24px !important;
+        font-size: 8px !important;
+      }
+      .modifier-card > .drink-base-qty > span:last-child {
+        grid-template-columns: 18px 20px 18px !important;
+        gap: 1px !important;
+      }
+      .modifier-card > .drink-base-qty button,
+      .modifier-card .drink-group button {
+        width: 18px !important;
+        min-width: 18px !important;
+        height: 18px !important;
+        min-height: 18px !important;
+        padding: 0 !important;
+        font-size: 7px !important;
+        line-height: 1 !important;
+      }
+      .modifier-card .group-summary {
+        width: auto !important;
+        min-width: 0 !important;
+        padding: 0 3px !important;
+        font-size: 7px !important;
+      }
+      .modifier-card .drink-group {
+        margin: 1px 4px !important;
+        padding: 2px !important;
+      }
+      .modifier-card .drink-group > header {
+        min-height: 21px !important;
+        padding: 1px 2px !important;
+      }
+      .modifier-card .adjustment-options {
+        padding: 2px !important;
+        gap: 1px !important;
+      }
+      .modifier-card .adjustment-options .option-chips {
+        gap: 1px !important;
+      }
+      .modifier-card .adjustment-options .option-chips button {
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: 18px !important;
+        height: 18px !important;
+        padding: 1px 3px !important;
+        font-size: 7px !important;
+      }
+      .modifier-card > .add-group {
+        margin: 1px 4px !important;
+        min-height: 20px !important;
+        height: 20px !important;
+        padding: 1px !important;
+        font-size: 7px !important;
+      }
+      .modifier-card > .wide {
+        margin: 1px 4px 4px !important;
+        min-height: 21px !important;
+        height: 21px !important;
+        font-size: 7px !important;
+      }
+
+      /* 修正三角方向：data-pointer-side 表示卡片靠近來源按鈕的一邊。 */
+      .is-anchored-popover[data-pointer-side="top"]::before {
+        top: -8px !important;
+        bottom: auto !important;
+        transform: translateX(-50%) rotate(45deg) !important;
+      }
+      .is-anchored-popover[data-pointer-side="bottom"]::before {
+        top: auto !important;
+        bottom: -8px !important;
+        transform: translateX(-50%) rotate(225deg) !important;
+      }
+      .is-anchored-popover[data-pointer-side="left"]::before {
+        left: -8px !important;
+        right: auto !important;
+        transform: translateY(-50%) rotate(-45deg) !important;
+      }
+      .is-anchored-popover[data-pointer-side="right"]::before {
+        left: auto !important;
+        right: -8px !important;
+        transform: translateY(-50%) rotate(135deg) !important;
+      }
+      .modifier-card.is-anchored-popover::before {
+        display: block !important;
+        z-index: 6 !important;
+      }
+
+      /* 飲品子窗開啟期間保留必選／補選母層。 */
+      .completion-parent-underlay {
+        position: fixed !important;
+        z-index: 1001 !important;
+        pointer-events: none !important;
+        opacity: 0.98;
+        overflow: hidden !important;
+      }
+      .completion-parent-underlay::before {
+        display: none !important;
+      }
     </style>
     <script type="importmap">
       {
         "imports": {
-          "./menu-api.js": "./menu-api.js?v=smt-t2s-1280x800-rebuild.28",
-          "./combo-rules.js": "./combo-rules.js?v=smt-t2s-1280x800-rebuild.28",
-          "../../shared/store.js": "../../shared/store.js?v=smt-t2s-1280x800-rebuild.28"
+          "./menu-api.js": "./menu-api.js?v=smt-t2s-1280x800-rebuild.29",
+          "./combo-rules.js": "./combo-rules.js?v=smt-t2s-1280x800-rebuild.29",
+          "../../shared/store.js": "../../shared/store.js?v=smt-t2s-1280x800-rebuild.29"
         }
       }
     </script>
@@ -53,6 +207,8 @@
         const app = document.getElementById('app');
         const view = { productsTop: 0, categoryLeft: 0, cartTop: 0 };
         let restoreTimer = 0;
+        let completionSnapshot = null;
+        let reopeningCompletion = false;
 
         function remember() {
           const products = app.querySelector('.products');
@@ -77,6 +233,73 @@
           }, 0);
         }
 
+        function captureCompletionParent(actionNode) {
+          if (actionNode?.dataset.action !== 'completion-drink') return;
+          const panel = actionNode.closest('.completion-card');
+          if (!panel) return;
+          const rect = panel.getBoundingClientRect();
+          completionSnapshot = {
+            html: panel.outerHTML,
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height,
+            scrollTop: panel.scrollTop
+          };
+        }
+
+        function restoreCompletionParent() {
+          if (!completionSnapshot) return;
+          const modifier = app.querySelector('.modifier-card');
+          let underlay = app.querySelector('.completion-parent-underlay');
+
+          if (modifier && !underlay) {
+            const host = document.createElement('div');
+            host.innerHTML = completionSnapshot.html;
+            underlay = host.firstElementChild;
+            if (underlay) {
+              underlay.classList.add('completion-parent-underlay');
+              underlay.removeAttribute('data-pointer-side');
+              underlay.querySelectorAll('[data-action]').forEach(node => {
+                node.removeAttribute('data-action');
+                node.setAttribute('tabindex', '-1');
+                node.setAttribute('aria-hidden', 'true');
+              });
+              Object.assign(underlay.style, {
+                left: completionSnapshot.left + 'px',
+                top: completionSnapshot.top + 'px',
+                width: completionSnapshot.width + 'px',
+                height: completionSnapshot.height + 'px',
+                right: 'auto',
+                bottom: 'auto',
+                transform: 'none'
+              });
+              underlay.scrollTop = completionSnapshot.scrollTop;
+              app.appendChild(underlay);
+            }
+          }
+
+          if (modifier) {
+            modifier.style.zIndex = '1005';
+            return;
+          }
+
+          if (!app.querySelector('.completion-card') && !reopeningCompletion) {
+            const opener = app.querySelector('[data-action="open-completion"]');
+            if (opener) {
+              reopeningCompletion = true;
+              opener.click();
+              setTimeout(() => {
+                completionSnapshot = null;
+                reopeningCompletion = false;
+              }, 0);
+            }
+          } else if (app.querySelector('.completion-card:not(.completion-parent-underlay)')) {
+            completionSnapshot = null;
+            reopeningCompletion = false;
+          }
+        }
+
         app.addEventListener('scroll', event => {
           const target = event.target;
           if (target.matches?.('.products')) view.productsTop = target.scrollTop;
@@ -95,6 +318,7 @@
             statusNode.setAttribute('aria-label', '開啟接單設定');
           }
 
+          captureCompletionParent(actionNode);
           remember();
           const action = (actionNode || statusNode)?.dataset.action || '';
           restore({ resetProducts: action === 'category' });
@@ -108,11 +332,16 @@
           if (!/^(接單中|已停止接單|接單至)/.test(statusText)) return;
           statusNode.dataset.action = 'open-status';
         }, true);
+
+        const modalObserver = new MutationObserver(() => {
+          requestAnimationFrame(restoreCompletionParent);
+        });
+        modalObserver.observe(app, { childList: true, subtree: true });
       })();
     </script>
-    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.28"></script>
-    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.28"></script>
-    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.28"></script>
-    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.28"></script>
+    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.29"></script>
+    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.29"></script>
+    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.29"></script>
+    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.29"></script>
   </body>
 </html>
