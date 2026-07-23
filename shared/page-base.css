@@ -133,7 +133,7 @@ button {
 .shell-nav-icon{width:25px;height:25px;display:block}
 .shell-nav-badge{position:absolute;top:3px;left:calc(50% + 10px);min-width:20px;height:20px;padding:0 5px;display:grid;place-items:center;border-radius:999px;background:var(--red);color:#fff;font-size:11px}
 
-/* 所有文字式單選／篩選控制共用同一套膠囊語言；內容卡仍保留卡片選中框。 */
+/* Choice controls share the same pill language by default. Page-level styles may override this without using !important. */
 :is(
   .top-btn,
   .category-page > button,
@@ -152,7 +152,7 @@ button {
   .method-grid > button,
   .theme
 ) {
-  border-radius: var(--choice-pill-radius) !important;
+  border-radius: var(--choice-pill-radius);
 }
 :is(
   .top-btn,
@@ -172,9 +172,9 @@ button {
   .method-grid > button,
   .theme
 ).active {
-  background: var(--orange-soft) !important;
-  border-color: color-mix(in srgb,var(--orange) 56%,white) !important;
-  color: var(--orange) !important;
+  background: var(--orange-soft);
+  border-color: color-mix(in srgb,var(--orange) 56%,white);
+  color: var(--orange);
   box-shadow: 0 3px 11px color-mix(in srgb,var(--orange) 14%,transparent);
 }
 .global-statusbar{height:78px;min-height:78px}
