@@ -3,42 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
-  <title>磨飯 MoreFun OS｜SMT / SMM</title>
+  <title>磨飯 MoreFun OS｜公網入口</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="unified-entry.css?v=unified-smt-smm.01">
+  <link rel="stylesheet" href="unified-entry.css?v=unified-public-door.02">
 </head>
 <body>
-  <main class="entry-shell" aria-label="磨飯 MoreFun OS 統一入口">
+  <main class="entry-shell" aria-label="磨飯 MoreFun OS 公網入口">
     <section class="entry-hero">
-      <p class="eyebrow">MoreFun OS｜同一網址雙模式</p>
+      <p class="eyebrow">MoreFun OS｜公網檢查門口</p>
       <h1>磨飯 SMT / SMM</h1>
-      <p class="lead">一個部署入口，同時檢查 Sunmi T2S 1280×800 收銀機版、iPad/電腦預覽同手機 SMM 管理版。</p>
+      <p class="lead">同一條公網網址，同時睇到收銀機 SMT、iPhone 黃框比例檢查、手機 SMM。根頁只做分流，不參與正式收銀流程。</p>
       <div id="device-hint" class="device-hint">正在量度裝置…</div>
     </section>
 
     <section class="mode-grid" aria-label="模式入口">
-      <a class="mode-card primary" href="./pages/order/index.html">
-        <small>Sunmi T2S / 收銀機</small>
+      <a id="entry-smt" class="mode-card primary" data-mode="smt" href="./pages/order/index.html">
+        <em class="recommend">收銀機 / 電腦 / iPad 建議</em>
+        <small>Sunmi T2S / 主 POS</small>
         <strong>SMT 真機頁</strong>
-        <span>1280×800 主 POS、點單、收銀、打印 host。</span>
+        <span>封裝 APK 同收銀機驗收用。直接進入 1280×800 主 POS，不經 iframe，不經縮放層。</span>
       </a>
-      <a class="mode-card" href="./smt-preview/index.html">
-        <small>iPhone / iPad 檢查</small>
-        <strong>SMT 黃框預覽</strong>
-        <span>黑邊＋黃框，縮放檢查有冇出界。</span>
+      <a id="entry-preview" class="mode-card preview" data-mode="preview" href="./smt-preview/index.html">
+        <em class="recommend">iPhone 檢查建議</em>
+        <small>iPhone / iPad 比例檢查</small>
+        <strong>SMT iPhone C 黃框</strong>
+        <span>黑邊＋黃色 1280×800 邊框，方便檢查 SMT 有冇出界或比例錯位。</span>
       </a>
-      <a class="mode-card phone" href="./smm/index.html">
-        <small>手機管理 PWA</small>
+      <a id="entry-smm" class="mode-card phone" data-mode="smm" href="./smm/index.html">
+        <em class="recommend">手機管理建議</em>
+        <small>SMM PWA</small>
         <strong>SMM 手機端</strong>
-        <span>訂單、售罄、列印任務、同步狀態、日結入口。</span>
+        <span>手機營運管理殼。SMM 可後續慢慢執，現階段主要保留同一 origin 同資料同步入口。</span>
       </a>
     </section>
 
     <section class="runtime-note">
-      <strong>流水號方向</strong>
-      <p>SMT 同 SMM 已放喺同一 origin。下一步以 shared runtime / backend 作唯一流水號權威，避免兩邊各自產生真假流水。</p>
+      <strong>而家點睇</strong>
+      <p>手機打開根頁會高亮 SMM 同 SMT 黃框檢查；電腦、iPad、收銀機橫屏會高亮 SMT 真機頁。三個入口永遠都顯示，可以手動切換。</p>
+    </section>
+
+    <section class="runtime-note warning">
+      <strong>封裝規則</strong>
+      <p>APK 封裝目標要用 <code>/pages/order/index.html</code>。根頁同 <code>/smt-preview/</code> 只供公網檢查，不入正式 Android 收銀包。</p>
     </section>
   </main>
-  <script type="module" src="unified-entry.js?v=unified-smt-smm.01"></script>
+  <script type="module" src="unified-entry.js?v=unified-public-door.02"></script>
 </body>
 </html>
