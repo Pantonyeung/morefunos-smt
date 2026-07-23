@@ -6,6 +6,22 @@ const scrollMemory=new Map();
 let lastTriggerRect=null;
 let prepareFrame=0;
 
+const externalArrow=document.createElement('div');
+externalArrow.setAttribute('aria-hidden','true');
+Object.assign(externalArrow.style,{
+  position:'fixed',
+  width:'14px',
+  height:'14px',
+  display:'none',
+  background:'#fff',
+  borderLeft:'1px solid #ddd3cc',
+  borderTop:'1px solid #ddd3cc',
+  boxShadow:'-2px -2px 5px rgba(44,34,29,.06)',
+  pointerEvents:'none',
+  zIndex:'1004'
+});
+document.body.appendChild(externalArrow);
+
 function categoryName(section){
   return section.querySelector('.cart-category>header strong')?.textContent?.trim()||'';
 }
@@ -118,6 +134,38 @@ function choosePlacement(trigger,width,height,safe,gap=12){
   return found||Object.entries(spaces).sort((a,b)=>b[1]-a[1])[0][0];
 }
 
+function showExternalArrow(placement,size){
+  const side=placement.side;
+  if(!['bottom','top','right','left'].includes(side)){
+    externalArrow.style.display='none';
+    return;
+  }
+  let x=placement.left;
+  let y=placement.top;
+  let rotate='45deg';
+  if(side==='bottom'){
+    x+=Number(placement.pointerX??size.width/2)-7;
+    y-=7;
+    rotate='45deg';
+  }else if(side==='top'){
+    x+=Number(placement.pointerX??size.width/2)-7;
+    y+=Number(placement.height||size.height)-7;
+    rotate='225deg';
+  }else if(side==='right'){
+    x-=7;
+    y+=Number(placement.pointerY??size.height/2)-7;
+    rotate='-45deg';
+  }else{
+    x+=size.width-7;
+    y+=Number(placement.pointerY??size.height/2)-7;
+    rotate='135deg';
+  }
+  externalArrow.style.left=Math.round(x)+'px';
+  externalArrow.style.top=Math.round(y)+'px';
+  externalArrow.style.transform='rotate('+rotate+')';
+  externalArrow.style.display='block';
+}
+
 function applyPlacement(card,placement,size){
   card.classList.add('is-anchored-popover');
   card.style.left=Math.round(placement.left)+'px';
@@ -133,6 +181,7 @@ function applyPlacement(card,placement,size){
   if(placement.pointerX!=null)card.style.setProperty('--pointer-x',placement.pointerX+'px');
   if(placement.pointerY!=null)card.style.setProperty('--pointer-y',placement.pointerY+'px');
   card.dataset.popoverPositioned='1';
+  showExternalArrow(placement,size);
 }
 
 function positionPopover(card){
@@ -165,7 +214,21 @@ function positionPopover(card){
 }
 
 function preparePopovers(){
-  app.querySelectorAll('.modal-card,.confirm-card').forEach(positionPopover);
+  const cards=[...app.querySelectorAll('.modal-card,.confirm-card')];
+  if(!cards.length){externalArrow.style.display='none';return;}
+  cards.forEach(positionPopover);
+  const active=cards[cards.length-1];
+  if(active?.dataset.popoverPositioned==='1'){
+    const placement={
+      left:Number.parseFloat(active.style.left)||0,
+      top:Number.parseFloat(active.style.top)||0,
+      side:active.dataset.pointerSide||'center',
+      pointerX:Number.parseFloat(active.style.getPropertyValue('--pointer-x'))||null,
+      pointerY:Number.parseFloat(active.style.getPropertyValue('--pointer-y'))||null,
+      height:Number.parseFloat(active.style.height)||active.getBoundingClientRect().height
+    };
+    showExternalArrow(placement,{width:active.getBoundingClientRect().width,height:active.getBoundingClientRect().height});
+  }
 }
 
 function prepareAll(){
@@ -215,7 +278,7 @@ app.addEventListener('scroll',event=>{
 
 app.addEventListener('click',event=>{
   const dismiss=event.target.closest('[data-action="dismiss-modal"]');
-  if(dismiss){popoverMemory.clear();scrollMemory.clear();return;}
+  if(dismiss){popoverMemory.clear();scrollMemory.clear();externalArrow.style.display='none';return;}
   const categoryHeader=event.target.closest('.cart-category>header');
   if(categoryHeader){event.preventDefault();toggleCategory(categoryHeader.parentElement);return;}
   const foldTrigger=event.target.closest('.fold-trigger');
