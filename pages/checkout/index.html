@@ -1,1 +1,97 @@
-<!doctype html><html lang="zh-HK"><head><meta charset="UTF-8"><meta name="viewport" content="width=1920,initial-scale=1"><title>磨飯 SMT｜結帳</title><link rel="stylesheet" href="../../shared/page-base.css?v=order-v1-31"><link rel="stylesheet" href="page.css?v=order-v1-31"><link rel="stylesheet" href="channel-payment.css?v=order-v1-31"></head><body data-page="checkout"><div id="app"></div><script src="../../shared/page-bridge.js?v=order-v1-31"></script><script type="module" src="page.js?v=order-v1-31"></script></body></html>
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+  <title>磨飯 SMT｜結帳</title>
+  <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.31">
+  <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.31">
+  <link rel="stylesheet" href="channel-payment.css?v=smt-t2s-1280x800-rebuild.31">
+  <style>
+    /* T2S 1280×800：左側預覽收窄，右側付款區成為主要操作區。 */
+    .checkout{
+      grid-template-columns:26% minmax(0,1fr)!important;
+      gap:10px!important;
+      padding:10px 12px!important;
+      overflow:hidden!important;
+    }
+    .checkout-cart{padding:10px!important}
+    .checkout-cart article{grid-template-columns:24px minmax(0,1fr) auto!important;gap:7px!important;padding:7px 0!important}
+    .checkout-cart article strong{font-size:14px!important;line-height:1.25!important}
+    .checkout-cart article small{font-size:11px!important}
+    .detail-actions{gap:7px!important;padding-top:8px!important}
+    .detail-actions button{min-height:48px!important;border-radius:9px!important}
+
+    /* 右側主區預留獨立固定結帳列，鍵盤只使用其上方空間。 */
+    .checkout-main{
+      position:relative!important;
+      padding:10px 10px 78px!important;
+      gap:7px!important;
+      overflow:hidden!important;
+    }
+    .checkout-main>.row button{min-height:52px!important;padding:5px 8px!important}
+    .option-icon{width:27px!important;height:27px!important}
+    .summary{gap:6px!important}
+    .summary>span,.summary .received-summary{padding:7px 8px!important;gap:2px!important}
+    .summary b{font-size:18px!important}
+
+    .cash-controls{
+      flex:1 1 auto!important;
+      min-height:0!important;
+      overflow:hidden!important;
+      padding-bottom:0!important;
+    }
+    .keypad-wrap{
+      height:100%!important;
+      min-height:0!important;
+      grid-template-rows:42px minmax(0,1fr)!important;
+      gap:6px!important;
+      overflow:hidden!important;
+    }
+    .keypad-wrap .quick-amounts{gap:6px!important}
+    .quick-amounts button{min-height:42px!important;height:42px!important;border-radius:8px!important}
+    .keypad-wrap .keypad{
+      min-height:0!important;
+      height:100%!important;
+      grid-template-columns:repeat(3,minmax(0,1fr))!important;
+      grid-template-rows:repeat(4,minmax(44px,1fr))!important;
+      gap:6px!important;
+      overflow:hidden!important;
+    }
+    .keypad-wrap .keypad button{
+      min-height:44px!important;
+      height:auto!important;
+      font-size:25px!important;
+      border-radius:9px!important;
+    }
+
+    /* 最底一行永遠只屬於結帳，唔再覆蓋鍵盤或其他付款控制。 */
+    .checkout-action-zone{
+      position:absolute!important;
+      left:10px!important;
+      right:10px!important;
+      bottom:10px!important;
+      z-index:8!important;
+      margin:0!important;
+      padding-top:7px!important;
+      background:#fff!important;
+      border-top:1px solid var(--line)!important;
+      box-shadow:0 -8px 18px rgba(49,34,26,.07)!important;
+    }
+    .checkout-action-zone .confirm{
+      width:100%!important;
+      height:58px!important;
+      min-height:58px!important;
+      border-radius:11px!important;
+      font-size:20px!important;
+    }
+    .zero-warning{margin:0 0 5px!important;padding:5px 8px!important;font-size:12px!important}
+    .checkout-context{min-height:0!important;height:100%!important}
+  </style>
+</head>
+<body data-page="checkout">
+  <div id="app"></div>
+  <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.31"></script>
+  <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.31"></script>
+</body>
+</html>
