@@ -1,4 +1,8 @@
-const normalize=value=>String(value??'').trim().replace(/\s+/g,'').replace(/[＋+]/g,'＋');
+const normalize=value=>String(value??'')
+  .trim()
+  .replace(/\s+/g,'')
+  .replace(/[＋+]/g,'＋')
+  .replace(/飯糰/g,'飯團');
 
 const riceballTiers=[
   {tier:'A',basePrice:41,names:['古早味','菠蘿','鹹蛋黃','芝士']},
