@@ -18,7 +18,7 @@ function prepareCategory(section){
 
 function prepareEditButtons(){
   app.querySelectorAll('.cart-actions .edit-button').forEach(button=>{
-    button.textContent='改';
+    if(button.textContent.trim()!=='改')button.textContent='改';
     button.setAttribute('aria-label','修改產品');
     button.setAttribute('title','修改產品');
   });
@@ -41,18 +41,8 @@ function safeViewport(){
 }
 
 function choosePlacement(trigger,width,height,safe,gap=12){
-  const spaces={
-    bottom:safe.bottom-trigger.bottom,
-    top:trigger.top-safe.top,
-    right:safe.right-trigger.right,
-    left:trigger.left-safe.left
-  };
-  const candidates=[
-    ['bottom',spaces.bottom>=height+gap],
-    ['top',spaces.top>=height+gap],
-    ['right',spaces.right>=width+gap],
-    ['left',spaces.left>=width+gap]
-  ];
+  const spaces={bottom:safe.bottom-trigger.bottom,top:trigger.top-safe.top,right:safe.right-trigger.right,left:trigger.left-safe.left};
+  const candidates=[['bottom',spaces.bottom>=height+gap],['top',spaces.top>=height+gap],['right',spaces.right>=width+gap],['left',spaces.left>=width+gap]];
   const found=candidates.find(([,fits])=>fits);
   if(found)return found[0];
   return Object.entries(spaces).sort((a,b)=>b[1]-a[1])[0][0];
@@ -73,19 +63,10 @@ function positionPopover(card){
   let top=safe.top+(maxHeight-height)/2;
   if(trigger){
     side=choosePlacement(trigger,width,height,safe);
-    if(side==='bottom'){
-      left=trigger.left+trigger.width/2-width/2;
-      top=trigger.bottom+12;
-    }else if(side==='top'){
-      left=trigger.left+trigger.width/2-width/2;
-      top=trigger.top-height-12;
-    }else if(side==='right'){
-      left=trigger.right+12;
-      top=trigger.top+trigger.height/2-height/2;
-    }else{
-      left=trigger.left-width-12;
-      top=trigger.top+trigger.height/2-height/2;
-    }
+    if(side==='bottom'){left=trigger.left+trigger.width/2-width/2;top=trigger.bottom+12;}
+    else if(side==='top'){left=trigger.left+trigger.width/2-width/2;top=trigger.top-height-12;}
+    else if(side==='right'){left=trigger.right+12;top=trigger.top+trigger.height/2-height/2;}
+    else {left=trigger.left-width-12;top=trigger.top+trigger.height/2-height/2;}
   }
   left=Math.max(safe.left,Math.min(left,safe.right-width));
   top=Math.max(safe.top,Math.min(top,safe.bottom-height));
@@ -107,10 +88,7 @@ function positionPopover(card){
 }
 
 function preparePopovers(){
-  app.querySelectorAll('.modal-card,.confirm-card').forEach(card=>{
-    card.dataset.popoverPositioned='';
-    positionPopover(card);
-  });
+  app.querySelectorAll('.modal-card,.confirm-card').forEach(positionPopover);
 }
 
 function prepareAll(){
