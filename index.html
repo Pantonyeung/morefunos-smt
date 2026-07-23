@@ -2,19 +2,33 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=1280,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <title>磨飯 SMT T2S 1280×800</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.25,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+  <title>磨飯 SMT｜iPhone T2S Adapter</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="app-shell.css?v=smt-t2s-1280x800-product-design-rewrite.01">
+  <link rel="stylesheet" href="app-shell.css?v=smt-t2s-iphone-adapter.01">
 </head>
 <body>
-  <main class="root-entry" aria-label="磨飯 SMT 入口">
-    <section>
-      <strong>磨飯 SMT</strong>
-      <span>Sunmi T2S 1280×800 橫屏專用介面</span>
-      <a href="./pages/order/index.html">打開點單</a>
+  <main class="preview-adapter" aria-label="磨飯 SMT iPhone 預覽 adapter">
+    <header class="adapter-hud">
+      <section>
+        <strong>SMT T2S Adapter</strong>
+        <span id="adapter-detail">正在量度畫面…</span>
+      </section>
+      <nav aria-label="預覽控制">
+        <button data-action="fit">適合</button>
+        <button data-action="out">－</button>
+        <button data-action="native">100%</button>
+        <button data-action="in">＋</button>
+        <a href="./pages/order/index.html">真機頁</a>
+      </nav>
+    </header>
+
+    <section id="preview-floor" class="preview-floor" aria-label="黑邊檢查區">
+      <div id="frame-box" class="frame-box">
+        <iframe id="t2s-frame" title="磨飯 SMT 1280×800" src="./pages/order/index.html"></iframe>
+      </div>
     </section>
   </main>
-  <script type="module" src="app-loader.js?v=smt-t2s-1280x800-product-design-rewrite.01"></script>
+  <script type="module" src="app-loader.js?v=smt-t2s-iphone-adapter.01"></script>
 </body>
 </html>
