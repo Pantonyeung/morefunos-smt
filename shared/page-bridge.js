@@ -7,5 +7,8 @@ function applyPreferences(){
     document.documentElement.dataset.sounds=settings.morePage?.sounds===false?'off':'on';
   }catch(_error){document.documentElement.dataset.theme='warm';document.documentElement.dataset.sounds='on';}
 }
+function markReady(){applyPreferences();ready();}
 applyPreferences();
-document.addEventListener('DOMContentLoaded',()=>{applyPreferences();ready();},{once:true});window.MoreFunPageBridge={navigate,ready,applyPreferences};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',markReady,{once:true});else queueMicrotask(markReady);
+window.addEventListener('message',event=>{if(event.data?.type==='morefun:ping')markReady();});
+window.MoreFunPageBridge={navigate,ready,applyPreferences};
