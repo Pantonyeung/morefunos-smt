@@ -3,7 +3,9 @@
 html,
 body,
 #app,
-.app {
+.app,
+body > main,
+#app > main {
   width: 1280px !important;
   min-width: 1280px !important;
   max-width: 1280px !important;
@@ -18,7 +20,9 @@ body {
   position: relative;
 }
 
-.app {
+.app,
+body > main,
+#app > main {
   display: flex;
   flex-direction: column;
 }
