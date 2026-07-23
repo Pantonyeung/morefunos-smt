@@ -71,12 +71,13 @@
 
 `pages/order/t2s-1280.css` 仍含有大量壓縮規則及部分 `!important`。這些是 rebuild.42/43 近似正確畫面的來源，但目前仍屬需要整理的頁內 T2S layer。
 
-後續處理方式：
+處理方式：
 
-- 逐段拆成清楚結構：cart / category / product-card / quick-drinks / modal / combo / completion
-- 保留像素與視覺結果
-- 逐步移除不必要 `!important`
-- 所有規則留在該頁正式 CSS，不再由 loader 注入
+- `html/body/#app` 已改為直接使用 `--t2s-width` / `--t2s-height`。
+- 彈窗最大寬高已由 `100vw/100vh` 改為 `--t2s-width` / `--order-popover-max-height`。
+- 不再依賴 1920 或瀏覽器 viewport 作為頁內排版基準。
+- 後續仍要逐段拆成清楚結構：cart / category / product-card / quick-drinks / modal / combo / completion。
+- 後續逐步移除不必要 `!important`，但不得改變 rebuild.42/43 視覺結果。
 
 ### 6. Order page JS modal logic
 
@@ -126,4 +127,5 @@
 
 - 全部 entry cache 統一到 `smt-t2s-1280x800-core-rewrite.4`。
 - 確保所有頁面入口仍然維持 `width=1280`。
-- 下一步：整理 `pages/more/page.css` 與 `pages/order/t2s-1280.css`。
+- `pages/order/t2s-1280.css` 已錨定至原生 T2S canvas，不再用 `100vw/100vh` 作彈窗尺寸基準。
+- 下一步：整理 `pages/more/page.css` 與點單頁剩餘 `!important`。
