@@ -4,22 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover" />
     <title>磨飯 SMT｜點單 T2S 1280×800</title>
-    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.31" />
-    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.31" />
-    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.31" />
+    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.32" />
+    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.32" />
+    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.32" />
     <style>
       .persistent-pairing-confirm{inset:auto 18px 76px auto!important;width:min(330px,calc(100% - 36px))!important;padding:10px 12px!important;gap:6px!important;border-radius:10px!important}
       .persistent-pairing-confirm strong{font-size:14px!important;line-height:1.25!important}.persistent-pairing-confirm p{margin:0!important;font-size:11px!important;line-height:1.35!important}.persistent-pairing-confirm div{gap:6px!important}.persistent-pairing-confirm button{min-height:34px!important;padding:5px 10px!important;font-size:11px!important}
 
-      /* 快捷飲品：整張卡完整顯示，視覺中心向上移少少。 */
       .quick-drawer-panel{height:140px!important;min-height:140px!important;max-height:140px!important}
-      .quick-drawer-panel>header{height:28px!important;min-height:28px!important;padding:0 8px!important}
-      .quick-drawer-panel>header button{width:24px!important;height:24px!important}
+      .quick-drawer-panel>header{height:28px!important;min-height:28px!important;padding:0 8px!important}.quick-drawer-panel>header button{width:24px!important;height:24px!important}
       .quick-drawer-panel>div{flex:1 1 auto!important;height:110px!important;min-height:0!important;padding:1px 6px 9px!important;align-items:flex-start!important;align-content:flex-start!important}
       .quick-drawer-panel .drink-choice-card{height:96px!important;grid-template-rows:17px 71px!important;padding:2px 4px 4px!important;transform:translateY(-2px)}
       .quick-drawer-panel .drink-choice-card .drink-choice-img{height:71px!important}
 
-      /* 飲品微調窗：細窗固定，唔跟母層重新排位。 */
       .modifier-card.is-anchored-popover{position:fixed!important;width:164px!important;min-width:164px!important;max-width:164px!important;max-height:146px!important;transform:none!important;z-index:1010!important}
       .modifier-card>header{min-height:25px!important;padding:3px 5px!important}.modifier-card>header strong{font-size:9px!important}.modifier-card>header button{width:19px!important;height:19px!important;min-height:19px!important;font-size:8px!important}
       .modifier-card>.drink-base-qty{margin:2px 4px!important;padding:2px 3px!important;min-height:22px!important;font-size:8px!important}.modifier-card>.drink-base-qty>span:last-child{grid-template-columns:17px 18px 17px!important;gap:1px!important}
@@ -28,19 +25,30 @@
       .modifier-card .adjustment-options{padding:2px!important;gap:1px!important}.modifier-card .adjustment-options .option-chips{gap:1px!important}.modifier-card .adjustment-options .option-chips button{width:auto!important;min-width:0!important;min-height:17px!important;height:17px!important;padding:1px 3px!important;font-size:7px!important}
       .modifier-card>.add-group{margin:1px 4px!important;min-height:18px!important;height:18px!important;padding:1px!important;font-size:7px!important}.modifier-card>.wide{margin:1px 4px 4px!important;min-height:20px!important;height:20px!important;font-size:7px!important}
 
-      /* 指向三角只貼住飲品細窗邊緣，位置由來源卡中心計算一次。 */
-      .modifier-card.is-anchored-popover::before{display:block!important;position:absolute!important;width:12px!important;height:12px!important;background:#fff!important;border-left:1px solid var(--line)!important;border-top:1px solid var(--line)!important;z-index:-1!important}
-      .modifier-card.is-anchored-popover[data-pointer-side="top"]::before{left:var(--pointer-x,50%)!important;top:-7px!important;bottom:auto!important;transform:translateX(-50%) rotate(45deg)!important}
-      .modifier-card.is-anchored-popover[data-pointer-side="bottom"]::before{left:var(--pointer-x,50%)!important;top:auto!important;bottom:-7px!important;transform:translateX(-50%) rotate(225deg)!important}
-      .modifier-card.is-anchored-popover[data-pointer-side="left"]::before{top:var(--pointer-y,50%)!important;left:-7px!important;right:auto!important;transform:translateY(-50%) rotate(-45deg)!important}
-      .modifier-card.is-anchored-popover[data-pointer-side="right"]::before{top:var(--pointer-y,50%)!important;left:auto!important;right:-7px!important;transform:translateY(-50%) rotate(135deg)!important}
+      /* 所有指引改用真正三角形，唔再用旋轉菱形。 */
+      .anchored-card::before,.modal-card.is-anchored-popover::before,.confirm-card.is-anchored-popover::before,.modifier-card.is-anchored-popover::before{
+        content:""!important;display:block!important;position:absolute!important;width:0!important;height:0!important;background:transparent!important;border:0!important;z-index:0!important;transform:none!important;pointer-events:none!important
+      }
+      .anchored-card[data-arrow-side="top"]::before,.is-anchored-popover[data-pointer-side="top"]::before{left:var(--anchor-x,var(--pointer-x,50%))!important;top:-9px!important;bottom:auto!important;border-left:9px solid transparent!important;border-right:9px solid transparent!important;border-bottom:9px solid #fff!important;transform:translateX(-50%)!important}
+      .anchored-card[data-arrow-side="bottom"]::before,.is-anchored-popover[data-pointer-side="bottom"]::before{left:var(--anchor-x,var(--pointer-x,50%))!important;top:auto!important;bottom:-9px!important;border-left:9px solid transparent!important;border-right:9px solid transparent!important;border-top:9px solid #fff!important;transform:translateX(-50%)!important}
+      .anchored-card[data-arrow-side="left"]::before,.is-anchored-popover[data-pointer-side="left"]::before{left:-9px!important;right:auto!important;top:var(--anchor-y,var(--pointer-y,50%))!important;border-top:9px solid transparent!important;border-bottom:9px solid transparent!important;border-right:9px solid #fff!important;transform:translateY(-50%)!important}
+      .anchored-card[data-arrow-side="right"]::before,.is-anchored-popover[data-pointer-side="right"]::before{left:auto!important;right:-9px!important;top:var(--anchor-y,var(--pointer-y,50%))!important;border-top:9px solid transparent!important;border-bottom:9px solid transparent!important;border-left:9px solid #fff!important;transform:translateY(-50%)!important}
 
-      /* 飲品子窗開啟時，母層使用固定快照；唔參與重新排版。 */
+      /* 掛單／加入堂食：四邊保留安全距離，完整圓角，唔貼框亦唔超出。 */
+      .order-transfer-card{
+        left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;
+        width:min(880px,calc(100vw - 48px))!important;height:min(520px,calc(100vh - 168px))!important;
+        max-width:calc(100vw - 48px)!important;max-height:calc(100vh - 168px)!important;
+        transform:translate(-50%,-50%)!important;border-radius:18px!important;overflow:hidden!important
+      }
+      .order-transfer-card>header{border-radius:18px 18px 0 0!important;overflow:hidden!important}
+      .order-transfer-card>footer{border-radius:0 0 18px 18px!important;overflow:hidden!important}
+
       .completion-parent-underlay{position:fixed!important;z-index:1001!important;pointer-events:none!important;opacity:.98;overflow:hidden!important;transform:none!important}
       .completion-parent-underlay::before{display:none!important}
     </style>
     <script type="importmap">
-      {"imports":{"./menu-api.js":"./menu-api.js?v=smt-t2s-1280x800-rebuild.31","./combo-rules.js":"./combo-rules.js?v=smt-t2s-1280x800-rebuild.31","../../shared/store.js":"../../shared/store.js?v=smt-t2s-1280x800-rebuild.31"}}
+      {"imports":{"./menu-api.js":"./menu-api.js?v=smt-t2s-1280x800-rebuild.32","./combo-rules.js":"./combo-rules.js?v=smt-t2s-1280x800-rebuild.32","../../shared/store.js":"../../shared/store.js?v=smt-t2s-1280x800-rebuild.32"}}
     </script>
   </head>
   <body data-page="order">
@@ -50,98 +58,21 @@
         const app=document.getElementById('app');
         const view={productsTop:0,categoryLeft:0,cartTop:0};
         let restoreTimer=0,underlay=null,sourceRect=null,openingDrink=false;
-
-        function remember(){
-          const products=app.querySelector('.products'),categories=app.querySelector('.category-scroll'),cart=app.querySelector('.cart-list');
-          if(products)view.productsTop=products.scrollTop;
-          if(categories)view.categoryLeft=categories.scrollLeft;
-          if(cart)view.cartTop=cart.scrollTop;
-        }
-        function restore({resetProducts=false}={}){
-          clearTimeout(restoreTimer);
-          restoreTimer=setTimeout(()=>requestAnimationFrame(()=>{
-            const products=app.querySelector('.products'),categories=app.querySelector('.category-scroll'),cart=app.querySelector('.cart-list');
-            if(products)products.scrollTop=resetProducts?0:view.productsTop;
-            if(categories)categories.scrollLeft=view.categoryLeft;
-            if(cart)cart.scrollTop=view.cartTop;
-          }),0);
-        }
-        function clearDrinkLayer(){
-          underlay?.remove();underlay=null;sourceRect=null;openingDrink=false;
-        }
-        function captureDrinkLayer(actionNode){
-          if(actionNode?.dataset.action!=='completion-drink')return;
-          const panel=actionNode.closest('.completion-card');
-          if(!panel)return;
-          clearDrinkLayer();
-          const panelRect=panel.getBoundingClientRect();
-          const targetRect=actionNode.getBoundingClientRect();
-          const host=document.createElement('div');
-          host.innerHTML=panel.outerHTML;
-          underlay=host.firstElementChild;
-          if(!underlay)return;
-          underlay.classList.add('completion-parent-underlay');
-          underlay.removeAttribute('data-pointer-side');
-          underlay.querySelectorAll('[data-action]').forEach(node=>{node.removeAttribute('data-action');node.setAttribute('tabindex','-1');node.setAttribute('aria-hidden','true')});
-          Object.assign(underlay.style,{left:panelRect.left+'px',top:panelRect.top+'px',width:panelRect.width+'px',height:panelRect.height+'px',right:'auto',bottom:'auto'});
-          underlay.scrollTop=panel.scrollTop;
-          document.body.appendChild(underlay);
-          sourceRect={left:targetRect.left,top:targetRect.top,right:targetRect.right,bottom:targetRect.bottom,width:targetRect.width,height:targetRect.height,cx:targetRect.left+targetRect.width/2,cy:targetRect.top+targetRect.height/2};
-          openingDrink=true;
-          setTimeout(()=>{openingDrink=false;syncDrinkPopover()},220);
-        }
-        function positionDrinkPopover(popover){
-          if(!popover||!sourceRect)return;
-          const margin=10,gap=9,vw=innerWidth,vh=innerHeight;
-          const width=popover.offsetWidth||164,height=popover.offsetHeight||120;
-          let left=sourceRect.right+gap,top=sourceRect.cy-height/2,side='left';
-          if(left+width>vw-margin){left=sourceRect.left-width-gap;side='right'}
-          if(left<margin){left=Math.min(vw-width-margin,Math.max(margin,sourceRect.cx-width/2));top=sourceRect.bottom+gap;side='top'}
-          if(top+height>vh-margin){top=sourceRect.top-height-gap;side='bottom'}
-          left=Math.max(margin,Math.min(left,vw-width-margin));top=Math.max(margin,Math.min(top,vh-height-margin));
-          popover.dataset.pointerSide=side;
-          popover.style.left=left+'px';popover.style.top=top+'px';popover.style.right='auto';popover.style.bottom='auto';popover.style.transform='none';
-          popover.style.setProperty('--pointer-x',Math.max(12,Math.min(width-12,sourceRect.cx-left))+'px');
-          popover.style.setProperty('--pointer-y',Math.max(12,Math.min(height-12,sourceRect.cy-top))+'px');
-        }
-        function syncDrinkPopover(){
-          const popover=app.querySelector('.modifier-card.is-anchored-popover,.modifier-card');
-          if(popover&&sourceRect){positionDrinkPopover(popover);return}
-          if(!openingDrink&&underlay)clearDrinkLayer();
-        }
-
-        app.addEventListener('scroll',event=>{
-          const target=event.target;
-          if(target.matches?.('.products'))view.productsTop=target.scrollTop;
-          else if(target.matches?.('.category-scroll'))view.categoryLeft=target.scrollLeft;
-          else if(target.matches?.('.cart-list'))view.cartTop=target.scrollTop;
-        },true);
-        app.addEventListener('pointerdown',event=>{
-          const actionNode=event.target.closest('[data-action]');
-          const statusNode=event.target.closest('button,[role="button"],span,div');
-          const statusText=statusNode?.textContent?.trim()||'';
-          if(!actionNode&&/^(接單中|已停止接單|接單至)/.test(statusText)){statusNode.dataset.action='open-status';statusNode.setAttribute('role','button');statusNode.setAttribute('aria-label','開啟接單設定')}
-          if(actionNode?.dataset.action==='completion-drink')captureDrinkLayer(actionNode);
-          if(actionNode?.dataset.action==='dismiss-modal'||actionNode?.dataset.action==='completion-close')clearDrinkLayer();
-          remember();
-          const action=(actionNode||statusNode)?.dataset.action||'';
-          restore({resetProducts:action==='category'});
-          setTimeout(()=>requestAnimationFrame(syncDrinkPopover),0);
-        },true);
-        app.addEventListener('keydown',event=>{
-          if(event.key!=='Enter'&&event.key!==' ')return;
-          const statusNode=event.target.closest('[role="button"]');
-          if(!statusNode)return;
-          const statusText=statusNode.textContent?.trim()||'';
-          if(/^(接單中|已停止接單|接單至)/.test(statusText))statusNode.dataset.action='open-status';
-        },true);
-        const modalObserver=new MutationObserver(()=>requestAnimationFrame(syncDrinkPopover));
-        modalObserver.observe(app,{childList:true,subtree:false});
+        function remember(){const products=app.querySelector('.products'),categories=app.querySelector('.category-scroll'),cart=app.querySelector('.cart-list');if(products)view.productsTop=products.scrollTop;if(categories)view.categoryLeft=categories.scrollLeft;if(cart)view.cartTop=cart.scrollTop}
+        function restore({resetProducts=false}={}){clearTimeout(restoreTimer);restoreTimer=setTimeout(()=>requestAnimationFrame(()=>{const products=app.querySelector('.products'),categories=app.querySelector('.category-scroll'),cart=app.querySelector('.cart-list');if(products)products.scrollTop=resetProducts?0:view.productsTop;if(categories)categories.scrollLeft=view.categoryLeft;if(cart)cart.scrollTop=view.cartTop}),0)}
+        function clearDrinkLayer(){underlay?.remove();underlay=null;sourceRect=null;openingDrink=false}
+        function captureDrinkLayer(actionNode){if(actionNode?.dataset.action!=='completion-drink')return;const panel=actionNode.closest('.completion-card');if(!panel)return;clearDrinkLayer();const panelRect=panel.getBoundingClientRect(),targetRect=actionNode.getBoundingClientRect(),host=document.createElement('div');host.innerHTML=panel.outerHTML;underlay=host.firstElementChild;if(!underlay)return;underlay.classList.add('completion-parent-underlay');underlay.removeAttribute('data-pointer-side');underlay.querySelectorAll('[data-action]').forEach(node=>{node.removeAttribute('data-action');node.setAttribute('tabindex','-1');node.setAttribute('aria-hidden','true')});Object.assign(underlay.style,{left:panelRect.left+'px',top:panelRect.top+'px',width:panelRect.width+'px',height:panelRect.height+'px',right:'auto',bottom:'auto'});underlay.scrollTop=panel.scrollTop;document.body.appendChild(underlay);sourceRect={left:targetRect.left,top:targetRect.top,right:targetRect.right,bottom:targetRect.bottom,width:targetRect.width,height:targetRect.height,cx:targetRect.left+targetRect.width/2,cy:targetRect.top+targetRect.height/2};openingDrink=true;setTimeout(()=>{openingDrink=false;syncDrinkPopover()},220)}
+        function positionDrinkPopover(popover){if(!popover||!sourceRect)return;const margin=10,gap=9,vw=innerWidth,vh=innerHeight,width=popover.offsetWidth||164,height=popover.offsetHeight||120;let left=sourceRect.right+gap,top=sourceRect.cy-height/2,side='left';if(left+width>vw-margin){left=sourceRect.left-width-gap;side='right'}if(left<margin){left=Math.min(vw-width-margin,Math.max(margin,sourceRect.cx-width/2));top=sourceRect.bottom+gap;side='top'}if(top+height>vh-margin){top=sourceRect.top-height-gap;side='bottom'}left=Math.max(margin,Math.min(left,vw-width-margin));top=Math.max(margin,Math.min(top,vh-height-margin));popover.dataset.pointerSide=side;popover.style.left=left+'px';popover.style.top=top+'px';popover.style.right='auto';popover.style.bottom='auto';popover.style.transform='none';popover.style.setProperty('--pointer-x',Math.max(12,Math.min(width-12,sourceRect.cx-left))+'px');popover.style.setProperty('--pointer-y',Math.max(12,Math.min(height-12,sourceRect.cy-top))+'px')}
+        function syncDrinkPopover(){const popover=app.querySelector('.modifier-card.is-anchored-popover,.modifier-card');if(popover&&sourceRect){positionDrinkPopover(popover);return}if(!openingDrink&&underlay)clearDrinkLayer()}
+        app.addEventListener('scroll',event=>{const target=event.target;if(target.matches?.('.products'))view.productsTop=target.scrollTop;else if(target.matches?.('.category-scroll'))view.categoryLeft=target.scrollLeft;else if(target.matches?.('.cart-list'))view.cartTop=target.scrollTop},true);
+        app.addEventListener('pointerdown',event=>{const actionNode=event.target.closest('[data-action]'),statusNode=event.target.closest('button,[role="button"],span,div'),statusText=statusNode?.textContent?.trim()||'';if(!actionNode&&/^(接單中|已停止接單|接單至)/.test(statusText)){statusNode.dataset.action='open-status';statusNode.setAttribute('role','button');statusNode.setAttribute('aria-label','開啟接單設定')}if(actionNode?.dataset.action==='completion-drink')captureDrinkLayer(actionNode);if(actionNode?.dataset.action==='dismiss-modal'||actionNode?.dataset.action==='completion-close')clearDrinkLayer();remember();const action=(actionNode||statusNode)?.dataset.action||'';restore({resetProducts:action==='category'});setTimeout(()=>requestAnimationFrame(syncDrinkPopover),0)},true);
+        app.addEventListener('keydown',event=>{if(event.key!=='Enter'&&event.key!==' ')return;const statusNode=event.target.closest('[role="button"]');if(!statusNode)return;const statusText=statusNode.textContent?.trim()||'';if(/^(接單中|已停止接單|接單至)/.test(statusText))statusNode.dataset.action='open-status'},true);
+        const modalObserver=new MutationObserver(()=>requestAnimationFrame(syncDrinkPopover));modalObserver.observe(app,{childList:true,subtree:false});
       })();
     </script>
-    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.31"></script>
-    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.31"></script>
-    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.31"></script>
-    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.31"></script>
+    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.32"></script>
+    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.32"></script>
+    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.32"></script>
+    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.32"></script>
   </body>
 </html>
