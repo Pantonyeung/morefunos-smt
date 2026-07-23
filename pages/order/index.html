@@ -4,19 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover" />
     <title>磨飯 SMT｜點單 T2S 1280×800</title>
-    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.32" />
-    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.32" />
-    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.32" />
+    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.33" />
+    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.33" />
+    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.33" />
     <style>
       .persistent-pairing-confirm{inset:auto 18px 76px auto!important;width:min(330px,calc(100% - 36px))!important;padding:10px 12px!important;gap:6px!important;border-radius:10px!important}
       .persistent-pairing-confirm strong{font-size:14px!important;line-height:1.25!important}.persistent-pairing-confirm p{margin:0!important;font-size:11px!important;line-height:1.35!important}.persistent-pairing-confirm div{gap:6px!important}.persistent-pairing-confirm button{min-height:34px!important;padding:5px 10px!important;font-size:11px!important}
-
       .quick-drawer-panel{height:140px!important;min-height:140px!important;max-height:140px!important}
       .quick-drawer-panel>header{height:28px!important;min-height:28px!important;padding:0 8px!important}.quick-drawer-panel>header button{width:24px!important;height:24px!important}
       .quick-drawer-panel>div{flex:1 1 auto!important;height:110px!important;min-height:0!important;padding:1px 6px 9px!important;align-items:flex-start!important;align-content:flex-start!important}
       .quick-drawer-panel .drink-choice-card{height:96px!important;grid-template-rows:17px 71px!important;padding:2px 4px 4px!important;transform:translateY(-2px)}
       .quick-drawer-panel .drink-choice-card .drink-choice-img{height:71px!important}
-
       .modifier-card.is-anchored-popover{position:fixed!important;width:164px!important;min-width:164px!important;max-width:164px!important;max-height:146px!important;transform:none!important;z-index:1010!important}
       .modifier-card>header{min-height:25px!important;padding:3px 5px!important}.modifier-card>header strong{font-size:9px!important}.modifier-card>header button{width:19px!important;height:19px!important;min-height:19px!important;font-size:8px!important}
       .modifier-card>.drink-base-qty{margin:2px 4px!important;padding:2px 3px!important;min-height:22px!important;font-size:8px!important}.modifier-card>.drink-base-qty>span:last-child{grid-template-columns:17px 18px 17px!important;gap:1px!important}
@@ -24,31 +22,19 @@
       .modifier-card .group-summary{width:auto!important;min-width:0!important;padding:0 3px!important;font-size:7px!important}.modifier-card .drink-group{margin:1px 4px!important;padding:2px!important}.modifier-card .drink-group>header{min-height:20px!important;padding:1px 2px!important}
       .modifier-card .adjustment-options{padding:2px!important;gap:1px!important}.modifier-card .adjustment-options .option-chips{gap:1px!important}.modifier-card .adjustment-options .option-chips button{width:auto!important;min-width:0!important;min-height:17px!important;height:17px!important;padding:1px 3px!important;font-size:7px!important}
       .modifier-card>.add-group{margin:1px 4px!important;min-height:18px!important;height:18px!important;padding:1px!important;font-size:7px!important}.modifier-card>.wide{margin:1px 4px 4px!important;min-height:20px!important;height:20px!important;font-size:7px!important}
-
-      /* 所有指引改用真正三角形，唔再用旋轉菱形。 */
-      .anchored-card::before,.modal-card.is-anchored-popover::before,.confirm-card.is-anchored-popover::before,.modifier-card.is-anchored-popover::before{
-        content:""!important;display:block!important;position:absolute!important;width:0!important;height:0!important;background:transparent!important;border:0!important;z-index:0!important;transform:none!important;pointer-events:none!important
-      }
+      .anchored-card::before,.modal-card.is-anchored-popover::before,.confirm-card.is-anchored-popover::before,.modifier-card.is-anchored-popover::before{content:""!important;display:block!important;position:absolute!important;width:0!important;height:0!important;background:transparent!important;border:0!important;z-index:0!important;transform:none!important;pointer-events:none!important}
       .anchored-card[data-arrow-side="top"]::before,.is-anchored-popover[data-pointer-side="top"]::before{left:var(--anchor-x,var(--pointer-x,50%))!important;top:-9px!important;bottom:auto!important;border-left:9px solid transparent!important;border-right:9px solid transparent!important;border-bottom:9px solid #fff!important;transform:translateX(-50%)!important}
       .anchored-card[data-arrow-side="bottom"]::before,.is-anchored-popover[data-pointer-side="bottom"]::before{left:var(--anchor-x,var(--pointer-x,50%))!important;top:auto!important;bottom:-9px!important;border-left:9px solid transparent!important;border-right:9px solid transparent!important;border-top:9px solid #fff!important;transform:translateX(-50%)!important}
       .anchored-card[data-arrow-side="left"]::before,.is-anchored-popover[data-pointer-side="left"]::before{left:-9px!important;right:auto!important;top:var(--anchor-y,var(--pointer-y,50%))!important;border-top:9px solid transparent!important;border-bottom:9px solid transparent!important;border-right:9px solid #fff!important;transform:translateY(-50%)!important}
       .anchored-card[data-arrow-side="right"]::before,.is-anchored-popover[data-pointer-side="right"]::before{left:auto!important;right:-9px!important;top:var(--anchor-y,var(--pointer-y,50%))!important;border-top:9px solid transparent!important;border-bottom:9px solid transparent!important;border-left:9px solid #fff!important;transform:translateY(-50%)!important}
-
-      /* 掛單／加入堂食：四邊保留安全距離，完整圓角，唔貼框亦唔超出。 */
-      .order-transfer-card{
-        left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;
-        width:min(880px,calc(100vw - 48px))!important;height:min(520px,calc(100vh - 168px))!important;
-        max-width:calc(100vw - 48px)!important;max-height:calc(100vh - 168px)!important;
-        transform:translate(-50%,-50%)!important;border-radius:18px!important;overflow:hidden!important
-      }
+      .order-transfer-card{left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;width:min(880px,calc(100vw - 48px))!important;height:min(520px,calc(100vh - 168px))!important;max-width:calc(100vw - 48px)!important;max-height:calc(100vh - 168px)!important;transform:translate(-50%,-50%)!important;border-radius:18px!important;overflow:hidden!important}
       .order-transfer-card>header{border-radius:18px 18px 0 0!important;overflow:hidden!important}
       .order-transfer-card>footer{border-radius:0 0 18px 18px!important;overflow:hidden!important}
-
       .completion-parent-underlay{position:fixed!important;z-index:1001!important;pointer-events:none!important;opacity:.98;overflow:hidden!important;transform:none!important}
       .completion-parent-underlay::before{display:none!important}
     </style>
     <script type="importmap">
-      {"imports":{"./menu-api.js":"./menu-api.js?v=smt-t2s-1280x800-rebuild.32","./combo-rules.js":"./combo-rules.js?v=smt-t2s-1280x800-rebuild.32","../../shared/store.js":"../../shared/store.js?v=smt-t2s-1280x800-rebuild.32"}}
+      {"imports":{"./menu-api.js":"./menu-api.js?v=smt-t2s-1280x800-rebuild.33","./combo-rules.js":"./combo-rules.js?v=smt-t2s-1280x800-rebuild.33","../../shared/store.js":"../../shared/store.js?v=smt-t2s-1280x800-rebuild.33"}}
     </script>
   </head>
   <body data-page="order">
@@ -70,9 +56,9 @@
         const modalObserver=new MutationObserver(()=>requestAnimationFrame(syncDrinkPopover));modalObserver.observe(app,{childList:true,subtree:false});
       })();
     </script>
-    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.32"></script>
-    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.32"></script>
-    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.32"></script>
-    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.32"></script>
+    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.33"></script>
+    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.33"></script>
+    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.33"></script>
+    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.33"></script>
   </body>
 </html>
