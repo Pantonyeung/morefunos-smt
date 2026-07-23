@@ -17,9 +17,10 @@
 
 ### Root
 
-- index.html 只作 1280×800 入口。
-- app-loader.js 不再建立 iframe，不再做 stage scale，不再做 1280/1920 轉換。
-- 直接進入 pages/order/index.html。
+- index.html 目前作 iPhone 預覽 adapter 入口，用黑底、黃框、縮放控制檢查 1280×800 T2S 邊界。
+- adapter 只供手機比例驗收，唔係正式 SMT runtime。
+- 正式 SMT 真機入口仍然係 pages/order/index.html。
+- 封裝 APK 或正式部署前，必須移除 adapter，將 root 回復為直接進入真機頁，避免 iframe／縮放層進入正式包。
 
 ### Shared layout system
 
@@ -52,6 +53,14 @@
 
 不再使用逐個 popover 補丁定位。
 
+## iPhone Adapter 使用邊界
+
+- adapter 入口：index.html。
+- adapter 用途：只畀 iPhone 橫屏／豎屏查看 1280×800 比例、縮放、黑邊同黃色實際邊界。
+- adapter 內部可以使用 iframe 同 scale，因為佢只係驗收工具。
+- pages/order/index.html 及其他正式 page 不可以引入 adapter scale。
+- 封裝前處理：移除 adapter 或另存到 preview-only 路徑，root 必須改回正式真機入口。
+
 ## 已保留嘅磨飯商業邏輯
 
 - 紫米飯團
@@ -81,6 +90,8 @@
 5. 檢查飲品加購、甜度冰量、飯底、套餐補選是否同一套 modal 層處理。
 6. 檢查購物車、產品卡、售罄入口、列印入口不互相遮擋。
 7. 檢查底部六格導航可跳轉。
+8. 喺 iPhone 打開 root adapter 檢查黑邊、黃框、橫屏／豎屏縮放比例。
+9. 封裝 APK 前移除 root adapter，正式包不得包含 iframe 預覽層。
 
 ## 後續注意
 
