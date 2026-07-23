@@ -70,16 +70,16 @@
 
 ### 5. Order page CSS
 
-`pages/order/t2s-1280.css` 是點單頁正式 T2S 內核層，所有仍需保留的 T2S 修正必須留在此檔，不再由 loader、inline style 或外掛 CSS 注入。
+`pages/order/t2s-1280.css` 仍含有大量壓縮規則及部分 `!important`。這些是 rebuild.42/43 近似正確畫面的來源，但目前仍屬需要整理的頁內 T2S layer。
 
 處理方式：
 
 - `html/body/#app` 已改為直接使用 `--t2s-width` / `--t2s-height`。
 - 彈窗最大寬高已由 `100vw/100vh` 改為 `--t2s-width` / `--order-popover-max-height`。
 - 不再依賴 1920 或瀏覽器 viewport 作為頁內排版基準。
-- core-rewrite.7 已把檔案拆成正式段落：root / status / cart / category / product grid / quick drinks / anchored modal / pairing / completion overlay。
-- 飲品卡與 quick drawer 已改用 CSS 變數控制尺寸，安全移除部分不必要 `!important`。
-- 仍保留少量 `!important` 只限於需要覆蓋 JS inline position lock 的 completion / pointer 狀態。
+- 已拆成正式段落：root / status / cart / category / product grid / quick drinks / anchored modal / pairing / completion overlay。
+- 快捷飲品尺寸已由 T2S CSS 變數控制。
+- 後續逐步移除不必要 `!important`，但不得改變 rebuild.42/43 視覺結果。
 
 ### 6. Order page JS modal logic
 
@@ -99,11 +99,12 @@
 
 ### 7. Checkout page
 
-`pages/checkout/page.css` 已是 1280×800 固定頁，但結帳頁仍需按參考圖正式重排：
+`pages/checkout/page.css` 已按 T2S 1280×800 重新整理：
 
-- 左：訂單詳情
+- 左：訂單詳情、產品圖片、數量／備註摘要、左下操作
 - 右：來源、付款方式、金額結算、鍵盤、備註、固定確認結帳
 - 移除手動「磨飯優惠券」入口，優惠券由系統自動計算
+- dialog 寬高改用 `--t2s-width` / `--t2s-height` 計算，不再使用 `vw/vh`
 
 ## Migration log
 
@@ -149,4 +150,10 @@
 - 快捷飲品、補選飲品、quick drawer 尺寸已改由 T2S CSS 變數控制。
 - 移除一批不需要的飲品卡 / quick drawer `!important`。
 - app-loader / index / order entry 已更新到 `smt-t2s-1280x800-core-rewrite.7`。
-- 下一步：結帳頁按參考圖正式內核重排，並清理 checkout dialog 內的 `vw` 殘留。
+
+### core-rewrite.8
+
+- `pages/checkout/page.css` 已重新整理成正式 T2S checkout core stylesheet。
+- 結帳頁 modal / discount / completion / correction dialog 已改用 T2S canvas 變數，不再依賴 `vw/vh`。
+- app-loader / index / checkout entry 已更新到 `smt-t2s-1280x800-core-rewrite.8`。
+- 下一步：全 repo 掃描 1920 / 1080 / `vw` / `vh` / 外掛補丁殘留。
