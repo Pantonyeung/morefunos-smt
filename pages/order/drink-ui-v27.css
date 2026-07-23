@@ -1,0 +1,172 @@
+/* T2S 飲品元件統一：快捷、必選、組合使用同一圖像語言。 */
+:root{
+  --drink-tile-width:118px;
+  --drink-tile-height:84px;
+  --drink-tile-compact-width:104px;
+  --drink-tile-compact-height:74px;
+}
+
+.quick-drawer-panel>div,
+.completion-drinks>div,
+.detail-drinks,
+.combo-candidates.is-drink-candidates,
+.drink-link-candidates{
+  align-items:start;
+}
+
+.quick-drawer-panel>div{
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:5px;
+  padding:5px 6px;
+}
+
+.quick-drawer-panel .drink-choice-card,
+.completion-drinks .drink-choice-card,
+.detail-drinks .drink-choice-card,
+.combo-candidates .drink-choice-card,
+.drink-link-candidates .drink-choice-card{
+  position:relative;
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:none;
+  height:var(--drink-tile-height);
+  padding:0;
+  overflow:hidden;
+  border-radius:10px;
+  background:#f5f1ec;
+  text-align:left;
+}
+
+.quick-drawer-panel .drink-choice-card .drink-choice-img,
+.completion-drinks .drink-choice-card .drink-choice-img,
+.detail-drinks .drink-choice-card .drink-choice-img,
+.combo-candidates .drink-choice-card .drink-choice-img,
+.drink-link-candidates .drink-choice-card .drink-choice-img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  border-radius:inherit;
+  overflow:hidden;
+}
+
+.quick-drawer-panel .drink-choice-card .drink-choice-img img,
+.completion-drinks .drink-choice-card .drink-choice-img img,
+.detail-drinks .drink-choice-card .drink-choice-img img,
+.combo-candidates .drink-choice-card .drink-choice-img img,
+.drink-link-candidates .drink-choice-card .drink-choice-img img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transform:scale(1.06);
+}
+
+.quick-drawer-panel .drink-choice-card>span:not(.drink-choice-img),
+.completion-drinks .drink-choice-card>span:not(.drink-choice-img),
+.detail-drinks .drink-choice-card>span:not(.drink-choice-img),
+.combo-candidates .drink-choice-card>span:not(.drink-choice-img),
+.drink-link-candidates .drink-choice-card>span:not(.drink-choice-img){
+  position:absolute;
+  z-index:2;
+  left:0;
+  right:0;
+  bottom:0;
+  display:block;
+  min-height:24px;
+  padding:7px 6px 5px;
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+  line-height:1.05;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  background:linear-gradient(180deg,rgba(25,20,17,0),rgba(25,20,17,.82));
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+
+.quick-drawer-panel .drink-choice-card.selected,
+.completion-drinks .drink-choice-card.selected,
+.detail-drinks .drink-choice-card.selected,
+.combo-candidates .drink-choice-card.selected,
+.drink-link-candidates .drink-choice-card.selected{
+  outline:3px solid #ef5b23;
+  outline-offset:-3px;
+}
+
+/* 必選及組合只比快捷飲品略細，保持同一視覺。 */
+.completion-drinks>div,
+.detail-drinks,
+.combo-candidates.is-drink-candidates,
+.drink-link-candidates{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:6px;
+  padding:6px;
+  overflow-x:auto;
+}
+
+.completion-drinks .drink-choice-card,
+.detail-drinks .drink-choice-card,
+.combo-candidates .drink-choice-card,
+.drink-link-candidates .drink-choice-card{
+  height:var(--drink-tile-compact-height);
+}
+
+.completion-drinks{
+  padding:7px 9px 9px;
+}
+.completion-drinks>strong{
+  display:block;
+  margin-bottom:5px;
+  font-size:12px;
+}
+
+/* 單一飲品設定窗：固定細窗，不再隨選項重排或跳位。 */
+.modifier-card.is-anchored-popover{
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  top:50%!important;
+  bottom:auto!important;
+  width:240px!important;
+  min-width:240px!important;
+  max-width:240px!important;
+  height:auto!important;
+  max-height:210px!important;
+  transform:translate(-50%,-50%)!important;
+  overflow:hidden!important;
+  border-radius:11px!important;
+}
+.modifier-card.is-anchored-popover::before{display:none!important}
+.modifier-card>header{min-height:32px!important;padding:5px 7px!important}
+.modifier-card>header strong{font-size:12px!important}
+.modifier-card>header button{width:27px!important;height:27px!important;min-height:27px!important}
+.modifier-card>.drink-base-qty{margin:4px 6px!important;padding:4px 5px!important;min-height:30px!important;font-size:10px!important}
+.modifier-card>.drink-base-qty>span:last-child{grid-template-columns:26px 26px 26px!important;gap:2px!important}
+.modifier-card>.drink-base-qty button,
+.modifier-card .drink-group button{min-height:23px!important;height:23px!important;padding:0 4px!important;font-size:10px!important}
+.modifier-card>.drink-groups{max-height:82px!important;overflow:auto!important}
+.modifier-card .drink-group{margin:3px 6px!important}
+.modifier-card .drink-group>header{min-height:28px!important;padding:3px 4px!important}
+.modifier-card .adjustment-options{padding:4px!important;gap:3px!important}
+.modifier-card .adjustment-options .option-chips{gap:3px!important}
+.modifier-card .adjustment-options .option-chips button{min-height:24px!important;padding:3px 5px!important;font-size:9px!important}
+.modifier-card>.add-group{margin:3px 6px!important;min-height:25px!important;padding:3px!important;font-size:10px!important}
+.modifier-card>.wide{margin:3px 6px 6px!important;min-height:27px!important;font-size:10px!important}
+
+/* 統一整理窗收窄，飲品區為主要內容。 */
+.completion-card.is-anchored-popover{
+  width:min(430px,calc(100vw - 24px))!important;
+  max-height:430px!important;
+  overflow:auto!important;
+}
+.completion-section{padding:7px 9px!important}
+.completion-section strong{font-size:13px!important}
+.completion-section span,.completion-section small{font-size:10px!important}
+
+@media (max-width:900px){
+  .quick-drawer-panel>div{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .completion-drinks>div,.detail-drinks,.combo-candidates.is-drink-candidates,.drink-link-candidates{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
