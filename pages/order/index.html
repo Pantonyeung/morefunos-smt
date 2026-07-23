@@ -2,11 +2,12 @@
 <html lang="zh-HK">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover" />
+    <meta name="viewport" content="width=1280,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
     <title>磨飯 SMT｜點單 T2S 1280×800</title>
-    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.33" />
-    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.33" />
-    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.33" />
+    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.34" />
+    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.34" />
+    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.34" />
+    <link rel="stylesheet" href="../../shared/t2s-fixed-canvas.css?v=smt-t2s-1280x800-rebuild.34" />
     <style>
       .persistent-pairing-confirm{inset:auto 18px 76px auto!important;width:min(330px,calc(100% - 36px))!important;padding:10px 12px!important;gap:6px!important;border-radius:10px!important}
       .persistent-pairing-confirm strong{font-size:14px!important;line-height:1.25!important}.persistent-pairing-confirm p{margin:0!important;font-size:11px!important;line-height:1.35!important}.persistent-pairing-confirm div{gap:6px!important}.persistent-pairing-confirm button{min-height:34px!important;padding:5px 10px!important;font-size:11px!important}
@@ -34,7 +35,7 @@
       .completion-parent-underlay::before{display:none!important}
     </style>
     <script type="importmap">
-      {"imports":{"./menu-api.js":"./menu-api.js?v=smt-t2s-1280x800-rebuild.33","./combo-rules.js":"./combo-rules.js?v=smt-t2s-1280x800-rebuild.33","../../shared/store.js":"../../shared/store.js?v=smt-t2s-1280x800-rebuild.33"}}
+      {"imports":{"./menu-api.js":"./menu-api.js?v=smt-t2s-1280x800-rebuild.34","./combo-rules.js":"./combo-rules.js?v=smt-t2s-1280x800-rebuild.34","../../shared/store.js":"../../shared/store.js?v=smt-t2s-1280x800-rebuild.34"}}
     </script>
   </head>
   <body data-page="order">
@@ -56,9 +57,9 @@
         const modalObserver=new MutationObserver(()=>requestAnimationFrame(syncDrinkPopover));modalObserver.observe(app,{childList:true,subtree:false});
       })();
     </script>
-    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.33"></script>
-    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.33"></script>
-    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.33"></script>
-    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.33"></script>
+    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.34"></script>
+    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.34"></script>
+    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.34"></script>
+    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.34"></script>
   </body>
 </html>
