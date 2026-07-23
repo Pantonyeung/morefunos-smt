@@ -14,18 +14,19 @@
 .product-card small{display:block;margin-top:4px;color:var(--mf-muted);font-size:12px;line-height:1.25}
 .product-card b{align-self:end;justify-self:end;font-size:22px;color:#a93f13}
 .product-code{position:absolute;left:10px;top:8px;padding:3px 6px;border-radius:8px;background:rgba(255,255,255,.88);color:#7d5540;font-size:12px;font-weight:950}
-.flow-panel{gap:9px;padding:9px;background:#fbf8f5}
-.flow-block{display:grid;gap:6px;padding:8px;border:1px solid var(--mf-line);border-radius:16px;background:#fff}
-.flow-block h2{margin:0;font-size:14px}
-.source-grid,.status-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
-.source-grid button,.status-grid button,.quick-action{min-height:36px;padding:0 5px;border-radius:12px;font-size:12px;line-height:1.15}
+.flow-panel{gap:7px;padding:8px;background:#fbf8f5}
+.flow-block{display:grid;gap:5px;padding:7px;border:1px solid var(--mf-line);border-radius:15px;background:#fff}
+.flow-block h2{margin:0;font-size:13px;line-height:1.15}
+.source-grid,.status-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
+.source-grid button,.status-grid button,.quick-action{min-height:34px;padding:0 5px;border-radius:12px;font-size:12px;line-height:1.15}
 .source-grid button.active,.status-grid button.active{background:var(--mf-orange-soft);border-color:#efb893;color:#c94b17}
-.flow-summary{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.flow-summary span{display:grid;gap:1px;padding:7px;border:1px solid var(--mf-line);border-radius:13px;background:#fff}
+.flow-summary{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.flow-summary span{display:grid;gap:1px;padding:6px;border:1px solid var(--mf-line);border-radius:12px;background:#fff}
 .flow-summary small{font-size:10px;color:var(--mf-muted)}
-.flow-summary b{font-size:18px;color:var(--mf-orange)}
-.quick-drinks{display:grid;gap:6px;min-height:0}
-.quick-drinks button{display:grid;grid-template-columns:1fr auto;align-items:center;gap:5px;min-height:34px;padding:0 8px;border-radius:12px;text-align:left;font-size:12px}
+.flow-summary b{font-size:17px;color:var(--mf-orange)}
+.quick-drinks{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;min-height:0}
+.quick-drinks h2{grid-column:1/-1}
+.quick-drinks button{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px;min-height:34px;padding:0 7px;border-radius:12px;text-align:left;font-size:11px;line-height:1.1}
 .quick-drinks small{color:var(--mf-muted);font-size:10px}
 .cart-panel>header{min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid var(--mf-line)}
 .cart-panel h2{margin:0;font-size:20px}
