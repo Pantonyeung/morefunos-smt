@@ -3,7 +3,7 @@ const frame=document.getElementById('page');
 const hud=document.getElementById('device-hud');
 const hudDetail=document.getElementById('device-hud-detail');
 const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html',dine:'pages/dine/index.html',soldout:'pages/soldout/index.html',more:'pages/more/index.html'};
-const BUILD='smt-t2s-1280x800-rebuild.8';
+const BUILD='smt-t2s-1280x800-rebuild.12';
 const TARGET_WIDTH=1280;
 const TARGET_HEIGHT=800;
 let current='';
@@ -79,12 +79,8 @@ addEventListener('message',event=>{
   if(event.data?.type==='morefun:set-ui-scale'){
     frame.contentWindow?.postMessage({type:'morefun:ui-scale-disabled',reason:'T2S 使用固定 1280×800 測試框；請使用瀏覽器雙指縮放檢查細節。'},'*');
   }
-  if(event.data?.type==='morefun:reload-current-page')load({force:true});
-  if(event.data?.type==='morefun:page-runtime-error'){
-    console.error(event.data);
-    if(!childReady)showLoaderError('頁面啟動失敗，資料仍保存在本機，請重新整理後再試。');
-  }
 });
 
 applyT2SViewport();
 load();
+setTimeout(()=>{if(!childReady)frame.contentWindow?.postMessage({type:'morefun:ping'},'*');},2500);
