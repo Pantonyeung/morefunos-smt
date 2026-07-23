@@ -7,24 +7,96 @@
       content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover"
     />
     <title>磨飯 SMT｜點單 T2S 1280×800</title>
-    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.24" />
-    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.24" />
-    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.24" />
+    <link rel="stylesheet" href="../../shared/page-base.css?v=smt-t2s-1280x800-rebuild.25" />
+    <link rel="stylesheet" href="page.css?v=smt-t2s-1280x800-rebuild.25" />
+    <link rel="stylesheet" href="t2s-1280.css?v=smt-t2s-1280x800-rebuild.25" />
+    <style>
+      .persistent-pairing-confirm {
+        inset: auto 18px 76px auto !important;
+        width: min(330px, calc(100% - 36px)) !important;
+        padding: 10px 12px !important;
+        gap: 6px !important;
+        border-radius: 10px !important;
+      }
+      .persistent-pairing-confirm strong {
+        font-size: 14px !important;
+        line-height: 1.25 !important;
+      }
+      .persistent-pairing-confirm p {
+        margin: 0 !important;
+        font-size: 11px !important;
+        line-height: 1.35 !important;
+      }
+      .persistent-pairing-confirm div {
+        gap: 6px !important;
+      }
+      .persistent-pairing-confirm button {
+        min-height: 34px !important;
+        padding: 5px 10px !important;
+        font-size: 11px !important;
+      }
+    </style>
     <script type="importmap">
       {
         "imports": {
-          "./menu-api.js": "./menu-api.js?v=smt-t2s-1280x800-rebuild.24",
-          "./combo-rules.js": "./combo-rules.js?v=smt-t2s-1280x800-rebuild.24",
-          "../../shared/store.js": "../../shared/store.js?v=smt-t2s-1280x800-rebuild.24"
+          "./menu-api.js": "./menu-api.js?v=smt-t2s-1280x800-rebuild.25",
+          "./combo-rules.js": "./combo-rules.js?v=smt-t2s-1280x800-rebuild.25",
+          "../../shared/store.js": "../../shared/store.js?v=smt-t2s-1280x800-rebuild.25"
         }
       }
     </script>
   </head>
   <body data-page="order">
     <div id="app"></div>
-    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.24"></script>
-    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.24"></script>
-    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.24"></script>
-    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.24"></script>
+    <script>
+      (() => {
+        const app = document.getElementById('app');
+        const position = { productsTop: 0, categoryLeft: 0, cartTop: 0 };
+        let resetProducts = false;
+        let restoreFrame = 0;
+
+        function capture() {
+          const products = app.querySelector('.products');
+          const categories = app.querySelector('.category-scroll');
+          const cart = app.querySelector('.cart-list');
+          if (products) position.productsTop = products.scrollTop;
+          if (categories) position.categoryLeft = categories.scrollLeft;
+          if (cart) position.cartTop = cart.scrollTop;
+        }
+
+        function restore() {
+          cancelAnimationFrame(restoreFrame);
+          restoreFrame = requestAnimationFrame(() => {
+            const products = app.querySelector('.products');
+            const categories = app.querySelector('.category-scroll');
+            const cart = app.querySelector('.cart-list');
+            if (products) products.scrollTop = resetProducts ? 0 : position.productsTop;
+            if (categories) categories.scrollLeft = position.categoryLeft;
+            if (cart) cart.scrollTop = position.cartTop;
+            resetProducts = false;
+          });
+        }
+
+        app.addEventListener('scroll', event => {
+          const target = event.target;
+          if (target.matches?.('.products')) position.productsTop = target.scrollTop;
+          if (target.matches?.('.category-scroll')) position.categoryLeft = target.scrollLeft;
+          if (target.matches?.('.cart-list')) position.cartTop = target.scrollTop;
+        }, true);
+
+        app.addEventListener('pointerdown', event => {
+          const action = event.target.closest('[data-action]')?.dataset.action || '';
+          capture();
+          if (action === 'category') resetProducts = true;
+        }, true);
+
+        new MutationObserver(restore).observe(app, { childList: true, subtree: true });
+        addEventListener('pageshow', restore);
+      })();
+    </script>
+    <script src="../../shared/vendor/qrcode.js?v=smt-t2s-1280x800-rebuild.25"></script>
+    <script src="../../shared/page-bridge.js?v=smt-t2s-1280x800-rebuild.25"></script>
+    <script type="module" src="page.js?v=smt-t2s-1280x800-rebuild.25"></script>
+    <script type="module" src="cart-category.js?v=smt-t2s-1280x800-rebuild.25"></script>
   </body>
 </html>
