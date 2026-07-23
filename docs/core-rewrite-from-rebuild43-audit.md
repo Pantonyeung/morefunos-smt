@@ -135,4 +135,10 @@
 - PWA manifest 已由 `orientation:any` 改為 `orientation:landscape`。
 - 全部 page entry cache 統一到 `smt-t2s-1280x800-core-rewrite.5`。
 - `pages/orders/order-operations.css` 的核對彈窗已由 `88vw` 改為 `calc(var(--t2s-width) - 120px)`。
-- 下一步：整理 `pages/more/page.css` 與點單頁剩餘 `!important`。
+
+### core-rewrite.6
+
+- `pages/more/page.css` 已重新整理為原生 1280×800 page stylesheet。
+- More dialog 由 `100vw/100vh` 依賴改成 `--t2s-width` / `--t2s-height` 計算。
+- More 頁 entry cache 更新到 `smt-t2s-1280x800-core-rewrite.6`。
+- 下一步：點單頁剩餘 `!important` 拆段與結帳頁參考圖內核重排。
