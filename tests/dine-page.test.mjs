@@ -203,9 +203,10 @@ test('堂食枱卡直接顯示開枱、三十五分鐘及首三項餐點摘要',
 });
 
 test('現有點餐及訂單底欄可以進入獨立堂食頁',()=>{
-  assert.match(read('app-loader.js'),/dine:\s*'pages\/dine\/index\.html'/);
+  assert.match(read('shared/page-bridge.js'),/dine:'\.\.\/dine\/index\.html'/);
   assert.match(read('pages/order/page.js'),/navigate-dine/);
   assert.match(read('pages/orders/page.js'),/navigate-dine/);
+  for(const path of ['pages/order/page.js','pages/orders/page.js','pages/dine/page.js'])assert.match(read(path),/MoreFunPageBridge\?\.navigate/,path+' 缺少真機直接導航出口');
 });
 
 test('堂食點單提供取消入口並同步清除失效堂食脈絡',()=>{
