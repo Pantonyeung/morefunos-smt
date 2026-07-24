@@ -2,20 +2,38 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.25,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
-  <title>磨飯 SMT T2S 1280×800</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#f8f6f2">
+  <title>磨飯 SMT｜1280×800 原生重建</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="app-shell.css?v=smt-t2s-1280x800-rebuild.40">
+  <link rel="stylesheet" href="app-shell.css?v=native-rebuild-gate3.1">
 </head>
 <body>
-  <main id="viewport">
-    <section id="stage"><iframe id="page" title="磨飯 SMT"></iframe></section>
-    <aside id="device-hud" aria-live="polite">
-      <strong>T2S 原比例預覽 1280×800</strong>
-      <span id="device-hud-detail">正在量度畫面…</span>
-      <span>iPhone 可直屏或橫屏查看；使用 Safari 雙指放大、縮小及移動畫面檢查細節。</span>
-    </aside>
-  </main>
-  <script type="module" src="app-loader.js?v=smt-t2s-1280x800-rebuild.40"></script>
+  <div id="app" class="app-shell" data-build="native-rebuild-gate3.1">
+    <header class="top-status-bar" aria-label="系統狀態">
+      <div class="brand-block">
+        <strong>磨飯 SMT</strong>
+        <span>1280×800 原生重建</span>
+      </div>
+      <div class="status-group" aria-live="polite">
+        <span class="status-pill" id="network-status">網絡：檢查中</span>
+        <span class="status-pill">本機資料：可用</span>
+        <span class="status-pill" id="clock-status">--:--</span>
+      </div>
+    </header>
+
+    <main class="workspace" id="workspace" tabindex="-1" aria-live="polite"></main>
+
+    <nav class="bottom-nav" aria-label="SMT 主導航">
+      <button type="button" data-route="order" aria-current="page">點單</button>
+      <button type="button" data-route="orders">訂單</button>
+      <button type="button" data-route="dine">堂食</button>
+      <button type="button" data-route="soldout">售罄</button>
+      <button type="button" data-route="more">更多</button>
+    </nav>
+  </div>
+
+  <div class="system-toast" id="system-toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="app-loader.js?v=native-rebuild-gate3.1"></script>
 </body>
 </html>
