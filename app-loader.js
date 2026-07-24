@@ -1,3 +1,5 @@
+import {renderOrderPage} from './src/pages/order/order.js';
+
 const workspace=document.getElementById('workspace');
 const nav=[...document.querySelectorAll('.bottom-nav [data-route]')];
 const networkStatus=document.getElementById('network-status');
@@ -5,10 +7,10 @@ const clockStatus=document.getElementById('clock-status');
 const toast=document.getElementById('system-toast');
 
 const routes={
-  order:{title:'點單',note:'Clean Architecture Gate 已啟用。下一步按 Rebuild39 功能基線重建完整點單頁。'},
-  orders:{title:'訂單',note:'保留 Rebuild39／完整 SMT 功能範圍，頁面將獨立擁有自己的 layout。'},
-  dine:{title:'堂食',note:'堂食頁將以原生 1280×800 重新建立，不載入舊縮放頁。'},
-  soldout:{title:'售罄',note:'售罄頁將使用同一資料模型，但由自己頁面控制樣式與互動。'},
+  order:{render:()=>renderOrderPage(workspace)},
+  orders:{title:'訂單',note:'保留完整 SMT 功能範圍；下一階段以原生 1280×800 重建。'},
+  dine:{title:'堂食',note:'堂食頁將獨立擁有 layout，不載入舊縮放頁。'},
+  soldout:{title:'售罄',note:'售罄頁使用同一資料模型，但頁面自己管理樣式與互動。'},
   more:{title:'更多',note:'設定、打印、日結、報表等功能會逐區重建。'}
 };
 
@@ -17,11 +19,15 @@ function routeKey(){
   return routes[value]?value:'order';
 }
 
+function renderPlaceholder(route){
+  workspace.innerHTML=`<section class="route-placeholder"><article class="route-card"><h1>${route.title}</h1><p>${route.note}</p></article></section>`;
+}
+
 function render(){
   const key=routeKey();
   const route=routes[key];
   nav.forEach(button=>button.setAttribute('aria-current',button.dataset.route===key?'page':'false'));
-  workspace.innerHTML=`<section class="route-placeholder"><article class="route-card"><h1>${route.title}</h1><p>${route.note}</p></article></section>`;
+  if(route.render)route.render();else renderPlaceholder(route);
 }
 
 function showToast(message){
