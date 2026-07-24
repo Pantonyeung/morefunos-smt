@@ -29,6 +29,7 @@ const app = document.getElementById("app"),
     localStorage.getItem(TERMINAL_ID_STORAGE_KEY) || "SMT",
   ),
   now = Date.now();
+const navigate=route=>window.MoreFunPageBridge?.navigate(route);
 const demo = [
   {
     id: "P0053",
@@ -301,20 +302,20 @@ function handle(b) {
     o = orders.find((x) => x.id === selectedId);
   if(a==="shell-navigate"){
     const route=b.dataset.route;
-    if(route!=="orders")parent.postMessage({type:"morefun:navigate",route},"*");
+    if(route!=="orders")navigate(route);
     return;
   } else if (a === "select-order") {
     selectedId = b.dataset.id;
     cancelMode = false;
     cancelDraft = {};
   } else if (a === "navigate-order")
-    parent.postMessage({ type: "morefun:navigate", route: "order" }, "*");
+    navigate("order");
   else if (a === "navigate-dine")
-    parent.postMessage({ type: "morefun:navigate", route: "dine" }, "*");
+    navigate("dine");
   else if (a === "navigate-soldout")
-    parent.postMessage({ type: "morefun:navigate", route: "soldout" }, "*");
+    navigate("soldout");
   else if (a === "navigate-more")
-    parent.postMessage({ type: "morefun:navigate", route: "more" }, "*");
+    navigate("more");
   else if (a === "show-active") {
     filters.view = "active";
     filters.exception = "";
@@ -454,7 +455,7 @@ function handle(b) {
       cancelOrder({ ...o, status: "reopened" }, terminalId),
       orderDisplayNumber(o) + " 已反結帳並載入點單頁",
     );
-    parent.postMessage({ type: "morefun:navigate", route: "order" }, "*");
+    navigate("order");
     return;
   } else if (a === "timeline") modal = "timeline";
   else if (a === "close-modal") modal = "";
