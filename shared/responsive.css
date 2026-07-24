@@ -1,0 +1,63 @@
+:root{
+  --profile-ui-scale:1;
+  --space-unit:8px;
+  --page-gap:16px;
+  --page-padding-x:20px;
+  --topbar-height:78px;
+  --bottom-nav-height:76px;
+  --control-min-height:48px;
+  --cart-ratio:28%;
+  --modal-max-width:760px;
+  --modal-max-height:calc(100vh - 154px);
+  --product-columns:5;
+  --responsive-font-scale:1;
+}
+
+:root[data-responsive-profile="standard"]{
+  --profile-ui-scale:.94;
+  --space-unit:7px;
+  --page-gap:14px;
+  --page-padding-x:16px;
+  --topbar-height:70px;
+  --bottom-nav-height:70px;
+  --control-min-height:44px;
+  --cart-ratio:30%;
+  --modal-max-width:700px;
+  --modal-max-height:calc(100vh - 140px);
+  --product-columns:4;
+  --responsive-font-scale:.95;
+}
+
+:root[data-responsive-profile="compact"]{
+  --profile-ui-scale:.86;
+  --space-unit:6px;
+  --page-gap:10px;
+  --page-padding-x:12px;
+  --topbar-height:60px;
+  --bottom-nav-height:64px;
+  --control-min-height:40px;
+  --cart-ratio:32%;
+  --modal-max-width:min(640px,calc(100vw - 24px));
+  --modal-max-height:calc(100vh - 124px);
+  --product-columns:4;
+  --responsive-font-scale:.88;
+}
+
+:root[data-responsive-profile="dense"]{
+  --profile-ui-scale:.8;
+  --space-unit:5px;
+  --page-gap:8px;
+  --page-padding-x:10px;
+  --topbar-height:56px;
+  --bottom-nav-height:60px;
+  --control-min-height:38px;
+  --cart-ratio:34%;
+  --modal-max-width:min(580px,calc(100vw - 20px));
+  --modal-max-height:calc(100vh - 116px);
+  --product-columns:3;
+  --responsive-font-scale:.82;
+}
+
+:root{
+  --effective-ui-scale:calc(var(--profile-ui-scale) * var(--user-ui-scale,1));
+}
