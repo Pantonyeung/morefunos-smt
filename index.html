@@ -2,20 +2,33 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.25,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
-  <title>磨飯 SMT T2S 1280×800</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="app-shell.css?v=smt-t2s-1280x800-rebuild.40">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#000000">
+  <title>磨飯 SMT｜1280×800 手機驗收</title>
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Noto Sans TC",sans-serif}
+    body{display:grid;grid-template-rows:auto minmax(0,1fr)}
+    .toolbar{display:flex;align-items:center;gap:8px;padding:max(8px,env(safe-area-inset-top)) 10px 8px;border-bottom:1px solid #252525;background:#000}
+    .toolbar strong{font-size:13px;white-space:nowrap}.toolbar span{min-width:0;flex:1;color:#8d8d8d;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .toolbar button{min-height:38px;padding:0 10px;border:1px solid #ffd43b;border-radius:9px;background:#111;color:#ffd43b;font-weight:800}
+    .viewer{position:relative;min-height:0;overflow:hidden;background:#000}
+    .stage{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:top left}
+    iframe{display:block;width:1280px;height:800px;border:3px solid #ffd43b;background:#fff}
+    body[data-mode="native"] .viewer{overflow:auto;-webkit-overflow-scrolling:touch}
+    body[data-mode="native"] .stage{position:relative;margin:18px;left:auto;top:auto;transform:none}
+    .hint{position:fixed;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);max-width:calc(100vw - 20px);padding:7px 10px;border:1px solid rgba(255,212,59,.55);border-radius:9px;background:rgba(0,0,0,.84);color:#ddd;font-size:10px;text-align:center;pointer-events:none}
+  </style>
 </head>
-<body>
-  <main id="viewport">
-    <section id="stage"><iframe id="page" title="磨飯 SMT"></iframe></section>
-    <aside id="device-hud" aria-live="polite">
-      <strong>T2S 原比例預覽 1280×800</strong>
-      <span id="device-hud-detail">正在量度畫面…</span>
-      <span>iPhone 可直屏或橫屏查看；使用 Safari 雙指放大、縮小及移動畫面檢查細節。</span>
-    </aside>
-  </main>
-  <script type="module" src="app-loader.js?v=smt-t2s-1280x800-rebuild.40"></script>
+<body data-mode="fit">
+  <header class="toolbar"><strong>SMT 1280×800</strong><span>開發期手機驗收殼；正式封裝前移除</span><button id="mode" type="button">100% 原尺寸</button></header>
+  <main class="viewer" id="viewer"><div class="stage" id="stage"><iframe src="./app.html#/order" title="磨飯 SMT 1280×800"></iframe></div></main>
+  <div class="hint" id="hint">完整縮放：黃色框內係固定 1280×800 SMT。</div>
+  <script>
+    const W=1280,H=800,body=document.body,viewer=document.getElementById('viewer'),stage=document.getElementById('stage'),mode=document.getElementById('mode'),hint=document.getElementById('hint');
+    function fit(){if(body.dataset.mode!=='fit')return;const scale=Math.min(viewer.clientWidth/W,viewer.clientHeight/H);stage.style.transform=`scale(${scale})`;stage.style.left=`${Math.max(0,(viewer.clientWidth-W*scale)/2)}px`;stage.style.top=`${Math.max(0,(viewer.clientHeight-H*scale)/2)}px`}
+    function setMode(next){body.dataset.mode=next;if(next==='fit'){mode.textContent='100% 原尺寸';hint.textContent='完整縮放：黃色框內係固定 1280×800 SMT。';fit()}else{stage.style.transform='none';stage.style.left='';stage.style.top='';mode.textContent='完整縮放';hint.textContent='100% 原尺寸：可拖動檢查有冇超界或遮擋。';viewer.scrollTo({left:0,top:0})}}
+    mode.addEventListener('click',()=>setMode(body.dataset.mode==='fit'?'native':'fit'));window.addEventListener('resize',fit);window.addEventListener('orientationchange',()=>setTimeout(fit,120));setMode('fit');
+  </script>
 </body>
 </html>
