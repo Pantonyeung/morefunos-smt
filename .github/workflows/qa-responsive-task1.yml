@@ -1,0 +1,26 @@
+name: QA Responsive Task 1
+on:
+  pull_request:
+    branches:
+      - qa-runner-1920-base
+jobs:
+  task1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --save-dev @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/morefun-http.log 2>&1 &
+          sleep 2
+          curl --fail http://127.0.0.1:4173/
+      - name: Run Task 1 tests
+        run: npx playwright test --config=playwright.config.cjs
