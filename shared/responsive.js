@@ -16,9 +16,14 @@ export function getResponsiveProfile(width,height){
   const landscape=viewportWidth>=viewportHeight;
   const aspectRatio=viewportWidth/viewportHeight;
 
+  /*
+   * Keep the common POS sizes on adjacent density bands without a hard
+   * 1440 -> 1366 cliff. 1920 remains the visual master; 1600/1440/1366
+   * share the same structural density and 1280 uses compact density.
+   */
   let name=RESPONSIVE_PROFILES.DENSE;
   if(viewportWidth>=1680&&viewportHeight>=900)name=RESPONSIVE_PROFILES.LARGE;
-  else if(viewportWidth>=1440&&viewportHeight>=820)name=RESPONSIVE_PROFILES.STANDARD;
+  else if(viewportWidth>=1360&&viewportHeight>=760)name=RESPONSIVE_PROFILES.STANDARD;
   else if(viewportWidth>=1200&&viewportHeight>=720)name=RESPONSIVE_PROFILES.COMPACT;
 
   return Object.freeze({
