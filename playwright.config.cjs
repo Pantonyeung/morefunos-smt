@@ -1,7 +1,7 @@
 const {defineConfig}=require('@playwright/test');
 module.exports=defineConfig({
   testDir:'./tests',
-  testMatch:['responsive-profile.spec.js','responsive-shell.spec.js','responsive-order.spec.js'],
+  testMatch:['responsive-profile.spec.js','responsive-shell.spec.js','responsive-order.spec.js','responsive-checkout.spec.js'],
   timeout:120000,
   expect:{timeout:15000},
   retries:1,
