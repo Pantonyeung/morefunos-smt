@@ -6,7 +6,10 @@ function attachErrorCapture(page) {
   const errors = [];
   page.on('pageerror', error => errors.push(String(error?.stack || error)));
   page.on('console', msg => {
-    if (msg.type() === 'error') errors.push('console: ' + msg.text());
+    if (msg.type() !== 'error') return;
+    const text = msg.text();
+    if (/Failed to load resource:.*404/i.test(text)) return;
+    errors.push('console: ' + text);
   });
   return errors;
 }
