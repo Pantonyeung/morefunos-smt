@@ -4,8 +4,9 @@
 
 | 檔案 | 責任 | 主要依賴 |
 |---|---|---|
-| `index.html` | PWA shell入口 | loader、shell CSS |
-| `app-loader.js` | route、viewport、安全縮放、iframe bridge及子頁錯誤可見後備 | pages、postMessage |
+| `index.html` | 公網分流入口；SMT 真機直接進 `pages/order/index.html` | unified entry、shell CSS |
+| `smt-preview/index.html`＋`app-loader.js` | iPhone 黃框 1280×800 比例檢查 adapter；不是 SMT 主路由 | iframe、預覽縮放 |
+| `shared/page-bridge.js` | 真機直接路由、iframe 訊息橋接、頁面 ready 與啟動錯誤可見後備 | pages、postMessage、location |
 | `pages/order/index.html` | 點單DOM入口 | page.js、page.css |
 | `pages/order/page.js` | 渲染、事件、modal、購物車、飲品、配對、待處理、共用待處理數量、餐牌啟動、售罄／停售預覽及堂食取消脈絡 | data、menu-api、domain、runtime、供應狀態、dine-domain |
 | `pages/order/page.css` | 工作區、定位及視覺 | page.js class names |
@@ -65,6 +66,7 @@
 | 訂單歷史歸檔 | `archiveExpiredOrders`、`archiveAndRender` | orders actions tests |
 | 實物打印資料 | `shouldPrintProductLabel`、`labelDocuments`、`renderPrintDocument` | print core tests |
 | 點單啟動安全 | `pendingOrderCount`、首次 `render`、`morefun:page-runtime-error` 後備畫面 | order edit flow及首次渲染驗證 |
+| 真機直接導航 | `ROUTE_PATHS`、`MoreFunPageBridge.navigate`；頂層用 `location.href`、黃框預覽用 `morefun:navigate` | order、dine、more、orders、soldout UI tests |
 | 訂單身份 | `createOrderIdentity`、`orderDisplayNumber`、`latestOrderDisplayNumber` | order identity、checkout、dine及 UI tests |
 | 歷史報表 | `buildReportRange`、`ordersForRange`、`analyticsReport`、`reportTabs` | more operations／more page tests |
 | 付款對數 | `paymentLegs`、`buildBreakdownRows`、付款分頁及 `reportDrilldown` | 混合付款、正負差額、別名及 more page tests |
