@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280,height=800,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#f8f6f2">
+  <title>磨飯 SMT｜1280×800 原生重建</title>
+  <link rel="stylesheet" href="app-shell.css?v=clean-gate-1">
+</head>
+<body>
+  <div class="app-shell" id="app-shell">
+    <header class="top-status-bar">
+      <div class="brand-block"><strong>磨飯 SMT</strong><span>1280×800 Clean Rebuild</span></div>
+      <div class="status-group"><span id="network-status" class="status-pill">網絡：檢查中</span><span class="status-pill">本機資料：可用</span><span id="clock-status" class="status-pill">--:--</span></div>
+    </header>
+    <main id="workspace" class="workspace" tabindex="-1"></main>
+    <nav class="bottom-nav" aria-label="SMT 主導航">
+      <button type="button" data-route="order" aria-current="page">點單</button>
+      <button type="button" data-route="orders">訂單</button>
+      <button type="button" data-route="dine">堂食</button>
+      <button type="button" data-route="soldout">售罄</button>
+      <button type="button" data-route="more">更多</button>
+    </nav>
+  </div>
+  <div id="system-toast" class="system-toast" hidden></div>
+  <script type="module" src="app-loader.js?v=clean-gate-1"></script>
+</body>
+</html>
