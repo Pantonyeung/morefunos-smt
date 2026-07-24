@@ -5,7 +5,7 @@ import fs from 'node:fs';
 const page=fs.readFileSync(new URL('../pages/soldout/page.js',import.meta.url),'utf8');
 const css=fs.readFileSync(new URL('../pages/soldout/page.css',import.meta.url),'utf8');
 const enhancements=fs.readFileSync(new URL('../pages/soldout/soldout-enhancements.css',import.meta.url),'utf8');
-const loader=fs.readFileSync(new URL('../app-loader.js',import.meta.url),'utf8');
+const bridge=fs.readFileSync(new URL('../shared/page-bridge.js',import.meta.url),'utf8');
 
 test('售罄頁沿用產品分類與三種點單卡模板',()=>{
   assert.match(page,/style==='text'/);
@@ -65,7 +65,10 @@ test('售罄頁可獨立切換大圖小圖及純文字卡',()=>{
   for(const label of ['大圖','小圖','純文字'])assert.match(page,new RegExp(label));
 });
 
-test('應用程式路由已接入售罄頁',()=>assert.match(loader,/soldout:'pages\/soldout\/index\.html'/));
+test('應用程式路由已接入售罄頁',()=>{
+  assert.match(bridge,/soldout:'\.\.\/soldout\/index\.html'/);
+  assert.match(page,/MoreFunPageBridge\?\.navigate/);
+});
 
 test('售罄頁使用正確餐牌後備參數，網絡失敗亦保留可操作頁面',()=>{
   assert.match(page,/loadMenuCatalog\(\{fallback:fallbackCatalog\}\)/);
