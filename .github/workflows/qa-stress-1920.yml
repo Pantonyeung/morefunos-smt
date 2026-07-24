@@ -1,0 +1,46 @@
+name: QA Stress 1920 Baseline
+
+on:
+  pull_request:
+    branches:
+      - qa-runner-1920-base
+  workflow_dispatch:
+
+jobs:
+  stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --save-dev @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start static server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/morefun-http.log 2>&1 &
+          echo $! > /tmp/morefun-http.pid
+          sleep 2
+          curl --fail http://127.0.0.1:4173/
+
+      - name: Run browser stress suite
+        run: npx playwright test
+
+      - name: Upload stress report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-stress-1920-report
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
