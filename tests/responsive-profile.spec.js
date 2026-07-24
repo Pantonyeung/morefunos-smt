@@ -5,7 +5,7 @@ const cases=[
   {width:1920,height:1080,profile:'large'},
   {width:1600,height:900,profile:'standard'},
   {width:1440,height:900,profile:'standard'},
-  {width:1366,height:768,profile:'compact'},
+  {width:1366,height:768,profile:'standard'},
   {width:1280,height:800,profile:'compact'}
 ];
 
