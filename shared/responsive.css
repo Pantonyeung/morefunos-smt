@@ -6,11 +6,8 @@
   --topbar-height:clamp(64px,7.2vh,78px);
   --bottom-nav-height:clamp(62px,7vh,76px);
   --control-min-height:48px;
-  --cart-ratio:28%;
-  --cart-ratio-min:25%;
-  --cart-ratio-max:28%;
-  --modal-max-width:760px;
-  --modal-max-height:calc(100vh - 154px);
+  --modal-max-width:480px;
+  --modal-max-height:calc(100vh - var(--topbar-height) - var(--bottom-nav-height) - 40px);
   --product-columns:4;
   --product-columns-secondary:3;
   --responsive-font-scale:1;
@@ -31,11 +28,7 @@
   --topbar-height:clamp(60px,7.2vh,70px);
   --bottom-nav-height:clamp(60px,7vh,70px);
   --control-min-height:44px;
-  --cart-ratio:30%;
-  --cart-ratio-min:28%;
-  --cart-ratio-max:30%;
-  --modal-max-width:700px;
-  --modal-max-height:calc(100vh - 132px);
+  --modal-max-width:440px;
   --product-columns:4;
   --product-columns-secondary:3;
   --responsive-font-scale:.96;
@@ -56,15 +49,11 @@
   --topbar-height:clamp(58px,7.2vh,64px);
   --bottom-nav-height:clamp(58px,7vh,64px);
   --control-min-height:40px;
-  --cart-ratio:32%;
-  --cart-ratio-min:30%;
-  --cart-ratio-max:32%;
-  --modal-max-width:min(660px,calc(100vw - 24px));
-  --modal-max-height:calc(100vh - 122px);
+  --modal-max-width:400px;
   --product-columns:4;
   --product-columns-secondary:3;
   --responsive-font-scale:.92;
-  --order-product-hero-height:122px;
+  --order-product-hero-height:118px;
   --order-cart-image-size:56px;
   --order-cart-row-gap:6px;
   --checkout-cart-ratio:31%;
@@ -81,15 +70,11 @@
   --topbar-height:56px;
   --bottom-nav-height:58px;
   --control-min-height:38px;
-  --cart-ratio:34%;
-  --cart-ratio-min:32%;
-  --cart-ratio-max:34%;
-  --modal-max-width:min(580px,calc(100vw - 20px));
-  --modal-max-height:calc(100vh - 116px);
+  --modal-max-width:360px;
   --product-columns:3;
   --product-columns-secondary:2;
   --responsive-font-scale:.84;
-  --order-product-hero-height:108px;
+  --order-product-hero-height:102px;
   --order-cart-image-size:48px;
   --order-cart-row-gap:5px;
   --checkout-cart-ratio:32%;
@@ -110,44 +95,68 @@ body[data-page="order"] .topbar{
   gap:calc(var(--space-unit) * 1.75);
 }
 body[data-page="order"] .workspace{padding:var(--page-gap)}
+
+/* Cart ratio is a real user choice: 25/75, 30/70 or 32/68 at every supported viewport. */
 body[data-page="order"] .order-grid{
-  grid-template-columns:minmax(280px,clamp(var(--cart-ratio-min),calc(var(--cart-ratio) + (var(--cart-width,32%) - 32%)),var(--cart-ratio-max))) minmax(0,1fr);
+  grid-template-columns:minmax(260px,var(--cart-width,32%)) minmax(0,1fr);
   gap:var(--page-gap);
 }
 body[data-page="order"] .products-large{grid-template-columns:repeat(var(--product-columns),minmax(0,1fr))}
 body[data-page="order"] .products-small,
 body[data-page="order"] .products-text{grid-template-columns:repeat(var(--product-columns-secondary),minmax(0,1fr))}
-body[data-page="order"] .product-card.large{grid-template-rows:clamp(112px,12cqw,var(--order-product-hero-height)) auto}
-body[data-page="order"] .product-hero{height:clamp(112px,12cqw,var(--order-product-hero-height))}
+
+/* Large product cards scale from the actual catalog width instead of keeping a fixed 1920-era height. */
+body[data-page="order"] .product-card.large{
+  grid-template-rows:clamp(92px,11.5cqw,var(--order-product-hero-height)) auto;
+}
+body[data-page="order"] .product-hero{
+  height:clamp(92px,11.5cqw,var(--order-product-hero-height));
+}
+body[data-page="order"] .product-info{
+  padding:clamp(6px,0.75cqw,10px) clamp(7px,0.9cqw,12px) clamp(7px,0.85cqw,10px);
+  gap:clamp(5px,0.7cqw,10px);
+}
+body[data-page="order"] .product-card strong{font-size:calc(17px * var(--responsive-font-scale))}
+body[data-page="order"] .product-price{font-size:calc(21px * var(--responsive-font-scale))}
+body[data-page="order"] .product-description{font-size:calc(13px * var(--responsive-font-scale))}
 body[data-page="order"] .cart-row{
   grid-template-columns:32px var(--order-cart-image-size) minmax(0,1fr) auto;
   gap:var(--order-cart-row-gap);
   padding-block:calc(var(--space-unit) + 5px);
 }
 body[data-page="order"] .cart-img{width:var(--order-cart-image-size);height:var(--order-cart-image-size)}
-body[data-page="order"] .order-transfer-card{
-  width:min(1120px,calc(100vw - 32px));
-  height:min(720px,var(--modal-max-height));
+
+/* Shared popup geometry. Normal operational cards stay near 25% viewport width and inside the working area. */
+body[data-page="order"] :is(.side-card,.modifier-card,.specified-link-card,.completion-card,.pending-panel,.product-settings-card){
+  width:min(25vw,var(--modal-max-width));
+  min-width:min(300px,calc(100vw - 24px));
+  max-width:calc(100vw - 24px);
+  max-height:var(--modal-max-height);
+  overflow:auto;
+}
+body[data-page="order"] .completion-card{
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+
+/* Large workflow cards are allowed to use more space, but must never leave the viewport. */
+body[data-page="order"] :is(.order-transfer-card,.pending-review-card,.proof-lightbox){
   max-width:calc(100vw - 32px);
   max-height:var(--modal-max-height);
 }
-body[data-page="order"] .specified-link-card,
-body[data-page="order"] .pending-review-card,
-body[data-page="order"] .proof-lightbox,
-body[data-page="order"] .product-settings-card,
-body[data-page="order"] .completion-card,
+body[data-page="order"] .order-transfer-card{
+  width:min(1120px,78vw);
+  height:min(720px,var(--modal-max-height));
+}
+body[data-page="order"] .pending-review-card{width:min(760px,56vw)}
+body[data-page="order"] .proof-lightbox{width:min(900px,68vw)}
 body[data-page="order"] .product-detail{
-  max-width:min(var(--modal-max-width),calc(100vw - 24px));
+  width:min(1360px,88vw);
+  height:min(830px,var(--modal-max-height));
+  max-width:calc(100vw - 24px);
   max-height:var(--modal-max-height);
 }
-body[data-page="order"] .completion-card{overflow:auto}
-body[data-page="order"] .pending-panel{
-  width:min(480px,calc(100vw - 24px));
-  min-width:0;
-  max-height:var(--modal-max-height);
-}
-body[data-page="order"] .modal-card,
-body[data-page="order"] .confirm-card{max-height:var(--modal-max-height)}
 
 :root[data-responsive-profile="compact"] body[data-page="order"] .categories{
   grid-template-rows:repeat(2,44px);
@@ -163,9 +172,6 @@ body[data-page="order"] .confirm-card{max-height:var(--modal-max-height)}
 :root[data-responsive-profile="compact"] body[data-page="order"] .pending-area{padding:7px 8px}
 :root[data-responsive-profile="compact"] body[data-page="order"] .pending-receipt{min-height:48px;padding:7px 8px;gap:6px}
 :root[data-responsive-profile="compact"] body[data-page="order"] .products{padding:0 9px 8px;gap:8px}
-:root[data-responsive-profile="compact"] body[data-page="order"] .product-info{padding:7px 8px 8px}
-:root[data-responsive-profile="compact"] body[data-page="order"] .product-card strong{font-size:15px}
-:root[data-responsive-profile="compact"] body[data-page="order"] .product-price{font-size:18px}
 :root[data-responsive-profile="compact"] body[data-page="order"] .quick-strip{height:84px;padding:7px 8px;gap:7px}
 
 /* Checkout page: same central profile engine, no size-specific restore stylesheet. */
