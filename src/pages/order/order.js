@@ -27,6 +27,33 @@ function filteredProducts(){
   });
 }
 
+function productGridMarkup(){
+  const products=filteredProducts();
+  return products.length?products.map(product=>`
+    <button type="button" class="product-card product-card--${product.mode}${product.soldout?' is-soldout':''}" data-product-id="${product.id}" ${product.soldout?'disabled':''}>
+      <span class="product-card__flag">${product.soldout?'測試售罄':'測試商品'}</span>
+      <strong>${product.name}</strong>
+      <span>${product.subtitle}</span>
+      <b>${money(product.price)}</b>
+    </button>`).join(''):`<div class="product-empty">沒有符合搜尋條件的測試商品</div>`;
+}
+
+function bindProductButtons(container){
+  container.querySelectorAll('[data-product-id]').forEach(button=>button.addEventListener('click',()=>{
+    const product=MOCK_PRODUCTS.find(item=>item.id===button.dataset.productId);
+    if(!product)return;
+    addProduct(product);
+    renderOrderPage(container);
+  }));
+}
+
+function refreshProductGrid(container){
+  const grid=container.querySelector('.product-grid');
+  if(!grid)return;
+  grid.innerHTML=productGridMarkup();
+  bindProductButtons(container);
+}
+
 export function renderOrderPage(container){
   container.innerHTML=`
     <section class="order-page" data-ratio="${state.ratio}">
@@ -49,9 +76,9 @@ export function renderOrderPage(container){
             </article>`).join(''):`<div class="cart-empty"><strong>購物車暫時未有項目</strong><span>按右邊測試商品加入，驗證版面同操作。</span></div>`}
         </div>
         <footer class="order-cart__footer">
-          <button type="button" class="secondary">暫存</button>
-          <button type="button" class="secondary">取單</button>
-          <button type="button" class="checkout" ${state.cart.length?'':'disabled'}>測試結帳 ${money(cartTotal())}</button>
+          <button type="button" class="secondary" disabled aria-disabled="true">暫存｜未實作</button>
+          <button type="button" class="secondary" disabled aria-disabled="true">取單｜未實作</button>
+          <button type="button" class="checkout" disabled aria-disabled="true">結帳｜未實作 ${money(cartTotal())}</button>
         </footer>
       </aside>
 
@@ -60,27 +87,19 @@ export function renderOrderPage(container){
           <div class="category-strip" role="tablist" aria-label="測試分類">
             ${MOCK_CATEGORIES.map(category=>`<button type="button" data-category="${category.id}" aria-selected="${state.category===category.id}">${category.name}</button>`).join('')}
           </div>
-          <label class="search-box"><span>搜尋</span><input id="mock-search" type="search" value="${state.query.replaceAll('"','&quot;')}" placeholder="搜尋測試商品"></label>
+          <label class="search-box"><span>搜尋</span><input id="mock-search" type="search" inputmode="search" autocomplete="off" autocorrect="off" spellcheck="false" value="${state.query.replaceAll('"','&quot;')}" placeholder="搜尋測試商品"></label>
         </header>
 
         <div class="order-test-controls">
-          <span>工作區比例（測試，未封板）</span>
-          <div class="ratio-switch" role="group" aria-label="工作區測試比例">
+          <span>工作區比例（個人顯示設定）</span>
+          <div class="ratio-switch" role="group" aria-label="工作區比例">
             ${['25-75','30-70','32-68'].map(value=>`<button type="button" data-ratio-value="${value}" aria-pressed="${state.ratio===value}">${value.replace('-', '/')}</button>`).join('')}
           </div>
         </div>
 
-        <div class="product-grid">
-          ${filteredProducts().length?filteredProducts().map(product=>`
-            <button type="button" class="product-card product-card--${product.mode}${product.soldout?' is-soldout':''}" data-product-id="${product.id}" ${product.soldout?'disabled':''}>
-              <span class="product-card__flag">${product.soldout?'測試售罄':'測試商品'}</span>
-              <strong>${product.name}</strong>
-              <span>${product.subtitle}</span>
-              <b>${money(product.price)}</b>
-            </button>`).join(''):`<div class="product-empty">沒有符合搜尋條件的測試商品</div>`}
-        </div>
+        <div class="product-grid">${productGridMarkup()}</div>
 
-        <button type="button" class="quick-drink-handle" disabled>快捷飲品｜Gate 5 接入</button>
+        <button type="button" class="quick-drink-handle" disabled>快捷飲品｜後續接入</button>
       </section>
     </section>`;
 
@@ -89,22 +108,13 @@ export function renderOrderPage(container){
     renderOrderPage(container);
   }));
 
-  container.querySelector('#mock-search')?.addEventListener('input',event=>{
-    state.query=event.target.value;
-    renderOrderPage(container);
-    requestAnimationFrame(()=>{
-      const input=container.querySelector('#mock-search');
-      input?.focus();
-      input?.setSelectionRange(input.value.length,input.value.length);
-    });
+  const searchInput=container.querySelector('#mock-search');
+  searchInput?.addEventListener('input',event=>{
+    state.query=event.currentTarget.value;
+    refreshProductGrid(container);
   });
 
-  container.querySelectorAll('[data-product-id]').forEach(button=>button.addEventListener('click',()=>{
-    const product=MOCK_PRODUCTS.find(item=>item.id===button.dataset.productId);
-    if(!product)return;
-    addProduct(product);
-    renderOrderPage(container);
-  }));
+  bindProductButtons(container);
 
   container.querySelectorAll('[data-cart-action]').forEach(button=>button.addEventListener('click',()=>{
     changeQty(button.dataset.id,button.dataset.cartAction==='plus'?1:-1);
