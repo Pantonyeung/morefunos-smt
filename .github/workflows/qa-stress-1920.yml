@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - qa-stress-1920-baseline
+  pull_request:
+    branches:
+      - smt-responsive-from-1920-baseline
   workflow_dispatch:
 
 jobs:
