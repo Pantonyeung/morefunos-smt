@@ -108,16 +108,17 @@ test('quick drink adjustment stays compact without repeating its image', () => {
   assert.match(css,/\.drink-choice-card\.selected::after/);
 });
 
-test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', async () => {
-  const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
-  assert.match(loader,/logicalHeight/);
-  assert.match(loader,/morefun-smt-ui-scale/);
-  assert.match(loader,/morefun:set-ui-scale/);
+test('真機頁以共用 bridge 在 iframe 與頂層之間切換導航', async () => {
+  const bridge=await readFile(new URL('../shared/page-bridge.js',import.meta.url),'utf8');
+  assert.match(bridge,/const ROUTE_PATHS=Object\.freeze\(/);
+  for(const route of ['order','orders','dine','soldout','more','checkout'])assert.match(bridge,new RegExp(route+":'\\.\\.\\/"));
+  assert.match(bridge,/parent&&parent!==window/);
+  assert.match(bridge,/location\.href=target/);
 });
 
 test('root height chain and scroll regions keep both bars fixed', async () => {
   const base=await readFile(new URL('../shared/page-base.css',import.meta.url),'utf8');
-  assert.match(base,/#app\{width:1920px;height:100%;min-height:0;overflow:hidden\}/);
+  assert.match(base,/#app\{width:1280px;height:800px;min-height:0;overflow:hidden\}/);
   assert.match(css,/\.cart-list\{[^}]*min-height:0[^}]*overflow-y:auto/);
   assert.match(css,/\.products\{[^}]*min-height:0[^}]*overflow-y:auto/);
 });
@@ -272,12 +273,11 @@ test('點單頁最近訂單讀取共用歷史而不再寫死舊單號',()=>{
 });
 
 test('子頁啟動錯誤會顯示可見後備畫面而不是白屏',async()=>{
-  const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
-  assert.match(loader,/morefun:page-runtime-error/);
-  assert.match(loader,/let childReady=false/);
-  assert.match(loader,/morefun:page-ready/);
-  assert.match(loader,/if\(!childReady\)showLoaderError/);
-  assert.match(loader,/showLoaderError\('點單頁啟動失敗/);
+  const bridge=await readFile(new URL('../shared/page-bridge.js',import.meta.url),'utf8');
+  assert.match(bridge,/morefun:page-runtime-error/);
+  assert.match(bridge,/window\.addEventListener\('error'/);
+  assert.match(bridge,/window\.addEventListener\('unhandledrejection'/);
+  assert.match(bridge,/重新載入/);
 });
 
 test('specified pairing creates dynamic labelled groups',()=>{
