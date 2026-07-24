@@ -1,57 +1,64 @@
-const stage=document.getElementById('stage');
-const frame=document.getElementById('page');
-const hud=document.getElementById('device-hud');
-const hudDetail=document.getElementById('device-hud-detail');
-const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html',dine:'pages/dine/index.html',soldout:'pages/soldout/index.html',more:'pages/more/index.html'};
-const BUILD='smt-t2s-1280x800-rebuild.40';
-const TARGET_WIDTH=1280;
-const TARGET_HEIGHT=800;
-let current='';
-let childReady=false;
-let loadTimer=0;
-let watchdogTimer=0;
-let loadSeq=0;
+const workspace=document.getElementById('workspace');
+const nav=[...document.querySelectorAll('.bottom-nav [data-route]')];
+const networkStatus=document.getElementById('network-status');
+const clockStatus=document.getElementById('clock-status');
+const toast=document.getElementById('system-toast');
 
-const checkoutFixCss=`
-body[data-page="checkout"] .app{width:1280px!important;height:800px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;background:#f8f6f2!important}
-body[data-page="checkout"] .statusbar{height:56px!important;min-height:56px!important;display:flex!important;align-items:center!important;padding:0 18px!important;gap:12px!important;background:#fff!important;border-bottom:1px solid var(--line)!important;z-index:2!important}
-body[data-page="checkout"] .statusbar .brand{display:block!important;font-size:20px!important;font-weight:950!important;color:var(--orange)!important;white-space:nowrap!important}
-body[data-page="checkout"] .status-item{display:inline-flex!important;align-items:center!important;min-height:28px!important;font-size:12px!important;font-weight:850!important;color:var(--muted)!important;white-space:nowrap!important}
-body[data-page="checkout"] .checkout{width:1280px!important;height:744px!important;display:grid!important;grid-template-columns:350px minmax(0,1fr)!important;gap:10px!important;padding:10px 12px!important;background:#f8f6f2!important;overflow:hidden!important}
-body[data-page="checkout"] .checkout-cart.panel,body[data-page="checkout"] .checkout-main.panel{background:#fff!important;border:1px solid var(--line)!important;border-radius:16px!important;box-shadow:0 8px 26px rgba(76,46,28,.08)!important;overflow:hidden!important}
-body[data-page="checkout"] .checkout-cart{height:100%!important;display:grid!important;grid-template-rows:42px minmax(0,1fr)68px!important;padding:10px!important;min-height:0!important}
-body[data-page="checkout"] .checkout-cart>header{height:42px!important;min-height:42px!important;display:flex!important;align-items:center!important;border-bottom:1px solid var(--line)!important;margin:0 0 5px!important}
-body[data-page="checkout"] .checkout-cart h2{display:block!important;margin:0!important;font-size:18px!important;font-weight:950!important}.cart-lines{min-height:0!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important}
-body[data-page="checkout"] .checkout-cart article{min-height:40px!important;padding:6px 0!important;grid-template-columns:22px minmax(0,1fr)auto!important;gap:7px!important}
-body[data-page="checkout"] .checkout-cart article strong{font-size:12px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}body[data-page="checkout"] .checkout-cart article small{font-size:10px!important;color:var(--muted)!important}
-body[data-page="checkout"] .detail-actions{height:68px!important;min-height:68px!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;padding-top:8px!important;border-top:1px solid var(--line)!important;background:#fff!important}.detail-actions button{min-height:44px!important;border-radius:12px!important}
-body[data-page="checkout"] .checkout-main{height:100%!important;display:grid!important;grid-template-rows:48px 48px 66px minmax(0,1fr)48px!important;gap:6px!important;padding:9px!important;min-width:0!important;min-height:0!important;overflow:hidden!important}
-body[data-page="checkout"] .row.channels{grid-template-columns:repeat(5,minmax(0,1fr))!important}body[data-page="checkout"] .row.payments{grid-template-columns:repeat(6,minmax(0,1fr))!important}
-body[data-page="checkout"] .row.channels button,body[data-page="checkout"] .row.payments button{height:48px!important;min-height:48px!important;max-height:48px!important;border:1px solid var(--line)!important;border-radius:12px!important;background:#fff!important;display:grid!important;grid-template-rows:18px 18px!important;place-items:center!important;gap:1px!important;padding:4px 5px!important;font-size:10px!important;font-weight:900!important;line-height:1.05!important;overflow:hidden!important;white-space:nowrap!important}.row.channels button.active,.row.payments button.active{border-color:var(--orange)!important;background:var(--orange-soft)!important;color:var(--orange)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--orange) 22%,transparent)!important}
-body[data-page="checkout"] .option-icon{width:17px!important;height:17px!important;max-width:17px!important;max-height:17px!important;object-fit:contain!important;display:block!important}
-body[data-page="checkout"] .summary{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important}.summary>span,.summary .received-summary{min-height:66px!important;padding:7px 9px!important;border:1px solid var(--line)!important;border-radius:10px!important;background:#fff!important;font-size:13px!important}.summary b{font-size:22px!important;line-height:1.1!important}.summary .received-summary.active{border:2px solid var(--orange)!important;background:#fff8f1!important}
-body[data-page="checkout"] .cash-area{display:grid!important;grid-template-columns:220px minmax(0,1fr)!important;gap:8px!important;min-height:0!important;overflow:hidden!important}.cash-entry{gap:6px!important}.received-display{min-height:44px!important;font-size:19px!important;border-radius:10px!important}.quick{gap:6px!important}.quick button{min-height:36px!important;border-radius:10px!important;font-size:11px!important}
-body[data-page="checkout"] .cash-controls{gap:6px!important;min-height:0!important;overflow:hidden!important}.keypad-wrap{display:grid!important;grid-template-rows:30px minmax(0,1fr)!important;gap:6px!important;min-height:0!important;overflow:hidden!important}.keypad-wrap .quick-amounts{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:6px!important}.quick-amounts button{height:30px!important;min-height:30px!important;font-size:11px!important;border-radius:8px!important}.keypad{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:repeat(4,minmax(56px,1fr))!important;gap:6px!important}.keypad button{height:56px!important;min-height:56px!important;border-radius:10px!important;font-size:24px!important}.confirm{height:48px!important;min-height:48px!important;border-radius:10px!important;font-size:16px!important}
-`;
+const routes={
+  order:{title:'點單',note:'Gate 3 只建立原生工作區；商品、分類、價格暫不接入。',items:['下一階段建立點單框架','測試期只可使用明確標示的假資料','正式商品資料只接受 Admin 權威來源']},
+  orders:{title:'訂單',note:'保留完整 SMT 訂單功能範圍，暫未搬入舊頁面實作。',items:['30 分鐘訂單生命週期屬後續 Gate','頁面將獨立擁有自己的 layout','不使用 Loader 注入頁面樣式']},
+  dine:{title:'堂食',note:'堂食功能保留，1280×800 畫面將原生重排。',items:['Table Session 與 Order Timer 分離','35 分鐘只作提示','後續 Gate 再接正式互動']},
+  soldout:{title:'售罄',note:'售罄屬正式功能，現階段只保留入口。',items:['離線供應控制後續接入','正式商品清單由 Admin 資料提供','舊商品資料不得成為正式來源']},
+  more:{title:'更多',note:'設備、日結、報表、備份與更新會逐區重建。',items:['每區獨立 owner','先完成結構再接資料','不以補丁方式搬舊 UI']}
+};
 
-const orderFixCss=`
-body[data-page="order"] .quick-drawer-panel{height:138px!important;min-height:138px!important;max-height:138px!important}body[data-page="order"] .quick-drawer-panel>header{height:28px!important;min-height:28px!important;padding:0 8px!important}body[data-page="order"] .quick-drawer-panel>div{height:108px!important;min-height:108px!important;padding:2px 8px 8px!important;display:flex!important;align-items:center!important;align-content:center!important;gap:8px!important;overflow-x:auto!important;overflow-y:hidden!important}
-body[data-page="order"] .quick-drawer-panel .drink-choice-card{width:82px!important;min-width:82px!important;max-width:82px!important;height:96px!important;padding:3px 5px 5px!important;grid-template-rows:18px 70px!important;align-self:center!important}body[data-page="order"] .quick-drawer-panel .drink-choice-card>span:not(.drink-choice-img){line-height:18px!important;font-size:10px!important}body[data-page="order"] .quick-drawer-panel .drink-choice-img{height:70px!important;align-self:center!important}body[data-page="order"] .quick-drawer-panel .drink-choice-img img{object-fit:contain!important}
-body[data-page="order"] .completion-drinks>div,body[data-page="order"] .detail-drinks,body[data-page="order"] .combo-candidates.is-drink-candidates,body[data-page="order"] .drink-link-candidates{padding:5px 6px 7px!important;align-items:center!important;overflow-x:auto!important;overflow-y:hidden!important}body[data-page="order"] .completion-drinks .drink-choice-card,body[data-page="order"] .detail-drinks .drink-choice-card,body[data-page="order"] .combo-candidates .drink-choice-card,body[data-page="order"] .drink-link-candidates .drink-choice-card{width:74px!important;min-width:74px!important;max-width:74px!important;height:88px!important;padding:3px 4px 5px!important;grid-template-rows:17px 63px!important}body[data-page="order"] .completion-drinks .drink-choice-img,body[data-page="order"] .detail-drinks .drink-choice-img,body[data-page="order"] .combo-candidates .drink-choice-img,body[data-page="order"] .drink-link-candidates .drink-choice-img{height:63px!important;align-self:center!important}
-body[data-page="order"] .modal-card.is-anchored-popover,body[data-page="order"] .confirm-card.is-anchored-popover{overflow:visible!important}body[data-page="order"] .modal-card.is-anchored-popover::before,body[data-page="order"] .confirm-card.is-anchored-popover::before,body[data-page="order"] .anchored-card::before{content:""!important;position:absolute!important;width:0!important;height:0!important;background:transparent!important;border:8px solid transparent!important;box-shadow:none!important;filter:none!important;z-index:1!important;transform:none!important}
-body[data-page="order"] .is-anchored-popover[data-pointer-side="top"]::before{left:var(--pointer-x)!important;top:-16px!important;bottom:auto!important;right:auto!important;transform:translateX(-50%)!important;border-bottom-color:#fff!important}body[data-page="order"] .is-anchored-popover[data-pointer-side="bottom"]::before{left:var(--pointer-x)!important;bottom:-16px!important;top:auto!important;right:auto!important;transform:translateX(-50%)!important;border-top-color:#fff!important}body[data-page="order"] .is-anchored-popover[data-pointer-side="left"]::before{left:-16px!important;top:var(--pointer-y)!important;right:auto!important;bottom:auto!important;transform:translateY(-50%)!important;border-right-color:#fff!important}body[data-page="order"] .is-anchored-popover[data-pointer-side="right"]::before{right:-16px!important;top:var(--pointer-y)!important;left:auto!important;bottom:auto!important;transform:translateY(-50%)!important;border-left-color:#fff!important}
-body[data-page="order"] .toast{position:fixed!important;left:300px!important;bottom:106px!important;width:260px!important;min-height:112px!important;display:grid!important;place-content:center!important;padding:14px 16px!important;background:#fff!important;border:1px solid var(--line)!important;border-radius:16px!important;box-shadow:0 18px 52px rgba(42,31,24,.24)!important;color:var(--text)!important;font-size:15px!important;font-weight:900!important;line-height:1.35!important;text-align:left!important;opacity:0!important;transform:translateY(8px)!important;pointer-events:none!important;z-index:1300!important}body[data-page="order"] .toast.show{opacity:1!important;transform:translateY(0)!important}
-`;
+function currentRoute(){
+  const value=(location.hash.replace(/^#\/?/,'')||'order').split('?')[0];
+  return routes[value]?value:'order';
+}
 
-function viewportSize(){const viewport=window.visualViewport;return{width:Math.round(viewport?.width||window.innerWidth),height:Math.round(viewport?.height||window.innerHeight)};}
-function isExactTarget(size){return size.width===TARGET_WIDTH&&size.height===TARGET_HEIGHT;}
-function applyT2SViewport(){const size=viewportSize();const orientation=size.width>=size.height?'橫屏':'直屏';document.documentElement.dataset.orientation=orientation==='橫屏'?'landscape':'portrait';const exact=isExactTarget(size);const scale=exact?1:Math.min(size.width/TARGET_WIDTH,size.height/TARGET_HEIGHT);const renderedWidth=Math.round(TARGET_WIDTH*scale),renderedHeight=Math.round(TARGET_HEIGHT*scale);stage.style.width=TARGET_WIDTH+'px';stage.style.height=TARGET_HEIGHT+'px';stage.style.left=Math.max(0,Math.round((size.width-renderedWidth)/2))+'px';stage.style.top=Math.max(0,Math.round((size.height-renderedHeight)/2))+'px';stage.style.transform=scale===1?'none':'scale('+scale+')';stage.dataset.profile=exact?'sunmi-t2s-native':'sunmi-t2s-simulator';stage.dataset.viewportWidth=String(size.width);stage.dataset.viewportHeight=String(size.height);stage.dataset.scale=scale.toFixed(4);stage.dataset.fitted='1';document.documentElement.dataset.previewMode=exact?'native':'simulator';if(hud&&hudDetail){hud.hidden=exact;hudDetail.textContent='裝置 '+size.width+'×'+size.height+'（'+orientation+'）｜完整框縮放 '+Math.round(scale*100)+'%｜黃色框內固定為 1280×800｜版本 '+BUILD;}}
-function route(){const key=(location.hash.replace(/^#\/?/,'')||'order').split('?')[0];return routes[key]?key:'order';}
-function showLoaderError(message){frame.srcdoc='<!doctype html><html lang="zh-HK"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0;display:grid;place-items:center;height:100vh;font-family:-apple-system,BlinkMacSystemFont,"PingFang HK",sans-serif;background:#fff8f3;color:#382b24}.card{max-width:520px;padding:28px;border:1px solid #ead9ce;border-radius:16px;background:#fff;text-align:center}.card strong{display:block;font-size:24px;color:#e84b12;margin-bottom:10px}.card button{min-height:48px;margin-top:12px;padding:0 20px;border:0;border-radius:10px;background:#ef5b23;color:#fff;font-weight:800}</style><body><section class="card"><strong>頁面未能載入</strong><p>'+String(message||'請重新整理後再試')+'</p><button onclick="location.reload()">重新載入</button></section></body></html>';}
-function injectPageFixes(){try{const doc=frame.contentDocument;if(!doc?.head||!doc.body)return;const page=doc.body.dataset.page||'';let css='';if(page==='checkout')css=checkoutFixCss;else if(page==='order')css=orderFixCss;else if(page==='more')css='body[data-page="more"] .app{width:1280px!important;height:800px!important;min-width:1280px!important;min-height:800px!important;overflow:hidden!important}';if(!css)return;let style=doc.getElementById('smt-loader-t2s-fixes');if(!style){style=doc.createElement('style');style.id='smt-loader-t2s-fixes';doc.head.appendChild(style);}style.textContent=css;}catch(error){console.warn('T2S_FIX_INJECT_FAILED',error);}}
-function load({force=false}={}){const key=route();if(!force&&key===current&&childReady)return;current=key;childReady=false;const seq=++loadSeq;clearTimeout(loadTimer);clearTimeout(watchdogTimer);frame.removeAttribute('srcdoc');frame.style.visibility='visible';frame.style.opacity='1';frame.src='about:blank';const stamp=Date.now();loadTimer=setTimeout(()=>{if(seq!==loadSeq)return;frame.src=routes[key]+'?build='+encodeURIComponent(BUILD)+'&t='+stamp;watchdogTimer=setTimeout(()=>{if(seq===loadSeq&&!childReady){frame.src=routes[key]+'?build='+encodeURIComponent(BUILD)+'&retry='+Date.now();}},1600);},20);}
-frame.addEventListener('error',()=>showLoaderError('子頁載入失敗，資料仍保存在本機。'));
-frame.addEventListener('load',()=>{applyT2SViewport();setTimeout(injectPageFixes,0);setTimeout(injectPageFixes,80);setTimeout(injectPageFixes,240);});
-addEventListener('hashchange',()=>load({force:true}));addEventListener('pageshow',()=>{applyT2SViewport();if(!childReady)load({force:true});});addEventListener('resize',applyT2SViewport,{passive:true});addEventListener('orientationchange',()=>setTimeout(applyT2SViewport,120),{passive:true});
-addEventListener('message',event=>{if(event.source!==frame.contentWindow)return;if(event.data?.type==='morefun:page-ready'){childReady=true;injectPageFixes();clearTimeout(watchdogTimer);}if(event.data?.type==='morefun:navigate'){const next=String(event.data.route||'order');if(location.hash==='#/'+next)load({force:true});else location.hash='#/'+next;}if(event.data?.type==='morefun:exit-fullscreen'&&document.fullscreenElement)document.exitFullscreen?.();if(event.data?.type==='morefun:set-ui-scale')frame.contentWindow?.postMessage({type:'morefun:ui-scale-disabled',reason:'T2S 使用固定 1280×800 測試框；請使用瀏覽器雙指縮放檢查細節。'},'*');if(event.data?.type==='morefun:reload-current-page')load({force:true});});
-applyT2SViewport();load({force:true});
+function render(){
+  const key=currentRoute();
+  const route=routes[key];
+  nav.forEach(button=>button.setAttribute('aria-current',button.dataset.route===key?'page':'false'));
+  workspace.innerHTML=`<section class="gate-panel"><article class="gate-card"><span class="badge">1280×800 原生重建｜Gate 3</span><h1>${route.title}</h1><p>${route.note}</p><ul>${route.items.map(item=>`<li>${item}</li>`).join('')}</ul></article></section>`;
+  workspace.focus({preventScroll:true});
+}
+
+function showToast(message){
+  if(!toast)return;
+  toast.textContent=message;
+  toast.hidden=false;
+  clearTimeout(showToast.timer);
+  showToast.timer=setTimeout(()=>{toast.hidden=true;},1800);
+}
+
+function updateNetwork(){
+  const online=navigator.onLine;
+  networkStatus.textContent=online?'網絡：在線':'網絡：離線';
+  networkStatus.dataset.state=online?'online':'offline';
+  if(!online)showToast('已進入離線狀態；正式本機資料流程將於後續 Gate 接入。');
+}
+
+function updateClock(){
+  clockStatus.textContent=new Intl.DateTimeFormat('zh-HK',{hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
+}
+
+nav.forEach(button=>button.addEventListener('click',()=>{
+  const next=button.dataset.route;
+  if(next===currentRoute())return;
+  location.hash=`#/${next}`;
+}));
+
+window.addEventListener('hashchange',render);
+window.addEventListener('online',updateNetwork);
+window.addEventListener('offline',updateNetwork);
+window.addEventListener('error',event=>{
+  console.error('SMT_SHELL_ERROR',event.error||event.message);
+  showToast('Shell 發生錯誤；未有正式交易資料被提交。');
+});
+
+updateNetwork();
+updateClock();
+setInterval(updateClock,30000);
+render();
