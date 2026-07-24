@@ -17,6 +17,10 @@
   --order-product-hero-height:150px;
   --order-cart-image-size:72px;
   --order-cart-row-gap:11px;
+  --checkout-cart-ratio:34%;
+  --checkout-option-height:70px;
+  --checkout-key-height:92px;
+  --checkout-confirm-height:62px;
 }
 
 :root[data-responsive-profile="standard"]{
@@ -38,6 +42,10 @@
   --order-product-hero-height:138px;
   --order-cart-image-size:64px;
   --order-cart-row-gap:9px;
+  --checkout-cart-ratio:32%;
+  --checkout-option-height:60px;
+  --checkout-key-height:74px;
+  --checkout-confirm-height:58px;
 }
 
 :root[data-responsive-profile="compact"]{
@@ -59,6 +67,10 @@
   --order-product-hero-height:116px;
   --order-cart-image-size:52px;
   --order-cart-row-gap:6px;
+  --checkout-cart-ratio:30%;
+  --checkout-option-height:48px;
+  --checkout-key-height:56px;
+  --checkout-confirm-height:52px;
 }
 
 :root[data-responsive-profile="dense"]{
@@ -80,6 +92,10 @@
   --order-product-hero-height:104px;
   --order-cart-image-size:46px;
   --order-cart-row-gap:5px;
+  --checkout-cart-ratio:32%;
+  --checkout-option-height:44px;
+  --checkout-key-height:50px;
+  --checkout-confirm-height:48px;
 }
 
 :root{
@@ -150,3 +166,34 @@ body[data-page="order"] .confirm-card{max-height:var(--modal-max-height)}
 :root[data-responsive-profile="compact"] body[data-page="order"] .product-card strong{font-size:14px}
 :root[data-responsive-profile="compact"] body[data-page="order"] .product-price{font-size:17px}
 :root[data-responsive-profile="compact"] body[data-page="order"] .quick-strip{height:82px;padding:6px 8px;gap:7px}
+
+/* Checkout page: same central profile engine, no size-specific restore stylesheet. */
+body[data-page="checkout"] .checkout{
+  grid-template-columns:minmax(300px,var(--checkout-cart-ratio)) minmax(0,1fr);
+  gap:var(--page-gap);
+  padding:var(--page-gap) var(--page-padding-x);
+}
+body[data-page="checkout"] .checkout-cart,
+body[data-page="checkout"] .checkout-main{padding:calc(var(--space-unit) + 6px)}
+body[data-page="checkout"] .row button,
+body[data-page="checkout"] .quick button{min-height:var(--checkout-option-height)}
+body[data-page="checkout"] .keypad-wrap .keypad{grid-template-rows:repeat(4,minmax(var(--checkout-key-height),1fr))}
+body[data-page="checkout"] .keypad-wrap .keypad button{min-height:var(--checkout-key-height);font-size:calc(34px * var(--responsive-font-scale))}
+body[data-page="checkout"] .confirm{height:var(--checkout-confirm-height);font-size:calc(22px * var(--responsive-font-scale))}
+body[data-page="checkout"] .discount-card{width:min(var(--modal-max-width),calc(100vw - 24px));max-height:var(--modal-max-height);overflow:auto}
+
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .checkout{grid-template-columns:minmax(270px,var(--checkout-cart-ratio)) minmax(0,1fr)}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .checkout-cart article{grid-template-columns:24px minmax(0,1fr) auto;gap:6px;padding:7px 0}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .detail-actions{gap:6px;padding-top:7px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .detail-actions button{min-height:48px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .checkout-main{gap:6px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .row{gap:6px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .option-icon{width:24px;height:24px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .summary{gap:5px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .summary>span,
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .summary .received-summary{padding:6px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .summary b{font-size:18px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .cash-area{grid-template-columns:220px minmax(0,1fr);gap:7px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .received-display{min-height:48px;font-size:20px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .quick{gap:5px}
+:root[data-responsive-profile="compact"] body[data-page="checkout"] .quick-amounts{gap:5px}
