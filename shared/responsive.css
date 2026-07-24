@@ -8,7 +8,7 @@
   --control-min-height:48px;
   --cart-ratio:28%;
   --cart-ratio-min:25%;
-  --cart-ratio-max:34%;
+  --cart-ratio-max:28%;
   --modal-max-width:760px;
   --modal-max-height:calc(100vh - 154px);
   --product-columns:4;
@@ -33,7 +33,7 @@
   --control-min-height:44px;
   --cart-ratio:30%;
   --cart-ratio-min:28%;
-  --cart-ratio-max:34%;
+  --cart-ratio-max:30%;
   --modal-max-width:700px;
   --modal-max-height:calc(100vh - 132px);
   --product-columns:4;
@@ -58,7 +58,7 @@
   --control-min-height:40px;
   --cart-ratio:32%;
   --cart-ratio-min:30%;
-  --cart-ratio-max:35%;
+  --cart-ratio-max:32%;
   --modal-max-width:min(660px,calc(100vw - 24px));
   --modal-max-height:calc(100vh - 122px);
   --product-columns:4;
@@ -83,7 +83,7 @@
   --control-min-height:38px;
   --cart-ratio:34%;
   --cart-ratio-min:32%;
-  --cart-ratio-max:38%;
+  --cart-ratio-max:34%;
   --modal-max-width:min(580px,calc(100vw - 20px));
   --modal-max-height:calc(100vh - 116px);
   --product-columns:3;
