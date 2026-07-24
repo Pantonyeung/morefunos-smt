@@ -21,6 +21,7 @@ import {activeDineOrderIdentities,createOrderIdentity,orderDisplayNumber} from "
 
 const app = document.getElementById("app"),
   order = readJSON(ORDER_STORAGE_KEY, { cart: [] });
+const navigate=route=>window.MoreFunPageBridge?.navigate(route);
 const terminalId = normalizeTerminalId(
   localStorage.getItem(TERMINAL_ID_STORAGE_KEY) ||
     new URLSearchParams(location.search).get("terminal") ||
@@ -203,7 +204,7 @@ function render() {
 function handle(button) {
   const action = button.dataset.action;
   if (action === "back")
-    parent.postMessage({ type: "morefun:navigate", route: "order" }, "*");
+    navigate("order");
   else if (action === "channel") {
     channel = button.dataset.value;
     const policy = getChannelPolicy(channel);
@@ -253,7 +254,7 @@ function handle(button) {
     try { completeCheckout(); } catch (error) { showToast(error.message || "未能建立訂單"); }
     return;
   } else if (action === "go-orders")
-    parent.postMessage({ type: "morefun:navigate", route: "orders" }, "*");
+    navigate("orders");
   else if (action === "correction-open") {
     channel = completedRecord.source;
     payment = completedRecord.paymentMethod;
