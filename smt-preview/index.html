@@ -3,25 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.25,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>磨飯 SMT｜iPhone T2S Adapter</title>
-  <link rel="stylesheet" href="../app-shell.css?v=smt-t2s-iphone-adapter.01">
+  <link rel="stylesheet" href="../app-shell.css?v=smt-t2s-iphone-adapter.02">
 </head>
 <body>
   <main class="preview-adapter" aria-label="磨飯 SMT iPhone 預覽 adapter">
     <header class="adapter-hud">
-      <section><strong>SMT T2S Adapter</strong><span id="adapter-detail">正在量度畫面…</span></section>
+      <section>
+        <strong>SMT T2S Adapter</strong>
+        <span id="adapter-detail">正在量度畫面…</span>
+      </section>
       <nav aria-label="預覽控制">
-        <button data-action="fit">適合</button>
-        <button data-action="out">－</button>
-        <button data-action="native">100%</button>
-        <button data-action="in">＋</button>
+        <button data-action="fit" aria-label="自動適合畫面">適合</button>
+        <button data-action="out" aria-label="縮小">－</button>
+        <button data-action="native" aria-label="切換百分百大小">100%</button>
+        <button data-action="in" aria-label="放大">＋</button>
+        <button data-action="focus" aria-label="切換專注預覽">全屏</button>
         <a href="../pages/order/index.html">真機頁</a>
       </nav>
     </header>
     <section id="preview-floor" class="preview-floor" aria-label="黑邊檢查區">
-      <div id="frame-box" class="frame-box"><iframe id="t2s-frame" title="磨飯 SMT 1280×800" src="../pages/order/index.html"></iframe></div>
+      <div id="frame-box" class="frame-box">
+        <iframe id="t2s-frame" title="磨飯 SMT 1280×800" src="../pages/order/index.html"></iframe>
+      </div>
     </section>
   </main>
-  <script type="module" src="../app-loader.js?v=smt-t2s-iphone-adapter.01"></script>
+  <script type="module" src="../app-loader.js?v=smt-t2s-iphone-adapter.02"></script>
 </body>
 </html>
