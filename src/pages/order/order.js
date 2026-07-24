@@ -1,128 +1,23 @@
 import {MOCK_CATEGORIES,MOCK_PRODUCTS} from '../../data/mock-catalog.js';
 
-const state={category:'all',query:'',ratio:'30-70',cart:[]};
-
-function money(value){return `$${Number(value||0).toFixed(0)}`}
-function cartTotal(){return state.cart.reduce((sum,line)=>sum+(line.price*line.qty),0)}
-
-function addProduct(product){
-  if(product.soldout)return;
-  const line=state.cart.find(item=>item.id===product.id);
-  if(line)line.qty+=1;else state.cart.push({...product,qty:1});
-}
-
-function changeQty(id,delta){
-  const line=state.cart.find(item=>item.id===id);
-  if(!line)return;
-  line.qty+=delta;
-  if(line.qty<=0)state.cart=state.cart.filter(item=>item.id!==id);
-}
-
-function filteredProducts(){
-  const q=state.query.trim().toLowerCase();
-  return MOCK_PRODUCTS.filter(product=>{
-    const categoryOk=state.category==='all'||product.category===state.category;
-    const searchOk=!q||`${product.name} ${product.subtitle}`.toLowerCase().includes(q);
-    return categoryOk&&searchOk;
-  });
-}
-
-function productGridMarkup(){
-  const products=filteredProducts();
-  return products.length?products.map(product=>`
-    <button type="button" class="product-card product-card--${product.mode}${product.soldout?' is-soldout':''}" data-product-id="${product.id}" ${product.soldout?'disabled':''}>
-      <span class="product-card__flag">${product.soldout?'測試售罄':'測試商品'}</span>
-      <strong>${product.name}</strong>
-      <span>${product.subtitle}</span>
-      <b>${money(product.price)}</b>
-    </button>`).join(''):`<div class="product-empty">沒有符合搜尋條件的測試商品</div>`;
-}
-
-function bindProductButtons(container){
-  container.querySelectorAll('[data-product-id]').forEach(button=>button.addEventListener('click',()=>{
-    const product=MOCK_PRODUCTS.find(item=>item.id===button.dataset.productId);
-    if(!product)return;
-    addProduct(product);
-    renderOrderPage(container);
-  }));
-}
-
-function refreshProductGrid(container){
-  const grid=container.querySelector('.product-grid');
-  if(!grid)return;
-  grid.innerHTML=productGridMarkup();
-  bindProductButtons(container);
-}
-
-export function renderOrderPage(container){
-  container.innerHTML=`
-    <section class="order-page" data-ratio="${state.ratio}">
-      <aside class="order-cart" aria-label="測試購物車">
-        <header class="order-cart__head">
-          <div><span class="test-badge">測試資料</span><h1>購物車</h1></div>
-          <span class="cart-count">${state.cart.reduce((n,line)=>n+line.qty,0)} 件</span>
-        </header>
-        <div class="order-cart__list">
-          ${state.cart.length?state.cart.map(line=>`
-            <article class="cart-line" data-line-id="${line.id}">
-              <div class="cart-line__copy"><strong>${line.name}</strong><span>${line.subtitle}</span></div>
-              <strong class="cart-line__price">${money(line.price*line.qty)}</strong>
-              <div class="cart-line__actions">
-                <button type="button" data-cart-action="minus" data-id="${line.id}">－</button>
-                <span>${line.qty}</span>
-                <button type="button" data-cart-action="plus" data-id="${line.id}">＋</button>
-                <button type="button" class="modify" disabled>修改</button>
-              </div>
-            </article>`).join(''):`<div class="cart-empty"><strong>購物車暫時未有項目</strong><span>按右邊測試商品加入，驗證版面同操作。</span></div>`}
-        </div>
-        <footer class="order-cart__footer">
-          <button type="button" class="secondary" disabled aria-disabled="true">暫存｜未實作</button>
-          <button type="button" class="secondary" disabled aria-disabled="true">取單｜未實作</button>
-          <button type="button" class="checkout" disabled aria-disabled="true">結帳｜未實作 ${money(cartTotal())}</button>
-        </footer>
-      </aside>
-
-      <section class="order-products" aria-label="測試商品區">
-        <header class="product-toolbar">
-          <div class="category-strip" role="tablist" aria-label="測試分類">
-            ${MOCK_CATEGORIES.map(category=>`<button type="button" data-category="${category.id}" aria-selected="${state.category===category.id}">${category.name}</button>`).join('')}
-          </div>
-          <label class="search-box"><span>搜尋</span><input id="mock-search" type="search" inputmode="search" autocomplete="off" autocorrect="off" spellcheck="false" value="${state.query.replaceAll('"','&quot;')}" placeholder="搜尋測試商品"></label>
-        </header>
-
-        <div class="order-test-controls">
-          <span>工作區比例（個人顯示設定）</span>
-          <div class="ratio-switch" role="group" aria-label="工作區比例">
-            ${['25-75','30-70','32-68'].map(value=>`<button type="button" data-ratio-value="${value}" aria-pressed="${state.ratio===value}">${value.replace('-', '/')}</button>`).join('')}
-          </div>
-        </div>
-
-        <div class="product-grid">${productGridMarkup()}</div>
-
-        <button type="button" class="quick-drink-handle" disabled>快捷飲品｜後續接入</button>
-      </section>
-    </section>`;
-
-  container.querySelectorAll('[data-category]').forEach(button=>button.addEventListener('click',()=>{
-    state.category=button.dataset.category;
-    renderOrderPage(container);
-  }));
-
-  const searchInput=container.querySelector('#mock-search');
-  searchInput?.addEventListener('input',event=>{
-    state.query=event.currentTarget.value;
-    refreshProductGrid(container);
-  });
-
-  bindProductButtons(container);
-
-  container.querySelectorAll('[data-cart-action]').forEach(button=>button.addEventListener('click',()=>{
-    changeQty(button.dataset.id,button.dataset.cartAction==='plus'?1:-1);
-    renderOrderPage(container);
-  }));
-
-  container.querySelectorAll('[data-ratio-value]').forEach(button=>button.addEventListener('click',()=>{
-    state.ratio=button.dataset.ratioValue;
-    renderOrderPage(container);
-  }));
-}
+const state={category:'all',query:'',ratio:localStorage.getItem('smt-workspace-ratio')||'30-70',cart:[],drafts:[],quickMode:false,quickDrink:null,modal:null,pending:[{id:'W001',source:'網站',customer:'測試客人',amount:48,wait:'3 分鐘',payment:'待核實'}]};
+const money=v=>`$${Number(v||0).toFixed(0)}`;
+const total=()=>state.cart.reduce((s,l)=>s+l.price*l.qty,0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function product(id){return MOCK_PRODUCTS.find(x=>x.id===id)}
+function addLine(p,options={}){const key=p.id+'|'+JSON.stringify(options);const line=state.cart.find(x=>x.key===key);if(line)line.qty++;else state.cart.push({key,id:p.id,name:p.name,subtitle:p.subtitle,price:p.price,qty:1,options});}
+function addProduct(p){if(!p||p.soldout)return;if(p.required?.length){state.modal={type:'product',id:p.id,choices:{}};return}addLine(p)}
+function changeQty(key,d){const l=state.cart.find(x=>x.key===key);if(!l)return;l.qty+=d;if(l.qty<=0)state.cart=state.cart.filter(x=>x.key!==key)}
+function filtered(){const q=state.query.trim().toLowerCase();return MOCK_PRODUCTS.filter(p=>(state.category==='all'||p.category===state.category)&&(!q||`${p.id} ${p.name} ${p.subtitle}`.toLowerCase().includes(q)))}
+function productMarkup(){const ps=filtered();return ps.length?ps.map(p=>`<button class="product-card product-card--${p.mode}${p.soldout?' is-soldout':''}" data-product="${p.id}" ${p.soldout?'disabled':''}><span class="product-card__flag">${p.soldout?'測試售罄':p.id}</span><strong>${p.name}</strong><span>${p.subtitle}</span><b>${money(p.price)}</b></button>`).join(''):`<div class="product-empty">沒有符合搜尋條件的測試商品</div>`}
+function cartMarkup(){return state.cart.length?state.cart.map(l=>`<article class="cart-line"><div class="cart-line__copy"><strong>${l.name}</strong><span>${Object.values(l.options||{}).join('・')||l.subtitle}</span></div><strong class="cart-line__price">${money(l.price*l.qty)}</strong><div class="cart-line__actions"><button data-minus="${esc(l.key)}">－</button><span>${l.qty}</span><button data-plus="${esc(l.key)}">＋</button><button class="modify" data-modify="${esc(l.key)}">修改</button><button class="delete" data-delete="${esc(l.key)}">刪除</button></div></article>`).join(''):`<div class="cart-empty"><strong>購物車暫時未有項目</strong><span>右邊加入測試商品；空車時可使用取單。</span></div>`}
+function quickMarkup(){const drinks=MOCK_PRODUCTS.filter(p=>p.quickDrink);return `<div class="quick-drink-strip"><strong>快捷飲品</strong><div>${drinks.map(p=>`<button data-quick-drink="${p.id}" aria-pressed="${state.quickDrink===p.id}">${p.name}</button>`).join('')}</div><button data-open-quick>展開</button></div>`}
+function modalMarkup(){if(!state.modal)return'';if(state.modal.type==='product'){const p=product(state.modal.id);return `<div class="overlay"><section class="modal-card"><header><strong>${p.name}</strong><button data-close>返回</button></header><div class="modal-body">${p.required.map(g=>`<fieldset><legend>${g.name}｜必選</legend>${g.options.map(o=>`<button data-choice="${g.id}" data-value="${o}" aria-pressed="${state.modal.choices[g.id]===o}">${o}</button>`).join('')}</fieldset>`).join('')}</div><footer><button data-confirm-product>確認加入 ${money(p.price)}</button></footer></section></div>`}
+if(state.modal.type==='drafts')return `<div class="overlay"><section class="modal-card"><header><strong>取單</strong><button data-close>返回</button></header><div class="modal-body">${state.drafts.length?state.drafts.map((d,i)=>`<button class="draft-row" data-load-draft="${i}">暫存 ${i+1}｜${d.length} 項｜${money(d.reduce((s,l)=>s+l.price*l.qty,0))}</button>`).join(''):'暫時沒有暫存單'}</div></section></div>`;
+if(state.modal.type==='checkout')return `<div class="overlay"><section class="modal-card modal-card--wide"><header><strong>結帳</strong><button data-close>返回</button></header><div class="modal-body"><div class="checkout-summary">${state.cart.map(l=>`<span>${l.name} × ${l.qty}</span>`).join('')}<b>總額 ${money(total())}</b></div><div class="checkout-actions"><button>現金</button><button>電子付款</button><button>其他付款</button></div></div><footer><button data-complete-checkout>測試完成結帳</button></footer></section></div>`;
+if(state.modal.type==='pending')return `<div class="overlay"><section class="modal-card"><header><strong>待處理訂單</strong><button data-close>返回</button></header><div class="modal-body">${state.pending.map(x=>`<article class="pending-row"><b>${x.source}｜${x.id}</b><span>${x.customer}</span><span>${money(x.amount)}｜${x.wait}｜${x.payment}</span></article>`).join('')}</div></section></div>`;
+if(state.modal.type==='quick')return `<div class="overlay"><section class="modal-card"><header><strong>快捷飲品</strong><button data-close>返回</button></header><div class="modal-body quick-drawer">${MOCK_PRODUCTS.filter(p=>p.quickDrink).map(p=>`<button data-quick-drink="${p.id}" aria-pressed="${state.quickDrink===p.id}"><span class="fake-image">圖片</span><strong>${p.name}</strong></button>`).join('')}</div></section></div>`;return''}
+function toast(msg){const el=document.querySelector('#system-toast');if(!el)return;el.textContent=msg;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,1800)}
+function bind(container){container.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{state.category=b.dataset.category;renderOrderPage(container)});const input=container.querySelector('#mock-search');input?.addEventListener('input',e=>{state.query=e.currentTarget.value;const g=container.querySelector('.product-grid');g.innerHTML=productMarkup();bindProducts(container)});container.querySelector('[data-clear-search]')?.addEventListener('click',()=>{state.query='';renderOrderPage(container)});bindProducts(container);container.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>{changeQty(b.dataset.minus,-1);renderOrderPage(container)});container.querySelectorAll('[data-plus]').forEach(b=>b.onclick=()=>{changeQty(b.dataset.plus,1);renderOrderPage(container)});container.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{state.cart=state.cart.filter(x=>x.key!==b.dataset.delete);renderOrderPage(container)});container.querySelectorAll('[data-modify]').forEach(b=>b.onclick=()=>{const l=state.cart.find(x=>x.key===b.dataset.modify),p=product(l?.id);if(p?.required?.length)state.modal={type:'product',id:p.id,choices:{...l.options},editKey:l.key};else toast('此測試商品沒有修改選項');renderOrderPage(container)});container.querySelectorAll('[data-ratio]').forEach(b=>b.onclick=()=>{state.ratio=b.dataset.ratio;localStorage.setItem('smt-workspace-ratio',state.ratio);renderOrderPage(container)});container.querySelector('[data-draft]')?.addEventListener('click',()=>{if(!state.cart.length)return;state.drafts.push(structuredClone(state.cart));state.cart=[];toast('已暫存');renderOrderPage(container)});container.querySelector('[data-retrieve]')?.addEventListener('click',()=>{state.modal={type:'drafts'};renderOrderPage(container)});container.querySelector('[data-checkout]')?.addEventListener('click',()=>{if(state.cart.length){state.modal={type:'checkout'};renderOrderPage(container)}});container.querySelector('[data-pending]')?.addEventListener('click',()=>{state.modal={type:'pending'};renderOrderPage(container)});container.querySelector('[data-quick-mode]')?.addEventListener('click',()=>{state.quickMode=!state.quickMode;toast(state.quickMode?'已切換快捷模式':'已切換普通模式');renderOrderPage(container)});container.querySelector('[data-open-quick]')?.addEventListener('click',()=>{state.modal={type:'quick'};renderOrderPage(container)});container.querySelectorAll('[data-quick-drink]').forEach(b=>b.onclick=()=>{state.quickDrink=state.quickDrink===b.dataset.quickDrink?null:b.dataset.quickDrink;toast(state.quickDrink?'已選快捷飲品':'已取消快捷飲品');renderOrderPage(container)});container.querySelector('[data-close]')?.addEventListener('click',()=>{state.modal=null;renderOrderPage(container)});container.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>{state.modal.choices[b.dataset.choice]=b.dataset.value;renderOrderPage(container)});container.querySelector('[data-confirm-product]')?.addEventListener('click',()=>{const p=product(state.modal.id);if(p.required.some(g=>!state.modal.choices[g.id])){toast('請完成所有必選項');return}if(state.modal.editKey)state.cart=state.cart.filter(x=>x.key!==state.modal.editKey);addLine(p,state.modal.choices);state.modal=null;renderOrderPage(container)});container.querySelectorAll('[data-load-draft]').forEach(b=>b.onclick=()=>{state.cart=state.drafts.splice(Number(b.dataset.loadDraft),1)[0]||[];state.modal=null;renderOrderPage(container)});container.querySelector('[data-complete-checkout]')?.addEventListener('click',()=>{state.cart=[];state.modal=null;toast('測試結帳完成');renderOrderPage(container)})}
+function bindProducts(container){container.querySelectorAll('[data-product]').forEach(b=>b.onclick=()=>{addProduct(product(b.dataset.product));renderOrderPage(container)})}
+export function renderOrderPage(container){container.innerHTML=`<section class="order-page" data-ratio="${state.ratio}"><aside class="order-cart"><header class="order-cart__head"><div><span class="test-badge">Rebuild39 功能驗收</span><h1>購物車</h1></div><button class="pending-button" data-pending>待處理 ${state.pending.length}</button></header><div class="order-cart__list">${cartMarkup()}</div><footer class="order-cart__footer">${state.cart.length?`<button class="secondary" data-draft>暫存</button>`:`<button class="secondary" data-retrieve>取單 ${state.drafts.length||''}</button>`}<button class="checkout" data-checkout ${state.cart.length?'':'disabled'}>結帳 ${money(total())}</button></footer></aside><section class="order-products"><header class="product-toolbar"><div class="category-strip">${MOCK_CATEGORIES.map(c=>`<button data-category="${c.id}" aria-selected="${state.category===c.id}">${c.name}</button>`).join('')}</div><label class="search-box"><span>搜尋</span><input id="mock-search" type="search" value="${esc(state.query)}" placeholder="名稱／編號"><button type="button" data-clear-search>清除</button></label></header><div class="order-test-controls"><span>工作區比例</span><div class="ratio-switch">${['25-75','30-70','32-68'].map(v=>`<button data-ratio="${v}" aria-pressed="${state.ratio===v}">${v.replace('-', '/')}</button>`).join('')}</div><button data-quick-mode>${state.quickMode?'快捷模式':'普通模式'}</button></div><div class="product-grid">${productMarkup()}</div>${quickMarkup()}</section></section>${modalMarkup()}`;bind(container)}
