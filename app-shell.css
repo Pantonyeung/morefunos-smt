@@ -1,84 +1,12 @@
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-html,
-body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #050505;
-  overscroll-behavior: none;
-}
-#viewport {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  background: #050505;
-}
-#stage {
-  position: absolute;
-  width: 1280px;
-  height: 800px;
-  min-width: 0;
-  min-height: 0;
-  background: #f8f6f2;
-  overflow: hidden;
-  transform-origin: top left;
-  outline: 3px solid #ffbf00;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.32),0 18px 60px rgba(0,0,0,.5);
-}
-html[data-preview-mode="native"] #stage {
-  outline: 0;
-  box-shadow: none;
-}
-#page {
-  width: 1280px;
-  height: 800px;
-  min-width: 0;
-  min-height: 0;
-  border: 0;
-  display: block;
-  background: #f8f6f2;
-}
-#device-hud {
-  position: fixed;
-  left: max(10px, env(safe-area-inset-left));
-  top: max(10px, env(safe-area-inset-top));
-  z-index: 9000;
-  max-width: min(620px, calc(100vw - 20px));
-  padding: 8px 11px;
-  border: 1px solid rgba(255,255,255,.3);
-  border-radius: 9px;
-  background: rgba(0,0,0,.78);
-  color: #fff;
-  font: 12px/1.35 -apple-system,BlinkMacSystemFont,"PingFang HK",sans-serif;
-  pointer-events: none;
-  backdrop-filter: blur(8px);
-}
-#device-hud strong {
-  display: block;
-  color: #ffd45c;
-  font-size: 13px;
-}
-#device-hud span {
-  display: block;
-  margin-top: 2px;
-  color: #e4e4e4;
-}
-#device-hud[hidden] {
-  display: none;
-}
-@media (max-width: 600px) {
-  #device-hud {
-    max-width: calc(100vw - 16px);
-    left: max(8px, env(safe-area-inset-left));
-    top: max(8px, env(safe-area-inset-top));
-    padding: 7px 9px;
-    font-size: 11px;
-  }
-  #device-hud strong {
-    font-size: 12px;
-  }
-}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--shell-bg:#f8f6f2;--surface:#fff;--line:#e7dfd7;--text:#2f241e;--muted:#74675f;--accent:#e95b24;--accent-soft:#fff1e8;--top-h:56px;--nav-h:72px}
+html,body{margin:0;width:1280px;height:800px;overflow:hidden;background:var(--shell-bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","Noto Sans TC",sans-serif;color:var(--text)}
+button,input,select,textarea{font:inherit}button{touch-action:manipulation}
+.app-shell{width:1280px;height:800px;display:grid;grid-template-rows:var(--top-h) minmax(0,1fr) var(--nav-h);overflow:hidden;background:var(--shell-bg)}
+.top-status-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 18px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0}
+.brand-block{display:flex;align-items:baseline;gap:10px;min-width:0}.brand-block strong{font-size:20px;font-weight:900;color:var(--accent);white-space:nowrap}.brand-block span{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.status-group{display:flex;align-items:center;gap:8px}.status-pill{min-height:30px;padding:0 10px;display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:12px;font-weight:750;color:var(--muted);white-space:nowrap}
+.workspace{min-width:0;min-height:0;overflow:hidden;background:var(--shell-bg)}
+.route-placeholder{height:100%;display:grid;place-items:center;padding:24px}.route-card{width:min(720px,100%);padding:28px;border:1px solid var(--line);border-radius:20px;background:#fff;box-shadow:0 12px 36px rgba(67,45,31,.08)}.route-card h1{margin:0 0 10px;font-size:28px}.route-card p{margin:0;color:var(--muted);line-height:1.55}
+.bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:center;padding:0 14px;background:var(--surface);border-top:1px solid var(--line)}.bottom-nav button{height:52px;border:1px solid transparent;border-radius:14px;background:transparent;color:var(--muted);font-size:15px;font-weight:850}.bottom-nav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent);border-color:#ffd7c5}
+.system-toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);max-width:520px;padding:12px 16px;border-radius:14px;background:#2f241e;color:#fff;font-size:13px;font-weight:750;box-shadow:0 12px 32px rgba(47,36,30,.22);z-index:20}.system-toast[hidden]{display:none}
