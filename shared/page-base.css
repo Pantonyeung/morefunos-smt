@@ -93,5 +93,5 @@ input,select,textarea{transition:border-color .18s ease,box-shadow .18s ease,bac
 @keyframes mf-scrim-in{from{opacity:0}to{opacity:1}}
 @keyframes mf-dialog-in{from{opacity:0}to{opacity:1}}
 @keyframes mf-drawer-in{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
-@media (hover:hover){button:not(:disabled):hover{filter:saturate(1.04);box-shadow:var(--shadow-soft)}
+@media (hover:hover){button:not(:disabled):hover{filter:saturate(1.04);box-shadow:var(--shadow-soft)}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}button:not(:disabled):active{transform:none}}
