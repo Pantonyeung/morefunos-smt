@@ -10,9 +10,10 @@ const loader=read('app-loader.js');
 const printDomain=read('pages/more/print-domain.js');
 
 test('更多頁已接入正式路由及五項底部導航',()=>{
-  assert.match(loader,/more:\s*'pages\/more\/index\.html'/);
+  assert.match(read('shared/page-bridge.js'),/more:'\.\.\/more\/index\.html'/);
   for(const path of ['pages/order/page.js','pages/orders/page.js','pages/dine/page.js','pages/soldout/page.js']){
     assert.match(read(path),/navigate-more/,path+' 缺少更多頁導航');
+    assert.match(read(path),/MoreFunPageBridge\?\.navigate/,path+' 缺少真機直接導航出口');
   }
   assert.match(page,/renderBottomNav\('more'/);
   for(const route of ['order','orders','dine','soldout','more'])assert.match(read('shared/shell.js'),new RegExp("\\['"+route+"'"));
