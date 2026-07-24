@@ -1,5 +1,5 @@
 export const orderPageConfig={
-  canvas:{width:1920,height:1080,reflow:false,profile:'sunmi-t2s-contain'},
+  canvas:{mode:'responsive',baselineWidth:1920,baselineHeight:1080,profiles:['large','standard','compact','dense']},
   catalog:{defaultTemplate:'large',showCode:true,showDescription:true,productOverrides:{}},
   categoryLayout:{columns:6,rows:1,showSearch:true},
   cart:{mergeMode:'same_config',showSequence:true,showImages:true,widthPercent:32},

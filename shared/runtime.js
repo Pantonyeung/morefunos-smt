@@ -1,3 +1,5 @@
+export {applyResponsiveProfile,getResponsiveProfile,RESPONSIVE_PROFILES} from './responsive.js';
+
 export function safeClone(value){
   if(typeof structuredClone==='function'){
     try{return structuredClone(value);}catch(_error){}

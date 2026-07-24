@@ -1,0 +1,96 @@
+/* Secondary SMT pages share the same responsive profiles and tokens. */
+:root[data-responsive-profile],
+body[data-responsive-profile],
+body[data-responsive-profile] #app{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+
+/* Orders */
+body[data-page="orders"] .topbar{height:var(--topbar-height);min-height:var(--topbar-height);padding-inline:calc(var(--page-padding-x) + 8px)}
+body[data-page="orders"] .workspace{padding:var(--page-gap) calc(var(--page-padding-x) + 8px)}
+body[data-page="orders"] .stats{gap:var(--page-gap);margin:var(--page-gap) 0}
+body[data-page="orders"] .orders-layout{grid-template-columns:minmax(320px,32%) minmax(0,1fr);gap:var(--page-gap)}
+body[data-page="orders"] .lanes{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--page-gap)}
+body[data-page="orders"] .reverse-card{width:min(520px,calc(100vw - 24px));max-height:var(--modal-max-height);overflow:auto}
+
+/* Dine */
+body[data-page="dine"] .dine-workspace{grid-template-columns:minmax(0,1fr) clamp(300px,26vw,430px);gap:var(--page-gap)}
+body[data-page="dine"] .dine-main{gap:var(--page-gap)}
+body[data-page="dine"] .waiting-bar{height:auto;min-height:72px;padding-inline:calc(var(--page-padding-x) + 4px)}
+body[data-page="dine"] .table-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:calc(var(--page-gap) - 3px)}
+body[data-page="dine"] .side-panel{width:min(560px,calc(100vw - 24px));max-width:calc(100vw - 24px)}
+body[data-page="dine"] .pending-review-panel{max-width:min(var(--modal-max-width),calc(100vw - 24px));max-height:var(--modal-max-height)}
+
+/* Sold-out */
+body[data-page="soldout"] .soldout-grid{grid-template-columns:minmax(0,1fr) clamp(320px,32%,520px);gap:var(--page-gap)}
+body[data-page="soldout"] .search-box{width:min(330px,28vw)}
+body[data-page="soldout"] .supply-panel>header{min-height:var(--topbar-height)}
+body[data-page="soldout"] .readonly-detail{width:min(680px,calc(100vw - 24px));max-height:var(--modal-max-height);overflow:auto}
+
+/* More */
+body[data-page="more"] .more-topbar{height:var(--topbar-height);min-height:var(--topbar-height)}
+body[data-page="more"] .more-workspace{padding:calc(var(--page-gap) + 8px) calc(var(--page-padding-x) + 22px) var(--page-gap)}
+body[data-page="more"] .more-heading{height:auto;min-height:64px;margin-bottom:var(--page-gap)}
+body[data-page="more"] .more-grid{gap:var(--page-gap)}
+body[data-page="more"] .more-analysis{margin-bottom:var(--page-gap);gap:var(--page-gap)}
+body[data-page="more"] .detail-dialog{width:min(1120px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:var(--modal-max-height)}
+body[data-page="more"] .confirm-dialog{width:min(700px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:var(--modal-max-height)}
+body[data-page="more"] .dialog-layer{padding:calc(var(--topbar-height) + 12px) 20px calc(var(--bottom-nav-height) + 12px)}
+body[data-page="more"] .dialog-scrim{inset:var(--topbar-height) 0 var(--bottom-nav-height)}
+
+:root[data-responsive-profile="compact"] body[data-page="orders"] .brand{font-size:24px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .page-head h1{font-size:28px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .stats{gap:8px;margin:8px 0}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .stats article{padding:10px 12px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .stats b{font-size:24px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .orders-layout{grid-template-columns:minmax(300px,34%) minmax(0,1fr);gap:10px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .detail{padding:12px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .detail h2{font-size:24px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .meta{gap:6px;padding:8px 0}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .lanes{gap:8px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .lane>header{padding:10px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .lane>header strong{font-size:16px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .lane-scroll{padding:6px}
+:root[data-responsive-profile="compact"] body[data-page="orders"] .order-card{padding:9px;margin-bottom:6px}
+
+:root[data-responsive-profile="compact"] body[data-page="dine"] .dine-workspace{grid-template-columns:minmax(0,1fr) 320px;gap:10px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .dine-main{gap:9px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .waiting-bar{min-height:58px;padding-inline:12px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .table-grid{gap:8px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .table-card{padding:10px 12px;border-radius:14px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .table-card header strong{font-size:20px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .table-state b{font-size:18px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .table-state span{font-size:22px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .table-detail>header{padding:12px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .table-detail h1{font-size:24px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .amount-strip{padding:10px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .pending-callout{margin:10px;padding:10px}
+:root[data-responsive-profile="compact"] body[data-page="dine"] .primary-actions{padding:10px;gap:7px}
+
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .soldout-grid{grid-template-columns:minmax(0,1fr) 360px;gap:10px}
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .search-box{width:220px;height:40px}
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .status-filter button{min-width:68px;padding-inline:8px}
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .catalog-caption{padding:0 10px 7px}
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .supply-panel>header{padding:8px 10px}
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .panel-tools{padding:7px 9px}
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .supply-list{padding-inline:9px}
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .group-head{height:44px}
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .supply-row{grid-template-columns:26px 48px 1fr;gap:7px;padding:7px 0}
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .supply-row-img{width:48px;height:48px}
+
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-workspace{padding:12px 18px 10px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-heading{min-height:54px;margin-bottom:10px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-heading h1{font-size:28px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-heading p{font-size:14px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-grid{gap:10px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-card{padding:12px 14px;grid-template-columns:54px minmax(0,1fr) 24px;gap:12px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-icon{width:52px;height:52px;font-size:26px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-copy>strong{font-size:19px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-copy>small{font-size:13px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .more-analysis{min-height:112px;padding:10px 12px;grid-template-columns:180px minmax(0,1fr) minmax(0,1fr) 90px;gap:10px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .analysis-total strong{font-size:28px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .detail-dialog>header{padding:12px 16px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .dialog-body{padding:12px 16px}
+:root[data-responsive-profile="compact"] body[data-page="more"] .detail-dialog>footer{padding:10px 16px}
