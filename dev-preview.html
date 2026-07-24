@@ -13,7 +13,7 @@
     .toolbar button,.toolbar a{min-height:38px;padding:7px 11px;border:1px solid #444;border-radius:9px;background:#242424;color:#fff;font:inherit;font-size:13px;font-weight:800;text-decoration:none}
     .toolbar button.active{background:#ef5218;border-color:#ef5218}
     .viewport-area{position:relative;min-height:0;overflow:hidden;background:#090909}
-    .canvas{position:absolute;left:50%;top:50%;transform-origin:top left;background:#fff;box-shadow:0 0 0 1px #555,0 18px 60px #000b}
+    .canvas{position:absolute;left:50%;top:50%;transform-origin:center center;background:#fff;box-shadow:0 0 0 1px #555,0 18px 60px #000b}
     iframe{display:block;border:0;width:100%;height:100%;background:#fff}
     .badge{position:absolute;z-index:4;right:8px;bottom:8px;padding:6px 9px;border-radius:8px;background:#000c;color:#fff;font-size:12px;pointer-events:none}
   </style>
@@ -54,32 +54,25 @@
       canvas.style.width=width+'px';
       canvas.style.height=height+'px';
       canvas.style.transform=`translate(-50%,-50%) scale(${scale})`;
-      canvas.style.marginLeft=(-width*(1-scale)/2)+'px';
-      canvas.style.marginTop=(-height*(1-scale)/2)+'px';
       badge.textContent=`模擬 ${width}×${height}｜畫面縮放 ${Math.round(scale*100)}%`;
       document.querySelectorAll('[data-size]').forEach(button=>button.classList.toggle('active',button.dataset.size===selected));
     }
 
-    function load(){
-      frame.src='index.html?embedded-preview=1#/order';
-      apply();
-    }
-
-    document.querySelectorAll('[data-size]').forEach(button=>button.addEventListener('click',()=>{
-      selected=button.dataset.size;
-      const url=new URL(location.href);
-      url.searchParams.set('size',selected);
-      history.replaceState(null,'',url);
+    function setSize(name){
+      selected=name;
       const [width,height]=presets[selected];
       frame.style.width=width+'px';
       frame.style.height=height+'px';
+      const url=new URL(location.href);
+      url.searchParams.set('size',selected);
+      history.replaceState(null,'',url);
       apply();
-    }));
+    }
+
+    document.querySelectorAll('[data-size]').forEach(button=>button.addEventListener('click',()=>setSize(button.dataset.size)));
     addEventListener('resize',apply,{passive:true});
-    const [initialWidth,initialHeight]=presets[selected];
-    frame.style.width=initialWidth+'px';
-    frame.style.height=initialHeight+'px';
-    load();
+    frame.src='index.html?embedded-preview=1#/order';
+    setSize(selected);
   </script>
 </body>
 </html>
