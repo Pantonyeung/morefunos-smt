@@ -7,6 +7,7 @@ const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
 const ordersPage=await readFile(new URL('../pages/orders/page.js',import.meta.url),'utf8');
 const checkoutPage=await readFile(new URL('../pages/checkout/page.js',import.meta.url),'utf8');
 const shellPage=await readFile(new URL('../shared/shell.js',import.meta.url),'utf8');
+const bridge=await readFile(new URL('../shared/page-bridge.js',import.meta.url),'utf8');
 
 test('掛單只開左右面板，再由一般掛單或堂食枱號完成操作',()=>{
   assert.match(orderPage,/DRAFT_STORAGE_KEY/);
@@ -38,8 +39,9 @@ test('checkout persists the completing terminal and order audit',()=>{
 });
 
 test('bottom navigation opens the independent orders page',()=>{
-  assert.match(loader,/orders:'pages\/orders\/index\.html'/);
-  assert.match(orderPage,/morefun:navigate.*orders/);
+  assert.match(shellPage,/orders/);
+  assert.match(bridge,/orders:'\.\.\/orders\/index\.html'/);
+  assert.match(orderPage,/MoreFunPageBridge\?\.navigate/);
 });
 
 test('orders page uses the three approved channel columns and payment methods',()=>{
@@ -64,5 +66,5 @@ test('reverse checkout reuse loads the original cart then navigates to the locke
   assert.match(ordersPage,/反結帳並重用/);
   assert.match(ordersPage,/reuse-order/);
   assert.match(ordersPage,/ORDER_STORAGE_KEY/);
-  assert.match(ordersPage,/morefun:navigate.*order/);
+  assert.match(ordersPage,/navigate\("order"\)/);
 });
