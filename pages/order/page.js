@@ -13,6 +13,7 @@ import {renderGlobalStatusBar,renderBottomNav} from '../../shared/shell.js';
 import {activeDineOrderIdentities,latestOrderDisplayNumber} from '../../shared/order-identity.js';
 
 const app=document.getElementById('app');
+const navigate=route=>window.MoreFunPageBridge?.navigate(route);
 const fallbackCatalog={categories:fallbackCategories,products:fallbackProducts,drinks:fallbackDrinks};
 let categories=[...fallbackCategories],products=[...fallbackProducts],drinks=[...fallbackDrinks];
 let productMap=new Map(),drinkMap=new Map(),snackProducts=[],drinkProducts=[];
@@ -390,10 +391,10 @@ function completeDineCancellation(){
   const context=store.get().dineContext;
   if(context?.startedFromFree){const dine=cleanupEmptyDineSessions(readJSON(DINE_STORAGE_KEY,null)||createInitialDineState());writeJSON(DINE_STORAGE_KEY,dine);}
   store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));
-  modal=null;confirmState=null;window.parent?.postMessage?.({type:'morefun:navigate',route:'dine'},'*');
+  modal=null;confirmState=null;navigate('dine');
 }
 function requestDineCancellation(){
-  const state=store.get();if(!state.dineContext){window.parent?.postMessage?.({type:'morefun:navigate',route:'dine'},'*');return;}
+  const state=store.get();if(!state.dineContext){navigate('dine');return;}
   if(!state.cart.length){completeDineCancellation();return;}
   confirmState={kind:'dine-cancel',title:'取消堂食點單？',message:'今次未正式加入 '+state.dineContext.tableId+' 號枱，購物車內容會一併清除；原有堂食餐品不受影響。'};modal=null;render();
 }
@@ -454,7 +455,7 @@ function handle(button){
   if(action==='shell-navigate'){
     const route=button.dataset.route;
     if(route==='dine'&&store.get().dineContext)return requestDineCancellation();
-    if(route!=='order')window.parent?.postMessage?.({type:'morefun:navigate',route},'*');
+    if(route!=='order')navigate(route);
     return;
   }
   if(store.get().quickDrawerOpen)scheduleQuickDrawerClose();
@@ -472,10 +473,10 @@ function handle(button){
   else if(action==='open-health'){modal={type:'health',anchor:anchorRect(button),dirty:false};render();}
   else if(action==='open-status'){modal={type:'status',anchor:anchorRect(button),dirty:false};render();}
   else if(action==='open-soldout'){modal={type:'soldout',anchor:anchorRect(button),dirty:false};render();}
-  else if(action==='navigate-orders')window.parent?.postMessage?.({type:'morefun:navigate',route:'orders'},'*');
+  else if(action==='navigate-orders')navigate('orders');
   else if(action==='navigate-dine')requestDineCancellation();
-  else if(action==='navigate-soldout')window.parent?.postMessage?.({type:'morefun:navigate',route:'soldout'},'*');
-  else if(action==='navigate-more')window.parent?.postMessage?.({type:'morefun:navigate',route:'more'},'*');
+  else if(action==='navigate-soldout')navigate('soldout');
+  else if(action==='navigate-more')navigate('more');
   else if(action==='open-hold-panel'){if(!store.get().cart.length){showToast('購物車未有餐品');return;}modal={type:'hang',dirty:false};render();}
   else if(action==='select-draft'){modal={...modal,selectedDraftId:button.dataset.id};render();}
   else if(action==='assign-table'){
@@ -601,8 +602,8 @@ function handle(button){
   else if(action==='cancel-dine-order')requestDineCancellation();
   else if(action==='checkout'){
     const current=store.get();if(pendingSummary(current.cart).total){showToast('請先完成必選項目');return;}if(!current.cart.length){showToast('購物車未有餐品');return;}
-    if(current.dineContext){try{const dineState=readJSON(DINE_STORAGE_KEY,null);const next=commitTableOrder(dineState,current.dineContext,current.cart,{terminalId,history:readJSON(ORDER_HISTORY_STORAGE_KEY,[])});writeJSON(DINE_STORAGE_KEY,next);syncDinePrintJobs(next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));window.parent?.postMessage?.({type:'morefun:navigate',route:'dine'},'*');}catch(error){showToast(error.message||'未能加入堂食枱位');}return;}
-    window.parent?.postMessage?.({type:'morefun:navigate',route:'checkout'},'*');
+    if(current.dineContext){try{const dineState=readJSON(DINE_STORAGE_KEY,null);const next=commitTableOrder(dineState,current.dineContext,current.cart,{terminalId,history:readJSON(ORDER_HISTORY_STORAGE_KEY,[])});writeJSON(DINE_STORAGE_KEY,next);syncDinePrintJobs(next);store.set(state=>({...state,cart:[],draftSession:null,dineContext:null}));navigate('dine');}catch(error){showToast(error.message||'未能加入堂食枱位');}return;}
+    navigate('checkout');
   }
 }
 app.addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});
