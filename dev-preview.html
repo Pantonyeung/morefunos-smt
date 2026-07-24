@@ -12,6 +12,13 @@
     .toolbar strong{font-size:14px;margin-right:4px}
     .toolbar button,.toolbar a{min-height:38px;padding:7px 11px;border:1px solid #444;border-radius:9px;background:#242424;color:#fff;font:inherit;font-size:13px;font-weight:800;text-decoration:none}
     .toolbar button.active{background:#ef5218;border-color:#ef5218}
+    .qa-status{min-height:38px;padding:7px 11px;border:1px solid #444;border-radius:9px;background:#242424;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800}
+    .qa-status[data-state="running"]{border-color:#d9a323;background:#2b2514;color:#ffd76a}
+    .qa-status[data-state="success"]{border-color:#338a57;background:#14261b;color:#76e7a0}
+    .qa-status[data-state="failed"]{border-color:#b84b4b;background:#2b1717;color:#ff8d8d}
+    .qa-status[data-state="idle"]{color:#cfcfcf}
+    .qa-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+    .qa-meta{font-size:11px;font-weight:700;opacity:.8}
     .viewport-area{position:relative;min-height:0;overflow:hidden;background:#090909}
     .canvas{position:absolute;left:50%;top:50%;transform-origin:center center;background:#fff;box-shadow:0 0 0 1px #555,0 18px 60px #000b}
     iframe{display:block;border:0;width:100%;height:100%;background:#fff}
@@ -21,6 +28,9 @@
 <body>
   <nav class="toolbar" aria-label="尺寸驗收選擇">
     <strong>尺寸驗收</strong>
+    <div class="qa-status" id="qaStatus" data-state="idle" title="每 15 秒更新一次 GitHub 測試狀態">
+      <span class="qa-dot"></span><span id="qaLabel">檢查測試狀態…</span><span class="qa-meta" id="qaMeta"></span>
+    </div>
     <button data-size="1920x1080">1920×1080</button>
     <button data-size="1600x900">1600×900</button>
     <button data-size="1440x900">1440×900</button>
@@ -44,6 +54,9 @@
     const canvas=document.getElementById('canvas');
     const frame=document.getElementById('preview');
     const badge=document.getElementById('badge');
+    const qaStatus=document.getElementById('qaStatus');
+    const qaLabel=document.getElementById('qaLabel');
+    const qaMeta=document.getElementById('qaMeta');
     let selected=new URLSearchParams(location.search).get('size')||'1920x1080';
     if(!presets[selected])selected='1920x1080';
 
@@ -69,10 +82,41 @@
       apply();
     }
 
+    function statusText(run){
+      if(!run)return {state:'idle',label:'暫時冇測試執行',meta:''};
+      if(run.status==='queued')return {state:'running',label:'測試排隊中',meta:`#${run.run_number}`};
+      if(run.status==='in_progress')return {state:'running',label:'測試運行中',meta:`#${run.run_number}`};
+      if(run.conclusion==='success')return {state:'success',label:'最新測試已通過',meta:`#${run.run_number}`};
+      if(['failure','timed_out','cancelled','action_required'].includes(run.conclusion))return {state:'failed',label:'最新測試失敗',meta:`#${run.run_number}`};
+      return {state:'idle',label:'等待下一輪測試',meta:`#${run.run_number||''}`};
+    }
+
+    async function refreshQaStatus(){
+      try{
+        const response=await fetch('https://api.github.com/repos/Pantonyeung/morefunos-smt/actions/runs?branch=smt-responsive-adaptive-v1&per_page=8',{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
+        if(!response.ok)throw new Error('status '+response.status);
+        const data=await response.json();
+        const runs=(data.workflow_runs||[]).filter(run=>/QA Responsive|QA Stress/.test(run.name||''));
+        const active=runs.find(run=>run.status==='in_progress'||run.status==='queued');
+        const run=active||runs[0];
+        const view=statusText(run);
+        qaStatus.dataset.state=view.state;
+        qaLabel.textContent=view.label;
+        qaMeta.textContent=view.meta+(run?.updated_at?' · '+new Date(run.updated_at).toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'}):'');
+        qaStatus.title=run?.html_url?'GitHub 測試：'+run.name:'每 15 秒更新一次 GitHub 測試狀態';
+      }catch(error){
+        qaStatus.dataset.state='idle';
+        qaLabel.textContent='暫時讀唔到測試狀態';
+        qaMeta.textContent='稍後自動再試';
+      }
+    }
+
     document.querySelectorAll('[data-size]').forEach(button=>button.addEventListener('click',()=>setSize(button.dataset.size)));
     addEventListener('resize',apply,{passive:true});
     frame.src='index.html?embedded-preview=1#/order';
     setSize(selected);
+    refreshQaStatus();
+    setInterval(refreshQaStatus,15000);
   </script>
 </body>
 </html>
