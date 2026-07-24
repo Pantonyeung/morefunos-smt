@@ -37,6 +37,7 @@ button{cursor:pointer}
 .top-btn{min-height:var(--control-min-height);padding:10px 15px;border:1px solid var(--line);border-radius:11px;background:#fff;font-weight:850}
 .top-btn.active{background:#fff5ef;border-color:#d7b8a6;color:#8d4d2c}
 .badge{display:inline-grid;place-items:center;min-width:27px;height:27px;border-radius:999px;background:var(--orange);color:#fff;font-size:13px}
+.health-button span{margin-right:6px}
 .workspace{flex:1;min-height:0;padding:var(--page-gap) var(--page-padding-x)}
 .bottom-nav{height:var(--bottom-nav-height);min-height:var(--bottom-nav-height);display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:7px 16px;background:#fff;border-top:1px solid var(--line);flex:none}
 .bottom-nav button{position:relative;border:1px solid transparent;background:#fff;font-weight:850;font-size:calc(17px * var(--responsive-font-scale))}
@@ -87,10 +88,10 @@ button:disabled{cursor:not-allowed;opacity:.42}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid color-mix(in srgb,var(--orange) 28%,transparent);outline-offset:2px;border-color:var(--orange)}
 input,select,textarea{transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease}
 .dialog-scrim,.modal-scrim,.overlay-scrim{animation:mf-scrim-in .2s ease-out both}
-.detail-dialog,.confirm-dialog,.modal-card,.confirm-card,.anchored-popover{animation:mf-dialog-in .26s var(--motion-standard) both;transform-origin:50% 55%}
+.detail-dialog,.confirm-dialog,.modal-card,.confirm-card,.anchored-popover{animation:mf-dialog-in .22s ease-out both}
 .side-panel,.pending-review-panel{animation:mf-drawer-in .28s var(--motion-standard) both}
 @keyframes mf-scrim-in{from{opacity:0}to{opacity:1}}
-@keyframes mf-dialog-in{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes mf-dialog-in{from{opacity:0}to{opacity:1}}
 @keyframes mf-drawer-in{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
-@media (hover:hover){button:not(:disabled):hover{filter:saturate(1.04);box-shadow:var(--shadow-soft)}}
+@media (hover:hover){button:not(:disabled):hover{filter:saturate(1.04);box-shadow:var(--shadow-soft)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}button:not(:disabled):active{transform:none}}
