@@ -74,16 +74,42 @@ test('large card reserves roughly three quarters for image',async({page})=>{
   expect(ratio).toBeLessThan(.78);
 });
 
-test('soldout reuses order large-card height at same viewport',async({page})=>{
+for(const [width,height] of cases){
+  test(`soldout reuses order large-card width and height ${width}x${height}`,async({page})=>{
+    await page.addInitScript(()=>localStorage.clear());
+    await page.setViewportSize({width,height});
+    const order=await frameFor(page,'order');
+    await setCardMode(order,'large');
+    const orderBox=await order.locator('.product-card.large:not([disabled])').first().evaluate(node=>{
+      const r=node.getBoundingClientRect();return {width:r.width,height:r.height};
+    });
+    const soldout=await frameFor(page,'soldout');
+    await soldout.waitForTimeout(320);
+    const soldoutBox=await soldout.locator('.supply-product.large').first().evaluate(node=>{
+      const r=node.getBoundingClientRect();return {width:r.width,height:r.height};
+    });
+    const source=await soldout.evaluate(()=>document.documentElement.dataset.adaptiveProductSource||'');
+    expect(source).toBe('order-shared-metric');
+    expect(Math.abs(soldoutBox.height-orderBox.height)).toBeLessThan(3);
+    expect(Math.abs(soldoutBox.width-orderBox.width)).toBeLessThan(4);
+  });
+}
+
+test('order cart lower controls keep area proportions instead of fixed widths',async({page})=>{
   await page.addInitScript(()=>localStorage.clear());
-  await page.setViewportSize({width:1440,height:900});
-  const order=await frameFor(page,'order');
-  await setCardMode(order,'large');
-  const orderHeight=await order.locator('.product-card.large:not([disabled])').first().evaluate(node=>node.getBoundingClientRect().height);
-  const soldout=await frameFor(page,'soldout');
-  await soldout.waitForTimeout(320);
-  const soldoutHeight=await soldout.locator('.supply-product.large').first().evaluate(node=>node.getBoundingClientRect().height);
-  const source=await soldout.evaluate(()=>document.documentElement.dataset.adaptiveProductSource||'');
-  expect(source).toBe('order-shared-metric');
-  expect(Math.abs(soldoutHeight-orderHeight)).toBeLessThan(3);
+  await page.setViewportSize({width:1280,height:800});
+  const frame=await frameFor(page,'order');
+  const footer=frame.locator('.cart footer button');
+  await expect(footer).toHaveCount(3);
+  const footerWidths=await footer.evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().width));
+  expect(Math.abs(footerWidths[0]-footerWidths[1])).toBeLessThan(3);
+  expect(footerWidths[2]/footerWidths[0]).toBeGreaterThan(3.4);
+  expect(footerWidths[2]/footerWidths[0]).toBeLessThan(4.6);
+
+  const pending=frame.locator('.pending-area>button');
+  await expect(pending).toHaveCount(3);
+  const pendingWidths=await pending.evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().width));
+  expect(pendingWidths[0]/pendingWidths[1]).toBeGreaterThan(2.2);
+  expect(pendingWidths[2]/pendingWidths[1]).toBeGreaterThan(.8);
+  expect(pendingWidths[2]/pendingWidths[1]).toBeLessThan(1.3);
 });
