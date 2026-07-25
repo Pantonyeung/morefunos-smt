@@ -1,1 +1,66 @@
-<!doctype html><html lang="zh-HK"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>磨飯 SMT Master V1.0</title><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="app-shell.css?v=adaptive-shell-route-cache-v2"><link rel="stylesheet" href="dev-preview-entry.css"></head><body><a id="dev-preview-entry" href="dev-preview.html?size=1920x1080">尺寸驗收</a><main id="viewport"><section id="stage"><iframe id="page" class="shell-page is-active" title="磨飯 SMT"></iframe></section><section id="orientation-lock" aria-live="polite"><div><strong>請旋轉至橫屏使用</strong><p>SMT iPhone 版只支援橫屏操作。</p></div></section></main><script type="module" src="app-loader.js?v=adaptive-shell-route-cache-v2"></script><script src="dev-preview-entry.js"></script></body></html>
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>磨飯 SMT Master V1.0</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="app-shell.css?v=global-shell-v1">
+  <link rel="stylesheet" href="dev-preview-entry.css">
+</head>
+<body>
+  <a id="dev-preview-entry" href="dev-preview.html?size=1920x1080">尺寸驗收</a>
+  <main id="viewport">
+    <section id="shell-app" aria-label="磨飯 SMT">
+      <header id="global-statusbar" class="global-shell-status">
+        <div class="shell-brand"><span>磨</span><strong>磨飯 SMT</strong></div>
+        <b id="shell-terminal">SMT</b>
+        <span id="shell-online"><i></i>系統在線</span>
+        <div class="shell-route-state"><small>目前頁面</small><strong id="shell-route-label">點餐</strong></div>
+        <div class="shell-spacer"></div>
+        <div id="shell-context" class="shell-context">準備營業</div>
+      </header>
+
+      <section id="page-host">
+        <section id="stage"><iframe id="page" class="shell-page is-active" title="磨飯 SMT"></iframe></section>
+        <div id="route-feedback" class="route-feedback" hidden><span></span><strong>切換中…</strong></div>
+      </section>
+
+      <nav id="global-bottom-nav" class="global-bottom-nav" aria-label="主要功能">
+        <button class="active" data-route="order" aria-current="page"><span>▣</span><b>點餐</b></button>
+        <button data-route="orders"><span>▤</span><b>訂單</b></button>
+        <button data-route="dine"><span>⌂</span><b>堂食</b></button>
+        <button data-route="soldout"><span>⊘</span><b>售罄</b></button>
+        <button data-route="more"><span>•••</span><b>更多</b></button>
+      </nav>
+    </section>
+
+    <section id="startup-gate" class="startup-gate" aria-live="polite">
+      <div class="startup-card" data-startup-step="login">
+        <div class="startup-brand"><span>磨</span><div><strong>磨飯 SMT</strong><small>每日開工登入</small></div></div>
+        <form data-form="login">
+          <label>帳號<input name="username" autocomplete="username" inputmode="text" value="morefun"></label>
+          <label>密碼<input name="password" type="password" autocomplete="current-password" value="morefun"></label>
+          <p id="startup-error" class="startup-error" hidden></p>
+          <button type="submit" class="startup-primary">登入</button>
+        </form>
+      </div>
+
+      <div class="startup-card" data-startup-step="cash" hidden>
+        <div class="startup-brand"><span>＄</span><div><strong>今日開工現金</strong><small>登入：<b id="opening-operator">morefun</b></small></div></div>
+        <form data-form="cash">
+          <div class="cash-summary"><span>昨日留底<strong id="opening-previous">$0</strong></span><span>今日開工<strong id="opening-total">$0</strong></span></div>
+          <label>今日加減調整<input name="opening-adjustment" type="number" step="0.1" inputmode="decimal" value="0"></label>
+          <small class="startup-note">正數代表補入錢櫃，負數代表先取走。確認後會作為今日現金基準。</small>
+          <button type="submit" class="startup-primary">確認開工</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="orientation-lock" aria-live="polite"><div><strong>請旋轉至橫屏使用</strong><p>SMT iPhone 版只支援橫屏操作。</p></div></section>
+  </main>
+  <script type="module" src="shell-startup.js?v=global-shell-v1"></script>
+  <script type="module" src="app-loader.js?v=global-shell-v1"></script>
+  <script src="dev-preview-entry.js"></script>
+</body>
+</html>
