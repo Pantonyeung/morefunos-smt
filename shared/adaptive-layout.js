@@ -33,31 +33,51 @@
 
   function contentMetrics(node){
     const style=getComputedStyle(node);
-    const paddingY=number(parseFloat(style.paddingTop))+number(parseFloat(style.paddingBottom));
-    const height=Math.max(0,node.clientHeight-paddingY);
+    const paddingTop=number(parseFloat(style.paddingTop));
+    const paddingBottom=number(parseFloat(style.paddingBottom));
+    const rect=node.getBoundingClientRect();
+    const clippedTop=Math.max(0,rect.top);
+    const clippedBottom=Math.min(innerHeight,rect.bottom);
+    const visibleBox=Math.max(0,clippedBottom-clippedTop);
+    const clientBox=Math.max(0,node.clientHeight);
+    const box=Math.min(clientBox||visibleBox,visibleBox||clientBox);
+    const height=Math.max(0,box-paddingTop-paddingBottom);
     const gap=number(parseFloat(style.rowGap||style.gap));
-    return {height,gap};
+    return {height,gap,rect};
   }
 
   function rowHeight(height,gap,visibleRows){
-    const fullRows=Math.floor(visibleRows);
-    return Math.max(48,(height-(fullRows*gap))/visibleRows);
+    const visibleGaps=Math.floor(visibleRows);
+    return Math.max(48,(height-(visibleGaps*gap))/visibleRows);
   }
 
-  function writeProductMetrics(metrics){
-    for(const mode of Object.keys(TARGET_ROWS)){
-      root.style.setProperty(`--adaptive-product-row-${mode}`,`${metrics[mode]}px`);
-    }
-  }
-
-  function measureOrderProducts(products){
+  function calculateProductMetrics(products){
     const {height,gap}=contentMetrics(products);
     if(height<100)return null;
     const metrics={};
-    for(const [mode,visibleRows] of Object.entries(TARGET_ROWS))metrics[mode]=rowHeight(height,gap,visibleRows);
-    writeProductMetrics(metrics);
+    for(const [mode,visibleRows] of Object.entries(TARGET_ROWS)){
+      metrics[mode]=rowHeight(height,gap,visibleRows);
+    }
+    return {metrics,height,gap};
+  }
+
+  function writeProductMetrics(metrics,products){
+    for(const [mode,row] of Object.entries(metrics)){
+      root.style.setProperty(`--adaptive-product-row-${mode}`,`${row}px`);
+    }
+    if(products){
+      const mode=products.classList.contains('products-small')?'small':products.classList.contains('products-text')?'text':'large';
+      const row=metrics[mode];
+      products.style.gridAutoRows=`${row}px`;
+      products.dataset.adaptiveTargetRows=String(TARGET_ROWS[mode]);
+      products.dataset.adaptiveRowHeight=row.toFixed(3);
+      products.dataset.adaptiveVisibleHeight=contentMetrics(products).height.toFixed(3);
+      products.querySelectorAll('.product-card').forEach(card=>{card.style.height=`${row}px`;});
+    }
+  }
+
+  function saveOrderMetrics(metrics){
     try{localStorage.setItem(METRIC_PREFIX+viewportKey(),JSON.stringify(metrics));}catch{}
-    return metrics;
   }
 
   function readOrderMetrics(){
@@ -68,20 +88,30 @@
     return null;
   }
 
-  function fallbackProductMetrics(products){
-    const {height,gap}=contentMetrics(products);
-    const referenceHeight=document.body.dataset.page==='soldout'?Math.max(height,innerHeight*.57):height;
-    const metrics={};
-    for(const [mode,visibleRows] of Object.entries(TARGET_ROWS))metrics[mode]=rowHeight(referenceHeight,gap,visibleRows);
-    writeProductMetrics(metrics);
-    return metrics;
-  }
-
   function applyProductArea(){
     const products=document.querySelector('.products');
     if(!products)return;
-    if(document.body.dataset.page==='order')measureOrderProducts(products);
-    else writeProductMetrics(readOrderMetrics()||fallbackProductMetrics(products));
+    const page=document.body.dataset.page;
+    if(page==='order'){
+      const calculated=calculateProductMetrics(products);
+      if(!calculated)return;
+      writeProductMetrics(calculated.metrics,products);
+      saveOrderMetrics(calculated.metrics);
+      root.dataset.adaptiveProductSource='order-live-area';
+      return;
+    }
+    if(page==='soldout'){
+      const shared=readOrderMetrics();
+      if(shared){
+        writeProductMetrics(shared,products);
+        root.dataset.adaptiveProductSource='order-shared-metric';
+        return;
+      }
+      const calculated=calculateProductMetrics(products);
+      if(!calculated)return;
+      writeProductMetrics(calculated.metrics,products);
+      root.dataset.adaptiveProductSource='soldout-fallback';
+    }
   }
 
   function applyCartArea(){
@@ -95,6 +125,10 @@
     root.style.setProperty('--adaptive-cart-gap',`${clamp(11*scale,6,12)}px`);
     root.style.setProperty('--adaptive-cart-pad',`${clamp(13*scale,8,14)}px`);
     root.style.setProperty('--adaptive-cart-control',`${clamp(36*scale,30,40)}px`);
+    root.style.setProperty('--adaptive-cart-header-pad',`${clamp(14*scale,8,15)}px`);
+    root.style.setProperty('--adaptive-cart-footer-pad',`${clamp(13*scale,8,14)}px`);
+    root.style.setProperty('--adaptive-cart-pending-pad',`${clamp(10*scale,6,11)}px`);
+    cart.dataset.adaptiveScale=scale.toFixed(4);
   }
 
   function apply(){
@@ -111,7 +145,7 @@
   const resizeObserver=new ResizeObserver(schedule);
   resizeObserver.observe(document.documentElement);
   const mutationObserver=new MutationObserver(schedule);
-  mutationObserver.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
+  mutationObserver.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
   addEventListener('resize',schedule,{passive:true});
   addEventListener('storage',schedule);
   document.addEventListener('DOMContentLoaded',schedule,{once:true});
