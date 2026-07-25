@@ -53,6 +53,23 @@ body {
   pointer-events: none;
   z-index: 1;
 }
+#stage[data-pending-route]::after {
+  content: '切換中…';
+  position: absolute;
+  left: 50%;
+  bottom: max(76px, calc(56px + env(safe-area-inset-bottom)));
+  transform: translateX(-50%);
+  z-index: 20;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(20,20,20,.88);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+}
 #orientation-lock {
   display: none;
   position: fixed;
