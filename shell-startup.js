@@ -1,4 +1,4 @@
-import {OPERATIONS_STORAGE_KEY,SETTINGS_STORAGE_KEY,readJSON,writeJSON} from './shared/store.js';
+import {OPERATIONS_STORAGE_KEY,SETTINGS_STORAGE_KEY,ORDER_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,readJSON,writeJSON} from './shared/store.js';
 import {businessWindow,buildOpeningCashState} from './pages/more/more-domain.js';
 
 const SESSION_KEY='morefun:smt:daily-session';
@@ -14,7 +14,7 @@ let operator='';
 
 function isQaBypass(){
   const params=new URLSearchParams(location.search);
-  return params.get('embedded-preview')==='1'||(navigator.webdriver&&params.get('force-startup')!=='1');
+  return navigator.webdriver&&params.get('force-startup')!=='1';
 }
 
 function credentials(){
@@ -43,6 +43,17 @@ function openingState(){
     operations,
     state:buildOpeningCashState(operations.dayCloses||[],operations.openingCashAdjustments||[],businessWindow().id)
   };
+}
+
+function ensureDailyWorkspaceClean(){
+  const businessDate=businessWindow().id;
+  const operations=readJSON(OPERATIONS_STORAGE_KEY,{})||{};
+  if(operations.workspaceResetBusinessDate===businessDate)return false;
+  localStorage.removeItem(ORDER_STORAGE_KEY);
+  localStorage.removeItem(DRAFT_STORAGE_KEY);
+  localStorage.removeItem(DRAFT_COUNTER_STORAGE_KEY);
+  writeJSON(OPERATIONS_STORAGE_KEY,{...operations,workspaceResetBusinessDate:businessDate,workspaceResetAt:Date.now()});
+  return true;
 }
 
 function setError(message=''){
@@ -111,7 +122,7 @@ function confirmOpening(event){
   const businessDate=businessWindow().id;
   const rows=(operations.openingCashAdjustments||[]).filter(row=>row.businessDate!==businessDate);
   rows.push({businessDate,previousRetained:Number(state.previousRetained||0),adjustment,openingCash,confirmedAt:Date.now(),operator:operator||validSession()?.username||'morefun'});
-  writeJSON(OPERATIONS_STORAGE_KEY,{...operations,openingCashAdjustments:rows});
+  writeJSON(OPERATIONS_STORAGE_KEY,{...operations,workspaceResetBusinessDate:businessDate,workspaceResetAt:operations.workspaceResetAt||Date.now(),openingCashAdjustments:rows});
   unlock();
 }
 
@@ -119,6 +130,7 @@ gate?.querySelector('[data-form="login"]')?.addEventListener('submit',submitLogi
 gate?.querySelector('[data-form="cash"]')?.addEventListener('submit',confirmOpening);
 adjustmentInput?.addEventListener('input',updateCashPreview);
 
+ensureDailyWorkspaceClean();
 if(isQaBypass())unlock();
 else if(validSession())continueAfterLogin(validSession().username);
 else showStep('login');
