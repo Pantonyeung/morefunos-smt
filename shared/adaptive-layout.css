@@ -98,7 +98,8 @@ body[data-page="soldout"] .product-code{
   font-size:max(var(--min-readable-font),calc(16px * var(--readability-scale)));
 }
 
-body[data-page="order"] .product-card.small{
+body[data-page="order"] .product-card.small,
+body[data-page="soldout"] .supply-product.small .card-open{
   grid-template-columns:min(calc(var(--adaptive-product-row-small) - 18px),82px) minmax(0,1fr) auto;
   gap:var(--adaptive-cart-gap);
   padding:calc(var(--adaptive-cart-pad) * .7) var(--adaptive-cart-pad);
@@ -107,6 +108,12 @@ body[data-page="order"] .product-thumb,
 body[data-page="soldout"] .product-thumb{
   width:min(calc(var(--adaptive-product-row-small) - 18px),82px);
   height:min(calc(var(--adaptive-product-row-small) - 18px),82px);
+}
+body[data-page="order"] .product-card.text,
+body[data-page="soldout"] .supply-product.text .card-open{
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:max(8px,calc(var(--adaptive-cart-gap) * 1.08));
+  padding:var(--adaptive-cart-pad) calc(var(--adaptive-cart-pad) * 1.15);
 }
 
 body[data-page="order"] .cart>header{
