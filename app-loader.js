@@ -3,12 +3,14 @@ import {applyResponsiveProfile,getResponsiveProfile} from './shared/responsive.j
 const stage=document.getElementById('stage');
 const seedFrame=document.getElementById('page');
 const nav=document.getElementById('global-bottom-nav');
+const shellApp=document.getElementById('shell-app');
 const routeLabel=document.getElementById('shell-route-label');
 const shellContext=document.getElementById('shell-context');
 const routeFeedback=document.getElementById('route-feedback');
 const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html',orders:'pages/orders/index.html',dine:'pages/dine/index.html',soldout:'pages/soldout/index.html',more:'pages/more/index.html'};
 const labels={order:'點餐',orders:'訂單',dine:'堂食',soldout:'售罄',more:'更多',checkout:'結帳'};
 const mainRoutes=['order','orders','dine','soldout','more'];
+const checkoutExitRoutes=new Set(['order','orders']);
 const BUILD='global-shell-v1-20260725';
 const frameByRoute=new Map();
 const allFrames=new Set();
@@ -31,6 +33,7 @@ function viewportSize(){const viewport=window.visualViewport;return {width:Math.
 function frameList(){return [...allFrames];}
 function route(){const key=(location.hash.replace(/^#\/?/,'')||'order').split('?')[0];return routes[key]?key:'order';}
 function pageUrl(key,mode='normal'){const base=routes[key]+'?build='+encodeURIComponent(BUILD);return mode==='normal'?base:base+'&'+mode+'='+Date.now();}
+function isCheckoutTransaction(key=current){return key==='checkout';}
 
 function applyChildShellMode(frame){
   try{
@@ -59,11 +62,22 @@ function applyProfile(){
 }
 function scheduleProfileUpdate(){if(resizeFrame)return;resizeFrame=requestAnimationFrame(()=>{resizeFrame=0;applyProfile();});}
 
+function setTransactionUi(active){
+  shellApp?.classList.toggle('transaction-active',active);
+  if(shellApp)shellApp.dataset.transaction=active?'checkout':'';
+  nav?.querySelectorAll('[data-route]').forEach(button=>{
+    button.disabled=active;
+    button.setAttribute('aria-disabled',active?'true':'false');
+  });
+}
+
 function setShellRouteUi(key,{loading=false}={}){
-  nav?.querySelectorAll('[data-route]').forEach(button=>{const active=button.dataset.route===key;button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');});
+  const checkout=isCheckoutTransaction(key);
+  setTransactionUi(checkout);
+  nav?.querySelectorAll('[data-route]').forEach(button=>{const active=!checkout&&button.dataset.route===key;button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');});
   if(routeLabel)routeLabel.textContent=labels[key]||key;
   if(routeFeedback)routeFeedback.hidden=!loading;
-  if(shellContext)shellContext.textContent=loading?'正在準備 '+(labels[key]||key)+'…':'營業操作中';
+  if(shellContext)shellContext.textContent=checkout?'結帳進行中｜主導航已鎖定':loading?'正在準備 '+(labels[key]||key)+'…':'營業操作中';
 }
 
 function showLoaderError(message,target=activeFrame){
@@ -125,18 +139,28 @@ function boot(){
 }
 
 nav?.addEventListener('click',event=>{
+  if(isCheckoutTransaction())return;
   const button=event.target.closest('[data-route]');if(!button)return;
   const next=button.dataset.route;if(!routes[next]||next===current)return;
   setShellRouteUi(next,{loading:!readyRoutes.has(next)});
   if(location.hash==='#/'+next)load();else location.hash='#/'+next;
 });
 
-addEventListener('hashchange',()=>{if(shellUnlocked)load();});
+addEventListener('hashchange',()=>{
+  if(!shellUnlocked)return;
+  const next=route();
+  if(isCheckoutTransaction()&&!checkoutExitRoutes.has(next)){
+    history.replaceState(null,'','#/checkout');
+    setShellRouteUi('checkout',{loading:false});
+    return;
+  }
+  load();
+});
 addEventListener('pageshow',()=>applyProfile());
 addEventListener('resize',scheduleProfileUpdate,{passive:true});
 addEventListener('orientationchange',()=>setTimeout(scheduleProfileUpdate,120),{passive:true});
 window.visualViewport?.addEventListener('resize',scheduleProfileUpdate,{passive:true});
-addEventListener('morefun:shell-unlocked',()=>{shellUnlocked=true;if(readyRoutes.has('order'))setActiveFrame(frameByRoute.get('order'), 'order');startSequentialPreload();});
+addEventListener('morefun:shell-unlocked',()=>{shellUnlocked=true;if(readyRoutes.has('order'))setActiveFrame(frameByRoute.get('order'),'order');startSequentialPreload();});
 
 addEventListener('message',event=>{
   const sourceFrame=findSourceFrame(event.source);if(!sourceFrame)return;const sourceRoute=String(sourceFrame.dataset.route||'');
@@ -151,7 +175,9 @@ addEventListener('message',event=>{
   if(event.data?.type==='morefun:shell-status'&&sourceFrame===activeFrame){if(shellContext&&event.data.context)shellContext.textContent=String(event.data.context);return;}
   if(sourceFrame!==activeFrame)return;
   if(event.data?.type==='morefun:navigate'){
-    const next=String(event.data.route||'order');if(!routes[next])return;setShellRouteUi(next,{loading:!readyRoutes.has(next)});if(location.hash==='#/'+next){if(next!==current)load();}else location.hash='#/'+next;
+    const next=String(event.data.route||'order');if(!routes[next])return;
+    if(isCheckoutTransaction()&&!checkoutExitRoutes.has(next))return;
+    setShellRouteUi(next,{loading:!readyRoutes.has(next)});if(location.hash==='#/'+next){if(next!==current)load();}else location.hash='#/'+next;
   }
   if(event.data?.type==='morefun:exit-fullscreen'&&document.fullscreenElement)document.exitFullscreen?.();
   if(event.data?.type==='morefun:set-ui-scale'){uiScale=Math.max(.82,Math.min(1,Number(event.data.value)||1));localStorage.setItem(SCALE_KEY,String(uiScale));applyProfile();}
