@@ -19,6 +19,17 @@ const forbiddenFiles=[
   'pages/checkout/t2s-restore.css'
 ];
 
+function walk(dir){
+  const out=[];
+  for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
+    if(['node_modules','.git','test-results','playwright-report'].includes(entry.name))continue;
+    const full=path.join(dir,entry.name);
+    if(entry.isDirectory())out.push(...walk(full));
+    else out.push(full);
+  }
+  return out;
+}
+
 test('adaptive branch has no legacy size patch files',()=>{
   for(const file of forbiddenFiles)expect(fs.existsSync(path.join(root,file)),file).toBeFalsy();
 });
@@ -61,4 +72,25 @@ test('soldout product cards cannot define independent fixed geometry',()=>{
   expect(shared).toContain('body[data-page="soldout"] .supply-product.small');
   expect(shared).toContain('body[data-page="order"] .product-card.text');
   expect(shared).toContain('body[data-page="soldout"] .supply-product.text');
+});
+
+test('shared bottom navigation geometry has a single owner',()=>{
+  const allowed=path.normalize(path.join(root,'shared/page-base.css'));
+  const offenders=[];
+  for(const file of walk(root).filter(file=>file.endsWith('.css'))){
+    if(path.normalize(file)===allowed)continue;
+    const source=fs.readFileSync(file,'utf8');
+    if(/\.bottom-nav\s*\{|\.bottom-nav\s+button\s*\{|\.shell-nav-button\s*\{|\.shell-nav-icon\s*\{/.test(source)){
+      offenders.push(path.relative(root,file));
+    }
+  }
+  expect(offenders,'Bottom-nav geometry must live only in shared/page-base.css').toEqual([]);
+});
+
+test('shared shell cannot regress to fixed bottom-nav child geometry',()=>{
+  const source=read('shared/page-base.css');
+  expect(source).toContain('--bottom-nav-icon-size');
+  expect(source).toContain('env(safe-area-inset-bottom)');
+  expect(source).toContain('height:auto');
+  expect(source).not.toContain('.shell-nav-button{display:grid;grid-template-rows:25px auto');
 });
