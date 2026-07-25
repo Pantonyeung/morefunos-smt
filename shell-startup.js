@@ -84,6 +84,12 @@ function unlock(){
   window.dispatchEvent(new CustomEvent('morefun:shell-unlocked'));
 }
 
+function continueAfterLogin(username){
+  const {state}=openingState();
+  if(state.confirmed){unlock();return;}
+  showCash(username);
+}
+
 function submitLogin(event){
   event.preventDefault();
   const form=event.currentTarget;
@@ -92,7 +98,8 @@ function submitLogin(event){
   const match=credentials().find(row=>row.enabled!==false&&String(row.username)===username&&String(row.password)===password);
   if(!match){setError('帳號或密碼不正確');return;}
   saveSession(username);
-  showCash(username);
+  operator=username;
+  continueAfterLogin(username);
 }
 
 function confirmOpening(event){
@@ -113,7 +120,7 @@ gate?.querySelector('[data-form="cash"]')?.addEventListener('submit',confirmOpen
 adjustmentInput?.addEventListener('input',updateCashPreview);
 
 if(isQaBypass())unlock();
-else if(validSession())showCash(validSession().username);
+else if(validSession())continueAfterLogin(validSession().username);
 else showStep('login');
 
 window.MoreFunStartup={unlock,showCash};
