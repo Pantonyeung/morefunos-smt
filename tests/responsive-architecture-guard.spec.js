@@ -44,3 +44,21 @@ test('new responsive layers do not use important overrides',()=>{
   expect(read('shared/responsive.css')).not.toContain('!important');
   expect(read('shared/responsive-pages.css')).not.toContain('!important');
 });
+
+test('soldout product cards cannot define independent fixed geometry',()=>{
+  const source=read('pages/soldout/page.css');
+  for(const token of [
+    'grid-template-rows:150px auto',
+    'grid-template-columns:72px 1fr auto',
+    '.supply-product.large{height:',
+    '.supply-product.small{height:',
+    '.supply-product.text{height:'
+  ])expect(source,token).not.toContain(token);
+  const shared=read('shared/adaptive-layout.css');
+  expect(shared).toContain('body[data-page="order"] .product-card.large');
+  expect(shared).toContain('body[data-page="soldout"] .supply-product.large');
+  expect(shared).toContain('body[data-page="order"] .product-card.small');
+  expect(shared).toContain('body[data-page="soldout"] .supply-product.small');
+  expect(shared).toContain('body[data-page="order"] .product-card.text');
+  expect(shared).toContain('body[data-page="soldout"] .supply-product.text');
+});
