@@ -11,7 +11,7 @@ const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html
 const labels={order:'點餐',orders:'訂單',dine:'堂食',soldout:'售罄',more:'更多',checkout:'結帳'};
 const mainRoutes=['order','orders','dine','soldout','more'];
 const checkoutExitRoutes=new Set(['order','orders']);
-const BUILD='global-shell-v1-20260725';
+const BUILD='global-shell-v2-20260725';
 const frameByRoute=new Map();
 const allFrames=new Set();
 const readyRoutes=new Set();
@@ -26,6 +26,7 @@ let shellUnlocked=document.documentElement.dataset.shellUnlocked==='1';
 let preloadStarted=false;
 let preloadQueue=[];
 let preloadingRoute='';
+let checkoutExitArmed='';
 const SCALE_KEY='morefun-smt-ui-scale';
 let uiScale=Math.max(.82,Math.min(1,Number(localStorage.getItem(SCALE_KEY)||1)));
 
@@ -41,7 +42,7 @@ function applyChildShellMode(frame){
     if(!doc?.head)return;
     let style=doc.getElementById('morefun-global-shell-mode');
     if(!style){style=doc.createElement('style');style.id='morefun-global-shell-mode';doc.head.appendChild(style);}
-    style.textContent='.global-statusbar,.shell-bottom-nav{display:none!important}.app{height:100%!important;min-height:0!important}.workspace{min-height:0!important}';
+    style.textContent='.global-statusbar,.shell-bottom-nav,.bottom-nav,.topbar.statusbar{display:none!important}.app{height:100%!important;min-height:0!important}.workspace{min-height:0!important}';
     doc.documentElement.dataset.globalShell='1';
   }catch(error){console.warn('GLOBAL_SHELL_CHILD_MODE_FAILED',error);}
 }
@@ -65,8 +66,10 @@ function scheduleProfileUpdate(){if(resizeFrame)return;resizeFrame=requestAnimat
 function setTransactionUi(active){
   shellApp?.classList.toggle('transaction-active',active);
   if(shellApp)shellApp.dataset.transaction=active?'checkout':'';
+  if(nav){nav.hidden=active;nav.setAttribute('aria-hidden',active?'true':'false');}
   nav?.querySelectorAll('[data-route]').forEach(button=>{
     button.disabled=active;
+    button.tabIndex=active?-1:0;
     button.setAttribute('aria-disabled',active?'true':'false');
   });
 }
@@ -77,7 +80,7 @@ function setShellRouteUi(key,{loading=false}={}){
   nav?.querySelectorAll('[data-route]').forEach(button=>{const active=!checkout&&button.dataset.route===key;button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');});
   if(routeLabel)routeLabel.textContent=labels[key]||key;
   if(routeFeedback)routeFeedback.hidden=!loading;
-  if(shellContext)shellContext.textContent=checkout?'結帳進行中｜主導航已鎖定':loading?'正在準備 '+(labels[key]||key)+'…':'營業操作中';
+  if(shellContext)shellContext.textContent=checkout?'結帳進行中｜交易模式':loading?'正在準備 '+(labels[key]||key)+'…':'營業操作中';
 }
 
 function showLoaderError(message,target=activeFrame){
@@ -99,7 +102,9 @@ function setActiveFrame(frame,key){
   if(old&&old!==frame){old.classList.remove('is-active','is-loading');old.setAttribute('aria-hidden','true');old.tabIndex=-1;if(old.id==='page')old.id='page-cache-'+String(old.dataset.route||'route');}
   const existingPage=document.getElementById('page');if(existingPage&&existingPage!==frame)existingPage.removeAttribute('id');
   frame.id='page';frame.classList.remove('is-loading');frame.classList.add('is-active');frame.setAttribute('aria-hidden','false');frame.removeAttribute('tabindex');
-  activeFrame=frame;current=key;pending='';childReady=true;clearTimeout(watchdogTimer);stage.dataset.route=current;delete stage.dataset.pendingRoute;applyProfileToFrame(frame);setShellRouteUi(key,{loading:false});
+  activeFrame=frame;current=key;pending='';childReady=true;clearTimeout(watchdogTimer);stage.dataset.route=current;delete stage.dataset.pendingRoute;
+  if(key==='checkout')checkoutExitArmed='';
+  applyProfileToFrame(frame);setShellRouteUi(key,{loading:false});
   try{frame.contentWindow?.postMessage({type:'morefun:page-activate',route:key},'*');}catch(_error){}
 }
 
@@ -138,22 +143,38 @@ function boot(){
   if(location.hash!=='#/order')history.replaceState(null,'','#/order');
 }
 
+function armCheckoutExit(next){
+  if(!isCheckoutTransaction()||!checkoutExitRoutes.has(next))return false;
+  checkoutExitArmed=next;
+  return true;
+}
+
 nav?.addEventListener('click',event=>{
-  if(isCheckoutTransaction())return;
+  if(isCheckoutTransaction()){
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
   const button=event.target.closest('[data-route]');if(!button)return;
   const next=button.dataset.route;if(!routes[next]||next===current)return;
   setShellRouteUi(next,{loading:!readyRoutes.has(next)});
   if(location.hash==='#/'+next)load();else location.hash='#/'+next;
-});
+},true);
 
 addEventListener('hashchange',()=>{
   if(!shellUnlocked)return;
   const next=route();
-  if(isCheckoutTransaction()&&!checkoutExitRoutes.has(next)){
+  if(isCheckoutTransaction()){
+    if(checkoutExitArmed===next&&checkoutExitRoutes.has(next)){
+      checkoutExitArmed='';
+      load();
+      return;
+    }
     history.replaceState(null,'','#/checkout');
     setShellRouteUi('checkout',{loading:false});
     return;
   }
+  checkoutExitArmed='';
   load();
 });
 addEventListener('pageshow',()=>applyProfile());
@@ -176,8 +197,11 @@ addEventListener('message',event=>{
   if(sourceFrame!==activeFrame)return;
   if(event.data?.type==='morefun:navigate'){
     const next=String(event.data.route||'order');if(!routes[next])return;
-    if(isCheckoutTransaction()&&!checkoutExitRoutes.has(next))return;
-    setShellRouteUi(next,{loading:!readyRoutes.has(next)});if(location.hash==='#/'+next){if(next!==current)load();}else location.hash='#/'+next;
+    if(isCheckoutTransaction()){
+      if(!armCheckoutExit(next))return;
+    }
+    setShellRouteUi(next,{loading:!readyRoutes.has(next)});
+    if(location.hash==='#/'+next){if(next!==current)load();}else location.hash='#/'+next;
   }
   if(event.data?.type==='morefun:exit-fullscreen'&&document.fullscreenElement)document.exitFullscreen?.();
   if(event.data?.type==='morefun:set-ui-scale'){uiScale=Math.max(.82,Math.min(1,Number(event.data.value)||1));localStorage.setItem(SCALE_KEY,String(uiScale));applyProfile();}
