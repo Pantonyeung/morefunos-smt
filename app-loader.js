@@ -11,7 +11,7 @@ const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html
 const labels={order:'點餐',orders:'訂單',dine:'堂食',soldout:'售罄',more:'更多',checkout:'結帳'};
 const mainRoutes=['order','orders','dine','soldout','more'];
 const checkoutExitRoutes=new Set(['order','orders']);
-const BUILD='global-shell-v2-20260725b';
+const BUILD='global-shell-v2-20260725d';
 const frameByRoute=new Map();
 const allFrames=new Set();
 const readyRoutes=new Set();
@@ -59,10 +59,7 @@ function installChildOverlayObserver(frame){
 function applyChildShellMode(frame){
   try{
     const doc=frame?.contentDocument;
-    if(!doc?.head)return;
-    let style=doc.getElementById('morefun-global-shell-mode');
-    if(!style){style=doc.createElement('style');style.id='morefun-global-shell-mode';doc.head.appendChild(style);}
-    style.textContent='.global-statusbar,.shell-bottom-nav,.bottom-nav,.topbar.statusbar{display:none!important}.app{height:100%!important;min-height:0!important}.workspace{min-height:0!important}body[data-page="more"] .more-heading{display:none!important}';
+    if(!doc?.documentElement)return;
     doc.documentElement.dataset.globalShell='1';
     installChildOverlayObserver(frame);
   }catch(error){console.warn('GLOBAL_SHELL_CHILD_MODE_FAILED',error);}
