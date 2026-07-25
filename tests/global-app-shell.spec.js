@@ -1,6 +1,6 @@
 const {test,expect}=require('@playwright/test');
 
-const APP='http://127.0.0.1:4173/';
+const APP='http://127.0.0.1:4173/?force-startup=1';
 
 async function loginAndOpen(page){
   await page.goto(APP,{waitUntil:'domcontentloaded'});
