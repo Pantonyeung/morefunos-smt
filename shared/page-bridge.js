@@ -7,5 +7,16 @@ function applyPreferences(){
     document.documentElement.dataset.sounds=settings.morePage?.sounds===false?'off':'on';
   }catch(_error){document.documentElement.dataset.theme='warm';document.documentElement.dataset.sounds='on';}
 }
+function handleShellNavigation(event){
+  const button=event.target?.closest?.('[data-action="shell-navigate"]');
+  if(!button||button.disabled)return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const route=button.dataset.route;
+  if(!route||route===document.body.dataset.page)return;
+  navigate(route);
+}
 applyPreferences();
-document.addEventListener('DOMContentLoaded',()=>{applyPreferences();ready();},{once:true});window.MoreFunPageBridge={navigate,ready,applyPreferences};
+document.addEventListener('click',handleShellNavigation,true);
+document.addEventListener('DOMContentLoaded',()=>{applyPreferences();ready();},{once:true});
+window.MoreFunPageBridge={navigate,ready,applyPreferences};
