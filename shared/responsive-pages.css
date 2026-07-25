@@ -7,12 +7,12 @@ body[data-responsive-profile] #app{
   min-width:0;
 }
 
-/* Orders */
+/* Orders: geometry is area-driven in pages/orders/page.css and shared/adaptive-layout.css. */
 body[data-page="orders"] .topbar{height:var(--topbar-height);min-height:var(--topbar-height);padding-inline:calc(var(--page-padding-x) + 8px)}
 body[data-page="orders"] .workspace{padding:var(--page-gap) calc(var(--page-padding-x) + 8px)}
 body[data-page="orders"] .stats{gap:var(--page-gap);margin:var(--page-gap) 0}
-body[data-page="orders"] .orders-layout{grid-template-columns:minmax(320px,32%) minmax(0,1fr);gap:var(--page-gap)}
-body[data-page="orders"] .lanes{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--page-gap)}
+body[data-page="orders"] .orders-layout{gap:var(--page-gap)}
+body[data-page="orders"] .lanes{gap:var(--page-gap)}
 body[data-page="orders"] .reverse-card{width:min(520px,calc(100vw - 24px));max-height:var(--modal-max-height);overflow:auto}
 
 /* Dine */
@@ -39,21 +39,6 @@ body[data-page="more"] .detail-dialog{width:min(1120px,calc(100vw - 32px));max-w
 body[data-page="more"] .confirm-dialog{width:min(700px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:var(--modal-max-height)}
 body[data-page="more"] .dialog-layer{padding:calc(var(--topbar-height) + 12px) 20px calc(var(--bottom-nav-height) + 12px)}
 body[data-page="more"] .dialog-scrim{inset:var(--topbar-height) 0 var(--bottom-nav-height)}
-
-:root[data-responsive-profile="compact"] body[data-page="orders"] .brand{font-size:24px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .page-head h1{font-size:28px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .stats{gap:8px;margin:8px 0}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .stats article{padding:10px 12px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .stats b{font-size:24px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .orders-layout{grid-template-columns:minmax(300px,34%) minmax(0,1fr);gap:10px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .detail{padding:12px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .detail h2{font-size:24px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .meta{gap:6px;padding:8px 0}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .lanes{gap:8px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .lane>header{padding:10px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .lane>header strong{font-size:16px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .lane-scroll{padding:6px}
-:root[data-responsive-profile="compact"] body[data-page="orders"] .order-card{padding:9px;margin-bottom:6px}
 
 :root[data-responsive-profile="compact"] body[data-page="dine"] .dine-workspace{grid-template-columns:minmax(0,1fr) 320px;gap:10px}
 :root[data-responsive-profile="compact"] body[data-page="dine"] .dine-main{gap:9px}
