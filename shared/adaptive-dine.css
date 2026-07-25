@@ -1,0 +1,164 @@
+/* More Fun SMT — Dine page adaptive geometry.
+   Reference surface: approved 1920x1080 dine layout.
+   Geometry is derived from the actual available area, not device-specific patches. */
+
+body[data-page="dine"] .dine-workspace{
+  min-width:0;
+  min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) clamp(300px,22.4%,430px);
+  gap:var(--page-gap);
+  overflow:hidden;
+  container-type:size;
+  container-name:dine-workspace;
+}
+
+body[data-page="dine"] .dine-main{
+  min-width:0;
+  min-height:0;
+  gap:clamp(8px,1.55cqh,14px);
+}
+
+body[data-page="dine"] .waiting-bar{
+  height:auto;
+  min-height:clamp(56px,8.2cqh,72px);
+  padding-inline:clamp(12px,2.1cqw,24px);
+  border-radius:clamp(12px,1.8cqh,16px);
+}
+body[data-page="dine"] .waiting-bar b{
+  font-size:max(var(--min-readable-font),clamp(16px,2.45cqh,21px));
+}
+
+body[data-page="dine"] .table-grid{
+  min-width:0;
+  min-height:0;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:repeat(3,minmax(0,1fr));
+  gap:clamp(7px,1.45cqh,13px);
+}
+body[data-page="dine"] .table-card{
+  min-width:0;
+  min-height:0;
+  padding:clamp(9px,1.75cqh,15px) clamp(10px,1.85cqw,18px);
+  gap:clamp(4px,.9cqh,7px);
+  border-radius:clamp(12px,1.8cqh,18px);
+  overflow:hidden;
+}
+body[data-page="dine"] .table-card header strong{
+  font-size:max(calc(var(--min-readable-font) * 1.18),clamp(18px,2.65cqh,22px));
+}
+body[data-page="dine"] .table-card .table-state b{
+  font-size:max(var(--min-readable-font),clamp(16px,2.4cqh,20px));
+}
+body[data-page="dine"] .table-card .table-state span{
+  font-size:max(calc(var(--min-readable-font) * 1.2),clamp(19px,3.1cqh,28px));
+}
+body[data-page="dine"] .table-time,
+body[data-page="dine"] .table-items,
+body[data-page="dine"] .table-totals{
+  font-size:max(var(--min-readable-font),clamp(12px,1.65cqh,13px));
+}
+
+body[data-page="dine"] .table-detail{
+  min-width:0;
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  container-type:size;
+  container-name:dine-detail;
+}
+body[data-page="dine"] .table-detail>header{
+  padding:clamp(12px,2.7cqh,22px);
+}
+body[data-page="dine"] .table-detail h1{
+  font-size:max(calc(var(--min-readable-font) * 1.45),clamp(22px,3.8cqh,30px));
+}
+body[data-page="dine"] .amount-strip{
+  padding:clamp(10px,2.25cqh,18px);
+  gap:clamp(5px,1cqw,10px);
+}
+body[data-page="dine"] .amount-strip b{
+  font-size:max(var(--min-readable-font),clamp(17px,2.75cqh,22px));
+}
+body[data-page="dine"] .pending-callout{
+  margin:clamp(9px,2cqh,16px);
+  padding:clamp(9px,2cqh,16px);
+}
+body[data-page="dine"] .batch-summary{
+  padding:clamp(10px,2.25cqh,18px);
+}
+body[data-page="dine"] .detail-items{
+  padding:clamp(9px,2cqh,16px) clamp(10px,2.25cqw,18px);
+  gap:clamp(5px,1.15cqh,8px);
+}
+body[data-page="dine"] .detail-items article{
+  padding:clamp(7px,1.3cqh,10px);
+  grid-template-columns:clamp(24px,3.5cqh,30px) minmax(0,1fr) auto;
+}
+body[data-page="dine"] .detail-status-grid{
+  gap:clamp(5px,1.1cqh,8px);
+  padding:0 clamp(10px,2.25cqw,18px) clamp(9px,2cqh,16px);
+}
+body[data-page="dine"] .detail-status-grid div{
+  padding:clamp(7px,1.45cqh,11px);
+}
+body[data-page="dine"] .primary-actions{
+  padding:clamp(9px,2cqh,16px);
+  gap:clamp(6px,1.2cqh,10px);
+}
+body[data-page="dine"] .primary-actions button,
+body[data-page="dine"] .table-detail>footer button{
+  min-height:clamp(44px,6.3cqh,58px);
+}
+body[data-page="dine"] .table-detail>footer{
+  padding:clamp(9px,2.2cqh,18px);
+}
+
+/* Dine modal / side surfaces must remain entirely inside the real viewport. */
+body[data-page="dine"] .side-panel{
+  width:min(560px,42vw);
+  max-width:calc(100vw - 24px);
+  top:0;
+  bottom:0;
+}
+body[data-page="dine"] .pending-review-panel{
+  width:min(50vw,960px);
+  max-width:calc(100vw - 24px);
+  max-height:var(--modal-max-height);
+}
+body[data-page="dine"] .side-panel>header,
+body[data-page="dine"] .pending-review-panel>header{
+  padding:clamp(12px,2.2vh,22px) clamp(14px,2.4vw,24px);
+}
+body[data-page="dine"] .panel-body,
+body[data-page="dine"] .pending-lines{
+  padding:clamp(12px,2.2vh,22px);
+}
+body[data-page="dine"] .side-panel>footer,
+body[data-page="dine"] .pending-review-panel>footer{
+  padding:clamp(10px,1.9vh,18px) clamp(12px,2.2vw,22px);
+}
+body[data-page="dine"] .waiting-list article,
+body[data-page="dine"] .record-list article,
+body[data-page="dine"] .payment-items article,
+body[data-page="dine"] .pending-lines article{
+  padding:clamp(9px,1.75vh,16px);
+}
+body[data-page="dine"] .pay-total{
+  padding:clamp(16px,3.1vh,30px);
+}
+body[data-page="dine"] .pay-total b{
+  font-size:max(calc(var(--min-readable-font) * 2),clamp(34px,5.4vh,52px));
+}
+body[data-page="dine"] .method-grid button{
+  min-height:clamp(48px,7vh,68px);
+}
+body[data-page="dine"] .qr-view img{
+  width:min(280px,38vh,70vw);
+  height:auto;
+  aspect-ratio:1;
+}
+
+/* Readability modes reuse the global font floor without changing the 3x3 table capacity. */
+:root[data-readability-mode="large"] body[data-page="dine"] .table-items span:nth-child(n+4){display:none}
+:root[data-readability-mode="small"] body[data-page="dine"] .table-items{line-height:1.18}
