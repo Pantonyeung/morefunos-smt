@@ -1,0 +1,127 @@
+More Fun／磨飯 SMT｜新對話接手指令包 V1
+
+你正在接手 More Fun／磨飯 SMT 功能完整性修改階段。
+
+【一、必須先讀】
+GitHub Repo：
+https://github.com/Pantonyeung/morefunos-smt.git
+
+工作基準：
+- Health Seal 分支：smt-responsive-adaptive-v1-health-seal-v1
+- 開發來源分支：smt-responsive-adaptive-v1
+- 回滾備份：smt-responsive-adaptive-v1-healthseal-backup-20260725
+
+必須先讀取：
+1. docs/SMT_HEALTH_SEAL_V1.md
+2. shared/responsive.js
+3. shared/responsive.css
+4. shared/responsive-pages.css
+5. shared/adaptive-layout.css
+6. shared/adaptive-layout.js
+7. shared/status-actions.js
+8. app-loader.js
+9. app-shell.css
+10. shell-startup.js
+11. pages/order/
+12. pages/orders/
+13. pages/dine/
+14. pages/soldout/
+15. pages/more/
+16. pages/checkout/
+
+開始前不要修改程式。先向我列出：
+- 你確認的基準分支／commit
+- Global App Shell 架構
+- Checkout 交易層規則
+- 每日登入／開工現金規則
+- Responsive 規則
+- 五個主頁目前功能
+- 已知技術債
+
+【二、目前已鎖定，不得重新設計】
+
+1. Global Status Bar 為全域唯一狀態欄。
+2. Global Bottom Navigation 為全域唯一主導航。
+3. 點單／訂單／堂食／售罄／更多只切換中央內容 View。
+4. 已 Ready 主頁保留，切換時不得重新建立造成卡頓。
+5. Checkout 為最高 Transaction Layer：
+   - 狀態欄可保留
+   - 主導航不可操作／不可誤退出
+   - 原點單狀態必須保存
+   - 只可以經 Checkout 明確返回或完成流程離開
+6. 每日新工作階段需要登入。
+7. 同一營業日已確認開工現金，不得因普通 reload 重複要求開工確認。
+8. 新營業日開始時交易工作區必須乾淨：購物車、未完成點單草稿、臨時交易狀態清空。
+9. 不得清除歷史訂單、Admin 設定、打印設定、日結／留底資料。
+10. 各頁原本快捷功能必須保留，Global Status Bar 透過 shared/status-actions.js 代理原有 action/event/domain，不得複製第二套業務邏輯。
+
+【三、Responsive 已鎖定】
+
+主要橫屏：
+- 1920×1080
+- 1600×900
+- 1440×900
+- 1366×768
+- 1280×800
+
+規則：
+- 1920 為視覺主模板，但不可整頁 scale。
+- 按實際可用內容區域計算。
+- 點單大產品卡每行 4 張；高度按可用區域計算約 3 行＋1/3 提示下一行。
+- 小圖卡約 4 行＋1/3。
+- 純文字卡約 5 行＋1/3。
+- 售罄產品卡尺寸跟點單頁同模板。
+- 字體必須維持最低可讀性，之後可加入大／中／細文字模式，但不得破壞版面。
+- Modal 必須留在畫面內；內容過長只做垂直滾動，除非資料本質必須表格橫向展示，否則禁止水平滾動。
+
+【四、禁止事項】
+
+禁止：
+1. 補丁式修改。
+2. 新增 patch.css / override.css / restore.css / hotfix.css 作永久方案。
+3. 大量 !important。
+4. 用 z-index 或固定高度硬壓問題。
+5. 用 1920 舊畫面縮放成 1280。
+6. 在錯誤架構上再疊兼容層。
+7. 重建每頁獨立導航或全域狀態欄。
+8. 因修改功能而隨意重做已驗收 UI。
+9. 未先找根因就修改。
+10. 測試未通過就宣布完成。
+
+【五、你的工作階段】
+
+下一階段不是重新做 UI。
+你的主要任務是：
+- 逐頁盤點功能完整性
+- 增加缺失功能
+- 刪除不需要功能
+- 修正實際營運流程
+- 接入真實資料／API
+- 保持已封板 UI、Responsive、Global Shell 穩定
+
+每次修改流程：
+1. 先指出問題根因。
+2. 說明會改哪個正式核心檔案。
+3. 優先修改既有 domain/module，不新增外掛層。
+4. 加回歸測試。
+5. 跑 Responsive QA。
+6. 跑 1920 Baseline Stress Test。
+7. 測試通過後先通知我實機驗收。
+8. 我驗收通過後先鎖定該功能。
+
+【六、Git 規則】
+
+- 不直接污染 Health Seal 分支。
+- 新功能請由 Health Seal 建立新開發分支。
+- 每一個可驗收功能用清楚 commit。
+- 不可 force push Health Seal。
+- 出現嚴重回歸時先停止，與 Health Seal 比對，不准繼續疊修。
+
+【七、開始方式】
+
+現在先讀取 repo 與上述文件，不修改。
+完成後只需要向我回覆：
+1. 你讀到的 Health Seal 基準。
+2. 目前五頁＋Checkout＋Startup 架構。
+3. 你認為第一個最值得檢查的功能完整性缺口。
+4. 等我提供第一個功能修改要求。
