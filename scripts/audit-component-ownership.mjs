@@ -29,6 +29,15 @@ const checks=[
     ]
   },
   {
+    id:'LEGACY_CHILD_CHROME_STANDALONE_ONLY',
+    description:'Legacy child chrome may render only when a page is opened standalone for QA',
+    authority:'shared/shell.js compatibility gate',
+    required:[
+      ['shared/shell.js','function isEmbeddedInGlobalShell()'],
+      ['shared/shell.js',"if(isEmbeddedInGlobalShell())return '';"]
+    ]
+  },
+  {
     id:'STATUS_ACTION_EXPLICIT_REGISTRATION',
     description:'Global status actions use render-time registration, never DOM observers/scanners',
     authority:'page render descriptors + shared/status-actions.js',
@@ -102,12 +111,6 @@ const knownMigrations=[
     note:'page.css legacy cart internals are frozen by policy; new cart work belongs to cart.css; migrate one responsibility group at a time with a contract test before removing the legacy rules'
   },
   {
-    id:'V5_LEGACY_CHILD_GLOBAL_CHROME_RUNTIME',
-    files:['shared/shell.js'],
-    needles:['renderGlobalStatusBar','renderBottomNav'],
-    note:'formal runtime should stop building second global chrome; standalone QA must be explicit QA-only'
-  },
-  {
     id:'V6_ADAPTIVE_DIRECT_COMPONENT_VISUALS',
     files:['shared/adaptive-layout.css'],
     needles:['body[data-page="order"] .product-card','body[data-page="orders"] .order-card'],
@@ -127,7 +130,14 @@ console.log('=============================');
 
 for(const check of checks){
   let failed=false;
-  for(const [file,needle] of check.forbidden){
+  for(const [file,needle] of check.required||[]){
+    if(!exists(file)||!read(file).includes(needle)){
+      failed=true;
+      hardFailures++;
+      console.error(`FAIL ${check.id}: ${file} missing required boundary ${needle}; authority=${check.authority}`);
+    }
+  }
+  for(const [file,needle] of check.forbidden||[]){
     if(!exists(file))continue;
     if(read(file).includes(needle)){
       failed=true;
