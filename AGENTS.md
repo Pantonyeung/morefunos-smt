@@ -45,10 +45,29 @@
 - 將修改的正式責任來源；
 - 是否會新增第二套邏輯、Observer、Override、Compatibility Layer 或 Patch；
 - 是否誤用整頁 Scale／第二套 Responsive UI；
+- 是否會碰觸已封板位置；若會，必須證明係本次問題根因；
 - Checkout／Responsive／資料／打印／跨端依賴的影響；
 - 測試及回滾方法。
 
 如方案與三份 PRIMARY STANDARD 衝突：**STOP，不得自行繞過。** 只有產品負責人明確要求「修改／更新標準」先可以改變最高標準。
+
+---
+
+## 1920 視覺封板工作流｜CURRENT HARD RULE
+
+現階段所有 UI／互動優化先以 **1920×1080 作唯一視覺封板模板**。
+
+固定順序：
+
+`1920×1080 Template 正確 → 實機驗收 → 封板 → Adaptive Core 套用其他尺寸 → 其他尺寸只做 Regression／必要 Token 調整`
+
+規則：
+
+- 1920 未正確前，不得同時為 1600／1440／1366／1280 個別調畫面；
+- 其他尺寸不得反向迫使已封板的 1920 Component 改位置、改 DOM、改操作順序；
+- 已封板區域預設 **READ-ONLY**；除非新問題根因直接位於該區域，否則禁止順手重構、改比例、改位置、改動畫；
+- Adaptive 只可以調整可用空間、Token、Density、Grid、Gap、Typography、Modal Bounds，不得重新設計已封板 Component；
+- 如其他尺寸出現問題，先修 Adaptive Core／Profile；不得先改 1920 已封板模板去遷就單一尺寸。
 
 ---
 
@@ -85,13 +104,7 @@ Adaptive ≠ Scale。
 
 Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Available Area、Device Profile；**不得重新定義 Business Logic、Cart、Checkout、Pricing、Print、Component Core 或資料模型。**
 
-正式主要尺寸：
-
-- 1920×1080
-- 1600×900
-- 1440×900
-- 1366×768
-- 1280×800
+現階段視覺封板只驗 1920×1080；其他正式尺寸由 Adaptive Core 套用後再做回歸，不作獨立設計模板。
 
 手機尺寸驗收工具可以縮放模擬畫布，但只屬 QA 工具，不代表正式 Runtime 使用 Scale。
 
@@ -122,6 +135,7 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 - 第一次 Fix 失敗必須 STOP 查根因，禁止直接疊第二層 Fix。
 - 禁止以 MutationObserver／DOM 掃描補自己已有 State；禁止永久 Patch／Override／Hotfix 層。
 - 禁止所有 State Change 重畫整個 App；優先局部 Surface Update。
+- 已封板 Component 預設不可修改；新需求只可改真正責任來源。
 - token 接近結束時，按 `SMT_CHAT_HANDOFF_PROTOCOL.md` 產生 checkpoint，不得以 token 不足停止開發。
 
 ## 驗證
