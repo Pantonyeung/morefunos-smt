@@ -20,6 +20,7 @@ let statusActions=[];
 function normalizeStatusActions(actions){
   return (Array.isArray(actions)?actions:[]).map((action,index)=>({
     id:String(action?.id||`action-${index}`),
+    sourceId:String(action?.sourceId||action?.id||`action-${index}`),
     className:String(action?.className||''),
     html:String(action?.html||action?.label||''),
     disabled:Boolean(action?.disabled),
@@ -28,13 +29,20 @@ function normalizeStatusActions(actions){
 }
 function publishStatusActions(){
   if(!(parent&&parent!==window))return;
-  parent.postMessage({type:'morefun:status-actions',page:document.body.dataset.page||'unknown',actions:statusActions},'*');
+  parent.postMessage({type:'morefun:status-actions',page:document.body.dataset.page||'unknown',actions:statusActions.map(({sourceId,...action})=>action)},'*');
 }
 function setStatusActions(actions){statusActions=normalizeStatusActions(actions);publishStatusActions();}
 function triggerStatusAction(message){
   const action=statusActions.find(item=>item.id===message.id);
   if(!action||action.disabled)return;
-  window.dispatchEvent(new CustomEvent('morefun:status-action-trigger',{detail:{id:action.id,anchor:message.anchor||null}}));
+  const source=document.querySelector(`[data-shell-source-id="${CSS.escape(action.sourceId)}"]`);
+  if(!source||source.disabled)return;
+  let handled=false;
+  try{
+    const actionEvent=new CustomEvent('morefun:status-action',{bubbles:true,cancelable:true,detail:{anchor:message.anchor||null}});
+    handled=!source.dispatchEvent(actionEvent);
+  }catch(_error){}
+  if(!handled)source.click();
 }
 function handleParentMessage(event){
   if(event.source!==parent)return;
