@@ -78,6 +78,14 @@ const checks=[
     ]
   },
   {
+    id:'ADAPTIVE_SOLDOUT_TOKEN_ONLY',
+    description:'Adaptive core must not directly style Soldout page components',
+    authority:'pages/soldout/page.css consumes shared responsive/adaptive tokens',
+    forbidden:[
+      ['shared/adaptive-layout.css','body[data-page="soldout"]']
+    ]
+  },
+  {
     id:'DRINK_CARD_VISUAL_AUTHORITY',
     description:'Drink Choice Card internal visual belongs to pages/order/page.css until a dedicated component stylesheet is introduced',
     authority:'pages/order/page.css',
