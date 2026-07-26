@@ -7,26 +7,12 @@ body[data-responsive-profile] #app{
   min-width:0;
 }
 
-/* Orders */
-body[data-page="orders"] .topbar{height:var(--topbar-height);min-height:var(--topbar-height);padding-inline:calc(var(--page-padding-x) + 8px)}
-body[data-page="orders"] .workspace{padding:var(--page-gap) calc(var(--page-padding-x) + 8px)}
-body[data-page="orders"] .stats{gap:var(--page-gap);margin:var(--page-gap) 0}
-body[data-page="orders"] .orders-layout{grid-template-columns:minmax(320px,32%) minmax(0,1fr);gap:var(--page-gap)}
-body[data-page="orders"] .lanes{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--page-gap)}
-body[data-page="orders"] .reverse-card{width:min(520px,calc(100vw - 24px));max-height:var(--modal-max-height);overflow:auto}
-
-/* Dine — geometry is owned by shared/adaptive-layout.css. */
+/* Dine — pending migration to page-owned responsive authority. */
 body[data-page="dine"] .dine-main{min-width:0}
 body[data-page="dine"] .side-panel{max-width:calc(100vw - 24px)}
 body[data-page="dine"] .pending-review-panel{max-width:min(var(--modal-max-width),calc(100vw - 24px));max-height:var(--modal-max-height)}
 
-/* Sold-out */
-body[data-page="soldout"] .soldout-grid{grid-template-columns:minmax(0,1fr) minmax(0,var(--side-width,32%));gap:var(--page-gap)}
-body[data-page="soldout"] .search-box{width:min(330px,28vw)}
-body[data-page="soldout"] .supply-panel>header{min-height:var(--topbar-height)}
-body[data-page="soldout"] .readonly-detail{width:min(680px,calc(100vw - 24px));max-height:var(--modal-max-height);overflow:auto}
-
-/* More — use the actual remaining content area instead of 1920-era fixed geometry. */
+/* More — pending migration to page-owned responsive authority. */
 body[data-page="more"] .more-topbar{height:var(--topbar-height);min-height:var(--topbar-height)}
 body[data-page="more"] .more-workspace{container-type:size;container-name:more-workspace;padding:clamp(10px,2.2cqh,24px) clamp(14px,2.2cqw,42px) clamp(10px,2cqh,22px)}
 body[data-page="more"] .more-heading{height:auto;min-height:clamp(48px,8.5cqh,76px);margin-bottom:clamp(8px,1.8cqh,18px);align-items:flex-end;gap:12px}
@@ -67,17 +53,6 @@ body[data-page="more"] .anomaly-table>header,body[data-page="more"] .anomaly-tab
 body[data-page="more"] .report-table :is(span,b,em,strong,small){min-width:0;overflow-wrap:anywhere}
 body[data-page="more"] .report-drilldown>div{overflow-y:auto;overflow-x:hidden}
 body[data-page="more"] .report-drilldown article{width:100%;min-width:0;grid-template-columns:minmax(58px,.65fr) minmax(110px,1.1fr) minmax(90px,1fr) minmax(90px,1fr) minmax(70px,.7fr) minmax(80px,.8fr);gap:8px}
-
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .soldout-grid{grid-template-columns:minmax(0,1fr) minmax(0,var(--side-width,32%));gap:10px}
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .search-box{width:220px;height:40px}
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .status-filter button{min-width:68px;padding-inline:8px}
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .catalog-caption{padding:0 10px 7px}
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .supply-panel>header{padding:8px 10px}
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .panel-tools{padding:7px 9px}
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .supply-list{padding-inline:9px}
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .group-head{height:44px}
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .supply-row{grid-template-columns:26px 48px 1fr;gap:7px;padding:7px 0}
-:root[data-responsive-profile="compact"] body[data-page="soldout"] .supply-row-img{width:48px;height:48px}
 
 :root[data-responsive-profile="standard"] body[data-page="more"] .more-analysis{grid-template-columns:minmax(145px,.95fr) minmax(0,1.35fr) minmax(0,1.35fr) minmax(80px,.5fr)}
 :root[data-responsive-profile="standard"] body[data-page="more"] .more-card{border-radius:16px}
