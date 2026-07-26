@@ -415,6 +415,7 @@ function categoryBar(state){
 function customConfirm(){
   const notice=newOrderNotice?.visible?'<aside class="new-order-toast"><div><small>'+newOrderNotice.source+' 新訂單</small><strong>'+newOrderNotice.id+'</strong><span>'+newOrderNotice.items+' 件 · '+money(newOrderNotice.amount)+'</span></div><button data-action="later-new-order">稍後處理</button><button class="primary" data-action="process-new-order">立即處理</button></aside>':'';
   if(!confirmState)return notice;
+  if(confirmState.kind==='modal-exit')return notice+'<div class="confirm-layer"><section class="confirm-card"><strong>'+confirmState.title+'</strong><p>'+confirmState.message+'</p><div><button data-action="confirm-cancel">繼續調整</button><button class="danger" data-action="confirm-discard">退出不保存</button><button class="primary" data-action="confirm-save-exit" '+(confirmState.saveAction?'':'disabled')+'>保存並退出</button></div></section></div>';
   const dissolve=confirmState.kind==='dissolve',dineCancel=confirmState.kind==='dine-cancel';
   return notice+'<div class="confirm-layer"><section class="confirm-card"><strong>'+confirmState.title+'</strong><p>'+confirmState.message+'</p><div><button data-action="confirm-cancel">'+(dissolve?'返回套餐':dineCancel?'繼續點單':'繼續修改')+'</button><button class="danger" data-action="'+(dissolve?'confirm-dissolve':dineCancel?'confirm-dine-cancel':'confirm-discard')+'">'+(dissolve?'確認拆開':dineCancel?'取消今次點單':'放棄修改')+'</button></div></section></div>';
 }
@@ -571,9 +572,21 @@ function requestDineCancellation(){
   confirmState={kind:'dine-cancel',title:'取消堂食點單？',message:'今次未正式加入 '+state.dineContext.tableId+' 號枱，購物車內容會一併清除；原有堂食餐品不受影響。'};modal=null;render();
 }
 function markDirty(){if(modal)modal.dirty=true;}
+function modalSaveAction(current=modal){
+  if(!current)return '';
+  if(current.type==='product')return 'apply-product';
+  if(current.type==='drink')return 'apply-drink';
+  if(current.type==='completion'&&current.draft?.activeGroup)return 'apply-required-group';
+  if(current.type==='combo')return 'apply-combo-edit';
+  if(current.type==='specified-link')return 'apply-specified-link';
+  return '';
+}
 function requestDismiss(){
   if(!modal)return;
-  if(modal.dirty&&['product','drink'].includes(modal.type)){confirmState={title:'尚未套用修改',message:'返回後今次選擇將不會保存。',returnModal:modal.type==='drink'&&modal.parent?modal.parent:null};render();return;}
+  if(modal.dirty){
+    confirmState={kind:'modal-exit',title:'已經有調整，是否退出？',message:'你可以繼續調整、退出而不保存，或者保存目前修改後退出。',returnModal:modal.type==='drink'&&modal.parent?modal.parent:null,saveAction:modalSaveAction(modal)};
+    render();return;
+  }
   modal=modal.type==='drink'&&modal.parent?modal.parent:null;confirmState=null;render();
 }
 function openProduct(productId,lineId='',anchor=null){
@@ -677,6 +690,7 @@ function handle(button,anchorOverride=null){
   else if(action==='dismiss-modal')requestDismiss();
   else if(action==='confirm-cancel'){confirmState=null;render();}
   else if(action==='confirm-discard'){modal=confirmState?.returnModal||null;confirmState=null;render();}
+  else if(action==='confirm-save-exit'){const saveAction=confirmState?.saveAction;confirmState=null;if(saveAction)handle({dataset:{action:saveAction}});else{modal=null;render();}}
   else if(action==='confirm-dine-cancel')completeDineCancellation();
   else if(action==='confirm-dissolve'){const lineId=confirmState.lineId;store.set(state=>{state.cart=normalizeCart(dissolveRiceballSet(state.cart,lineId,{idFactory:role=>stableId('line-'+role)}),state.orderServiceMode);state.lastAffectedLineId=state.cart.at(-1)?.lineId||'';state.lastMutationKind='changed';return state;});confirmState=null;modal=null;render();showToast('套餐已拆開並按單品重新計價');}
   else if(action==='toggle-pending-panel'){if(modal?.type==='pending')modal=null;else modal={type:'pending',anchor:actionAnchor(button,anchorOverride),dirty:false};render();}
@@ -755,7 +769,7 @@ function handle(button,anchorOverride=null){
   }
 }
 app.addEventListener('morefun:status-action',event=>{const button=event.target.closest('[data-action]');if(!button||button.disabled)return;event.preventDefault();handle(button,event.detail?.anchor||null);});
-app.addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});
+app.addEventListener('click',event=>{if(event.target.classList?.contains('modal-scrim')){event.preventDefault();requestDismiss();return;}const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});
 app.addEventListener('pointerdown',event=>{if(event.target.closest('.quick-drawer-panel'))scheduleQuickDrawerClose();});
 app.addEventListener('input',event=>{if(event.target.matches('[data-action="detail-note"]')&&modal?.type==='product'){modal.draft.note=event.target.value;markDirty();return;}if(event.target.matches('[data-action="search-query"]')&&modal?.type==='search'){const value=event.target.value;store.set(state=>({...state,searchQuery:value}));render();requestAnimationFrame(()=>{const input=document.querySelector('[data-action="search-query"]');if(input){input.focus();input.setSelectionRange(value.length,value.length);}});}});
 addEventListener('message',event=>{if(event.data?.type==='morefun:page-activate'&&event.data.route==='order'){const current=readJSON(ORDER_STORAGE_KEY,null);if(current?.dineContext&&!store.get().dineContext)store.set(state=>({...state,dineContext:current.dineContext,orderServiceMode:SERVICE_DINE_IN,cart:applyOrderServiceMode(current.cart||[],SERVICE_DINE_IN)}));}});
