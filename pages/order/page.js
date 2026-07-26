@@ -508,6 +508,13 @@ function refreshQuickSurface(html){
   if(current){current.outerHTML=html;}else catalog.insertAdjacentHTML('beforeend',html);
   return catalog.querySelector('.quick-drawer');
 }
+let lastOverlayOpen=null;
+function publishOverlayState(){
+  const open=Boolean(modal||confirmState);
+  if(open===lastOverlayOpen)return;
+  lastOverlayOpen=open;
+  window.parent?.postMessage?.({type:'morefun:overlay-state',open},'*');
+}
 function refreshModalSurface(state){
   const toast=document.getElementById('toast');if(!toast)return;
   app.querySelectorAll(':scope > .modal-scrim,:scope > .modal-card,:scope > .confirm-layer,:scope > .new-order-toast').forEach(node=>node.remove());
@@ -516,8 +523,7 @@ function refreshModalSurface(state){
     const first=document.querySelector('.side-card .setting-row');
     first?.insertAdjacentHTML('beforebegin','<div class="setting-block"><strong>購物車相同產品</strong><div class="segmented"><button data-action="cart-merge" data-value="same" class="'+(state.settings.cart.mergeMode!=='never'?'active':'')+'">相同配置合併</button><button data-action="cart-merge" data-value="never" class="'+(state.settings.cart.mergeMode==='never'?'active':'')+'">逐項顯示</button></div></div>');
   }
-  bindImageFallbacks(app);
-  refreshQrCodes(app);
+  app.querySelectorAll(':scope > .modal-card,:scope > .confirm-layer,:scope > .new-order-toast').forEach(node=>{bindImageFallbacks(node);refreshQrCodes(node);});
   requestAnimationFrame(()=>positionActiveCard());
 }
 function render(){
@@ -531,36 +537,39 @@ function render(){
   const quickKey=surfaceKey([state.quickDrawerOpen,state.settings.quickDrinks,pendingSummary(state.cart).drink,lastDrinkAssignment,modal?.type==='drink'?modal.drinkId:'',drinks.map(item=>[item.id,item.available])]);
   const bottomKey=String(pendingCount);
   const modalKey=surfaceKey([modal,confirmState,newOrderNotice,modal?{cart:state.cart,settings:state.settings,health:state.health,pendingOrders:state.pendingOrders,searchQuery:state.searchQuery,drafts}:null]);
-  const cartHtml=cartSurface(state),categoryHtml=categoryBar(state),productsHtml=productGridSurface(state),quickHtml=quickDrinks(),topHtml=topbar(),bottomHtml=renderBottomNav('order',{badges:{orders:pendingCount}});
 
   if(!renderStarted){
+    const topHtml=topbar(),cartHtml=cartSurface(state),categoryHtml=categoryBar(state),productsHtml=productGridSurface(state),quickHtml=quickDrinks(),bottomHtml=renderBottomNav('order',{badges:{orders:pendingCount}});
     app.innerHTML='<main>'+topHtml+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%">'+cartHtml+'<section class="catalog">'+categoryHtml+productsHtml+quickHtml+'</section></section></section>'+bottomHtml+'</main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
     document.body.classList.toggle('has-modal',Boolean(modal));
     bindImageFallbacks(app);refreshQrCodes(app);
     Object.assign(renderKeys,{top:topKey,cart:cartKey,category:categoryKey,products:productsKey,quick:quickKey,bottom:bottomKey,modal:modalKey});
     renderStarted=true;
     requestAnimationFrame(()=>{positionActiveCard();restoreCartViewport(state,0);});
-    window.parent?.postMessage?.({type:'morefun:overlay-state',open:Boolean(modal||confirmState)},'*');
+    publishOverlayState();
     window.dispatchEvent(new Event('morefun:layout-invalidated'));
     return;
   }
 
-  document.querySelector('.order-grid')?.style.setProperty('--cart-width',Number(state.settings.cart.widthPercent||32)+'%');
+  let layoutChanged=false;
+  const grid=document.querySelector('.order-grid');
+  const cartWidth=Number(state.settings.cart.widthPercent||32)+'%';
+  if(grid&&grid.style.getPropertyValue('--cart-width')!==cartWidth){grid.style.setProperty('--cart-width',cartWidth);layoutChanged=true;}
   document.body.classList.toggle('has-modal',Boolean(modal));
 
-  if(renderKeys.top!==topKey){replaceOuter('.topbar',topHtml);renderKeys.top=topKey;}
+  if(renderKeys.top!==topKey){replaceOuter('.topbar',topbar());renderKeys.top=topKey;}
   if(renderKeys.cart!==cartKey){
     const oldCart=document.querySelector('.cart-list'),previousScroll=oldCart?oldCart.scrollTop:cartScrollTop;
-    const node=replaceOuter('.cart',cartHtml);if(node)bindImageFallbacks(node);
-    renderKeys.cart=cartKey;requestAnimationFrame(()=>restoreCartViewport(state,previousScroll));
+    const node=replaceOuter('.cart',cartSurface(state));if(node)bindImageFallbacks(node);
+    renderKeys.cart=cartKey;layoutChanged=true;requestAnimationFrame(()=>restoreCartViewport(state,previousScroll));
   }
-  if(renderKeys.category!==categoryKey){replaceOuter('.category-shell',categoryHtml);renderKeys.category=categoryKey;}
-  if(renderKeys.products!==productsKey){const node=replaceOuter('.products',productsHtml);if(node)bindImageFallbacks(node);renderKeys.products=productsKey;}
-  if(renderKeys.quick!==quickKey){const node=refreshQuickSurface(quickHtml);if(node)bindImageFallbacks(node);renderKeys.quick=quickKey;}
-  if(renderKeys.bottom!==bottomKey){replaceOuter('.bottom-nav',bottomHtml);renderKeys.bottom=bottomKey;}
+  if(renderKeys.category!==categoryKey){replaceOuter('.category-shell',categoryBar(state));renderKeys.category=categoryKey;layoutChanged=true;}
+  if(renderKeys.products!==productsKey){const node=replaceOuter('.products',productGridSurface(state));if(node)bindImageFallbacks(node);renderKeys.products=productsKey;layoutChanged=true;}
+  if(renderKeys.quick!==quickKey){const node=refreshQuickSurface(quickDrinks());if(node)bindImageFallbacks(node);renderKeys.quick=quickKey;layoutChanged=true;}
+  if(renderKeys.bottom!==bottomKey){replaceOuter('.bottom-nav',renderBottomNav('order',{badges:{orders:pendingCount}}));renderKeys.bottom=bottomKey;layoutChanged=true;}
   if(renderKeys.modal!==modalKey){refreshModalSurface(state);renderKeys.modal=modalKey;}
-  window.parent?.postMessage?.({type:'morefun:overlay-state',open:Boolean(modal||confirmState)},'*');
-  window.dispatchEvent(new Event('morefun:layout-invalidated'));
+  publishOverlayState();
+  if(layoutChanged)window.dispatchEvent(new Event('morefun:layout-invalidated'));
 }
 function completeDineCancellation(){
   const context=store.get().dineContext;
