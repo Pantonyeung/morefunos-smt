@@ -11,7 +11,7 @@ const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html
 const labels={order:'點餐',orders:'訂單',dine:'堂食',soldout:'售罄',more:'更多',checkout:'結帳'};
 const mainRoutes=['order','orders','dine','soldout','more'];
 const checkoutExitRoutes=new Set(['order','orders']);
-const BUILD='global-shell-v2-20260725d';
+const BUILD='global-shell-v2-20260726-checkout-ready';
 const frameByRoute=new Map();
 const allFrames=new Set();
 const readyRoutes=new Set();
@@ -124,7 +124,10 @@ function setActiveFrame(frame,key){
   activeFrame=frame;current=key;pending='';childReady=true;clearTimeout(watchdogTimer);stage.dataset.route=current;delete stage.dataset.pendingRoute;
   if(key==='checkout')checkoutExitArmed='';
   applyProfileToFrame(frame);setShellRouteUi(key,{loading:false});syncChildOverlay(frame);
-  try{frame.contentWindow?.postMessage({type:'morefun:page-activate',route:key},'*');}catch(_error){}
+  try{
+    if(key==='checkout')frame.contentWindow?.postMessage({type:'morefun:checkout-enter',route:key},'*');
+    frame.contentWindow?.postMessage({type:'morefun:page-activate',route:key},'*');
+  }catch(_error){}
 }
 
 function armWatchdog(frame,key){clearTimeout(watchdogTimer);watchdogTimer=setTimeout(()=>{if(key!==pending||readyRoutes.has(key))return;frame.src=pageUrl(key,'retry');},1800);}
@@ -145,7 +148,7 @@ function preloadNext(){
 }
 function startSequentialPreload(){
   if(preloadStarted||!shellUnlocked||!readyRoutes.has('order'))return;
-  preloadStarted=true;preloadQueue=mainRoutes.filter(key=>key!=='order');setTimeout(preloadNext,160);
+  preloadStarted=true;preloadQueue=['checkout',...mainRoutes.filter(key=>key!=='order')];setTimeout(preloadNext,40);
 }
 
 function load({force=false}={}){
@@ -206,7 +209,7 @@ addEventListener('message',event=>{
   const message=event.data||{};
   if(message.type==='morefun:page-ready'){
     const key=frame.dataset.route||message.page||pending||current;readyRoutes.add(key);frame.classList.remove('is-loading');applyProfileToFrame(frame);
-    if(preloadingRoute===key){preloadingRoute='';setTimeout(preloadNext,80);}
+    if(preloadingRoute===key){preloadingRoute='';setTimeout(preloadNext,40);}
     if(key===pending||(!childReady&&key===current))setActiveFrame(frame,key);
     if(key==='order')startSequentialPreload();
     return;
