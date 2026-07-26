@@ -1,0 +1,20 @@
+/* Order page adaptive profile consumer. Shared adaptive core supplies tokens only. */
+.products{grid-auto-flow:row;align-content:start;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.products-large{grid-auto-rows:var(--adaptive-product-row-large)}
+.products-small{grid-auto-rows:var(--adaptive-product-row-small)}
+.products-text{grid-auto-rows:var(--adaptive-product-row-text)}
+.product-card.large{height:var(--adaptive-product-row-large);min-height:0;max-height:var(--adaptive-product-row-large);align-self:stretch}
+.product-card.small{height:var(--adaptive-product-row-small);min-height:0;max-height:var(--adaptive-product-row-small);align-self:stretch}
+.product-card.text{height:var(--adaptive-product-row-text);min-height:0;max-height:var(--adaptive-product-row-text);align-self:stretch}
+.product-card.large:not(.no-product-image){grid-template-rows:minmax(0,3fr) minmax(0,1fr);min-height:0;height:100%}
+.product-card.large .product-hero{width:100%;height:100%;min-height:0;max-height:none}
+.product-card.large .product-info{min-height:0;height:100%;overflow:hidden;align-content:center;padding-block:clamp(5px,calc(var(--adaptive-product-row-large) * .035),10px)}
+.product-card strong{font-size:max(var(--min-readable-font),calc(17px * var(--readability-scale)))}
+.product-price{font-size:max(var(--min-readable-font),calc(21px * var(--readability-scale)))}
+.product-description{font-size:max(var(--min-readable-font),calc(13px * var(--readability-scale)));-webkit-line-clamp:1}
+.product-code{font-size:max(var(--min-readable-font),calc(16px * var(--readability-scale)))}
+.product-card.small{grid-template-columns:min(calc(var(--adaptive-product-row-small) - 18px),82px) minmax(0,1fr) auto;gap:var(--adaptive-cart-gap);padding:calc(var(--adaptive-cart-pad) * .7) var(--adaptive-cart-pad)}
+.product-thumb{width:min(calc(var(--adaptive-product-row-small) - 18px),82px);height:min(calc(var(--adaptive-product-row-small) - 18px),82px)}
+.product-card.text{grid-template-columns:minmax(0,1fr) auto;gap:max(8px,calc(var(--adaptive-cart-gap) * 1.08));padding:var(--adaptive-cart-pad) calc(var(--adaptive-cart-pad) * 1.15)}
+:root[data-readability-mode="small"] .product-description{display:none}
+:root[data-readability-mode="large"] .product-description{-webkit-line-clamp:1}
