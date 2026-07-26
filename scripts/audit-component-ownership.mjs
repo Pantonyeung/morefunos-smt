@@ -72,7 +72,7 @@ const checks=[
   {
     id:'ADAPTIVE_ORDERS_TOKEN_ONLY',
     description:'Adaptive core must not directly style Orders page components',
-    authority:'pages/orders/page.css consumes shared responsive/adaptive tokens',
+    authority:'pages/orders/page.css + pages/orders/responsive.css',
     forbidden:[
       ['shared/adaptive-layout.css','body[data-page="orders"]']
     ]
@@ -80,9 +80,25 @@ const checks=[
   {
     id:'ADAPTIVE_SOLDOUT_TOKEN_ONLY',
     description:'Adaptive core must not directly style Soldout page components',
-    authority:'pages/soldout/page.css consumes shared responsive/adaptive tokens',
+    authority:'pages/soldout/page.css + pages/soldout/responsive.css',
     forbidden:[
       ['shared/adaptive-layout.css','body[data-page="soldout"]']
+    ]
+  },
+  {
+    id:'RESPONSIVE_ORDERS_PAGE_AUTHORITY',
+    description:'Orders responsive component decisions belong to the Orders page authority',
+    authority:'pages/orders/responsive.css',
+    forbidden:[
+      ['shared/responsive-pages.css','body[data-page="orders"]']
+    ]
+  },
+  {
+    id:'RESPONSIVE_SOLDOUT_PAGE_AUTHORITY',
+    description:'Soldout responsive component decisions belong to the Soldout page authority',
+    authority:'pages/soldout/responsive.css',
+    forbidden:[
+      ['shared/responsive-pages.css','body[data-page="soldout"]']
     ]
   },
   {
@@ -135,8 +151,8 @@ const knownMigrations=[
   {
     id:'V7_RESPONSIVE_PAGE_DIRECT_VISUALS',
     files:['shared/responsive-pages.css'],
-    needles:['body[data-page="orders"]','body[data-page="dine"]','body[data-page="soldout"]','body[data-page="more"]'],
-    note:'move page-internal visual decisions to each page stylesheet; responsive core supplies profile/tokens only'
+    needles:['body[data-page="dine"]','body[data-page="more"]'],
+    note:'move remaining page-internal visual decisions to each page stylesheet; responsive core supplies profile/tokens only'
   }
 ];
 
