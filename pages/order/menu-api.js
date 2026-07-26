@@ -77,21 +77,25 @@ function inferRules({categoryNames,name,matched={},raw={},rule={}}){
   if(categoryText.includes('沙律'))add('sauce');
 
   const productType=String(rule.product_type??rule.item_type??raw.product_type??raw.item_type??'').toLowerCase();
-  const comboRole=String(rule.link_role??rule.combo_role??raw.link_role??raw.combo_role??matched.linkRole??'').toLowerCase();
-  const isDrink=categoryText.includes('飲品')||productType.includes('drink')||comboRole==='drink';
+  const explicitRole=String(rule.link_role??rule.combo_role??raw.link_role??raw.combo_role??'').toLowerCase();
+  const knownRole=String(matched.linkRole??'').toLowerCase();
   const temporary=resolveTemporaryComboRule({name,category:categoryNames[0],categories:categoryNames});
+  const isDrink=categoryText.includes('飲品')||productType.includes('drink')||explicitRole==='drink'||knownRole==='drink'||temporary?.role==='combo_drink';
+  const isSnack=explicitRole==='snack'||knownRole==='snack'||temporary?.role==='combo_snack';
+  const explicitCombinable=rule.is_combinable??raw.is_combinable;
+  const combinable=truthy(explicitCombinable,Boolean(matched.combinable))||temporary?.role==='riceball_main';
 
   return {
     required,
     drinkSlots:required.includes('drink')?Math.max(1,moneyNumber(rule.drink_slots??raw.drink_slots??matched.drinkSlots)):moneyNumber(rule.drink_slots??raw.drink_slots??matched.drinkSlots),
-    combinable:temporary?.role==='riceball_main',
-    comboEligible:Boolean(temporary?.comboEligible),
-    linkRole:isDrink?'drink':temporary?.role==='combo_snack'?'snack':'',
-    comboRole:temporary?.role||'',
-    comboTier:temporary?.comboTier||'',
-    comboBasePrice:Number(temporary?.comboBasePrice||0),
-    comboSurcharge:Number(temporary?.comboSurcharge||0),
-    ruleSource:temporary?'smt_menu_test':Object.keys(rule).length?'product_rules':'product'
+    combinable:Boolean(combinable),
+    comboEligible:Boolean(temporary?.comboEligible||matched.comboEligible),
+    linkRole:isDrink?'drink':isSnack?'snack':'',
+    comboRole:temporary?.role||explicitRole||'',
+    comboTier:temporary?.comboTier||matched.comboTier||'',
+    comboBasePrice:Number(temporary?.comboBasePrice??matched.comboBasePrice??0),
+    comboSurcharge:Number(temporary?.comboSurcharge??matched.comboSurcharge??0),
+    ruleSource:Object.keys(rule).length?'product_rules':temporary?'menu_inference':Object.keys(matched).length?'known_catalog':'product'
   };
 }
 
