@@ -1,23 +1,33 @@
 # 磨飯 SMT｜AI Start Here
 
-> **第一步必讀：`docs/SMT_DEVELOPMENT_CHARTER_V1.0.md`。任何 AI／Codex／Work／工程代理未完整閱讀前，禁止分析後直接改碼。**
+> **第一步：完整閱讀 SMT Development Standard 三份 PRIMARY STANDARD。任何 AI／Codex／Work／工程代理未完成閱讀前，禁止分析後直接改碼。**
 
 更新：2026-07-26｜目前功能完整性分支：`smt-functional-completeness-v1`
 
-## 最高標準
+## 三份同級最高標準
 
-`docs/SMT_DEVELOPMENT_CHARTER_V1.0.md` 係 SMT 目前最高產品／工程開發標準。
+1. `docs/SMT_DEVELOPMENT_CHARTER_V1.0.md`
+2. `docs/MFKG_STANDARD_V1.0.md`
+3. `docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`
 
-任何新需求必須先對照憲章：
+三者共同構成 **SMT Development Standard**。
+
+- Development Charter：規定點樣開發。
+- MFKG：規定系統真相、決策、依賴及跨端關係點樣被理解與追蹤。
+- Adaptive Application：規定同一套 App 點樣適應不同正式裝置／尺寸。
+
+任何新需求必須先對照三份標準：
 
 1. 屬於邊個 Domain？
 2. 真正根因係乜？
-3. 會修改邊個正式責任來源？
-4. 有冇新增第二套邏輯、Observer、Override、Compatibility Layer 或 Patch？
-5. 會唔會影響 Checkout／Responsive／資料／打印？
-6. 點測試、點回滾？
+3. 涉及邊個 MFKG Node／Edge？
+4. 會修改邊個正式責任來源？
+5. 有冇新增第二套邏輯、Observer、Override、Compatibility Layer 或 Patch？
+6. 有冇將 Adaptive 錯寫成整頁 Scale／第二套 UI？
+7. 會唔會影響 Checkout／Responsive／資料／打印／其他端？
+8. 點測試、點回滾？
 
-如果需求與憲章衝突，必須 STOP；只有產品負責人明確要求「修改／更新憲章」先可以改變最高標準。
+如果需求與三份標準衝突，必須 STOP；只有產品負責人明確要求「修改／更新標準」先可以改變最高標準。
 
 ## 目標
 
@@ -35,6 +45,8 @@
 - 只有現場外賣／堂食選付款方式；付款、訂單、打印、日結屬高風險功能。
 - 禁止永久 Patch／Override／Hotfix 層；禁止 MutationObserver／DOM 掃描補自己已有 State；禁止所有 State Change 重畫整個 App。
 - 第一次 Fix 失敗必須 STOP 查根因，唔可以直接疊第二層 Fix。
+- Adaptive Core 只可控制尺寸／密度／Profile／Available Area；不得建立第二套 Component／Domain／Checkout／Pricing／Print。
+- 重要修改完成後必須同步 MFKG／Decision／Implementation Status／Code Map（按影響範圍）。
 
 ## 現況判斷方式
 
@@ -52,23 +64,28 @@
 
 ## 按任務載入
 
-- 最高規範：`docs/SMT_DEVELOPMENT_CHARTER_V1.0.md`
+- 三份最高標準：`docs/SMT_DEVELOPMENT_CHARTER_V1.0.md` + `docs/MFKG_STANDARD_V1.0.md` + `docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`
+- 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
 - UI：Current Lock + `docs/ai-context/SMT_CODE_MAP.md`
 - Bug：`SMT_CHANGE_IMPACT.md` + 對應測試
 - 現況：`docs/ai-context/SMT_IMPLEMENTATION_STATUS.md`
 - 決策：`docs/ai-context/SMT_DECISION_LEDGER.md`
 - Chat：`SMT_AI_CONTEXT_PACK.md`
-- 機器查詢：`SMT_KNOWLEDGE_GRAPH.json`
 
 ## 開工格式
 
 任何新 AI／新對話接手第一輪，先回覆：
 
 ```text
-【憲章】
-已閱讀 SMT Development Charter V1.0：是／否
+【SMT Development Standard】
+Development Charter 已閱讀：是／否
+MFKG Standard 已閱讀：是／否
+Adaptive Application Standard 已閱讀：是／否
 
 【本次 Domain】
+
+【MFKG】
+涉及 Node／Edge：
 
 【正式責任來源】
 
@@ -76,12 +93,14 @@
 第二套邏輯：無／有
 Observer：無／有
 Override／Patch：無／有
+整頁 Scale／第二套 Responsive UI：無／有
 
 【影響】
 Checkout：
-Responsive：
+Adaptive／Responsive：
 資料：
 打印：
+跨端：
 
 【測試／回滾】
 ```
