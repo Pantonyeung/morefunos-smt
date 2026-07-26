@@ -47,15 +47,24 @@ function syncChildOverlay(frame){
     setChildOverlayState(frame,open);
   }catch(_error){}
 }
+function stopChildOverlayObserver(frame){
+  try{
+    frame?._shellOverlayObserver?.disconnect?.();
+    if(frame)frame._shellOverlayObserver=null;
+    const doc=frame?.contentDocument;
+    if(doc?.documentElement)delete doc.documentElement.dataset.shellOverlayObserver;
+  }catch(_error){}
+}
 
 function installChildOverlayObserver(frame){
   try{
-    if(frame?.dataset?.route==='order')return;
+    if(frame?.dataset?.route==='order'||frame!==activeFrame)return;
     const doc=frame?.contentDocument;
-    if(!doc?.documentElement||doc.documentElement.dataset.shellOverlayObserver==='1')return;
+    if(!doc?.documentElement||frame._shellOverlayObserver)return;
     doc.documentElement.dataset.shellOverlayObserver='1';
     const observer=new MutationObserver(()=>syncChildOverlay(frame));
     observer.observe(doc.body||doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
+    frame._shellOverlayObserver=observer;
     syncChildOverlay(frame);
   }catch(error){console.warn('GLOBAL_SHELL_OVERLAY_OBSERVER_FAILED',error);}
 }
@@ -118,7 +127,7 @@ function showLoaderError(message,target=activeFrame){
 function attachFrame(frame,key){
   frame.dataset.route=key;frame.title='磨飯 SMT｜'+(labels[key]||key);allFrames.add(frame);frameByRoute.set(key,frame);
   frame.addEventListener('error',()=>showLoaderError('子頁載入失敗，資料仍保存在本機。',frame));
-  frame.addEventListener('load',()=>applyProfileToFrame(frame));
+  frame.addEventListener('load',()=>{delete frame.dataset.appliedProfile;applyProfileToFrame(frame);});
 }
 function createHiddenFrame(key){const frame=document.createElement('iframe');frame.className='shell-page is-loading';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;attachFrame(frame,key);stage.appendChild(frame);return frame;}
 function findSourceFrame(source){return frameList().find(frame=>source===frame.contentWindow)||null;}
@@ -126,13 +135,14 @@ function findSourceFrame(source){return frameList().find(frame=>source===frame.c
 function setActiveFrame(frame,key){
   if(!frame)return;
   const old=activeFrame;
-  if(old&&old!==frame){old.classList.remove('is-active','is-loading','has-shell-overlay');old.setAttribute('aria-hidden','true');old.tabIndex=-1;if(old.id==='page')old.id='page-cache-'+String(old.dataset.route||'route');}
+  if(old&&old!==frame){stopChildOverlayObserver(old);old.classList.remove('is-active','is-loading','has-shell-overlay');old.setAttribute('aria-hidden','true');old.tabIndex=-1;if(old.id==='page')old.id='page-cache-'+String(old.dataset.route||'route');}
   shellApp?.classList.remove('child-overlay-active');
   const existingPage=document.getElementById('page');if(existingPage&&existingPage!==frame)existingPage.removeAttribute('id');
   frame.id='page';frame.classList.remove('is-loading');frame.classList.add('is-active');frame.setAttribute('aria-hidden','false');frame.removeAttribute('tabindex');
   activeFrame=frame;current=key;pending='';childReady=true;clearTimeout(watchdogTimer);stage.dataset.route=current;delete stage.dataset.pendingRoute;
   if(key==='checkout')checkoutExitArmed='';
   setShellRouteUi(key,{loading:false});
+  applyChildShellMode(frame);
   if(key!=='order')syncChildOverlay(frame);else setChildOverlayState(frame,frame.classList.contains('has-shell-overlay'));
   try{
     if(key==='checkout')frame.contentWindow?.postMessage({type:'morefun:checkout-enter',route:key},'*');
@@ -144,7 +154,7 @@ function armWatchdog(frame,key){clearTimeout(watchdogTimer);watchdogTimer=setTim
 function ensureFrameLoading(key,{force=false,background=false}={}){
   let frame=frameByRoute.get(key);
   if(!frame){frame=createHiddenFrame(key);frame.src=pageUrl(key,force?'reload':'normal');return frame;}
-  if(force){readyRoutes.delete(key);frame.classList.add('is-loading');frame.classList.remove('is-active');frame.setAttribute('aria-hidden','true');delete frame.dataset.appliedProfile;frame.src=pageUrl(key,'reload');}
+  if(force){readyRoutes.delete(key);stopChildOverlayObserver(frame);frame.classList.add('is-loading');frame.classList.remove('is-active');frame.setAttribute('aria-hidden','true');delete frame.dataset.appliedProfile;frame.src=pageUrl(key,'reload');}
   if(background)frame.classList.add('is-loading');
   return frame;
 }
