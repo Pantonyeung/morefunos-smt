@@ -245,7 +245,7 @@ function healthIssueCount(state){return Object.values(state.health).filter(item=
 function pendingOrderCount(state){return Object.values(state.pendingOrders||{}).flat().length;}
 function topbar(){
   const state=store.get();const issues=healthIssueCount(state),pendingCount=pendingOrderCount(state),soldout=products.filter(item=>supplyStatus(item)!=='available').length;
-  return renderGlobalStatusBar({terminalId,operationLabel:operationLabel(state),operationTone:state.operations.acceptingOrders&&!state.operations.immediateStopped?'online':'offline',lastOrder:latestOrderDisplayNumber([...readJSON(ORDER_HISTORY_STORAGE_KEY,[]),...activeDineOrderIdentities(readJSON(DINE_STORAGE_KEY,null))]),context:state.dineContext?'堂食｜'+state.dineContext.tableId+' 號枱':'',rightActions:'<button class="top-btn" data-action="toggle-pending-panel">待處理 <span class="badge">'+pendingCount+'</span></button><button class="top-btn" data-action="open-soldout">售罄 '+soldout+'</button><button class="top-btn" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button>'});
+  return renderGlobalStatusBar({terminalId,operationLabel:operationLabel(state),operationTone:state.operations.acceptingOrders&&!state.operations.immediateStopped?'online':'offline',lastOrder:latestOrderDisplayNumber([...readJSON(ORDER_HISTORY_STORAGE_KEY,[]),...activeDineOrderIdentities(readJSON(DINE_STORAGE_KEY,null))]),context:state.dineContext?'堂食｜'+state.dineContext.tableId+' 號枱':'',rightActions:'<button class="top-btn" data-action="toggle-pending-panel">待處理 <span class="badge">'+pendingCount+'</span></button><button class="top-btn" data-action="open-soldout">售罄 '+soldout+'</button><button class="top-btn quick-state '+(state.quickMode?'is-on':'is-off')+'" data-action="open-quick-settings">快捷 '+(state.quickMode?'ON':'OFF')+'</button><button class="top-btn health-button '+(issues?'has-error':'is-ok')+'" data-action="open-health"><span>'+(issues?'!':'✓')+'</span>'+(issues?'設備 '+issues:'設備正常')+'</button><button class="top-btn" data-action="open-settings">顯示設定</button>'});
 }
 function draftRows(selectedId=''){
   return drafts.map(d=>'<button class="draft-pick '+(selectedId===d.id?'selected':'')+'" data-action="select-draft" data-id="'+escapeHtml(d.id)+'"><strong>'+escapeHtml(d.draftNumber)+'</strong><small>'+new Date(d.createdAt).toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'})+'｜'+d.cart.reduce((n,l)=>n+Number(l.qty||0),0)+' 件｜'+money(cartTotal(d.cart))+'</small></button>').join('')||'<p class="receipt-empty">目前沒有暫存單</p>';
@@ -438,6 +438,7 @@ function activeModal(){
   return '';
 }
 function anchorRect(button){const r=button?.getBoundingClientRect?.();return r?{left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}:null;}
+function actionAnchor(button,override=null){return override||anchorRect(button);}
 function positionActiveCard(){
   const card=document.querySelector('.side-card,.product-settings-card,.modifier-card,.pending-panel,.pending-review-card,.proof-lightbox');const a=modal?.anchor;if(!card||!a)return;
   const topbarRect=document.querySelector('.topbar')?.getBoundingClientRect(),bottomNavRect=document.querySelector('.bottom-nav')?.getBoundingClientRect();
@@ -549,27 +550,27 @@ function applyDrink(){
   if(appliedTarget&&selections[0]){lastDrinkAssignment={drink:selections[0].name,target:appliedTarget.name};clearTimeout(drinkFeedbackTimer);drinkFeedbackTimer=setTimeout(()=>{lastDrinkAssignment=null;render();},3200);}
   pendingDrinkAssignment=null;modal=null;render();showToast('已補選飲品');
 }
-function handle(button){
+function handle(button,anchorOverride=null){
   const action=button.dataset.action;
   if(action==='shell-navigate'){const route=button.dataset.route;if(route==='dine'&&store.get().dineContext)return requestDineCancellation();if(route!=='order')window.parent?.postMessage?.({type:'morefun:navigate',route},'*');return;}
   if(store.get().quickDrawerOpen)scheduleQuickDrawerClose();
   if(action==='category')store.set(state=>({...state,category:button.dataset.value}));
-  else if(action==='open-search'){modal={type:'search',anchor:anchorRect(button),dirty:false};render();}
+  else if(action==='open-search'){modal={type:'search',anchor:actionAnchor(button,anchorOverride),dirty:false};render();}
   else if(action==='clear-search'){store.set(state=>({...state,searchQuery:''}));render();}
-  else if(action==='open-product')openProduct(button.dataset.id,'',anchorRect(button));
+  else if(action==='open-product')openProduct(button.dataset.id,'',actionAnchor(button,anchorOverride));
   else if(action==='quick-add-product')quickAddProduct(button.dataset.id);
   else if(action==='cart-qty')changeCartQuantity(button.dataset.id,Number(button.dataset.delta)||0);
   else if(action==='toggle-order-service')store.set(state=>{const next=state.orderServiceMode===SERVICE_DINE_IN?SERVICE_TAKEAWAY:SERVICE_DINE_IN;return {...state,orderServiceMode:next,cart:applyOrderServiceMode(state.cart,next),lastAffectedLineId:'',lastMutationKind:''};});
   else if(action==='toggle-line-service')store.set(state=>({...state,cart:toggleLineServiceMode(state.cart,button.dataset.id,state.orderServiceMode),lastAffectedLineId:button.dataset.id,lastMutationKind:'changed'}));
   else if(action==='toggle-cart-view')saveCartViewMode(store.get().cartViewMode===CART_VIEW_ORGANIZED?CART_VIEW_INPUT:CART_VIEW_ORGANIZED);
   else if(action==='toggle-cart-category')store.set(state=>{const category=button.dataset.value;const collapsed=state.collapsedCartCategories.includes(category);return {...state,collapsedCartCategories:collapsed?state.collapsedCartCategories.filter(item=>item!==category):state.collapsedCartCategories.concat(category)};});
-  else if(action==='edit-line'){const line=store.get().cart.find(x=>x.lineId===button.dataset.id);if(line?.lineType==='combo'){modal={type:'combo',lineId:line.lineId,anchor:anchorRect(button),dirty:false,draft:{components:safeClone(line.combo?.components||[])}};render();}else if(line)openProduct(line.productId,line.lineId,anchorRect(button));}
+  else if(action==='edit-line'){const line=store.get().cart.find(x=>x.lineId===button.dataset.id);if(line?.lineType==='combo'){modal={type:'combo',lineId:line.lineId,anchor:actionAnchor(button,anchorOverride),dirty:false,draft:{components:safeClone(line.combo?.components||[])}};render();}else if(line)openProduct(line.productId,line.lineId,actionAnchor(button,anchorOverride));}
   else if(action==='open-completion'){modal={type:'completion',dirty:false,draft:{activeGroup:'',activeTarget:'',assignments:{}}};render();}
-  else if(action==='open-quick-settings'){modal={type:'quick',anchor:anchorRect(button),dirty:false};render();}
-  else if(action==='open-settings'){modal={type:'settings',anchor:anchorRect(button),dirty:false};render();}
-  else if(action==='open-health'){modal={type:'health',anchor:anchorRect(button),dirty:false};render();}
-  else if(action==='open-status'){modal={type:'status',anchor:anchorRect(button),dirty:false};render();}
-  else if(action==='open-soldout'){modal={type:'soldout',anchor:anchorRect(button),dirty:false};render();}
+  else if(action==='open-quick-settings'){modal={type:'quick',anchor:actionAnchor(button,anchorOverride),dirty:false};render();}
+  else if(action==='open-settings'){modal={type:'settings',anchor:actionAnchor(button,anchorOverride),dirty:false};render();}
+  else if(action==='open-health'){modal={type:'health',anchor:actionAnchor(button,anchorOverride),dirty:false};render();}
+  else if(action==='open-status'){modal={type:'status',anchor:actionAnchor(button,anchorOverride),dirty:false};render();}
+  else if(action==='open-soldout'){modal={type:'soldout',anchor:actionAnchor(button,anchorOverride),dirty:false};render();}
   else if(action==='navigate-orders')window.parent?.postMessage?.({type:'morefun:navigate',route:'orders'},'*');
   else if(action==='navigate-dine')requestDineCancellation();
   else if(action==='navigate-soldout')window.parent?.postMessage?.({type:'morefun:navigate',route:'soldout'},'*');
@@ -602,7 +603,7 @@ function handle(button){
   else if(action==='confirm-discard'){modal=confirmState?.returnModal||null;confirmState=null;render();}
   else if(action==='confirm-dine-cancel')completeDineCancellation();
   else if(action==='confirm-dissolve'){const lineId=confirmState.lineId;store.set(state=>{state.cart=normalizeCart(dissolveRiceballSet(state.cart,lineId,{idFactory:role=>stableId('line-'+role)}),state.orderServiceMode);state.lastAffectedLineId=state.cart.at(-1)?.lineId||'';state.lastMutationKind='changed';return state;});confirmState=null;modal=null;render();showToast('套餐已拆開並按單品重新計價');}
-  else if(action==='toggle-pending-panel'){if(modal?.type==='pending')modal=null;else modal={type:'pending',anchor:anchorRect(button),dirty:false};render();}
+  else if(action==='toggle-pending-panel'){if(modal?.type==='pending')modal=null;else modal={type:'pending',anchor:actionAnchor(button,anchorOverride),dirty:false};render();}
   else if(action==='process-pending-order'){const pendingOrders=store.get().pendingOrders;const order=Object.values(pendingOrders).flat().find(x=>x.id===button.dataset.id);if(order){modal={type:'pending-detail',order,anchor:modal?.anchor,dirty:false};showToast('開啟 '+order.id+' 核對流程');render();}}
   else if(action==='start-pending-review'){modal={type:'pending-review',order:modal.order,anchor:modal.anchor,dirty:false};render();}
   else if(action==='enlarge-proof'){modal={type:'proof',order:modal.order,anchor:modal.anchor,dirty:false};render();}
@@ -628,7 +629,7 @@ function handle(button){
     else if(multi){const arr=modal.draft.options[g]||[];modal.draft.options[g]=arr.includes(v)?arr.filter(x=>x!==v):arr.concat(v);}else modal.draft.options[g]=modal.draft.options[g]===v?'':v;
     render();
   }
-  else if(action==='detail-drink'){const parent=modal;modal={type:'drink',drinkId:button.dataset.id,context:'detail',maxQty:parent.draft.qty,parent,anchor:anchorRect(button),dirty:false,draft:{qty:parent.draft.qty,sweetness:'',ice:'',groups:[]}};render();}
+  else if(action==='detail-drink'){const parent=modal;modal={type:'drink',drinkId:button.dataset.id,context:'detail',maxQty:parent.draft.qty,parent,anchor:actionAnchor(button,anchorOverride),dirty:false,draft:{qty:parent.draft.qty,sweetness:'',ice:'',groups:[]}};render();}
   else if(action==='detail-qty'){markDirty();modal.draft.qty=Math.max(1,modal.draft.qty+Number(button.dataset.delta));render();}
   else if(action==='toggle-keypad'){modal.draft.keypad=!modal.draft.keypad;render();}
   else if(action==='keypad'){const key=button.dataset.key;if(key==='完成')modal.draft.keypad=false;else if(key==='←')modal.draft.keypadValue=modal.draft.keypadValue.slice(0,-1);else modal.draft.keypadValue=(modal.draft.keypadValue+key).replace(/^0+(?=\d)/,'');if(modal.draft.keypadValue)modal.draft.qty=Math.max(1,Number(modal.draft.keypadValue));markDirty();render();}
@@ -640,7 +641,7 @@ function handle(button){
   else if(action==='apply-drink')applyDrink();
   else if(action==='quick-drink'){
     if(store.get().settings.quickDrinks.quickAssist===false){showToast('快捷補選已關閉');return;}
-    const target=findDrinkTarget(store.get().cart),missing=pendingSummary(store.get().cart).drink;if(!missing||!target){showToast('目前沒有待補飲品');return;}pendingDrinkAssignment={lineId:target.lineId,name:target.name};openDrink(button.dataset.id,'global',missing,anchorRect(button));
+    const target=findDrinkTarget(store.get().cart),missing=pendingSummary(store.get().cart).drink;if(!missing||!target){showToast('目前沒有待補飲品');return;}pendingDrinkAssignment={lineId:target.lineId,name:target.name};openDrink(button.dataset.id,'global',missing,actionAnchor(button,anchorOverride));
   }
   else if(action==='complete-group'){modal.draft=completionDraft(button.dataset.group);modal.dirty=false;render();}
   else if(action==='completion-back'){modal.draft={activeGroup:'',activeTarget:'',assignments:{}};modal.dirty=false;render();}
@@ -655,7 +656,7 @@ function handle(button){
   }
   else if(action==='apply-required-group')applyRequiredGroup();
   else if(action==='linkup-all')applyLinkUp(Number(button.dataset.count)||0);
-  else if(action==='open-specified-link'){const count=pairingGroupCount(store.get().cart),groups=Array.from({length:count},()=>({main:'',snack:'',drink:''}));if(!count){showToast('需要主餐及小食才可指定配對');return;}modal={type:'specified-link',anchor:anchorRect(button),dirty:false,draft:{groups,active:0}};render();}
+  else if(action==='open-specified-link'){const count=pairingGroupCount(store.get().cart),groups=Array.from({length:count},()=>({main:'',snack:'',drink:''}));if(!count){showToast('需要主餐及小食才可指定配對');return;}modal={type:'specified-link',anchor:actionAnchor(button,anchorOverride),dirty:false,draft:{groups,active:0}};render();}
   else if(action==='select-pairing-group'){modal.draft.active=Number(button.dataset.index)||0;render();}
   else if(action==='select-link-item'){const group=modal.draft.groups[modal.draft.active],role=button.dataset.role;group[role]=group[role]===button.dataset.id?'':button.dataset.id;render();}
   else if(action==='select-link-drink'){const group=modal.draft.groups[modal.draft.active];group.drink=group.drink===button.dataset.id?'':button.dataset.id;render();}
@@ -677,6 +678,7 @@ function handle(button){
     window.parent?.postMessage?.({type:'morefun:navigate',route:'checkout'},'*');
   }
 }
+app.addEventListener('morefun:status-action',event=>{const button=event.target.closest('[data-action]');if(!button||button.disabled)return;event.preventDefault();handle(button,event.detail?.anchor||null);});
 app.addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});
 app.addEventListener('pointerdown',event=>{if(event.target.closest('.quick-drawer-panel'))scheduleQuickDrawerClose();});
 app.addEventListener('input',event=>{if(event.target.matches('[data-action="detail-note"]')&&modal?.type==='product'){modal.draft.note=event.target.value;markDirty();return;}if(event.target.matches('[data-action="search-query"]')&&modal?.type==='search'){const value=event.target.value;store.set(state=>({...state,searchQuery:value}));render();requestAnimationFrame(()=>{const input=document.querySelector('[data-action="search-query"]');if(input){input.focus();input.setSelectionRange(value.length,value.length);}});}});
