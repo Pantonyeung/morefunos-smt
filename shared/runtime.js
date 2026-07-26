@@ -8,14 +8,23 @@ export function safeClone(value){
 }
 
 export function createRenderQueue(renderFn){
-  let scheduled=false;
+  let frame=0;
   let rendering=false;
   let pending=false;
+  let afterRenderCallbacks=[];
   function run(){
-    scheduled=false;
+    if(frame){cancelAnimationFrame(frame);frame=0;}
     if(rendering){pending=true;return;}
     rendering=true;
-    try{renderFn();}
+    try{
+      renderFn();
+      const callbacks=afterRenderCallbacks;
+      afterRenderCallbacks=[];
+      callbacks.forEach(callback=>{
+        try{callback();}
+        catch(error){window.dispatchEvent(new CustomEvent('morefun:runtime-error',{detail:error}));}
+      });
+    }
     catch(error){window.dispatchEvent(new CustomEvent('morefun:runtime-error',{detail:error}));}
     finally{
       rendering=false;
@@ -23,11 +32,14 @@ export function createRenderQueue(renderFn){
     }
   }
   function schedule(){
-    if(scheduled)return;
-    scheduled=true;
-    requestAnimationFrame(run);
+    if(frame)return;
+    frame=requestAnimationFrame(run);
   }
-  return {schedule,flush:run};
+  function afterRender(callback){
+    if(typeof callback==='function')afterRenderCallbacks.push(callback);
+    schedule();
+  }
+  return {schedule,flush:run,afterRender};
 }
 
 export function createStore(initialState,options={}){
