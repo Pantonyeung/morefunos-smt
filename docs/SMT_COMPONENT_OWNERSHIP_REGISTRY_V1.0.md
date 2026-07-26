@@ -47,7 +47,7 @@
 | Category / Search Surface | `pages/order/page.js` + `pages/order/page.css` | `category-layout.js` | Adaptive 重畫分類 DOM |
 | Product Card DOM / Visual | `pages/order/page.js` + `pages/order/page.css` | Adaptive row tokens | `adaptive-layout.css` 直接改產品卡內部 Style |
 | Cart DOM | `pages/order/page.js` | `order-domain.js` | Shared Runtime 建第二 Cart |
-| Cart Visual / Geometry | `pages/order/cart.css` | `--adaptive-cart-*` tokens | `adaptive-layout.css` 再 selector `.cart-row/.seq-service/...` |
+| Cart Visual / Geometry | `pages/order/cart.css` | `--adaptive-cart-*` tokens | `page.css`／`adaptive-layout.css` 再 selector Cart 內部 |
 | 外／堂＋序號 Marker | `pages/order/cart.css` | `--adaptive-cart-marker` | 任何 Shared CSS 再定義 Marker |
 | Cart View 原單／整理 | `pages/order/order-domain.js` | page.js render | UI 自己排序第二套資料 |
 | Order Service Mode | `pages/order/order-domain.js` | page.js action | Cart CSS／Checkout 自己推斷第二套 |
@@ -82,19 +82,20 @@
 
 ## 6. 現存 Ownership Violations（必須清理）
 
-### V1 — Order Cart Visual Dual Owner
+### V1 — Order Cart Visual 多 Owner
+- `pages/order/page.css`
 - `pages/order/cart.css`
 - `shared/adaptive-layout.css`
 
-狀態：**MIGRATION REQUIRED**
+狀態：**MIGRATION REQUIRED / HIGH PRIORITY**
 
-目標：`cart.css` 成為唯一 Visual Owner；Adaptive 只提供 `--adaptive-cart-*` Token。
+目標：`cart.css` 成為唯一 Visual Owner；`page.css` 移除 Cart 內部 Style；Adaptive 只提供 `--adaptive-cart-*` Token。
 
 ### V2 — Drink Card Visual Dual Owner
 - `pages/order/page.css`
 - `pages/order/cart.css`
 
-狀態：**MIGRATION REQUIRED**
+狀態：**MIGRATION REQUIRED / HIGH PRIORITY**
 
 目標：`page.css` 成為 Drink Card 唯一 Visual Owner；`cart.css` 只管理 Quick Drawer／Required Grid 容器。
 
@@ -117,12 +118,49 @@
 ### V5 — Legacy Child Global Chrome
 - `shared/shell.js` 仍可 render child `global-statusbar` / `bottom-nav`
 - Global Shell 已有真正 `global-shell-status` / `global-bottom-nav`
+- `shared/page-base.css` 仍保留 child global chrome 視覺
 
 狀態：**MIGRATION REQUIRED**
 
 目標：Global Shell 模式下 Child Page 不再建立第二套 Global Chrome；Standalone QA 如有需要，必須明確標示 QA-only，不可成為 Runtime Owner。
 
-## 7. 修改前 Ownership Gate
+### V6 — Adaptive CSS 直接成為 Page Component 第二 Owner
+- `shared/adaptive-layout.css` 直接 selector Order Product／Cart／Orders Component
+- 各 Page CSS 同時管理同一元件
+
+狀態：**MIGRATION REQUIRED / HIGH PRIORITY**
+
+目標：`adaptive-layout.js` 只計算 CSS Variable；Component Owner CSS 消費 Token；`adaptive-layout.css` 不再進入 Component 內部 selector。
+
+### V7 — Responsive Pages CSS 直接成為第二 Page Owner
+- `shared/responsive-pages.css` 直接 selector Orders／Dine／Soldout／More 內部元件
+- 各頁 Page CSS 同時控制相同 Component
+
+狀態：**MIGRATION REQUIRED**
+
+目標：Responsive Core 只提供 profile／token；各頁唯一 Owner CSS 自己使用 token。
+
+### V8 — Shared Page Base 保留 Legacy Page Chrome
+- `shared/page-base.css` 定義 `.topbar/.bottom-nav/.global-statusbar` 等 legacy child chrome
+- `app-shell.css` 已管理正式 Global Shell
+
+狀態：**MIGRATION REQUIRED**
+
+目標：正式 Runtime 只保留 `app-shell.css` Global Chrome；Page Base 只保留真正 page primitive／modal primitive／token。
+
+## 7. Ownership Cleanup 順序
+
+1. V1 Order Cart Visual
+2. V2 Drink Card Visual
+3. V3 Global Page Actions
+4. V4 Global Overlay State
+5. V5 / V8 Legacy Child Global Chrome
+6. V6 Adaptive Direct Selectors
+7. V7 Responsive Pages Direct Selectors
+
+在 V1–V4 未完成前，禁止再新增點單頁視覺補丁或 Global Shell workaround。
+
+## 8. 修改前 Ownership Gate
 
 每次修改前必須回答：
 
@@ -135,7 +173,7 @@
 
 任何一題答「有第二 Owner」：STOP，先完成 Ownership Consolidation。
 
-## 8. Definition of Done
+## 9. Definition of Done
 
 一個 Component 只有同時符合以下先可以叫完成：
 
