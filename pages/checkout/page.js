@@ -19,8 +19,8 @@ import { checkoutConfig } from "./page-config.js";
 import {defaultPrinterState,createPrintJobs} from "../more/print-domain.js";
 import {activeDineOrderIdentities,createOrderIdentity,orderDisplayNumber} from "../../shared/order-identity.js";
 
-const app = document.getElementById("app"),
-  order = readJSON(ORDER_STORAGE_KEY, { cart: [] });
+const app = document.getElementById("app");
+let order = readJSON(ORDER_STORAGE_KEY, { cart: [] });
 const terminalId = normalizeTerminalId(
   localStorage.getItem(TERMINAL_ID_STORAGE_KEY) ||
     new URLSearchParams(location.search).get("terminal") ||
@@ -37,6 +37,24 @@ let channel = "現場",
   completedRecord = null,
   correctionOpen = false,
   correctionReason = "";
+
+function resetTransactionUi(){
+  channel="現場";
+  payment="現金";
+  receivedInput="";
+  discount={type:"none"};
+  discountPanel=false;
+  keypadTarget="received";
+  channelData={};
+  completedRecord=null;
+  correctionOpen=false;
+  correctionReason="";
+}
+function hydrateLatestOrder(){
+  order=readJSON(ORDER_STORAGE_KEY,{cart:[]})||{cart:[]};
+  resetTransactionUi();
+  render();
+}
 
 function pricing() {
   try {
@@ -81,17 +99,7 @@ function discountCard(result) {
 }
 function correctionCard() {
   const policy = getChannelPolicy(channel);
-  return `<section class="correction-card panel"><header><h3>更正資料</h3><button data-action="correction-close">×</button></header><label>渠道</label><div class="row channels">${checkoutConfig.channels.map((value) => `<button data-action="correction-channel" data-value="${value}" class="${channel === value ? "active" : ""}">${value}</button>`).join("")}</div>${
-    policy.requiresPaymentMethod
-      ? `<label>付款方式</label><div class="row payments">${policy.paymentMethods
-          .filter(Boolean)
-          .map(
-            (value) =>
-              `<button data-action="correction-payment" data-value="${value}" class="${payment === value ? "active" : ""}">${value}</button>`,
-          )
-          .join("")}</div>`
-      : ""
-  }<label>更正原因（必填）</label><textarea data-correction-reason placeholder="例如：揀錯付款方式">${escapeHtml(correctionReason)}</textarea><footer><button data-action="correction-save">保存更正</button></footer></section>`;
+  return `<section class="correction-card panel"><header><h3>更正資料</h3><button data-action="correction-close">×</button></header><label>渠道</label><div class="row channels">${checkoutConfig.channels.map((value) => `<button data-action="correction-channel" data-value="${value}" class="${channel === value ? "active" : ""}">${value}</button>`).join("")}</div>${policy.requiresPaymentMethod ? `<label>付款方式</label><div class="row payments">${policy.paymentMethods.filter(Boolean).map((value) => `<button data-action="correction-payment" data-value="${value}" class="${payment === value ? "active" : ""}">${value}</button>`).join("")}</div>` : ""}<label>更正原因（必填）</label><textarea data-correction-reason placeholder="例如：揀錯付款方式">${escapeHtml(correctionReason)}</textarea><footer><button data-action="correction-save">保存更正</button></footer></section>`;
 }
 function completedCard() {
   if (!completedRecord) return "";
@@ -318,4 +326,10 @@ function handle(button) {
   }
   render();
 }
+
+addEventListener('message',event=>{
+  const message=event.data||{};
+  if(message.type==='morefun:checkout-enter'||(message.type==='morefun:page-activate'&&message.route==='checkout'))hydrateLatestOrder();
+});
+
 render();
