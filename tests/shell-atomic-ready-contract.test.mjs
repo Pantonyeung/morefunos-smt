@@ -20,7 +20,18 @@ test('page ready waits for stable frames',()=>{
   assert.match(bridge,/requestAnimationFrame\(\(\)=>requestAnimationFrame\(ready\)\)/);
 });
 
-test('order overlay state can be event driven',()=>{
+test('order overlay state stays event driven',()=>{
   assert.match(loader,/morefun:overlay-state/);
   assert.match(loader,/frame\?\.dataset\?\.route==='order'/);
+});
+
+test('responsive profile writes are deduplicated per frame',()=>{
+  assert.match(loader,/function profileSignature\(/);
+  assert.match(loader,/frame\.dataset\.appliedProfile!==signature/);
+});
+
+test('inactive preloaded pages do not keep overlay observers running',()=>{
+  assert.match(loader,/function stopChildOverlayObserver\(/);
+  assert.match(loader,/frame!==activeFrame/);
+  assert.match(loader,/stopChildOverlayObserver\(old\)/);
 });
