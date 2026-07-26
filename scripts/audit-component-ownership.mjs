@@ -36,6 +36,18 @@ const checks=[
     ]
   },
   {
+    id:'DRINK_CARD_VISUAL_SINGLE_OWNER',
+    description:'Drink Choice Card visual must only be owned by pages/order/page.css',
+    owner:'pages/order/page.css',
+    forbidden:[
+      ['pages/order/cart.css','.drink-choice-card'],
+      ['pages/order/cart.css','.drink-choice-img'],
+      ['pages/order/cart.css','.drink-choice-count'],
+      ['shared/adaptive-layout.css','.drink-choice-card'],
+      ['shared/responsive-pages.css','.drink-choice-card']
+    ]
+  },
+  {
     id:'PACKAGING_DOMAIN_SINGLE_OWNER',
     description:'Packaging pricing truth must remain in order-domain.js',
     owner:'pages/order/order-domain.js',
@@ -52,11 +64,6 @@ const knownMigrations=[
     id:'V1_ORDER_CART_MULTI_OWNER',
     files:['pages/order/page.css','pages/order/cart.css','shared/adaptive-layout.css'],
     needles:['.cart-row','.cart-img','.pending-area','.cart footer']
-  },
-  {
-    id:'V2_DRINK_CARD_MULTI_OWNER',
-    files:['pages/order/page.css','pages/order/cart.css'],
-    needles:['.drink-choice-card','.drink-choice-img']
   },
   {
     id:'V3_STATUS_ACTION_DOM_OBSERVER',
