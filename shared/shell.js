@@ -9,9 +9,24 @@ const navItems=[
 ];
 
 function icon(paths){return `<svg class="shell-nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;}
+function registerPageActions(rightActions=''){
+  if(typeof document==='undefined'||!rightActions)return rightActions;
+  const template=document.createElement('template');
+  template.innerHTML=rightActions;
+  const page=document.body?.dataset?.page||'page';
+  const actions=[...template.content.querySelectorAll('button')].map((button,index)=>{
+    const action=button.dataset.action||button.dataset.route||'action';
+    const sourceId=`${page}-${action}-${index}`;
+    button.dataset.shellSourceId=sourceId;
+    return {id:sourceId,sourceId,className:button.className||'',html:button.innerHTML,disabled:Boolean(button.disabled),ariaLabel:button.getAttribute('aria-label')||button.textContent?.trim()||''};
+  });
+  queueMicrotask(()=>window.MoreFunPageBridge?.setStatusActions?.(actions));
+  return template.innerHTML;
+}
 
 export function renderGlobalStatusBar({terminalId='SMT',operationLabel='接單中',operationTone='online',lastOrder='—',context='',rightActions=''}={}){
-  return `<header class="topbar global-statusbar"><div class="brand shell-brand"><span class="shell-brand-mark">磨</span><strong>磨飯 SMT</strong></div><span class="shell-terminal">${escape(terminalId)}</span>${context?`<span class="shell-context">${escape(context)}</span>`:''}<span class="shell-operation ${escape(operationTone)}"><i></i>${escape(operationLabel)}</span><div class="shell-last-order"><small>最近訂單</small><strong>${escape(lastOrder||'—')}</strong></div><div class="spacer"></div><div class="shell-actions">${rightActions}</div></header>`;
+  const registeredActions=registerPageActions(rightActions);
+  return `<header class="topbar global-statusbar"><div class="brand shell-brand"><span class="shell-brand-mark">磨</span><strong>磨飯 SMT</strong></div><span class="shell-terminal">${escape(terminalId)}</span>${context?`<span class="shell-context">${escape(context)}</span>`:''}<span class="shell-operation ${escape(operationTone)}"><i></i>${escape(operationLabel)}</span><div class="shell-last-order"><small>最近訂單</small><strong>${escape(lastOrder||'—')}</strong></div><div class="spacer"></div><div class="shell-actions">${registeredActions}</div></header>`;
 }
 
 export function renderBottomNav(activeRoute,{badges={}}={}){
