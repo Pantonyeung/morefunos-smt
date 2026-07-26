@@ -8,8 +8,10 @@ const read = path => readFile(new URL(path, root), 'utf8');
 test('Work and Chat entries point to current baseline', async () => {
   const [agents, start, compact, pack] = await Promise.all([read('AGENTS.md'), read('SMT_AI_START_HERE.md'), read('SMT_CONTEXT_MIN.md'), read('SMT_AI_CONTEXT_PACK.md')]);
   assert.match(agents, /SMT_AI_START_HERE\.md/);
-  assert.match(start, /order-v1-31/);
-  assert.match(compact, /order-v1-31/);
+  assert.match(start, /smt-functional-completeness-v1/);
+  assert.match(start, /SMT_DEVELOPMENT_CHARTER_V1\.0/);
+  assert.match(compact, /smt-functional-completeness-v1/);
+  assert.match(compact, /SMT Development Standard/);
   assert.match(pack, /SMT CHECKPOINT/);
   assert.match(pack, /token 不足不是阻止開發的理由/);
 });
@@ -23,7 +25,7 @@ test('knowledge graph edges resolve and carry evidence', async () => {
   for (const edge of graph.edges) {
     assert.ok(ids.has(edge.from));
     assert.ok(ids.has(edge.to));
-    assert.ok(['EXTRACTED', 'INFERRED'].includes(edge.evidence));
+    assert.ok(graph.evidenceTypes.includes(edge.evidence));
   }
 });
 

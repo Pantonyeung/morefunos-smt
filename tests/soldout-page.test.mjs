@@ -4,7 +4,7 @@ import fs from 'node:fs';
 
 const page=fs.readFileSync(new URL('../pages/soldout/page.js',import.meta.url),'utf8');
 const css=fs.readFileSync(new URL('../pages/soldout/page.css',import.meta.url),'utf8');
-const enhancements=fs.readFileSync(new URL('../pages/soldout/soldout-enhancements.css',import.meta.url),'utf8');
+const adaptive=fs.readFileSync(new URL('../shared/adaptive-layout.css',import.meta.url),'utf8');
 const loader=fs.readFileSync(new URL('../app-loader.js',import.meta.url),'utf8');
 
 test('售罄頁沿用產品分類與三種點單卡模板',()=>{
@@ -55,9 +55,9 @@ test('提供紫米快捷操作、售罄獨立分類及清晰狀態卡',()=>{
   assert.match(page,/紫米恢復/);
   assert.match(page,/data-value="售罄"/);
   assert.match(page,/status==='soldout'\?'soldout':status==='paused'\?'paused'/);
-  assert.doesNotMatch(enhancements,/grayscale\(/);
-  assert.match(enhancements,/\.supply-product\.soldout/);
-  assert.match(enhancements,/\.supply-product\.paused/);
+  assert.doesNotMatch(css,/grayscale\(/);
+  assert.match(css,/\.supply-product\.soldout/);
+  assert.match(css,/\.supply-product\.paused/);
 });
 
 test('售罄頁可獨立切換大圖小圖及純文字卡',()=>{
@@ -77,8 +77,8 @@ test('售罄產品移出原分類並集中到售罄分類，停售仍留原分�
   assert.match(page,/statusOf\(p\.id\)!=='soldout'&&p\.category===category/);
 });
 
-test('小圖與純文字卡解除父層點單格線，內容不會被壓成直排',()=>{
-  assert.match(enhancements,/\.supply-product\.small\s*\{[^}]*display:\s*block/);
-  assert.match(enhancements,/\.supply-product\.text\s*\{[^}]*display:\s*block/);
-  assert.match(enhancements,/\.supply-product\.small \.card-open\s*\{[^}]*grid-template-columns:\s*72px minmax\(0,1fr\) auto/);
+test('小圖與純文字卡共用點單頁自適應卡尺寸模型',()=>{
+  assert.match(css,/\.supply-product\.large,\.supply-product\.small,\.supply-product\.text\{display:block/);
+  assert.match(adaptive,/body\[data-page="soldout"\] \.supply-product\.small \.card-open\{[\s\S]*?grid-template-columns:min\(calc\(var\(--adaptive-product-row-small\) - 18px\),82px\)/);
+  assert.match(adaptive,/body\[data-page="soldout"\] \.supply-product\.text \.card-open\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
 });

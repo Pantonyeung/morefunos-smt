@@ -117,7 +117,7 @@ test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', asy
 
 test('root height chain and scroll regions keep both bars fixed', async () => {
   const base=await readFile(new URL('../shared/page-base.css',import.meta.url),'utf8');
-  assert.match(base,/#app\{width:1920px;height:100%;min-height:0;overflow:hidden\}/);
+  assert.match(base,/#app\{width:100%;height:100%;min-width:0;min-height:0;overflow:hidden\}/);
   assert.match(css,/\.cart-list\{[^}]*min-height:0[^}]*overflow-y:auto/);
   assert.match(css,/\.products\{[^}]*min-height:0[^}]*overflow-y:auto/);
 });
@@ -274,10 +274,10 @@ test('點單頁最近訂單讀取共用歷史而不再寫死舊單號',()=>{
 test('子頁啟動錯誤會顯示可見後備畫面而不是白屏',async()=>{
   const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
   assert.match(loader,/morefun:page-runtime-error/);
-  assert.match(loader,/let childReady=false/);
-  assert.match(loader,/morefun:page-ready/);
-  assert.match(loader,/if\(!childReady\)showLoaderError/);
-  assert.match(loader,/showLoaderError\('點單頁啟動失敗/);
+  assert.match(loader,/loaderErrorDocument/);
+  assert.match(loader,/showLoaderError/);
+  assert.match(loader,/啟動失敗，資料仍保存在本機/);
+  assert.match(loader,/setActiveFrame\(target,key\)/);
 });
 
 test('specified pairing creates dynamic labelled groups',()=>{
@@ -288,14 +288,17 @@ test('specified pairing creates dynamic labelled groups',()=>{
   assert.match(page,/draft:\{groups,active:0\}/);
 });
 
-test('all drink selection surfaces share the same vertical card language',()=>{
+test('all drink selection surfaces share one image-first Drink Choice Card',()=>{
   assert.match(page,/drinkChoiceCard\(d,'quick-drink'.*'drawer'\)/);
   assert.match(page,/drinkChoiceCard\(d,'detail-drink'.*'detail'\)/);
-  assert.match(page,/drinkChoiceCard\(d,'completion-drink'.*'completion'\)/);
-  assert.match(page,/<span>.*<\/span>'\+\(imageMode\?imageBlock/);
-  assert.match(css,/\.drink-card--drawer\s*\{[^}]*height:\s*240px/);
+  assert.match(page,/drinkChoiceCard\(item,'completion-required-choice'.*'completion'/);
+  const imageIndex=page.indexOf("imageMode?imageBlock(d.image,d.name,'drink-choice-img')");
+  const nameIndex=page.indexOf("'<span>'+escapeHtml(d.name)");
+  assert.ok(imageIndex>=0&&nameIndex>imageIndex,'Drink Choice Card must render image before name');
+  assert.match(css,/\.drink-card--drawer/);
   assert.match(css,/\.drink-card--detail/);
   assert.match(css,/\.drink-card--completion/);
+  assert.match(css,/\.drink-choice-count/);
 });
 
 test('riceball and snack can become one pending-drink combo without a cart drink',()=>{

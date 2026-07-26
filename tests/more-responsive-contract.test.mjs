@@ -6,7 +6,7 @@ const shellCss=fs.readFileSync(new URL('../app-shell.css',import.meta.url),'utf8
 const loader=fs.readFileSync(new URL('../app-loader.js',import.meta.url),'utf8');
 
 const required=[
-  'body[data-page="more"] .more-workspace{container-type:size;container-name:more-workspace}',
+  'body[data-page="more"] .more-workspace{container-type:size;container-name:more-workspace;',
   'body[data-page="more"] .more-analysis{grid-template-columns:',
   'body[data-page="more"] .more-card{min-height:0',
   'body[data-page="more"] .detail-dialog{width:min(',
