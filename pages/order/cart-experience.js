@@ -1,0 +1,242 @@
+const app=document.getElementById('app');
+
+const view={productsTop:0,categoryLeft:0,cartTop:0};
+const collapsedCategories=new Set();
+let knownLineIds=null;
+let preferredServiceMode='';
+let pendingServiceMode='';
+let pendingHighlightLineId='';
+let lastEditedLineId='';
+let prepareFrame=0;
+let resetProductsOnRestore=false;
+
+function rememberScroll(){
+  const products=app?.querySelector('.products');
+  const categories=app?.querySelector('.category-scroll');
+  const cart=app?.querySelector('.cart-list');
+  if(products)view.productsTop=products.scrollTop;
+  if(categories)view.categoryLeft=categories.scrollLeft;
+  if(cart)view.cartTop=cart.scrollTop;
+}
+
+function restoreScroll(){
+  const products=app?.querySelector('.products');
+  const categories=app?.querySelector('.category-scroll');
+  const cart=app?.querySelector('.cart-list');
+  if(products)products.scrollTop=resetProductsOnRestore?0:view.productsTop;
+  if(categories)categories.scrollLeft=view.categoryLeft;
+  if(cart)cart.scrollTop=view.cartTop;
+  resetProductsOnRestore=false;
+}
+
+function categoryName(section){
+  return section.querySelector(':scope > header strong')?.textContent?.trim()||'';
+}
+
+function prepareCategories(){
+  app?.querySelectorAll('.cart-category').forEach(section=>{
+    const header=section.querySelector(':scope > header');
+    const name=categoryName(section);
+    if(!header||!name)return;
+    const collapsed=collapsedCategories.has(name);
+    section.classList.toggle('is-collapsed',collapsed);
+    header.classList.add('cart-category-toggle');
+    header.setAttribute('role','button');
+    header.setAttribute('tabindex','0');
+    header.setAttribute('aria-expanded',String(!collapsed));
+    header.setAttribute('aria-label',(collapsed?'展開':'收起')+name+'分類');
+  });
+}
+
+function activeLineMode(row){
+  const active=row.querySelector('.service-mode .mode-choice.active');
+  return active?.dataset.value==='外賣'?'外賣':'堂食';
+}
+
+function prepareLineModeToggles(){
+  app?.querySelectorAll('.cart-row').forEach(row=>{
+    const seq=row.querySelector('.seq');
+    if(!seq)return;
+    if(!seq.dataset.cartSequence)seq.dataset.cartSequence=seq.textContent.trim();
+    const mode=activeLineMode(row);
+    seq.classList.add('cart-line-mode-toggle');
+    seq.setAttribute('role','button');
+    seq.setAttribute('tabindex','0');
+    seq.setAttribute('aria-label',`第 ${seq.dataset.cartSequence} 項，目前${mode}，按下切換`);
+    seq.innerHTML=`<b>${seq.dataset.cartSequence}</b><small>${mode==='外賣'?'外':'堂'}</small>`;
+  });
+}
+
+function cartModes(){
+  return [...(app?.querySelectorAll('.cart-row')||[])].map(activeLineMode);
+}
+
+function serviceModeState(){
+  const modes=cartModes();
+  if(!modes.length)return preferredServiceMode||'堂食';
+  if(modes.every(mode=>mode==='堂食'))return '堂食';
+  if(modes.every(mode=>mode==='外賣'))return '外賣';
+  return '混合';
+}
+
+function prepareOrderServiceSelector(){
+  const actions=app?.querySelector('.cart > header .cart-header-actions');
+  if(!actions)return;
+  let selector=actions.querySelector('.cart-service-selector');
+  if(!selector){
+    selector=document.createElement('span');
+    selector.className='cart-service-selector';
+    selector.setAttribute('role','group');
+    selector.setAttribute('aria-label','全單用餐方式');
+    selector.innerHTML='<button type="button" data-cart-service-mode="堂食">堂食</button><button type="button" data-cart-service-mode="外賣">外賣</button><small></small>';
+    actions.insertBefore(selector,actions.lastElementChild||null);
+  }
+  const state=serviceModeState();
+  selector.querySelectorAll('[data-cart-service-mode]').forEach(button=>button.classList.toggle('active',button.dataset.cartServiceMode===state));
+  const label=selector.querySelector('small');
+  if(label)label.textContent=state==='混合'?'混合':'';
+}
+
+function clickLineMode(row,mode){
+  const source=[...row.querySelectorAll('.service-mode .mode-choice')].find(button=>button.dataset.value===mode);
+  if(source&&!source.classList.contains('active')){source.click();return true;}
+  return false;
+}
+
+function applyPendingServiceMode(){
+  if(!pendingServiceMode)return;
+  const row=[...(app?.querySelectorAll('.cart-row')||[])].find(item=>activeLineMode(item)!==pendingServiceMode);
+  if(row&&clickLineMode(row,pendingServiceMode))return;
+  preferredServiceMode=pendingServiceMode;
+  pendingServiceMode='';
+  prepareOrderServiceSelector();
+}
+
+function firstMissingDrinkTarget(){
+  const rows=[...(app?.querySelectorAll('.cart-row')||[])];
+  for(const row of rows){
+    const detail=row.querySelector('.cart-copy small')?.textContent||'';
+    if(!detail.includes('尚欠飲品'))continue;
+    return row.querySelector('.cart-copy strong')?.textContent?.trim()||'';
+  }
+  return '';
+}
+
+function prepareQuickDrinkTarget(){
+  const target=firstMissingDrinkTarget();
+  const panelTitle=app?.querySelector('.quick-drawer-panel > header strong');
+  const handle=app?.querySelector('.quick-drawer-handle');
+  if(handle)handle.setAttribute('aria-label',target?`快捷飲品，正在補 ${target}`:'快捷飲品，目前沒有指定補選目標');
+  if(panelTitle){
+    const base=panelTitle.textContent.replace(/｜正在補：.*$/,'');
+    panelTitle.textContent=target?`${base}｜正在補：${target}`:base;
+  }
+}
+
+function updateRecentRows(){
+  const rows=[...(app?.querySelectorAll('.cart-row[data-line-id]')||[])];
+  const ids=new Set(rows.map(row=>row.dataset.lineId).filter(Boolean));
+  if(knownLineIds===null){knownLineIds=ids;return;}
+  const added=rows.find(row=>row.dataset.lineId&&!knownLineIds.has(row.dataset.lineId));
+  const targetId=pendingHighlightLineId||added?.dataset.lineId||'';
+  knownLineIds=ids;
+  if(!targetId)return;
+  const target=rows.find(row=>row.dataset.lineId===targetId);
+  pendingHighlightLineId='';
+  if(!target)return;
+  target.classList.remove('cart-row-recent');
+  requestAnimationFrame(()=>{
+    target.classList.add('cart-row-recent');
+    target.scrollIntoView({block:'nearest',behavior:'smooth'});
+    setTimeout(()=>target.classList.remove('cart-row-recent'),900);
+  });
+}
+
+function applyPreferredModeToNewRows(){
+  if(!preferredServiceMode||!knownLineIds)return;
+  const rows=[...(app?.querySelectorAll('.cart-row[data-line-id]')||[])];
+  const candidate=rows.find(row=>row.dataset.lineId&&!knownLineIds.has(row.dataset.lineId)&&activeLineMode(row)!==preferredServiceMode);
+  if(candidate)clickLineMode(candidate,preferredServiceMode);
+}
+
+function prepare(){
+  prepareFrame=0;
+  prepareCategories();
+  prepareLineModeToggles();
+  prepareOrderServiceSelector();
+  prepareQuickDrinkTarget();
+  applyPreferredModeToNewRows();
+  updateRecentRows();
+  requestAnimationFrame(restoreScroll);
+  applyPendingServiceMode();
+}
+
+function schedulePrepare(){
+  if(prepareFrame)return;
+  prepareFrame=requestAnimationFrame(prepare);
+}
+
+function toggleCategory(section){
+  const name=categoryName(section);
+  if(!name)return;
+  if(collapsedCategories.has(name))collapsedCategories.delete(name);else collapsedCategories.add(name);
+  prepareCategories();
+}
+
+function toggleLineMode(toggle){
+  const row=toggle.closest('.cart-row');
+  if(!row)return;
+  const next=activeLineMode(row)==='外賣'?'堂食':'外賣';
+  clickLineMode(row,next);
+}
+
+app?.addEventListener('scroll',event=>{
+  const target=event.target;
+  if(target.matches?.('.products'))view.productsTop=target.scrollTop;
+  else if(target.matches?.('.category-scroll'))view.categoryLeft=target.scrollLeft;
+  else if(target.matches?.('.cart-list'))view.cartTop=target.scrollTop;
+},true);
+
+app?.addEventListener('pointerdown',event=>{
+  rememberScroll();
+  const action=event.target.closest?.('[data-action]');
+  if(action?.dataset.action==='category')resetProductsOnRestore=true;
+  if(action?.dataset.action==='edit-line')lastEditedLineId=action.dataset.id||'';
+  if(action?.dataset.action==='apply-product'&&lastEditedLineId)pendingHighlightLineId=lastEditedLineId;
+},true);
+
+app?.addEventListener('click',event=>{
+  const service=event.target.closest?.('[data-cart-service-mode]');
+  if(service){
+    event.preventDefault();
+    event.stopPropagation();
+    pendingServiceMode=service.dataset.cartServiceMode;
+    applyPendingServiceMode();
+    return;
+  }
+  const lineToggle=event.target.closest?.('.cart-line-mode-toggle');
+  if(lineToggle){
+    event.preventDefault();
+    event.stopPropagation();
+    toggleLineMode(lineToggle);
+    return;
+  }
+  const header=event.target.closest?.('.cart-category-toggle');
+  if(header&&!event.target.closest('[data-action]')){
+    event.preventDefault();
+    toggleCategory(header.closest('.cart-category'));
+  }
+},true);
+
+app?.addEventListener('keydown',event=>{
+  if(event.key!=='Enter'&&event.key!==' ')return;
+  const lineToggle=event.target.closest?.('.cart-line-mode-toggle');
+  if(lineToggle){event.preventDefault();toggleLineMode(lineToggle);return;}
+  const header=event.target.closest?.('.cart-category-toggle');
+  if(header){event.preventDefault();toggleCategory(header.closest('.cart-category'));}
+},true);
+
+new MutationObserver(schedulePrepare).observe(app,{childList:true,subtree:true});
+addEventListener('resize',schedulePrepare,{passive:true});
+window.visualViewport?.addEventListener('resize',schedulePrepare,{passive:true});
+schedulePrepare();
