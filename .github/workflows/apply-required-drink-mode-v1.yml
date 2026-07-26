@@ -1,0 +1,71 @@
+name: Apply Required Drink Assignment Core
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/apply-required-drink-mode-v1.yml']
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - name: Update formal order core
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('pages/order/page.js')
+          s=p.read_text()
+          old="""function completionDraft(group=''){
+  const current=modal?.draft||{};
+  if(!group)return {...current,activeGroup:'',activeTarget:'',assignments:current.assignments||{}};
+  const targets=requiredTargets(store.get().cart,group),assignments=current.activeGroup===group?(current.assignments||{}):{};
+  const activeTarget=(current.activeGroup===group&&targets.some(target=>target.id===current.activeTarget))?current.activeTarget:(targets.find(target=>!assignments[target.id])?.id||targets[0]?.id||'');
+  return {activeGroup:group,activeTarget,assignments};
+}"""
+          new="""function completionDraft(group=''){
+  const current=modal?.draft||{};
+  if(!group)return {...current,activeGroup:'',activeTarget:'',assignments:current.assignments||{},assignMode:current.assignMode||'quick'};
+  const targets=requiredTargets(store.get().cart,group),assignments=current.activeGroup===group?(current.assignments||{}):{};
+  const activeTarget=(current.activeGroup===group&&targets.some(target=>target.id===current.activeTarget))?current.activeTarget:(targets.find(target=>!assignments[target.id])?.id||targets[0]?.id||'');
+  return {activeGroup:group,activeTarget,assignments,assignMode:current.activeGroup===group?(current.assignMode||'quick'):'quick'};
+}"""
+          if old not in s: raise SystemExit('completionDraft pattern not found')
+          s=s.replace(old,new)
+          old2="""  const selected=active?assignments[active.id]:'';
+  return '<div class=\"required-workflow-head\"><div><small>必須完成｜'+label+'</small><strong>已分配 '+done+' / '+targets.length+'</strong><span>每一份都會顯示指定結果，避免配錯餐點。</span></div><button data-action=\"completion-back\">返回必選總覽</button></div><div class=\"required-workflow-grid\"><section class=\"required-target-pane\"><h3>要補選嘅餐點</h3><div class=\"required-target-list\">'+targetHtml+'</div></section><section class=\"required-choice-pane\"><div class=\"required-active-target\"><small>目前指定</small><strong>'+(active?completionTargetLabel(active):'已完成')+'</strong><span>'+(selected?'目前：'+escapeHtml(group==='drink'?(drinkMap.get(selected)?.name||selected):selected):'請選擇 '+label)+'</span></div>'+choices+(selected&&done<targets.length?'<button class=\"required-fill\" data-action=\"completion-fill-remaining\" data-value=\"'+escapeHtml(selected)+'\">其餘未選全部用同一選項</button>':'')+'</section></div><footer class=\"required-workflow-actions\"><button data-action=\"completion-back\">返回</button><button class=\"primary\" data-action=\"apply-required-group\" '+(done===targets.length&&targets.length?'':'disabled')+'>確認 '+label+'｜'+done+' 份</button></footer>';
+}"""
+          new2="""  const selected=active?assignments[active.id]:'';
+  const modeSwitch=group==='drink'?'<div class=\"required-assign-mode\"><button data-action=\"completion-assign-mode\" data-value=\"quick\" class=\"'+(draft.assignMode!=='specified'?'active':'')+'\"><strong>快速順序</strong><small>連續揀飲品，自動填下一份</small></button><button data-action=\"completion-assign-mode\" data-value=\"specified\" class=\"'+(draft.assignMode==='specified'?'active':'')+'\"><strong>指定配對</strong><small>先揀餐點，再指定飲品</small></button></div>':'';
+  return '<div class=\"required-workflow-head\"><div><small>必須完成｜'+label+'</small><strong>已分配 '+done+' / '+targets.length+'</strong><span>'+(group==='drink'?(draft.assignMode==='specified'?'指定配對：揀左邊餐點，再揀飲品。':'快速順序：直接連續揀飲品，系統會自動去下一份。'):'每一份都會顯示指定結果，避免配錯餐點。')+'</span></div><button data-action=\"completion-back\">返回必選總覽</button></div>'+modeSwitch+'<div class=\"required-workflow-grid\"><section class=\"required-target-pane\"><h3>要補選嘅餐點</h3><div class=\"required-target-list\">'+targetHtml+'</div></section><section class=\"required-choice-pane\"><div class=\"required-active-target\"><small>目前指定</small><strong>'+(active?completionTargetLabel(active):'已完成')+'</strong><span>'+(selected?'目前：'+escapeHtml(group==='drink'?(drinkMap.get(selected)?.name||selected):selected):'請選擇 '+label)+'</span></div>'+choices+(selected&&done<targets.length?'<button class=\"required-fill\" data-action=\"completion-fill-remaining\" data-value=\"'+escapeHtml(selected)+'\">其餘未選全部用同一選項</button>':'')+'</section></div><footer class=\"required-workflow-actions\"><button data-action=\"completion-back\">返回</button><button class=\"primary\" data-action=\"apply-required-group\" '+(done===targets.length&&targets.length?'':'disabled')+'>確認 '+label+'｜'+done+' 份</button></footer>';
+}"""
+          if old2 not in s: raise SystemExit('required panel pattern not found')
+          s=s.replace(old2,new2)
+          old3="""  else if(action==='completion-target'){modal.draft.activeTarget=button.dataset.id;render();}
+  else if(action==='completion-required-choice'){
+    const target=modal.draft.activeTarget,value=button.dataset.value;if(!target)return;
+    modal.draft.assignments={...(modal.draft.assignments||{}),[target]:value};modal.dirty=true;
+    const targets=requiredTargets(store.get().cart,modal.draft.activeGroup),next=targets.find(item=>!modal.draft.assignments[item.id]);if(next)modal.draft.activeTarget=next.id;render();
+  }"""
+          new3="""  else if(action==='completion-target'){modal.draft.activeTarget=button.dataset.id;render();}
+  else if(action==='completion-assign-mode'){modal.draft.assignMode=button.dataset.value==='specified'?'specified':'quick';render();}
+  else if(action==='completion-required-choice'){
+    const target=modal.draft.activeTarget,value=button.dataset.value;if(!target)return;
+    modal.draft.assignments={...(modal.draft.assignments||{}),[target]:value};modal.dirty=true;
+    if(modal.draft.activeGroup!=='drink'||modal.draft.assignMode!=='specified'){
+      const targets=requiredTargets(store.get().cart,modal.draft.activeGroup),next=targets.find(item=>!modal.draft.assignments[item.id]);if(next)modal.draft.activeTarget=next.id;
+    }
+    render();
+  }"""
+          if old3 not in s: raise SystemExit('choice action pattern not found')
+          s=s.replace(old3,new3)
+          p.write_text(s)
+      - name: Commit migrated core
+        run: |
+          git config user.name "morefunos-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add pages/order/page.js
+          git diff --cached --quiet || git commit -m "feat(order): add quick and specified required drink assignment modes"
+          git push
