@@ -144,7 +144,7 @@ function applyLinkUp(count){
     state.lastMutationKind='changed';
     return state;
   });
-  showToast('已組合 '+count+' 份飯團套餐');
+  queue.afterRender(()=>showToast('已組合 '+count+' 份飯團套餐'));
 }
 
 let initialCart=saved&&Array.isArray(saved.cart)?saved.cart:[];
@@ -374,7 +374,7 @@ function applyRequiredGroup(){
     }
     state.lastAffectedLineId=targets.at(-1)?.lineId||'';state.lastMutationKind='changed';return state;
   });
-  const remaining=pendingSummary(store.get().cart);modal={type:'completion',dirty:false,draft:{activeGroup:'',activeTarget:'',assignments:{}}};render();showToast(requiredGroupLabel(group)+'已完成');
+  modal={type:'completion',dirty:false,draft:{activeGroup:'',activeTarget:'',assignments:{}}};queue.afterRender(()=>showToast(requiredGroupLabel(group)+'已完成'));
 }
 function completionModal(){
   const state=store.get(),required=pendingSummary(state.cart),link=linkUpSummary(state.cart);
@@ -518,7 +518,7 @@ function quickAddProduct(productId){
   const p=productMap.get(productId);if(!p)return;
   const current=store.get();const line=makeLine(productId,1,{serviceMode:current.orderServiceMode});const before=current.cart;
   store.set(state=>{const next=mergeCart(state.cart.concat(line),state.settings.cart.mergeMode);const mutation=locateMutation(before,next,productId,line.lineId);state.cart=next;state.lastAffectedLineId=mutation.lineId;state.lastMutationKind=mutation.kind;return state;});
-  showToast('已加入 '+p.name);
+  queue.afterRender(()=>showToast('已加入 '+p.name));
 }
 function changeCartQuantity(lineId,delta){
   store.set(state=>{state.cart=updateCartLineQuantity(state.cart,lineId,delta,Object.fromEntries(products.map(p=>[p.id,p.drinkSlots||0])));state.lastAffectedLineId=state.cart.some(line=>line.lineId===lineId)?lineId:'';state.lastMutationKind='changed';return state;});
@@ -541,7 +541,7 @@ function applyProduct(){
     else{const next=mergeCart(state.cart.concat(line),state.settings.cart.mergeMode);const mutation=locateMutation(before,next,p.id,line.lineId);state.cart=next;state.lastAffectedLineId=mutation.lineId;state.lastMutationKind=mutation.kind;}
     return state;
   });
-  modal=null;render();showToast(editing?'已更新產品':'已加入購物車');
+  modal=null;queue.afterRender(()=>showToast(editing?'已更新產品':'已加入購物車'));
 }
 function applyDrink(){
   const groups=modal.draft.groups||[];
@@ -550,7 +550,7 @@ function applyDrink(){
   let appliedTarget=null;
   store.set(state=>{let remaining=selections.slice();state.cart=state.cart.map(line=>{if(!remaining.length)return line;const miss=Math.max(0,line.drinkSlots-line.drinkAssignments.length);const taken=remaining.splice(0,miss);if(taken.length&&!appliedTarget)appliedTarget={lineId:line.lineId,name:line.name};return taken.length?{...line,drinkAssignments:line.drinkAssignments.concat(taken)}:line;});if(appliedTarget){state.lastAffectedLineId=appliedTarget.lineId;state.lastMutationKind='changed';}return state;});
   if(appliedTarget&&selections[0]){lastDrinkAssignment={drink:selections[0].name,target:appliedTarget.name};clearTimeout(drinkFeedbackTimer);drinkFeedbackTimer=setTimeout(()=>{lastDrinkAssignment=null;render();},3200);}
-  pendingDrinkAssignment=null;modal=null;render();showToast('已補選飲品');
+  pendingDrinkAssignment=null;modal=null;queue.afterRender(()=>showToast('已補選飲品'));
 }
 function handle(button,anchorOverride=null){
   const action=button.dataset.action;
@@ -558,7 +558,7 @@ function handle(button,anchorOverride=null){
   if(store.get().quickDrawerOpen)scheduleQuickDrawerClose();
   if(action==='category')store.set(state=>({...state,category:button.dataset.value}));
   else if(action==='open-search'){modal={type:'search',anchor:actionAnchor(button,anchorOverride),dirty:false};render();}
-  else if(action==='clear-search'){store.set(state=>({...state,searchQuery:''}));render();}
+  else if(action==='clear-search'){store.set(state=>({...state,searchQuery:''}));}
   else if(action==='open-product')openProduct(button.dataset.id,'',actionAnchor(button,anchorOverride));
   else if(action==='quick-add-product')quickAddProduct(button.dataset.id);
   else if(action==='cart-qty')changeCartQuantity(button.dataset.id,Number(button.dataset.delta)||0);
