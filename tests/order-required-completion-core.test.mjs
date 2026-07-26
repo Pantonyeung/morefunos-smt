@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
 const page=fs.readFileSync(new URL('../pages/order/page.js',import.meta.url),'utf8');
-const pageCss=fs.readFileSync(new URL('../pages/order/page.css',import.meta.url),'utf8');
 const cartCss=fs.readFileSync(new URL('../pages/order/cart.css',import.meta.url),'utf8');
 
 assert.ok(page.includes('function requiredTargets('),'required completion must enumerate exact cart targets');
@@ -13,8 +12,8 @@ assert.ok(page.includes('其餘未選全部用同一選項'),'same-choice bulk f
 assert.ok(!page.includes('apply-bulk'),'legacy force-same bulk required completion must not return');
 assert.ok(!page.includes('bulkOptionModal'),'legacy bulk option modal must not return');
 
-assert.ok(page.includes('seq-service'),'cart sequence and 堂/外 must share the compact vertical service rail');
-assert.ok(cartCss.includes('.seq-service')&&cartCss.includes('height:72px'),'service rail must remain approximately product-image height');
+assert.ok(page.includes('seq-service'),'cart sequence and 堂/外 must share the compact vertical service badge');
+assert.ok(cartCss.includes('.cart-row>.seq-service')&&cartCss.includes('height:60px'),'service badge must remain compact and aligned with the current 60px cart image');
 assert.ok(cartCss.includes('.required-workflow-grid'),'checkout-blocking required work must use the large central workflow');
 
 for(const action of ['open-product','edit-line','open-quick-settings','open-settings','open-health','open-soldout']){
@@ -22,7 +21,7 @@ for(const action of ['open-product','edit-line','open-quick-settings','open-sett
 }
 assert.ok(page.includes('anchorRect(button)'),'optional button-triggered flows must preserve source anchors');
 for(const side of ['left','right','top','bottom']){
-  assert.ok(pageCss.includes(`data-pointer-side="${side}"`),`popover pointer must support ${side}`);
+  assert.ok(cartCss.includes(`data-pointer-side="${side}"`),`popover pointer must support ${side} in the component core`);
 }
 
-console.log('SMT_ORDER_REQUIRED_COMPLETION_CORE_OK');
+console.log('SMT_ORDER_REQUIRED_COMPLETION_CORE_V2_OK');
