@@ -1,0 +1,61 @@
+name: oneoff-order-runtime-perf-v2
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/oneoff-order-runtime-perf-v2.yml']
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - name: Consolidate high-frequency render paths
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('pages/order/page.js')
+          t=p.read_text()
+
+          t=t.replace("import {loadMenuCatalog} from './menu-api.js';","import {loadMenuCatalog,MENU_CACHE_KEY} from './menu-api.js';",1)
+          old="""const fallbackCatalog={categories:fallbackCategories,products:fallbackProducts,drinks:fallbackDrinks};\nlet categories=[...fallbackCategories],products=[...fallbackProducts],drinks=[...fallbackDrinks];"""
+          new="""const fallbackCatalog={categories:fallbackCategories,products:fallbackProducts,drinks:fallbackDrinks};\nconst cachedCatalog=readJSON(MENU_CACHE_KEY,null);\nconst initialCatalog=cachedCatalog?.products?.length?cachedCatalog:fallbackCatalog;\nlet categories=[...(initialCatalog.categories||fallbackCategories)],products=[...(initialCatalog.products||fallbackProducts)],drinks=[...(initialCatalog.drinks||fallbackDrinks)];"""
+          if old in t:t=t.replace(old,new,1)
+
+          replacements={
+          "store.set(state=>{let next=state.cart;groups.forEach(group=>{const quickId=group.drink?.startsWith('quick:')?group.drink.slice(6):'',quick=quickId?drinkMap.get(quickId):null;next=combineRiceballSet(next,{mainLineId:group.main,snackLineId:group.snack,drinkLineId:quickId?'':group.drink,quickDrink:quick?{productId:quick.id,drinkId:quick.id,name:quick.name,image:quick.image,unitPrice:quick.price,selection:drinkSelection(quick.id)}:null},{comboId:stableId('combo'),lineId:stableId('line'),comboPrice:59,source:'specified'});});state.cart=normalizeCart(next,state.orderServiceMode);state.lastAffectedLineId=state.cart.at(-1)?.lineId||'';state.lastMutationKind='changed';return state;});modal=null;render();showToast('已建立 '+groups.length+' 組指定套餐');":
+          "store.set(state=>{let next=state.cart;groups.forEach(group=>{const quickId=group.drink?.startsWith('quick:')?group.drink.slice(6):'',quick=quickId?drinkMap.get(quickId):null;next=combineRiceballSet(next,{mainLineId:group.main,snackLineId:group.snack,drinkLineId:quickId?'':group.drink,quickDrink:quick?{productId:quick.id,drinkId:quick.id,name:quick.name,image:quick.image,unitPrice:quick.price,selection:drinkSelection(quick.id)}:null},{comboId:stableId('combo'),lineId:stableId('line'),comboPrice:59,source:'specified'});});state.cart=normalizeCart(next,state.orderServiceMode);state.lastAffectedLineId=state.cart.at(-1)?.lineId||'';state.lastMutationKind='changed';return state;});modal=null;queue.afterRender(()=>showToast('已建立 '+groups.length+' 組指定套餐'));",
+          "store.set(state=>{state.cart=state.cart.map(line=>line.lineId!==lineId?line:{...line,image:components.find(item=>item.role==='main')?.image||line.image,drinkAssignments:drink?[{drinkId:drink.productId,name:drink.name,image:drink.image||'',sweetness:'',ice:'',source:drink.source}]:[],combo:{...line.combo,components,missingRoles:drink?[]:['drink']}});state.lastAffectedLineId=lineId;state.lastMutationKind='changed';return state;});modal=null;render();showToast('套餐組合已更新');":
+          "store.set(state=>{state.cart=state.cart.map(line=>line.lineId!==lineId?line:{...line,image:components.find(item=>item.role==='main')?.image||line.image,drinkAssignments:drink?[{drinkId:drink.productId,name:drink.name,image:drink.image||'',sweetness:'',ice:'',source:drink.source}]:[],combo:{...line.combo,components,missingRoles:drink?[]:['drink']}});state.lastAffectedLineId=lineId;state.lastMutationKind='changed';return state;});modal=null;queue.afterRender(()=>showToast('套餐組合已更新'));",
+          "store.set(next=>({...next,cart:[],draftSession:null,dineContext:null,orderServiceMode:SERVICE_TAKEAWAY,lastAffectedLineId:'',lastMutationKind:''}));modal=null;render();showToast('已暫存 '+draft.draftNumber);":
+          "store.set(next=>({...next,cart:[],draftSession:null,dineContext:null,orderServiceMode:SERVICE_TAKEAWAY,lastAffectedLineId:'',lastMutationKind:''}));modal=null;queue.afterRender(()=>showToast('已暫存 '+draft.draftNumber));",
+          "store.set(state=>({...state,cart:normalizeCart(restored.cart,orderServiceMode),draftSession:restored.session,dineContext:null,orderServiceMode,lastAffectedLineId:'',lastMutationKind:''}));modal=null;render();showToast('已取回 '+draft.draftNumber);":
+          "store.set(state=>({...state,cart:normalizeCart(restored.cart,orderServiceMode),draftSession:restored.session,dineContext:null,orderServiceMode,lastAffectedLineId:'',lastMutationKind:''}));modal=null;queue.afterRender(()=>showToast('已取回 '+draft.draftNumber));",
+          "store.set(state=>{state.pendingOrders={online:state.pendingOrders.online.filter(x=>x.id!==accepted.id),queue:state.pendingOrders.queue.filter(x=>x.id!==accepted.id)};state.runningOrders=state.runningOrders.concat(accepted);return state;});showToast('已接單 '+accepted.id+'；30分鐘後自動完成');modal=null;render();":
+          "store.set(state=>{state.pendingOrders={online:state.pendingOrders.online.filter(x=>x.id!==accepted.id),queue:state.pendingOrders.queue.filter(x=>x.id!==accepted.id)};state.runningOrders=state.runningOrders.concat(accepted);return state;});modal=null;queue.afterRender(()=>showToast('已接單 '+accepted.id+'；30分鐘後自動完成'));",
+          "if(event.target.matches('[data-action=\"search-query\"]')&&modal?.type==='search'){const value=event.target.value;store.set(state=>({...state,searchQuery:value}));render();requestAnimationFrame(()=>{const input=document.querySelector('[data-action=\"search-query\"]');if(input){input.focus();input.setSelectionRange(value.length,value.length);}});}":
+          "if(event.target.matches('[data-action=\"search-query\"]')&&modal?.type==='search'){const value=event.target.value;store.set(state=>({...state,searchQuery:value}));queue.afterRender(()=>{const input=document.querySelector('[data-action=\"search-query\"]');if(input){input.focus();input.setSelectionRange(value.length,value.length);}});}"
+          }
+          for a,b in replacements.items():
+              if a in t:t=t.replace(a,b,1)
+
+          old="setInterval(()=>{store.set(state=>{const next=completeExpiredOrders(state.runningOrders);const completed=next.filter((order,index)=>order.status==='completed'&&state.runningOrders[index]?.status!=='completed');if(!completed.length)return state;state.runningOrders=next.filter(order=>order.status==='running');state.completedOrders=state.completedOrders.concat(completed);return state;});},30000);"
+          new="setInterval(()=>{const current=store.get();if(!current.runningOrders.length)return;const next=completeExpiredOrders(current.runningOrders);const completed=next.filter((order,index)=>order.status==='completed'&&current.runningOrders[index]?.status!=='completed');if(!completed.length)return;store.set(state=>{state.runningOrders=next.filter(order=>order.status==='running');state.completedOrders=state.completedOrders.concat(completed);return state;});},30000);"
+          if old in t:t=t.replace(old,new,1)
+
+          p.write_text(t)
+          PY
+      - name: Verify
+        run: |
+          grep -q 'MENU_CACHE_KEY' pages/order/page.js
+          grep -q 'if(!current.runningOrders.length)return' pages/order/page.js
+          ! grep -q "searchQuery:value}));render();" pages/order/page.js
+      - name: Commit
+        run: |
+          git config user.name morefun-refactor-bot
+          git config user.email actions@users.noreply.github.com
+          git add pages/order/page.js
+          git commit -m 'perf(order): reduce redundant renders and seed cached catalog' || exit 0
+          git push origin HEAD:smt-functional-completeness-v1
