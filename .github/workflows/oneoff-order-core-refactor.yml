@@ -1,0 +1,43 @@
+name: oneoff-order-core-refactor
+
+on:
+  push:
+    branches:
+      - smt-functional-completeness-v1
+    paths:
+      - .github/workflows/oneoff-order-core-refactor.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refactor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - name: Move drink badges into render core
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('pages/order/page.js')
+          text = path.read_text()
+          old = """  const done=targets.filter(target=>assignments[target.id]).length,label=requiredGroupLabel(group);\n  const targetHtml=targets.map(target=>'<button class=\"required-target '+(target.id===active?.id?'active ':'')+(assignments[target.id]?'complete':'')+'\" data-action=\"completion-target\" data-id=\"'+escapeHtml(target.id)+'\"><span><b>'+completionTargetLabel(target)+'</b><small>'+(assignments[target.id]?'已選：'+escapeHtml(group==='drink'?(drinkMap.get(assignments[target.id])?.name||assignments[target.id]):assignments[target.id]):'尚未選擇')+'</small></span><em>'+(assignments[target.id]?'✓':'待選')+'</em></button>').join('');\n  let choices='';\n  if(group==='drink')choices='<div class=\"required-drink-grid\">'+drinks.filter(item=>item.available!==false).map(item=>'<button data-action=\"completion-required-choice\" data-value=\"'+escapeHtml(item.id)+'\" class=\"'+(active&&assignments[active.id]===item.id?'selected':'')+'\">'+imageBlock(item.image,item.name,'required-choice-img')+'<span>'+escapeHtml(item.name)+'</span></button>').join('')+'</div>';\n"""
+          new = """  const done=targets.filter(target=>assignments[target.id]).length,label=requiredGroupLabel(group);\n  const targetHtml=targets.map(target=>'<button class=\"required-target '+(target.id===active?.id?'active ':'')+(assignments[target.id]?'complete':'')+'\" data-action=\"completion-target\" data-id=\"'+escapeHtml(target.id)+'\"><span><b>'+completionTargetLabel(target)+'</b><small>'+(assignments[target.id]?'已選：'+escapeHtml(group==='drink'?(drinkMap.get(assignments[target.id])?.name||assignments[target.id]):assignments[target.id]):'尚未選擇')+'</small></span><em>'+(assignments[target.id]?'✓':'待選')+'</em></button>').join('');\n  const drinkAssignmentCounts=new Map();\n  if(group==='drink')Object.values(assignments).forEach(id=>{if(id)drinkAssignmentCounts.set(id,(drinkAssignmentCounts.get(id)||0)+1);});\n  let choices='';\n  if(group==='drink')choices='<div class=\"required-drink-grid\">'+drinks.filter(item=>item.available!==false).map(item=>{const count=drinkAssignmentCounts.get(item.id)||0;return '<button data-action=\"completion-required-choice\" data-value=\"'+escapeHtml(item.id)+'\" class=\"'+(active&&assignments[active.id]===item.id?'selected ':'')+(count?'has-assignment':'')+'\" aria-label=\"'+escapeHtml(item.name)+(count?'，已選 '+count+' 份':'')+'\">'+imageBlock(item.image,item.name,'required-choice-img')+'<span>'+escapeHtml(item.name)+'</span>'+(count?'<em class=\"drink-choice-count\">✓ '+count+'</em>':'')+'</button>';}).join('')+'</div>';\n"""
+          if old not in text:
+              raise SystemExit('requiredSelectionPanel target not found; aborting')
+          path.write_text(text.replace(old,new,1))
+          PY
+      - name: Verify observer layer stays absent
+        run: |
+          ! grep -R "drink-choice-view.js" -n pages/order/index.html
+          ! test -f pages/order/drink-choice-view.js
+          grep -q "drinkAssignmentCounts" pages/order/page.js
+      - name: Commit refactor
+        run: |
+          git config user.name "morefun-refactor-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add pages/order/page.js
+          git commit -m "refactor: render drink assignment badges from state" || exit 0
+          git push origin HEAD:smt-functional-completeness-v1
