@@ -1,0 +1,81 @@
+name: order-1920-regression-fix-v1
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/order-1920-regression-fix-v1.yml']
+permissions:
+  contents: write
+jobs:
+  fix-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply 1920-only order page regressions to core
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p=Path(path); text=p.read_text()
+              if old not in text:
+                  raise SystemExit(f'pattern not found: {path}: {old[:80]}')
+              p.write_text(text.replace(old,new,1))
+
+          # 1) Packaging fee: service/business type, not display category.
+          replace('pages/order/order-domain.js',
+          "export const TAKEAWAY_PACKAGING_FEE_PER_UNIT=1;\nconst PACKAGING_FEE_EXEMPT_CATEGORIES=new Set(['飯團','飲品']);\n\nexport function packagingUnitsForLine(line){\n  if(normalizeServiceMode(line?.serviceMode,SERVICE_TAKEAWAY)!==SERVICE_TAKEAWAY)return 0;\n  if(PACKAGING_FEE_EXEMPT_CATEGORIES.has(String(line?.category||'')))return 0;\n  return Math.max(0,Number(line?.qty)||0);\n}",
+          "export const TAKEAWAY_PACKAGING_FEE_PER_UNIT=1;\n\nfunction isStandaloneRiceball(line){\n  if(line?.lineType==='combo')return false;\n  if(line?.combinable===true)return true;\n  const categories=[line?.category,...(Array.isArray(line?.categories)?line.categories:[])].map(String);\n  return categories.some(value=>value==='飯團'||value.includes('單點飯團'));\n}\nfunction isStandaloneDrink(line){\n  if(line?.lineType==='combo')return false;\n  if(line?.linkRole==='drink')return true;\n  const categories=[line?.category,...(Array.isArray(line?.categories)?line.categories:[])].map(String);\n  return categories.some(value=>value==='飲品'||value.includes('單點飲品'));\n}\nexport function packagingUnitsForLine(line){\n  if(normalizeServiceMode(line?.serviceMode,SERVICE_TAKEAWAY)!==SERVICE_TAKEAWAY)return 0;\n  if(isStandaloneRiceball(line)||isStandaloneDrink(line))return 0;\n  return Math.max(0,Number(line?.qty)||0);\n}")
+
+          # Preserve product category set in cart state so pricing is not tied to display category.
+          replace('pages/order/page.js',
+          "lineId:stableId('line'),productId,name:p.name,image:p.image,category:p.category,qty,",
+          "lineId:stableId('line'),productId,name:p.name,image:p.image,category:p.category,categories:[...(p.categories||[p.category]).filter(Boolean)],qty,")
+          replace('pages/order/page.js',
+          "return {...line,lineId:line.lineId||stableId('line'),name:line.name||p.name||'餐點',image:line.image||p.image||'',category:line.category||p.category||'',qty,unitPrice,total:unitPrice*qty,serviceMode,serviceModeOverride:line.serviceModeOverride||'',options:{...(line.options||{})},",
+          "return {...line,lineId:line.lineId||stableId('line'),name:line.name||p.name||'餐點',image:line.image||p.image||'',category:line.category||p.category||'',categories:Array.isArray(line.categories)?line.categories:[...(p.categories||[line.category||p.category]).filter(Boolean)],qty,unitPrice,total:unitPrice*qty,serviceMode,serviceModeOverride:line.serviceModeOverride||'',options:{...(line.options||{})},")
+
+          # 2) Cart identity tile follows approved reference: sequence on top, 外/堂 below.
+          p=Path('pages/order/cart.css'); css=p.read_text()
+          css=css.replace(".cart-row>.seq-service{position:static;width:42px;height:60px;align-self:center;display:grid;grid-template-rows:23px 37px;border:1px solid #ddcfc4;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(69,48,32,.05)}",
+          ".cart-row>.seq-service{position:static;width:42px;height:60px;align-self:center;display:grid;grid-template-rows:36px 24px;border:1px solid #ddcfc4;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(69,48,32,.05)}")
+          css=css.replace(".cart-row>.seq-service>.seq{position:static;grid-row:2;width:100%;height:37px;margin:0;padding:0;border:0;border-radius:0;background:#fff;color:#4f4037;font-size:17px;line-height:37px;text-align:center;display:block;font-weight:950}",
+          ".cart-row>.seq-service>.seq{position:static;grid-row:1;width:100%;height:36px;margin:0;padding:0;border:0;border-radius:0;background:#fff;color:#4f4037;font-size:17px;line-height:36px;text-align:center;display:block;font-weight:950}")
+          css=css.replace(".cart-row>.seq-service>.line-service-toggle{position:static;grid-row:1;width:100%;min-width:0;height:23px;margin:0;padding:0;border:0;border-bottom:1px solid #eaded5;border-radius:0;background:#fff8f4;color:#b84216;font-size:12px;line-height:22px;text-align:center;font-weight:950;box-shadow:none}",
+          ".cart-row>.seq-service>.line-service-toggle{position:static;grid-row:2;width:100%;min-width:0;height:24px;margin:0;padding:0;border:0;border-top:1px solid #eaded5;border-radius:0;background:#fff8f4;color:#b84216;font-size:12px;line-height:23px;text-align:center;font-weight:950;box-shadow:none}")
+          # Hide fallback label only inside cart; no more visible 餐點圖片 under a valid/failed image.
+          marker=".cart-img{width:60px;height:60px;border-radius:10px;align-self:center}"
+          css=css.replace(marker,marker+"\n.cart-row .cart-img .image-fallback{display:none}")
+          # 3) Same Drink Choice component: image is the dominant visual, crop source whitespace.
+          css=css.replace(".required-drink-grid .drink-choice-img img{width:100%;height:100%;object-fit:cover;transform:scale(1.22);transform-origin:center}",
+          ".required-drink-grid .drink-choice-img img{width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.75);transform-origin:center}")
+          css=css.replace(".quick-drawer-panel .drink-choice-img img{width:100%;height:100%;object-fit:cover;transform:scale(1.22);transform-origin:center}",
+          ".quick-drawer-panel .drink-choice-img img{width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.75);transform-origin:center}")
+          p.write_text(css)
+
+          # 4) Specified-link task modal must never exceed the visible 1920 workspace.
+          p=Path('pages/order/page.css'); css=p.read_text()
+          css=css.replace(".specified-link-card { width:min(25vw,520px); }",
+          ".specified-link-card{width:min(620px,34vw);max-height:calc(100vh - 150px);display:flex;flex-direction:column;overflow:hidden}.specified-link-card .pairing-body{flex:1;min-height:0;overflow:auto}.specified-link-card>footer{flex:none;background:#fff}")
+          p.write_text(css)
+
+          # Regression tests for packaging rules.
+          t=Path('tests/order-1920-regression-v1.test.mjs')
+          t.write_text("""import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport {packagingFeeForLine,cartPricingSummary,SERVICE_TAKEAWAY,SERVICE_DINE_IN} from '../pages/order/order-domain.js';\n\nconst line=(overrides={})=>({lineId:'x',name:'產品',category:'其他',categories:[],qty:1,unitPrice:23,total:23,serviceMode:SERVICE_TAKEAWAY,...overrides});\n\ntest('standalone riceball is packaging-fee exempt even when display category is popularity',()=>{\n  assert.equal(packagingFeeForLine(line({category:'人氣推薦',categories:['人氣推薦','飯團'],combinable:true})),0);\n});\n\ntest('standalone drink is packaging-fee exempt',()=>{\n  assert.equal(packagingFeeForLine(line({category:'人氣推薦',categories:['飲品'],linkRole:'drink'})),0);\n});\n\ntest('standalone riceball plus discounted drink remains packaging-fee exempt',()=>{\n  const cart=[line({lineId:'r',category:'人氣推薦',combinable:true,total:23}),line({lineId:'d',category:'飲品',linkRole:'drink',total:3})];\n  assert.equal(cartPricingSummary(cart).packagingFee,0);\n});\n\ntest('riceball combo and other takeaway boxed meals still charge packaging',()=>{\n  assert.equal(packagingFeeForLine(line({lineType:'combo',category:'飯團套餐'})),1);\n  assert.equal(packagingFeeForLine(line({category:'便當'})),1);\n  assert.equal(packagingFeeForLine(line({category:'便當',serviceMode:SERVICE_DINE_IN})),0);\n});\n""")
+          PY
+
+          node --check pages/order/page.js
+          node --check pages/order/order-domain.js
+          node --test tests/*.test.mjs
+
+          git config user.name 'morefun-smt-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add pages/order/order-domain.js pages/order/page.js pages/order/cart.css pages/order/page.css tests/order-1920-regression-v1.test.mjs
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix(order): resolve 1920 visual and packaging regressions'
+          git push origin HEAD:smt-functional-completeness-v1
