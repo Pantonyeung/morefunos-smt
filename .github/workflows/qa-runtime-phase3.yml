@@ -1,0 +1,58 @@
+name: qa-runtime-phase3
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/qa-runtime-phase3.yml']
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run regression suite and syntax checks
+        shell: bash
+        run: |
+          set +e
+          mkdir -p docs/qa
+          {
+            echo '# SMT Runtime Phase 3 QA'
+            echo
+            echo "Commit: $(git rev-parse HEAD)"
+            echo
+            echo '## node --test tests/*.test.mjs'
+            echo '```text'
+            node --test tests/*.test.mjs
+            TEST_STATUS=$?
+            echo '```'
+            echo
+            echo '## Syntax checks'
+            echo '```text'
+            SYNTAX_STATUS=0
+            for f in app-loader.js shared/runtime.js shared/adaptive-layout.js shared/page-bridge.js pages/order/page.js pages/order/order-domain.js pages/order/menu-api.js pages/checkout/page.js; do
+              echo "> node --check $f"
+              node --check "$f" || SYNTAX_STATUS=1
+            done
+            echo '```'
+            echo
+            echo "TEST_STATUS=$TEST_STATUS"
+            echo "SYNTAX_STATUS=$SYNTAX_STATUS"
+            if [ "$TEST_STATUS" -eq 0 ] && [ "$SYNTAX_STATUS" -eq 0 ]; then
+              echo 'RESULT=PASS'
+            else
+              echo 'RESULT=FAIL'
+            fi
+          } > docs/qa/SMT_RUNTIME_PHASE3_QA.md 2>&1
+          cat docs/qa/SMT_RUNTIME_PHASE3_QA.md
+      - name: Commit QA report
+        run: |
+          git config user.name morefun-qa-bot
+          git config user.email actions@users.noreply.github.com
+          git add docs/qa/SMT_RUNTIME_PHASE3_QA.md
+          git commit -m 'test(runtime): record phase 3 regression results' || exit 0
+          git push origin HEAD:smt-functional-completeness-v1
