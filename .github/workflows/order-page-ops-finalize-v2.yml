@@ -1,0 +1,56 @@
+name: order-page-ops-finalize-v2
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/order-page-ops-finalize-v2.yml']
+permissions:
+  contents: write
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply core-boundary changes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('pages/order/page.js');t=p.read_text()
+          a=t.index('function pendingPanel(){')
+          b=t.index('function pendingDetailModal(){',a)
+          repl='''function pendingPanel(){\n  const pendingOrders=store.get().pendingOrders;\n  const rows=list=>list.map(x=>'<button data-action="process-pending-order" data-id="'+x.id+'"><span><strong>'+x.id+' · '+x.source+'</strong><small>'+x.contact+'</small></span><b>'+x.items+' 件 · '+money(x.amount)+'</b><small>等待 '+x.wait+' · 按下處理</small></button>').join('');\n  const onlineWeight=Math.max(1,Math.min(4,pendingOrders.online.length||1)),queueWeight=Math.max(1,Math.min(4,pendingOrders.queue.length||1));\n  return '<aside class="pending-panel modal-card"><header><strong>待處理</strong><button data-action="dismiss-modal">×</button></header><div class="pending-split"><section style="--pending-weight:'+onlineWeight+'"><h3>磨飯 App／網頁訂單</h3><div class="pending-scroll">'+rows(pendingOrders.online)+'</div></section><section style="--pending-weight:'+queueWeight+'"><h3>電話／WhatsApp 排隊單</h3><div class="pending-scroll">'+rows(pendingOrders.queue)+'</div></section></div><footer class="single-action"><button data-action="dismiss-modal">返回</button></footer></aside>';\n}\n'''
+          t=t[:a]+repl+t[b:];p.write_text(t)
+
+          p=Path('pages/order/page.css');t=p.read_text()
+          a=t.index('.pending-split > section {')
+          b=t.index('.pending-split > section + section {',a)
+          repl='''.pending-split > section {\n  min-height: 110px;\n  flex: var(--pending-weight,1) 1 0;\n  padding: 12px;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n}\n'''
+          t=t[:a]+repl+t[b:]
+          if '.pending-panel>footer.single-action{' not in t:
+            t+='\n.pending-panel>footer.single-action{display:flex;justify-content:flex-end;padding:12px;border-top:1px solid var(--line)}\n.pending-panel>footer.single-action button{min-width:104px;min-height:46px;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:900}\n'
+          p.write_text(t)
+
+          p=Path('pages/more/print-domain.js');t=p.read_text()
+          t=t.replace("...(order.printServiceMode?[`服務：${order.printServiceMode}`]:[]),...header(order,'製作單')","...(order.printServiceMode?[`======== ${order.printServiceMode} ========`]:[]),...header(order,'製作單')")
+          t=t.replace("...(order.printServiceMode?[`服務：${order.printServiceMode}`]:[]),...header(order,'打包單')","...(order.printServiceMode?[`======== ${order.printServiceMode} ========`]:[]),...header(order,'打包單')")
+          p.write_text(t)
+          PY
+      - name: Verify all regressions
+        shell: bash
+        run: |
+          node --check pages/order/page.js
+          node --check pages/more/print-domain.js
+          node --test tests/*.test.mjs
+      - name: Commit verified changes
+        shell: bash
+        run: |
+          git config user.name 'MoreFun SMT QA'
+          git config user.email 'actions@morefun.local'
+          git add pages/order/page.js pages/order/page.css pages/more/print-domain.js
+          git commit -m 'feat(order): finalize adaptive pending and service print headings'
+          git push origin HEAD:smt-functional-completeness-v1
