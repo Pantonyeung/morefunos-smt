@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Capture failing tests
+      - name: Capture failing tests with locations
         shell: bash
         run: |
           set +e
@@ -24,8 +24,8 @@ jobs:
           {
             echo '# SMT Runtime Phase 3 Failure Summary'
             echo
-            echo '## Failed subtests / files'
-            grep -E '^(not ok|# Subtest: tests/)|ERR_ASSERTION|ENOENT|AssertionError|The input did not match|Expected|Actual' /tmp/test.log || true
+            echo '## Failed tests with context'
+            grep -A12 -E '^not ok|^# Subtest: tests/' /tmp/test.log || true
             echo
             echo '## Totals'
             grep -E '^# (tests|pass|fail|cancelled|skipped|todo)' /tmp/test.log || true
@@ -36,5 +36,5 @@ jobs:
           git config user.name morefun-qa-bot
           git config user.email actions@users.noreply.github.com
           git add docs/qa/SMT_RUNTIME_PHASE3_FAILURES.md
-          git commit -m 'test(runtime): summarize current regression failures' || exit 0
+          git commit -m 'test(runtime): include failure locations' || exit 0
           git push origin HEAD:smt-functional-completeness-v1
