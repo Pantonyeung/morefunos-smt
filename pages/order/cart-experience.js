@@ -6,9 +6,11 @@ let knownLineIds=null;
 let preferredServiceMode='';
 let pendingServiceMode='';
 let pendingHighlightLineId='';
+let pendingRevealProductName='';
 let lastEditedLineId='';
 let prepareFrame=0;
 let resetProductsOnRestore=false;
+let revealFrame=0;
 
 function rememberScroll(){
   const products=app?.querySelector('.products');
@@ -133,28 +135,52 @@ function prepareQuickDrinkTarget(){
   }
 }
 
+function cartRows(){return [...(app?.querySelectorAll('.cart-row[data-line-id]')||[])];}
+
+function rowByProductName(name){
+  if(!name)return null;
+  return cartRows().find(row=>row.querySelector('.cart-copy strong')?.textContent?.trim()===name)||null;
+}
+
 function updateRecentRows(){
-  const rows=[...(app?.querySelectorAll('.cart-row[data-line-id]')||[])];
+  const rows=cartRows();
   const ids=new Set(rows.map(row=>row.dataset.lineId).filter(Boolean));
   if(knownLineIds===null){knownLineIds=ids;return;}
   const added=rows.find(row=>row.dataset.lineId&&!knownLineIds.has(row.dataset.lineId));
-  const targetId=pendingHighlightLineId||added?.dataset.lineId||'';
+  if(!pendingHighlightLineId&&added?.dataset.lineId)pendingHighlightLineId=added.dataset.lineId;
   knownLineIds=ids;
-  if(!targetId)return;
-  const target=rows.find(row=>row.dataset.lineId===targetId);
-  pendingHighlightLineId='';
+}
+
+function revealRecentRow(){
+  cancelAnimationFrame(revealFrame);
+  revealFrame=0;
+  const rows=cartRows();
+  let target=pendingHighlightLineId?rows.find(row=>row.dataset.lineId===pendingHighlightLineId):null;
+  if(!target&&pendingRevealProductName)target=rowByProductName(pendingRevealProductName);
   if(!target)return;
+  pendingHighlightLineId='';
+  pendingRevealProductName='';
   target.classList.remove('cart-row-recent');
+  target.scrollIntoView({block:'nearest',inline:'nearest',behavior:'auto'});
   requestAnimationFrame(()=>{
     target.classList.add('cart-row-recent');
-    target.scrollIntoView({block:'nearest',behavior:'smooth'});
-    setTimeout(()=>target.classList.remove('cart-row-recent'),900);
+    setTimeout(()=>target.classList.remove('cart-row-recent'),1100);
+  });
+}
+
+function scheduleRevealRecentRow(){
+  cancelAnimationFrame(revealFrame);
+  revealFrame=requestAnimationFrame(()=>{
+    revealFrame=requestAnimationFrame(()=>{
+      revealFrame=0;
+      revealRecentRow();
+    });
   });
 }
 
 function applyPreferredModeToNewRows(){
   if(!preferredServiceMode||!knownLineIds)return;
-  const rows=[...(app?.querySelectorAll('.cart-row[data-line-id]')||[])];
+  const rows=cartRows();
   const candidate=rows.find(row=>row.dataset.lineId&&!knownLineIds.has(row.dataset.lineId)&&activeLineMode(row)!==preferredServiceMode);
   if(candidate)clickLineMode(candidate,preferredServiceMode);
 }
@@ -167,8 +193,9 @@ function prepare(){
   prepareQuickDrinkTarget();
   applyPreferredModeToNewRows();
   updateRecentRows();
-  requestAnimationFrame(restoreScroll);
+  restoreScroll();
   applyPendingServiceMode();
+  scheduleRevealRecentRow();
 }
 
 function schedulePrepare(){
@@ -190,6 +217,11 @@ function toggleLineMode(toggle){
   clickLineMode(row,next);
 }
 
+function productNameFromTrigger(trigger){
+  if(!trigger)return '';
+  return trigger.querySelector('.product-copy strong')?.textContent?.trim()||trigger.querySelector('strong')?.textContent?.trim()||'';
+}
+
 app?.addEventListener('scroll',event=>{
   const target=event.target;
   if(target.matches?.('.products'))view.productsTop=target.scrollTop;
@@ -203,6 +235,11 @@ app?.addEventListener('pointerdown',event=>{
   if(action?.dataset.action==='category')resetProductsOnRestore=true;
   if(action?.dataset.action==='edit-line')lastEditedLineId=action.dataset.id||'';
   if(action?.dataset.action==='apply-product'&&lastEditedLineId)pendingHighlightLineId=lastEditedLineId;
+  if(action&&['open-product','quick-add-product'].includes(action.dataset.action))pendingRevealProductName=productNameFromTrigger(action);
+  if(action?.dataset.action==='apply-product'&&!lastEditedLineId){
+    const modal=action.closest('.product-settings-card');
+    pendingRevealProductName=modal?.querySelector('.settings-product-head h2')?.textContent?.trim()||pendingRevealProductName;
+  }
 },true);
 
 app?.addEventListener('click',event=>{
