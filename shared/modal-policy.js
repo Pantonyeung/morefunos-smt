@@ -9,20 +9,19 @@
   let confirmLayer=null;
 
   function activeModal(){return document.querySelector('.modal-card');}
-  function modalScrim(){return document.querySelector('.modal-scrim');}
   function closeButton(){return activeModal()?.querySelector('[data-action="dismiss-modal"]');}
   function saveButton(){return SAVE_ACTIONS.map(action=>activeModal()?.querySelector(`[data-action="${action}"]`)).find(Boolean)||null;}
   function clearPolicyConfirm(){confirmLayer?.remove();confirmLayer=null;}
+  function resetPolicy(){dirty=false;clearPolicyConfirm();}
 
   function finishDiscard(){
     const close=closeButton();
-    if(!close){dirty=false;clearPolicyConfirm();return;}
+    if(!close){resetPolicy();return;}
     close.click();
     requestAnimationFrame(()=>{
       const discard=document.querySelector('[data-action="confirm-discard"]');
       if(discard)discard.click();
-      dirty=false;
-      clearPolicyConfirm();
+      resetPolicy();
     });
   }
 
@@ -42,7 +41,7 @@
         const status=confirmLayer.querySelector('[data-modal-policy-status]');
         if(save&&save.disabled){if(status)status.textContent='仍有必選項未完成，請先完成再保存。';return;}
         if(save){clearPolicyConfirm();dirty=false;save.click();return;}
-        clearPolicyConfirm();dirty=false;closeButton()?.click();
+        resetPolicy();closeButton()?.click();
       }
     });
   }
@@ -51,22 +50,18 @@
     const scrim=event.target.closest('.modal-scrim');
     if(scrim&&event.target===scrim){
       event.preventDefault();event.stopPropagation();
-      if(!activeModal())return;
+      if(!activeModal()){resetPolicy();return;}
       if(dirty)showUnsavedConfirm();else closeButton()?.click();
       return;
     }
     const action=event.target.closest('[data-action]')?.dataset.action;
     if(action&&DIRTY_ACTIONS.has(action)&&activeModal())dirty=true;
     if(action==='dismiss-modal'||SAVE_ACTIONS.includes(action)){
-      if(!document.querySelector('.confirm-layer'))dirty=false;
+      if(!document.querySelector('.confirm-layer'))resetPolicy();
     }
   },true);
 
   document.addEventListener('input',event=>{
     if(activeModal()&&event.target.closest('.modal-card'))dirty=true;
   },true);
-
-  new MutationObserver(()=>{
-    if(!activeModal()){dirty=false;clearPolicyConfirm();}
-  }).observe(document.documentElement,{subtree:true,childList:true});
 })();
