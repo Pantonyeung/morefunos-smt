@@ -70,8 +70,9 @@ export function createStore(initialState,options={}){
     notify();
   }
   function setTransient(updater){
-    const next=typeof updater==='function'?updater(state):updater;
-    if(next==null||next===state)return;
+    const draft={...state};
+    const next=typeof updater==='function'?updater(draft):updater;
+    if(next==null)return;
     state=next;
     notify();
   }
