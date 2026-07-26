@@ -44,6 +44,6 @@ assert.ok(cartCss.includes('.modifier-card:not([data-pointer-side])'),'modifier 
 assert.ok(cartCss.includes('暫時未有可用選項'),'empty bulk option sets must render an explicit safe fallback');
 assert.ok(cartCss.includes('.cart-list>.cart-row:nth-child(even)'),'input-order cart must use restrained zebra rows');
 assert.ok(cartCss.includes('.cart-category .cart-row:nth-of-type(even)'),'organized cart must use restrained zebra rows');
-assert.ok(cartCss.includes('.service-mode .line-service-toggle{position:absolute;left:0'),'line service mode must sit with the sequence marker instead of consuming description space');
+assert.ok(cartCss.includes('.cart-row>.seq-service')&&cartCss.includes('.cart-row>.seq-service>.line-service-toggle'),'line service mode must remain inside the compact sequence/service badge instead of consuming description space');
 
-console.log('SMT_CART_CHECKOUT_CORE_V6_OK');
+console.log('SMT_CART_CHECKOUT_CORE_V7_OK');
