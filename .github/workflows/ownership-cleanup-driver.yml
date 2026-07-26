@@ -1,0 +1,46 @@
+name: ownership-cleanup-driver
+
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths:
+      - '.github/workflows/ownership-cleanup-driver.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: contains(github.event.head_commit.message, 'trigger isolated ownership cleanup driver')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ownership-cleanup-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run V1/V2 ownership migration
+        run: node scripts/ownership-cleanup-once.mjs
+      - name: Ownership audit
+        run: node scripts/audit-component-ownership.mjs
+      - name: AI context validation
+        run: node scripts/validate-ai-context.mjs
+      - name: Full regression
+        run: node --test tests/*.test.mjs
+      - name: Commit verified cleanup branch
+        run: |
+          rm -f scripts/ownership-cleanup-once.mjs .github/workflows/ownership-cleanup-v1.yml
+          git config user.name 'MoreFun Ownership QA'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'refactor(ownership): consolidate cart and drink card owners'
+          git push origin HEAD:ownership-cleanup-v1
+      - name: Remove one-off driver from formal branch
+        run: |
+          git fetch origin smt-functional-completeness-v1
+          git checkout -B smt-functional-completeness-v1 origin/smt-functional-completeness-v1
+          git rm .github/workflows/ownership-cleanup-driver.yml
+          git commit -m 'chore(ownership): remove one-off cleanup driver'
+          git push origin HEAD:smt-functional-completeness-v1
