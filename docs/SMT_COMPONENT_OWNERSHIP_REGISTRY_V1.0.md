@@ -1,186 +1,170 @@
-# SMT Component Ownership Registry V1.0
+# SMT Component Ownership Registry V1.1
 
 > 狀態：CURRENT / HARD RULE
-> 目的：每一個 UI Component、Global Surface、Domain、Adaptive Token 只可以有一個真正責任來源（Single Owner）。
+> 目的：一個元件可以由多層架構共同組成，但同一項決策只可以有一個唯一 Authority。
 
 ## 1. 最高規則
 
-1. 一個 Component 只可以有一個 Owner。
-2. Owner 以外檔案不得重新定義同一 Component 的 DOM、內部 Layout、Style、State 或 Business Logic。
-3. Adaptive Core 只可提供 Token／Available Area／Density／Grid／Typography 計算；不得直接重新設計 Component。
-4. Page 可以消費 Shared Component／Token，但不得複製 Shared Component。
-5. Global Shell 只由 Shell 管理；Page 不得建立第二套 Global Status Bar／Global Bottom Navigation。
-6. Domain 只管理資料／規則；UI 不得自行再計算第二套 Pricing、Packaging、Checkout、Print、Required、Link Up。
-7. 如發現兩個 Owner：STOP。先收口成單一 Owner，才可以繼續功能修改。
-8. 第一次修正無效時，第一檢查項必須係「是否有第二 Owner／Override／Observer／舊 Runtime 重新覆蓋」。
+1. 一個 Component 可以跨 Page／Component／Domain／Adaptive 層存在；但同一種決策只可以有一個最終 Authority。
+2. Page／Composition 只決定元件外部位置、可用空間、與其他元件關係；不得重新定義 Component 內部 Visual。
+3. Component Visual Authority 只管理自己內部 DOM 幾何、Style、Interaction Visual；不得自行重算 Business Rule。
+4. State／Domain Truth Source 只可以有一個；UI、Checkout、Print、Report 不得建立第二套計價／狀態推斷。
+5. Adaptive Core 只可提供 Token／Available Area／Density／Grid／Typography 計算；不得直接成為 Component Visual Authority。
+6. Global Shell 只由 Shell 管理；Page 不得建立第二套 Global Status Bar／Global Bottom Navigation 作正式 Runtime Authority。
+7. 如發現兩個 Layer 同時對同一 Property、State、Action、Business Rule 擁有最終決定權：STOP。先收口 Authority，才可以繼續功能修改。
+8. 第一次修正無效時，第一檢查項必須係「是否存在第二 Authority／Override／Observer／舊 Runtime 重新覆蓋」。
 
-## 2. Owner 類型
+## 2. Authority 類型
 
-- **DOM Owner**：唯一可以建立／改 Component DOM 結構。
-- **Visual Owner**：唯一可以管理 Component 內部 Layout／Style。
-- **State Owner**：唯一可以管理 Component 狀態來源。
-- **Domain Owner**：唯一可以管理商業規則／計價／資料轉換。
-- **Token Provider**：只提供 CSS Variable／數值，不視為 Component Owner；不得直接 selector 進 Component 內部。
+- **Composition Authority**：決定 Component 放邊、外部寬高約束、與其他 Surface 的排列關係。
+- **DOM Authority**：唯一可以建立／改 Component 內部 DOM 結構。
+- **Visual Authority**：唯一可以管理 Component 內部 Layout／Style／Interaction Visual。
+- **State Authority**：唯一可以管理 UI 狀態真相來源。
+- **Domain Authority**：唯一可以管理商業規則／計價／資料轉換。
+- **Token Provider**：只提供 CSS Variable／數值；不得直接 selector 進 Component 內部。
 
-每一個 Component 仍然只有一個「決策 Owner」。Token Provider 只供數值。
+**重要：Ownership ≠ File Ownership。**
 
-## 3. Global Ownership
+同一 Component 可以由多個檔案共同構成，但每個檔案必須屬於不同責任層；禁止兩個檔案同時對同一屬性／狀態／行為擁有最終決定權。
 
-| Component / Surface | 唯一 Owner | 允許依賴 | 禁止 |
-|---|---|---|---|
-| Global App Shell DOM | `index.html` | Shell JS/CSS | Child Page 重建 Shell |
-| Global Status Bar Visual | `app-shell.css` | responsive tokens | Page CSS 改 `.global-shell-status` |
-| Global Bottom Navigation Visual | `app-shell.css` | responsive tokens | Page CSS 建第二套 Global Nav |
-| Global Route / Persistent Page Lifecycle | `app-loader.js` | page-ready bridge | Child Page 自行切主頁 iframe |
-| Checkout Transaction Lock | `app-loader.js` | Checkout messages | Page Nav 繞過 Transaction Lock |
-| Startup Login / Opening Cash | `shell-startup.js` | runtime/store | Page 自己建立每日登入／開工現金 |
-| Global Page Actions Surface | `shared/status-actions.js`（目標：explicit message registry） | Page action descriptors | DOM 掃描／複製隱藏按鈕作永久方案 |
-| Global Overlay Shell State | `app-loader.js`（只接 explicit overlay-state） | Page bridge message | DOM MutationObserver 作第二真相 |
-| Global responsive profile | `shared/responsive.js` / `shared/responsive.css` | viewport | Page 自己建立 resolution-specific layout |
-| Adaptive numeric tokens | `shared/adaptive-layout.js` | Component dimensions | Adaptive JS 改 Business Logic／DOM |
+## 3. Global Authority Matrix
 
-## 4. Order Page Ownership
+| Component / Surface | Composition / DOM Authority | Visual Authority | State / Domain Authority | Token / Dependency | 禁止 |
+|---|---|---|---|---|---|
+| Global App Shell | `index.html` / `app-loader.js` | `app-shell.css` | `app-loader.js` | responsive tokens | Child Page 重建 Shell |
+| Global Status Bar | Shell | `app-shell.css` | `shared/status-actions.js` descriptor registry | Page action descriptors | DOM 掃描／Child Page Visual override |
+| Global Bottom Navigation | Shell | `app-shell.css` | `app-loader.js` | responsive tokens | Page 建第二套正式 Nav |
+| Route / Persistent Page Lifecycle | `app-loader.js` | Shell | `app-loader.js` | page-ready bridge | Child Page 自行管理主 iframe |
+| Checkout Transaction Lock | Shell | `app-shell.css` | `app-loader.js` | Checkout messages | Hash／Page Nav 繞過 transaction lock |
+| Startup Login / Opening Cash | Shell | `app-shell.css` | `shell-startup.js` | runtime/store | Page 建第二套登入／開工現金 |
+| Global Overlay Shell State | Shell | `app-shell.css` | explicit `morefun:overlay-state` | Page bridge | MutationObserver 第二真相 |
+| Responsive Profile | Shell / Shared | N/A | `shared/responsive.js` | viewport | Page 建 resolution-specific second UI |
+| Adaptive Numeric Tokens | N/A | N/A | `shared/adaptive-layout.js` | component measurements | Adaptive JS/CSS 改 Component 內部 Visual／Business Logic |
 
-| Component / Feature | 唯一 Owner | Token / Domain Provider | 禁止第二 Owner |
-|---|---|---|---|
-| Order Page Composition / Surface Render | `pages/order/page.js` | Store / Domain | Loader 注入 UI |
-| Category / Search Surface | `pages/order/page.js` + `pages/order/page.css` | `category-layout.js` | Adaptive 重畫分類 DOM |
-| Product Card DOM / Visual | `pages/order/page.js` + `pages/order/page.css` | Adaptive row tokens | `adaptive-layout.css` 直接改產品卡內部 Style |
-| Cart DOM | `pages/order/page.js` | `order-domain.js` | Shared Runtime 建第二 Cart |
-| Cart Visual / Geometry | `pages/order/cart.css` | `--adaptive-cart-*` tokens | `page.css`／`adaptive-layout.css` 再 selector Cart 內部 |
-| 外／堂＋序號 Marker | `pages/order/cart.css` | `--adaptive-cart-marker` | 任何 Shared CSS 再定義 Marker |
-| Cart View 原單／整理 | `pages/order/order-domain.js` | page.js render | UI 自己排序第二套資料 |
-| Order Service Mode | `pages/order/order-domain.js` | page.js action | Cart CSS／Checkout 自己推斷第二套 |
-| Packaging Pricing | `pages/order/order-domain.js` | Checkout consumes result | UI／Print 自行重算 |
-| Drink Choice Card DOM | `pages/order/page.js::drinkChoiceCard` | drink data | 其他函數複製另一套飲品卡 DOM |
-| Drink Choice Card Visual | `pages/order/page.css`（目標唯一 Owner） | context tokens/classes | `cart.css`／Adaptive 直接改 card 內部結構 |
-| Quick Drink Drawer Layout | `pages/order/cart.css` | Drink Card component | 重新定義 Drink Card 本身 |
-| Required Workflow DOM / State | `pages/order/page.js` | `pendingSummary` / Domain | 第二套 Required Runtime |
-| Required Workflow Visual | `pages/order/cart.css` | Modal bounds tokens | `adaptive-layout.css` 直接改 `.required-workflow` |
-| Specified Pairing | `pages/order/page.js` + `order-domain.js` | Pool / Link Up | Quick Drink 建第二 pairing domain |
-| Modal State / Exit Dirty Rule | `pages/order/page.js` | global modal primitives | 每張 Modal 自己發明退出規則 |
-| Modal Anchor Position | `pages/order/page.js::positionActiveCard` | viewport / shell bounds | CSS hardcode fixed source position |
-| Cart Recent Highlight / Scroll | `pages/order/page.js` | Store mutation state | CSS／Observer 自己猜最新項 |
+## 4. Order Page Authority Matrix
 
-## 5. Other Page / Domain Ownership
+| Component / Feature | Composition Authority | DOM Authority | Visual Authority | State / Domain Authority | Token Provider | 禁止 |
+|---|---|---|---|---|---|---|
+| Order Page Workspace | `pages/order/page.css` | `pages/order/page.js` | `pages/order/page.css` | Page Store | responsive/adaptive tokens | Loader 注入 UI |
+| Category / Search | `page.css` | `page.js` | `page.css` | `category-layout.js` / transient state | adaptive category tokens | Adaptive 重畫 DOM |
+| Product Card | `page.css` | `page.js` | `page.css`（後續可獨立 `product-card.css`） | Catalog | adaptive row tokens | Adaptive 直接改 card internal selector |
+| Cart Surface 外部位置 | `page.css` | `page.js` | N/A | Order Store | `--cart-width` | `cart.css` 重排整個 page composition |
+| Cart Component 內部 | N/A | `page.js::cartLineRow/cartSurface` | `pages/order/cart.css` | `order-domain.js` | `--adaptive-cart-*` | `page.css`／Adaptive 重複定義 Cart internal property |
+| 外／堂＋序號 Marker | N/A | `cartLineRow` | `cart.css` | `order-domain.js` service mode | `--adaptive-cart-marker` | Shared CSS 再定義 marker geometry |
+| Cart View 原單／整理 | N/A | `page.js` | `cart.css` | `order-domain.js` | N/A | UI 自己排序第二套資料 |
+| Packaging Pricing | N/A | N/A | N/A | `order-domain.js` | N/A | UI／Checkout／Print 自行重算 |
+| Drink Choice Card | Container 由使用場景決定 | `page.js::drinkChoiceCard` | `page.css`（後續可抽 `components/drink-card.css`） | Order state | context class/token | `cart.css`／Adaptive 重定義 card internal visual |
+| Quick Drink Drawer | `cart.css` | `page.js` | `cart.css` | Order transient state | adaptive available area | 重寫 Drink Card 本體 |
+| Required Workflow | Modal shell | `page.js` | `cart.css` | `pendingSummary` / Domain | modal bounds tokens | Adaptive 直接改 required internal selector |
+| Specified Pairing | Modal shell | `page.js` | Modal/component CSS | `order-domain.js` | pool/link data | Quick Drink 建第二 pairing domain |
+| Modal State / Dirty Exit | Shell bounds | `page.js` | modal primitives + page component CSS | `page.js` single modal state | viewport bounds | 每張 Modal 自己發明退出規則 |
+| Recent Highlight / Auto Scroll | Cart composition | `page.js` | `cart.css` | Store mutation state | N/A | Observer／CSS 自己猜最新項 |
 
-| Area | 唯一 Owner |
-|---|---|
-| Orders UI | `pages/orders/page.js` + page CSS |
-| Orders business rules | `pages/orders/orders-domain.js` |
-| Checkout UI | `pages/checkout/page.js` + page CSS |
-| Checkout policy / record | `pages/checkout/checkout-domain.js` |
-| Dine UI | `pages/dine/page.js` + page CSS |
-| Dine business rules | `pages/dine/dine-domain.js` |
-| Soldout UI | `pages/soldout/page.js` + page CSS |
-| More UI | `pages/more/page.js` + `pages/more/page.css` |
-| More / reporting domain | `pages/more/more-domain.js` |
-| Printing domain | `pages/more/print-domain.js` |
-| Order identity | `shared/order-identity.js` |
-| Cross-terminal operations | `shared/operations.js` |
-| Runtime persistence defaults | `shared/runtime.js` |
+## 5. Other Page / Domain Authority
 
-## 6. 現存 Ownership Violations（必須清理）
+| Area | Composition / Visual Authority | Domain / State Authority |
+|---|---|---|
+| Orders UI | `pages/orders/page.js` + `pages/orders/page.css` | `pages/orders/orders-domain.js` |
+| Checkout UI | `pages/checkout/page.js` + page CSS | `pages/checkout/checkout-domain.js` |
+| Dine UI | `pages/dine/page.js` + page CSS | `pages/dine/dine-domain.js` |
+| Soldout UI | `pages/soldout/page.js` + page CSS | Supply state / catalog |
+| More UI | `pages/more/page.js` + `pages/more/page.css` | `pages/more/more-domain.js` |
+| Printing | Print UI surface | `pages/more/print-domain.js` |
+| Order Identity | N/A | `shared/order-identity.js` |
+| Cross-terminal Operations | N/A | `shared/operations.js` |
+| Runtime Persistence | N/A | `shared/runtime.js` / store |
 
-### V1 — Order Cart Visual 多 Owner
-- `pages/order/page.css`
-- `pages/order/cart.css`
-- `shared/adaptive-layout.css`
+## 6. 現存 Authority Violations
+
+### V1 — Order Cart 內部 Visual 仍有雙 Authority
+- `pages/order/page.css` 仍保留 `.cart-row/.cart-img/.cart-actions/.pending-area/.cart footer` 等舊 internal 規則。
+- `pages/order/cart.css` 已經係正式 Cart Component Visual Authority。
 
 狀態：**MIGRATION REQUIRED / HIGH PRIORITY**
 
-目標：`cart.css` 成為唯一 Visual Owner；`page.css` 移除 Cart 內部 Style；Adaptive 只提供 `--adaptive-cart-*` Token。
+處理方式：逐組搬遷；每次移除 `page.css` 同一責任規則，再由 `cart.css` 唯一保留同等視覺，禁止用 override 蓋住舊規則。
 
-### V2 — Drink Card Visual Dual Owner
-- `pages/order/page.css`
-- `pages/order/cart.css`
+建議順序：
+`Marker → Image → Row Geometry → Copy/Price/Actions → Pending → Footer`
 
-狀態：**MIGRATION REQUIRED / HIGH PRIORITY**
+### V2 — Drink Card Visual Dual Authority
 
-目標：`page.css` 成為 Drink Card 唯一 Visual Owner；`cart.css` 只管理 Quick Drawer／Required Grid 容器。
+狀態：**CLEARED**
 
-### V3 — Global Page Actions 有兩個真相
-- Child Page 隱藏 Status Action DOM
-- `shared/status-actions.js` MutationObserver 掃描及複製
+`cart.css` 不再定義 `.drink-choice-*` 內部；Drink Card 目前由 `page.css` 唯一管理。
 
-狀態：**MIGRATION REQUIRED / HIGH PRIORITY**
+### V3 — Global Page Actions DOM Observer
 
-目標：Page 只發 explicit Action Descriptor；Global Shell 只渲染 descriptor；Click 以 action id 回傳 Page。
+狀態：**CLEARED / EXPLICIT REGISTRATION**
 
-### V4 — Global Overlay State 有兩個真相
-- Page explicit `morefun:overlay-state`
-- `app-loader.js` MutationObserver 再掃 Child DOM
+Shell 只接 render-time action descriptors；禁止 MutationObserver／child DOM scan。
 
-狀態：**MIGRATION REQUIRED / HIGH PRIORITY**
+### V4 — Global Overlay 雙真相
 
-目標：只保留 explicit overlay-state message。
+狀態：**CLEARED**
 
-### V5 — Legacy Child Global Chrome
-- `shared/shell.js` 仍可 render child `global-statusbar` / `bottom-nav`
-- Global Shell 已有真正 `global-shell-status` / `global-bottom-nav`
-- `shared/page-base.css` 仍保留 child global chrome 視覺
+只保留 explicit `morefun:overlay-state`。
+
+### V5 — Legacy Child Global Chrome Runtime
+- Child Page 仍可能 render legacy Global Status/Bottom Nav 作 standalone 結構。
+- 正式 Global Shell 已有唯一 Chrome。
 
 狀態：**MIGRATION REQUIRED**
 
-目標：Global Shell 模式下 Child Page 不再建立第二套 Global Chrome；Standalone QA 如有需要，必須明確標示 QA-only，不可成為 Runtime Owner。
+處理方式：正式 Runtime 逐頁停止建立第二套 Global Chrome；若 standalone QA 仍需要，必須 QA-only，不能成為 Runtime Authority。
 
-### V6 — Adaptive CSS 直接成為 Page Component 第二 Owner
-- `shared/adaptive-layout.css` 直接 selector Order Product／Cart／Orders Component
-- 各 Page CSS 同時管理同一元件
+### V6 — Adaptive CSS 仍直接進入部分 Page Component
+- Cart direct selectors 已移除。
+- Order Product／Orders 等仍有 direct selectors。
 
 狀態：**MIGRATION REQUIRED / HIGH PRIORITY**
 
-目標：`adaptive-layout.js` 只計算 CSS Variable；Component Owner CSS 消費 Token；`adaptive-layout.css` 不再進入 Component 內部 selector。
+處理方式：Adaptive 只計算 CSS Variable；Component Visual Authority 消費 Token。
 
-### V7 — Responsive Pages CSS 直接成為第二 Page Owner
-- `shared/responsive-pages.css` 直接 selector Orders／Dine／Soldout／More 內部元件
-- 各頁 Page CSS 同時控制相同 Component
+### V7 — Responsive Pages CSS 仍直接控制 Orders／Dine／Soldout／More
 
 狀態：**MIGRATION REQUIRED**
 
-目標：Responsive Core 只提供 profile／token；各頁唯一 Owner CSS 自己使用 token。
+處理方式：Responsive Core 只提供 profile/token；各 Page CSS 自己消費。
 
-### V8 — Shared Page Base 保留 Legacy Page Chrome
-- `shared/page-base.css` 定義 `.topbar/.bottom-nav/.global-statusbar` 等 legacy child chrome
-- `app-shell.css` 已管理正式 Global Shell
+### V8 — Shared Page Base Global Chrome Visual
 
-狀態：**MIGRATION REQUIRED**
+狀態：**VISUAL CLEARED / RUNTIME GUARD REMAINS**
 
-目標：正式 Runtime 只保留 `app-shell.css` Global Chrome；Page Base 只保留真正 page primitive／modal primitive／token。
+`page-base.css` 已退出 Global Chrome Visual；待 V5 完成後移除 legacy guard。
 
-## 7. Ownership Cleanup 順序
+## 7. Authority Cleanup 順序
 
-1. V1 Order Cart Visual
-2. V2 Drink Card Visual
-3. V3 Global Page Actions
-4. V4 Global Overlay State
-5. V5 / V8 Legacy Child Global Chrome
-6. V6 Adaptive Direct Selectors
-7. V7 Responsive Pages Direct Selectors
+1. V1 Cart internal visual：逐組搬遷，不重畫 1920。
+2. V5 Legacy Child Chrome：停止正式 Runtime 建第二套 Global UI。
+3. V6 Adaptive direct selectors：逐 Page 轉 Token。
+4. V7 Responsive Page direct selectors：逐 Page 轉 Token。
+5. 視實際重用程度，再決定 Product Card／Drink Card 是否拆成獨立 component stylesheet；**不為拆檔而拆檔。**
 
-在 V1–V4 未完成前，禁止再新增點單頁視覺補丁或 Global Shell workaround。
-
-## 8. 修改前 Ownership Gate
+## 8. 修改前 Authority Gate
 
 每次修改前必須回答：
 
-1. Component 名稱？
-2. Registry Owner 係邊個檔案？
-3. 今次只改 Owner 嗎？
-4. 有冇其他 CSS／JS selector、Observer、Runtime 同時控制？
-5. Adaptive 係咪只傳 Token，而唔係直接改 Component？
-6. Domain 係咪唯一商業規則來源？
+1. 今次改嘅係 Composition、DOM、Visual、State、Domain 定 Token？
+2. 呢種決策嘅唯一 Authority 係邊個？
+3. 有冇另一個檔案同時修改同一 Property／State／Action？
+4. Adaptive 係咪只提供 Token？
+5. Domain 係咪唯一 Business Truth？
+6. 會唔會碰已封板 1920？如果會，係咪問題根因？
 
-任何一題答「有第二 Owner」：STOP，先完成 Ownership Consolidation。
+只要發現第二 Authority：先完成 Consolidation，禁止疊新 Fix。
 
 ## 9. Definition of Done
 
 一個 Component 只有同時符合以下先可以叫完成：
 
-- 一個 DOM Owner；
-- 一個 Visual Owner；
-- 一個 State／Domain truth source；
+- Composition responsibility 清楚；
+- DOM Authority 清楚；
+- Visual Authority 清楚；
+- State／Domain truth source 唯一；
 - Adaptive 只提供 Token；
 - 無永久 Override／Patch／MutationObserver 補同一 State；
+- 同一 Property 不在兩個 Authority Layer 重複定義；
 - Code Map / MFKG / Ownership Registry 一致；
-- Contract Test 可以阻止第二 Owner 再出現。
+- Contract Test 可以阻止第二 Authority 再出現；
+- 1920 已封板畫面行為保持不變，除非本次問題根因直接要求修改。
