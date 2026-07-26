@@ -70,6 +70,12 @@ const checks=[
     ]
   },
   {
+    id:'ADAPTIVE_ORDER_PRODUCT_PAGE_AUTHORITY',
+    description:'Order product adaptive visuals belong to the Order page authority',
+    authority:'pages/order/adaptive.css',
+    forbidden:[['shared/adaptive-layout.css','body[data-page="order"]']]
+  },
+  {
     id:'ADAPTIVE_ORDERS_TOKEN_ONLY',
     description:'Adaptive core must not directly style Orders page components',
     authority:'pages/orders/page.css + pages/orders/responsive.css',
@@ -145,12 +151,6 @@ const knownMigrations=[
     files:['pages/order/page.css','pages/order/cart.css'],
     needles:['.cart-row','.cart-img','.cart-actions','.pending-area','.cart footer'],
     note:'page.css legacy cart internals are frozen by policy; new cart work belongs to cart.css; migrate one responsibility group at a time with a contract test before removing the legacy rules'
-  },
-  {
-    id:'V6_ADAPTIVE_DIRECT_COMPONENT_VISUALS',
-    files:['shared/adaptive-layout.css'],
-    needles:['body[data-page="order"] .product-card'],
-    note:'replace remaining order product direct styling with tokens consumed by component/page visual authority'
   }
 ];
 
