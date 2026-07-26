@@ -1,5 +1,5 @@
 name: oneoff-order-surface-render
-# rerun-after-contract-alignment: 2026-07-26-2
+# rerun-after-contract-alignment: 2026-07-26-3
 
 on:
   push:
