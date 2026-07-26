@@ -61,15 +61,22 @@ export function createStore(initialState,options={}){
     }
     catch(error){console.warn('STORE_PERSIST_FAILED',error);}
   }
+  function notify(){listeners.forEach(listener=>listener(state));}
   function set(updater){
     const draft=safeClone(state);
     const next=typeof updater==='function'?updater(draft):updater;
     state=options.normalize?options.normalize(next):next;
     persist();
-    listeners.forEach(listener=>listener(state));
+    notify();
+  }
+  function setTransient(updater){
+    const next=typeof updater==='function'?updater(state):updater;
+    if(next==null||next===state)return;
+    state=next;
+    notify();
   }
   function subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);}
-  return {get,set,subscribe,persist};
+  return {get,set,setTransient,subscribe,persist};
 }
 
 function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
