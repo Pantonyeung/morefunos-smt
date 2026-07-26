@@ -11,11 +11,11 @@ const routes={order:'pages/order/index.html',checkout:'pages/checkout/index.html
 const labels={order:'點餐',orders:'訂單',dine:'堂食',soldout:'售罄',more:'更多',checkout:'結帳'};
 const mainRoutes=['order','orders','dine','soldout','more'];
 const checkoutExitRoutes=new Set(['order','orders']);
-const BUILD='global-shell-v2-20260726-checkout-ready';
+const BUILD='global-shell-v2-20260726-atomic-ready';
 const frameByRoute=new Map();
 const allFrames=new Set();
 const readyRoutes=new Set();
-let activeFrame=seedFrame;
+let activeFrame=null;
 let current='';
 let pending='';
 let childReady=false;
@@ -28,7 +28,7 @@ let preloadQueue=[];
 let preloadingRoute='';
 let checkoutExitArmed='';
 const SCALE_KEY='morefun-smt-ui-scale';
-let uiScale=Math.max(.82,Math.min(1,Number(localStorage.getItem(SCALE_KEY)||1)));
+let uiScale=Math.max(.82,Math.min(1,Number(localStorage.getItem(SCALE_KEY)||1));
 
 function viewportSize(){const viewport=window.visualViewport;return {width:Math.round(viewport?.width||window.innerWidth),height:Math.round(viewport?.height||window.innerHeight)};}
 function frameList(){return [...allFrames];}
@@ -123,7 +123,7 @@ function setActiveFrame(frame,key){
   frame.id='page';frame.classList.remove('is-loading');frame.classList.add('is-active');frame.setAttribute('aria-hidden','false');frame.removeAttribute('tabindex');
   activeFrame=frame;current=key;pending='';childReady=true;clearTimeout(watchdogTimer);stage.dataset.route=current;delete stage.dataset.pendingRoute;
   if(key==='checkout')checkoutExitArmed='';
-  applyProfileToFrame(frame);setShellRouteUi(key,{loading:false});syncChildOverlay(frame);
+  setShellRouteUi(key,{loading:false});syncChildOverlay(frame);
   try{
     if(key==='checkout')frame.contentWindow?.postMessage({type:'morefun:checkout-enter',route:key},'*');
     frame.contentWindow?.postMessage({type:'morefun:page-activate',route:key},'*');
@@ -134,7 +134,7 @@ function armWatchdog(frame,key){clearTimeout(watchdogTimer);watchdogTimer=setTim
 function ensureFrameLoading(key,{force=false,background=false}={}){
   let frame=frameByRoute.get(key);
   if(!frame){frame=createHiddenFrame(key);frame.src=pageUrl(key,force?'reload':'normal');return frame;}
-  if(force){readyRoutes.delete(key);frame.classList.add('is-loading');frame.src=pageUrl(key,'reload');}
+  if(force){readyRoutes.delete(key);frame.classList.add('is-loading');frame.classList.remove('is-active');frame.setAttribute('aria-hidden','true');frame.src=pageUrl(key,'reload');}
   if(background)frame.classList.add('is-loading');
   return frame;
 }
@@ -161,7 +161,9 @@ function load({force=false}={}){
 
 function boot(){
   const key='order';
-  current=key;childReady=false;attachFrame(seedFrame,key);seedFrame.classList.add('is-active');seedFrame.src=pageUrl(key);stage.dataset.route=key;setShellRouteUi(key,{loading:false});
+  current='';pending=key;childReady=false;attachFrame(seedFrame,key);
+  seedFrame.classList.remove('is-active');seedFrame.classList.add('is-loading');seedFrame.setAttribute('aria-hidden','true');seedFrame.tabIndex=-1;
+  seedFrame.src=pageUrl(key);stage.dataset.pendingRoute=key;setShellRouteUi(key,{loading:true});
   if(location.hash!=='#/order')history.replaceState(null,'','#/order');
 }
 
@@ -210,7 +212,7 @@ addEventListener('message',event=>{
   if(message.type==='morefun:page-ready'){
     const key=frame.dataset.route||message.page||pending||current;readyRoutes.add(key);frame.classList.remove('is-loading');applyProfileToFrame(frame);
     if(preloadingRoute===key){preloadingRoute='';setTimeout(preloadNext,40);}
-    if(key===pending||(!childReady&&key===current))setActiveFrame(frame,key);
+    if(key===pending||(!childReady&&key===current))requestAnimationFrame(()=>setActiveFrame(frame,key));
     if(key==='order')startSequentialPreload();
     return;
   }
@@ -223,11 +225,18 @@ addEventListener('message',event=>{
 });
 
 window.MoreFunShell={
-  unlock(){shellUnlocked=true;document.documentElement.dataset.shellUnlocked='1';applyProfile();load({force:true});},
+  unlock(){
+    shellUnlocked=true;document.documentElement.dataset.shellUnlocked='1';applyProfile();
+    const key=route();
+    const cached=frameByRoute.get(key);
+    if(cached&&readyRoutes.has(key)){if(current!==key)setActiveFrame(cached,key);return;}
+    if(!cached)load();
+  },
   reload(){load({force:true});},
   setScale(value){uiScale=Math.max(.82,Math.min(1,Number(value)||1));localStorage.setItem(SCALE_KEY,String(uiScale));applyProfile();},
   getScale(){return uiScale;},
   profile(){return currentProfile;}
 };
+addEventListener('morefun:shell-unlocked',()=>window.MoreFunShell.unlock());
 
 applyProfile();boot();
