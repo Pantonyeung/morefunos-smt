@@ -1,5 +1,7 @@
 # SMT Code Map
 
+> Component／Global Surface／Domain 的唯一責任來源，以 `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md` 為準。本 Code Map 只描述程式位置，不得用來建立第二 Owner。
+
 ## 執行入口
 
 | 檔案 | 責任 | 主要依賴 |
@@ -8,8 +10,9 @@
 | `app-loader.js` | route、viewport、安全縮放、iframe bridge及子頁錯誤可見後備 | pages、postMessage |
 | `pages/order/index.html` | 點單DOM入口 | page.js、page.css |
 | `pages/order/page.js` | 渲染、事件、modal、購物車、飲品、配對、待處理、共用待處理數量、餐牌啟動、售罄／停售預覽及堂食取消脈絡 | data、menu-api、domain、runtime、供應狀態、dine-domain |
-| `pages/order/page.css` | 工作區、定位及視覺 | page.js class names |
-| `pages/order/order-domain.js` | 純資料操作 | 無DOM |
+| `pages/order/page.css` | 點單頁非 Cart Component 視覺；Drink Card 目標唯一 Visual Owner | page.js class names、Adaptive tokens |
+| `pages/order/cart.css` | Cart／Required／Quick Drawer 容器視覺唯一 Owner（Ownership migration 中） | page.js class names、Adaptive cart tokens |
+| `pages/order/order-domain.js` | 純資料操作、Cart View、Service Mode、Packaging Pricing | 無DOM |
 | `pages/order/page-data.js` | catalog、drink、pending示範資料 | page.js |
 | `pages/order/menu-api.js` | Firebase RTDB餐牌讀取、正規化、SMT規則合併、快取及離線回退 | `public/catalogV1`、page-data後備 |
 | `pages/orders/page.js` | 三渠道總覽、核數／通知、行內部分取消、歷史及反結帳 | 訂單記錄、orders-domain、終端ID |
@@ -22,10 +25,10 @@
 | `pages/more/page.js` | 更多頁六入口、歷史日期範圍、營業／渠道／付款／商品／異常分析、訂單下鑽、日結、報表匯出、打印中心、備份／恢復、顯示設定、系統診斷及高風險二次確認 | more-domain、print-domain、本機訂單／設定 |
 | `pages/more/more-domain.js` | 營業日、歷史範圍、港幣面額盤點、待核實付款反推、3% 授權日結、渠道／付款／商品／時段／異常報表、CSV、快照校驗／恢復及診斷純資料邏輯 | 無 DOM |
 | `pages/more/print-domain.js` | 五部設備、四款格式、合併統計、打印工作、重試／改送、診斷及安卓橋接封包 | 無 DOM |
-| `pages/more/page.css` | 更多頁主卡、細節彈窗、確認彈窗及固定畫布視覺 | page.js class names |
 | `shared/operations.js` | 暫存流水、跨機接手、作廢、日結清理、再暫存 lineage、結帳稽核 | 純資料操作 |
 | `shared/order-identity.js` | 同步歷史及活躍堂食每日三位顯示流水、早上五時營業日、舊編號兼容、最新開單及永久訂單識別；跨機原子派號待後台 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
+| `shared/adaptive-layout.js` | Adaptive 數值／Token 計算；不得成為 Component Owner | viewport、Component dimensions |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
 | `tests/menu-api.test.mjs` | 真實餐牌合約、映射及離線回歸 | menu-api |
 
@@ -33,7 +36,7 @@
 
 | 功能 | UI／函數 | 驗證 |
 |---|---|---|
-| 購物車 | `cartRows`, `cartRow`, `changeCartQuantity`, `openProduct` | cart tests |
+| 購物車 | `cartRows`, `cartLineRow`, `changeCartQuantity`, `openProduct` | cart tests |
 | 快捷飲品 | `quickDrinks`, `drinkChoiceCard`, `openDrink`, `drinkModifierModal`, `applyDrink` | drink tests |
 | 產品修改 | `productDetailModal`, `detailGroups`, `applyProduct` | edit flow |
 | 指定配對 | `pairingGroupCount`, `specifiedLinkModal`, pairing actions | dynamic A–Z tests |
@@ -60,7 +63,8 @@
 | 日結盤點及反推 | `syncCashDenomination`、`totalCashBreakdown`、`calculateDayCloseReconciliation`、`createDayClose` | more operations tests |
 | 堂食取消生命週期 | `createDineOrderContext`、`cleanupEmptyDineSessions`、`requestDineCancellation` | dine page tests |
 | 全局觸控動效 | `shared/page-base.css` 共用 focus／press／dialog／drawer／reduced-motion | more page及全量回歸 |
-| 共用介面骨架及選擇膠囊 | `shared/shell.js`、`shared/page-base.css`、`renderGlobalStatusBar`、`renderBottomNav`、`--choice-pill-radius` | shell UI tests |
+| 正式 Global Shell | `index.html`、`app-shell.css`、`app-loader.js` | shell UI tests |
+| 共用 legacy child shell（待移除 Runtime Owner 身份） | `shared/shell.js`、`shared/page-base.css` | Ownership migration |
 | 分類格數及搜尋 | `category-layout.js`、`categoryBar`、更多頁顯示設定 | category layout／order UI tests |
 | 訂單歷史歸檔 | `archiveExpiredOrders`、`archiveAndRender` | orders actions tests |
 | 實物打印資料 | `shouldPrintProductLabel`、`labelDocuments`、`renderPrintDocument` | print core tests |
@@ -81,13 +85,15 @@
 7. 完成訂單／堂食／重印 → 中央打印工作 → 格式化文件 → `morefun.print.v1` 安卓橋接 → 實體結果回寫。
 8. 空枱點餐 → 只寫 `dineContext` → 取消則清除並返回堂食；正式提交餐品 → 校驗會話 → 開枱及建立正式批次。
 9. 日結 → 面額盤點 → 實點現金 → 待核實現金／非現金反推 → 3% 覆核及授權 → 不可覆寫版本稽核。
-10. 任一主要頁 → 共用全域狀態欄／底欄 → 頁面只附加專用狀態；來源操作卡 → 共用定位器 → 四方向箭嘴。
+10. 任一主要頁 → 正式 Global Shell 狀態欄／底欄 → Page 只提供 page action descriptor（目前仍有 legacy DOM proxy，列入 Ownership migration）。
 11. 完成單計時 → 三十分鐘 → 持久完成狀態／完成時間／audit → 歷史訂單。
 12. 結帳／堂食完成 → `createOrderIdentity` → 每日顯示流水＋永久識別 → 各主頁由同一函數找最新單號。
 13. 更多頁選日期 → `buildReportRange` → 範圍內訂單 → 營業／渠道／付款／商品／異常同源統計及下鑽。
 
 ## 修改守則
 
+- 修改前必讀 `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`。
 - class或 `data-action` 改名，同步改 CSS 及測試。
 - Store shape 改動須兼容舊 localStorage。
 - 快取版本改動同步 service worker／資源 query，避免 Safari 顯示舊版。
+- 如同一 Component 出現兩個 Visual／DOM／State Owner：STOP，先做 Ownership Consolidation。
