@@ -160,5 +160,6 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 
 ```bash
 node scripts/validate-ai-context.mjs
+node scripts/audit-component-ownership.mjs
 node --test tests/*.test.mjs
 ```
