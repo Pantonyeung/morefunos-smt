@@ -1,0 +1,16 @@
+/* Soldout page responsive profile consumer. Shared responsive core supplies tokens only. */
+.soldout-grid{grid-template-columns:minmax(0,1fr) minmax(0,var(--side-width,32%));gap:var(--page-gap)}
+.search-box{width:min(330px,28vw)}
+.supply-panel>header{min-height:var(--topbar-height)}
+.readonly-detail{width:min(680px,calc(100vw - 24px));max-height:var(--modal-max-height);overflow:auto}
+
+:root[data-responsive-profile="compact"] .soldout-grid{grid-template-columns:minmax(0,1fr) minmax(0,var(--side-width,32%));gap:10px}
+:root[data-responsive-profile="compact"] .search-box{width:220px;height:40px}
+:root[data-responsive-profile="compact"] .status-filter button{min-width:68px;padding-inline:8px}
+:root[data-responsive-profile="compact"] .catalog-caption{padding:0 10px 7px}
+:root[data-responsive-profile="compact"] .supply-panel>header{padding:8px 10px}
+:root[data-responsive-profile="compact"] .panel-tools{padding:7px 9px}
+:root[data-responsive-profile="compact"] .supply-list{padding-inline:9px}
+:root[data-responsive-profile="compact"] .group-head{height:44px}
+:root[data-responsive-profile="compact"] .supply-row{grid-template-columns:26px 48px 1fr;gap:7px;padding:7px 0}
+:root[data-responsive-profile="compact"] .supply-row-img{width:48px;height:48px}
