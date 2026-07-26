@@ -5,6 +5,7 @@
   const FONT_SCALES={small:.92,medium:1,large:1.12};
   const MIN_FONT={small:12,medium:13,large:15};
   let frame=0;
+  let lastLayoutSignature='';
 
   const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
   const number=value=>Number.isFinite(Number(value))?Number(value):0;
@@ -77,7 +78,11 @@
   }
 
   function saveOrderMetrics(metrics){
-    try{localStorage.setItem(METRIC_PREFIX+viewportKey(),JSON.stringify(metrics));}catch{}
+    try{
+      const key=METRIC_PREFIX+viewportKey();
+      const serialized=JSON.stringify(metrics);
+      if(localStorage.getItem(key)!==serialized)localStorage.setItem(key,serialized);
+    }catch{}
   }
 
   function readOrderMetrics(){
@@ -131,7 +136,24 @@
     cart.dataset.adaptiveScale=scale.toFixed(4);
   }
 
+  function currentLayoutSignature(){
+    const products=document.querySelector('.products');
+    const cart=document.querySelector('.cart');
+    const productRect=products?.getBoundingClientRect();
+    const cartRect=cart?.getBoundingClientRect();
+    const settings=readSettings();
+    const mode=['small','medium','large'].includes(settings.display?.fontSizeMode)?settings.display.fontSizeMode:'medium';
+    return [
+      Math.round(innerWidth),Math.round(innerHeight),mode,document.body.dataset.page||'',products?.className||'',
+      Math.round(productRect?.width||0),Math.round(productRect?.height||0),
+      Math.round(cartRect?.width||0),Math.round(cartRect?.height||0)
+    ].join('|');
+  }
+
   function apply(){
+    const signature=currentLayoutSignature();
+    if(signature===lastLayoutSignature)return;
+    lastLayoutSignature=signature;
     applyGlobalScale();
     applyProductArea();
     applyCartArea();
@@ -146,7 +168,7 @@
   resizeObserver.observe(document.documentElement);
   addEventListener('morefun:layout-invalidated',schedule);
   addEventListener('resize',schedule,{passive:true});
-  addEventListener('storage',schedule);
+  addEventListener('storage',()=>{lastLayoutSignature='';schedule();});
   document.addEventListener('DOMContentLoaded',schedule,{once:true});
   schedule();
 })();
