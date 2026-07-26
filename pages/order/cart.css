@@ -1,0 +1,22 @@
+.cart-mode-controls{display:flex;align-items:center;gap:8px}
+.cart>header .cart-mode-toggle{min-width:74px;border-width:1px;font-weight:950;box-shadow:0 2px 7px rgba(69,48,32,.06)}
+.cart>header .cart-mode-toggle.takeaway{border-color:#efb18b;background:#fff2e9;color:#b84216}
+.cart>header .cart-mode-toggle.dine{border-color:#cbb9aa;background:#f3eee9;color:#5f493c}
+.cart>header .cart-view-toggle{border-color:#d9cec4;background:#fff;color:#6f5b4f}
+.cart>header .cart-view-toggle.organized{border-color:#bda99a;background:#eee7e1;color:#4f3d33}
+.cart-row{position:relative}
+.cart-row.is-recent{background:#fff7f0;box-shadow:inset 4px 0 0 var(--orange)}
+.cart-row.is-recent .seq{background:var(--orange);color:#fff}
+.recent-badge{display:inline-flex;align-items:center;width:max-content;margin-top:2px;padding:2px 7px;border-radius:999px;background:var(--orange-soft);color:#b84216;font-size:11px;font-style:normal;font-weight:950}
+.service-mode{display:flex;align-items:center;gap:6px;margin-top:2px}
+.service-mode .line-service-toggle{min-width:42px;height:28px;padding:0 8px;border:1px solid #ddd1c7;border-radius:999px;background:#f7f3ef;color:#6f5b4f;font-size:12px;font-weight:950}
+.service-mode .line-service-toggle.is-override{border-color:#efb18b;background:#fff2e9;color:#b84216}
+.cart-category>header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 2px 7px;border-bottom:1px solid #f0e9e3;color:#6f5b4f}
+.cart-category-toggle{display:flex;align-items:center;gap:8px;border:0;background:transparent;padding:0;font-weight:950;color:inherit}
+.cart-category>header>span{font-size:12px;font-weight:900;color:var(--muted)}
+.cart-summary-strip{display:flex;gap:6px;flex-wrap:wrap;padding:7px 0 2px;color:var(--muted);font-size:12px;font-weight:850}
+.cart-summary-strip b{color:var(--text)}
+.quick-drink-context{display:grid;gap:3px;padding:8px 10px;margin:0 0 8px;border:1px solid #ead9ce;border-radius:10px;background:#fffaf6;font-size:12px}
+.quick-drink-context strong{color:#6f5b4f}
+.quick-drink-context em{font-style:normal;color:#b84216;font-weight:950}
+.cart footer .primary:disabled{background:#d8d3cf;border-color:#d8d3cf;color:#8d8580;box-shadow:none;cursor:not-allowed}
