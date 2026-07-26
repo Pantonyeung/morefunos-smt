@@ -16,7 +16,12 @@ function handleShellNavigation(event){
   if(!route||route===document.body.dataset.page)return;
   navigate(route);
 }
+function announceReadyAfterStableFrames(){
+  const announce=()=>requestAnimationFrame(()=>requestAnimationFrame(ready));
+  if(document.fonts?.ready)document.fonts.ready.then(announce,announce);
+  else announce();
+}
 applyPreferences();
 document.addEventListener('click',handleShellNavigation,true);
-document.addEventListener('DOMContentLoaded',()=>{applyPreferences();ready();},{once:true});
+document.addEventListener('DOMContentLoaded',()=>{applyPreferences();announceReadyAfterStableFrames();},{once:true});
 window.MoreFunPageBridge={navigate,ready,applyPreferences};
