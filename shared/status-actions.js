@@ -58,13 +58,33 @@ function scheduleSync(){
   syncFrame=requestAnimationFrame(syncChildStatusActions);
 }
 
+function proxyAnchorInFrame(proxy,frame){
+  const proxyRect=proxy?.getBoundingClientRect?.();
+  const frameRect=frame?.getBoundingClientRect?.();
+  if(!proxyRect||!frameRect)return null;
+  return {
+    left:proxyRect.left-frameRect.left,
+    right:proxyRect.right-frameRect.left,
+    top:proxyRect.top-frameRect.top,
+    bottom:proxyRect.bottom-frameRect.top,
+    width:proxyRect.width,
+    height:proxyRect.height
+  };
+}
+
 host?.addEventListener('click',event=>{
   const proxy=event.target.closest('[data-shell-proxy-index]');
   if(!proxy||proxy.disabled)return;
   const frame=activePageFrame();
   const index=Number(proxy.dataset.shellProxyIndex);
   const source=childActionNodes(frame)[index];
-  if(source&&!source.disabled)source.click();
+  if(!source||source.disabled)return;
+  let handled=false;
+  try{
+    const actionEvent=new frame.contentWindow.CustomEvent('morefun:status-action',{bubbles:true,cancelable:true,detail:{anchor:proxyAnchorInFrame(proxy,frame)}});
+    handled=!source.dispatchEvent(actionEvent);
+  }catch(_error){}
+  if(!handled)source.click();
 });
 
 stage?.addEventListener('load',scheduleSync,true);
