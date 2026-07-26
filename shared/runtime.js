@@ -48,7 +48,10 @@ export function createStore(initialState,options={}){
   function get(){return state;}
   function persist(){
     if(!options.storageKey)return;
-    try{localStorage.setItem(options.storageKey,JSON.stringify(state));}
+    try{
+      const persisted=typeof options.persistState==='function'?options.persistState(state):state;
+      localStorage.setItem(options.storageKey,JSON.stringify(persisted));
+    }
     catch(error){console.warn('STORE_PERSIST_FAILED',error);}
   }
   function set(updater){
