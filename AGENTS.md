@@ -23,11 +23,14 @@
 
 硬規則：
 
-- 一個 Component 只可以有一個真正 Owner；
-- 一個 Business Rule 只可以有一個 Domain truth source；
-- Adaptive 只可以提供 Token／Available Area／Density／Grid／Typography，不得成為第二 Component Owner；
-- 如發現第二 Owner、Override、Observer、Compatibility Layer 或舊 Runtime 同時控制：**STOP，先收口 Ownership，再修改功能**；
-- 第一次 Fix 無效，第一檢查項必須係 Ownership Conflict，不得直接疊第二層 Fix。
+- **一個元件可以由多層架構共同組成，但同一項決策只可以有一個唯一 Authority；**
+- Page／Composition 只決定元件放邊、佔幾多外部空間；不得重新定義 Component 內部 Visual；
+- Component Visual Authority 只決定自己內部 DOM 幾何、樣式及互動視覺；
+- State／Domain Truth Source 只可以有一個；UI、Checkout、Print 不得自行再算第二套；
+- Adaptive 只可以提供 Token／Available Area／Density／Grid／Typography，不得成為第二 Component Authority；
+- Shell 只管理 Global Chrome／Route／Transaction Layer；Page 不得重建第二套 Global Status Bar／Global Bottom Navigation；
+- 如發現兩個 Layer 同時對同一屬性、同一狀態、同一行為擁有最終決定權：**STOP，先收口 Authority，再修改功能**；
+- 第一次 Fix 無效，第一檢查項必須係 Ownership／Authority Conflict，不得直接疊第二層 Fix。
 
 ---
 
@@ -57,7 +60,7 @@
 - 已閱讀 Adaptive Application Standard；
 - 已閱讀 Component Ownership Registry；
 - 本次需求所屬 Domain；
-- Registry 指定唯一 Owner；
+- Registry 指定嘅 Layout／Visual／State／Domain Authority；
 - 將新增／修改邊個 MFKG Node／Edge；
 - 將修改的正式責任來源；
 - 是否會新增第二套邏輯、Observer、Override、Compatibility Layer 或 Patch；
@@ -150,7 +153,7 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 - 修改前查 `SMT_CHANGE_IMPACT.md`；修改後更新狀態、決策、程式地圖、MFKG 及 Chat 接力包。
 - 所有主卡同時只可開一張；頂欄、底欄及結帳區不得被內容推動或遮蓋。
 - 不可聲稱已完成未做的 API、硬件或實機驗收。
-- 第一次 Fix 失敗必須 STOP 查根因及 Ownership Conflict，禁止直接疊第二層 Fix。
+- 第一次 Fix 失敗必須 STOP 查根因及 Ownership／Authority Conflict，禁止直接疊第二層 Fix。
 - 禁止以 MutationObserver／DOM 掃描補自己已有 State；禁止永久 Patch／Override／Hotfix 層。
 - 禁止所有 State Change 重畫整個 App；優先局部 Surface Update。
 - 已封板 Component 預設不可修改；新需求只可改 Registry 指定真正責任來源。
