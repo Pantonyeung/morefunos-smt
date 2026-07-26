@@ -1,3 +1,5 @@
+import {ORDER_STORAGE_KEY,readJSON} from '../../shared/store.js';
+
 export const CART_VIEW_INPUT='input';
 export const CART_VIEW_ORGANIZED='organized';
 export const SERVICE_TAKEAWAY='外賣';
@@ -15,7 +17,9 @@ export function normalizeServiceMode(value,fallback=SERVICE_TAKEAWAY){
 
 export function resolveInitialOrderServiceMode(dineContext,savedMode){
   if(dineContext)return SERVICE_DINE_IN;
-  return normalizeServiceMode(savedMode,SERVICE_TAKEAWAY);
+  const persisted=readJSON(ORDER_STORAGE_KEY,{});
+  const hasActiveCart=Array.isArray(persisted?.cart)&&persisted.cart.length>0;
+  return hasActiveCart?normalizeServiceMode(savedMode,SERVICE_TAKEAWAY):SERVICE_TAKEAWAY;
 }
 
 export function applyOrderServiceMode(cart,mode){
