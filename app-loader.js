@@ -40,41 +40,12 @@ function setChildOverlayState(frame,open){
   frame?.classList.toggle('has-shell-overlay',Boolean(open));
   if(frame===activeFrame)shellApp?.classList.toggle('child-overlay-active',Boolean(open));
 }
-function syncChildOverlay(frame){
-  try{
-    const doc=frame?.contentDocument;
-    const open=Boolean(doc?.querySelector?.('.dialog-layer,.confirm-layer,.overlay-scrim,.anchored-popover'));
-    setChildOverlayState(frame,open);
-  }catch(_error){}
-}
-function stopChildOverlayObserver(frame){
-  try{
-    frame?._shellOverlayObserver?.disconnect?.();
-    if(frame)frame._shellOverlayObserver=null;
-    const doc=frame?.contentDocument;
-    if(doc?.documentElement)delete doc.documentElement.dataset.shellOverlayObserver;
-  }catch(_error){}
-}
-
-function installChildOverlayObserver(frame){
-  try{
-    if(frame?.dataset?.route==='order'||frame!==activeFrame)return;
-    const doc=frame?.contentDocument;
-    if(!doc?.documentElement||frame._shellOverlayObserver)return;
-    doc.documentElement.dataset.shellOverlayObserver='1';
-    const observer=new MutationObserver(()=>syncChildOverlay(frame));
-    observer.observe(doc.body||doc.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
-    frame._shellOverlayObserver=observer;
-    syncChildOverlay(frame);
-  }catch(error){console.warn('GLOBAL_SHELL_OVERLAY_OBSERVER_FAILED',error);}
-}
 
 function applyChildShellMode(frame){
   try{
     const doc=frame?.contentDocument;
     if(!doc?.documentElement)return;
     doc.documentElement.dataset.globalShell='1';
-    installChildOverlayObserver(frame);
   }catch(error){console.warn('GLOBAL_SHELL_CHILD_MODE_FAILED',error);}
 }
 
@@ -144,7 +115,7 @@ function findSourceFrame(source){return frameList().find(frame=>source===frame.c
 function setActiveFrame(frame,key){
   if(!frame)return;
   const old=activeFrame;
-  if(old&&old!==frame){stopChildOverlayObserver(old);old.classList.remove('is-active','is-loading','has-shell-overlay');old.setAttribute('aria-hidden','true');old.tabIndex=-1;if(old.id==='page')old.id='page-cache-'+String(old.dataset.route||'route');}
+  if(old&&old!==frame){old.classList.remove('is-active','is-loading','has-shell-overlay');old.setAttribute('aria-hidden','true');old.tabIndex=-1;if(old.id==='page')old.id='page-cache-'+String(old.dataset.route||'route');}
   shellApp?.classList.remove('child-overlay-active');
   const existingPage=document.getElementById('page');if(existingPage&&existingPage!==frame)existingPage.removeAttribute('id');
   frame.id='page';frame.classList.remove('is-loading');frame.classList.add('is-active');frame.setAttribute('aria-hidden','false');frame.removeAttribute('tabindex');
@@ -152,7 +123,7 @@ function setActiveFrame(frame,key){
   if(key==='checkout')checkoutExitArmed='';
   setShellRouteUi(key,{loading:false});
   applyChildShellMode(frame);
-  if(key!=='order')syncChildOverlay(frame);else setChildOverlayState(frame,frame.classList.contains('has-shell-overlay'));
+  setChildOverlayState(frame,frame.classList.contains('has-shell-overlay'));
   try{
     if(key==='checkout')frame.contentWindow?.postMessage({type:'morefun:checkout-enter',route:key},'*');
     frame.contentWindow?.postMessage({type:'morefun:page-activate',route:key},'*');
@@ -163,7 +134,7 @@ function armWatchdog(frame,key){clearTimeout(watchdogTimer);watchdogTimer=setTim
 function ensureFrameLoading(key,{force=false,background=false}={}){
   let frame=frameByRoute.get(key);
   if(!frame){frame=createHiddenFrame(key);frame.src=pageUrl(key,force?'reload':'normal');return frame;}
-  if(force){readyRoutes.delete(key);stopChildOverlayObserver(frame);frame.classList.add('is-loading');frame.classList.remove('is-active');frame.setAttribute('aria-hidden','true');delete frame.dataset.appliedProfile;frame.src=pageUrl(key,'reload');}
+  if(force){readyRoutes.delete(key);setChildOverlayState(frame,false);frame.classList.add('is-loading');frame.classList.remove('is-active');frame.setAttribute('aria-hidden','true');delete frame.dataset.appliedProfile;frame.src=pageUrl(key,'reload');}
   if(background)frame.classList.add('is-loading');
   return frame;
 }
