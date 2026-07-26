@@ -1,0 +1,68 @@
+name: Migrate Order Popover Core
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/migrate-order-popover-core.yml']
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - name: Migrate formal core
+        shell: python
+        run: |
+          from pathlib import Path
+
+          page = Path('pages/order/page.js')
+          text = page.read_text()
+          old = "function anchorRect(button){const r=button?.getBoundingClientRect?.();return r?{left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}:null;}"
+          new = old + "\nfunction actionAnchor(button,override=null){return override||anchorRect(button);}"
+          if old not in text:
+              raise SystemExit('anchorRect marker missing')
+          text = text.replace(old,new,1)
+          if 'function handle(button){' not in text:
+              raise SystemExit('handle marker missing')
+          text = text.replace('function handle(button){','function handle(button,anchorOverride=null){',1)
+          start = text.index('function handle(button,anchorOverride=null){')
+          end = text.index("app.addEventListener('click'", start)
+          block = text[start:end].replace('anchorRect(button)','actionAnchor(button,anchorOverride)')
+          text = text[:start] + block + text[end:]
+          click_marker = "app.addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});"
+          proxy_listener = "app.addEventListener('morefun:status-action',event=>{const button=event.target.closest('[data-action]');if(!button||button.disabled)return;event.preventDefault();handle(button,event.detail?.anchor||null);});\n" + click_marker
+          if click_marker not in text:
+              raise SystemExit('click listener marker missing')
+          text = text.replace(click_marker,proxy_listener,1)
+          quick_old = "<button class=\"top-btn\" data-action=\"open-quick-settings\">快捷 '+(state.quickMode?'ON':'OFF')+'</button>"
+          quick_new = "<button class=\"top-btn quick-state '+(state.quickMode?'is-on':'is-off')+'\" data-action=\"open-quick-settings\">快捷 '+(state.quickMode?'ON':'OFF')+'</button>"
+          if quick_old not in text:
+              raise SystemExit('quick status marker missing')
+          text = text.replace(quick_old,quick_new,1)
+          page.write_text(text)
+
+          shell = Path('app-shell.css')
+          css = shell.read_text()
+          marker='/* page-action-state-v1 */'
+          if marker not in css:
+              css += "\n"+marker+"\n.shell-page-action.quick-state.is-on{border-color:#e3a37d;background:#fff0e7;color:#a9451e;box-shadow:inset 0 0 0 1px rgba(239,91,35,.08)}\n.shell-page-action.quick-state.is-off{border-color:#ddd4cd;background:#fff;color:#70645c}\n"
+          shell.write_text(css)
+
+          index = Path('index.html')
+          html = index.read_text().replace('shared/status-actions.js?v=global-shell-v2d','shared/status-actions.js?v=global-shell-v2e').replace('app-shell.css?v=global-shell-v2d','app-shell.css?v=global-shell-v2e')
+          index.write_text(html)
+
+          order_index = Path('pages/order/index.html')
+          oi = order_index.read_text().replace('cart.css?v=order-cart-core-v4','cart.css?v=order-cart-core-v5').replace('page.js?v=order-core-v6','page.js?v=order-core-v7')
+          order_index.write_text(oi)
+
+          Path('.github/workflows/migrate-order-popover-core.yml').unlink()
+      - name: Commit migration
+        run: |
+          git config user.name "MoreFun Core Migration"
+          git config user.email "actions@users.noreply.github.com"
+          git add pages/order/page.js pages/order/index.html app-shell.css index.html .github/workflows/migrate-order-popover-core.yml
+          git commit -m "fix(order): anchor global actions and finalize order interaction core"
+          git push origin HEAD:smt-functional-completeness-v1
