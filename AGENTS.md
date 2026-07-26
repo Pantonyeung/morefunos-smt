@@ -1,6 +1,6 @@
 # 磨飯 SMT AI 工作入口
 
-> **強制規則：任何 AI、Codex、Work 模式、程式代理、開發者或新對話，在分析、設計或修改 SMT 前，必須先完整閱讀三份 PRIMARY STANDARD。未完成閱讀，禁止修改程式。**
+> **強制規則：任何 AI、Codex、Work 模式、程式代理、開發者或新對話，在分析、設計或修改 SMT 前，必須先完整閱讀三份 PRIMARY STANDARD 以及 Component Ownership Registry。未完成閱讀，禁止修改程式。**
 
 ## 三份同級最高開發標準
 
@@ -15,6 +15,20 @@
 
 **三者共同構成 SMT Development Standard；全部屬強制規範，不是參考文件。**
 
+## 強制 Component Ownership Registry
+
+`docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`
+
+任何 UI Component、Global Surface、Domain、State、Adaptive Token 修改前必須先查 Registry。
+
+硬規則：
+
+- 一個 Component 只可以有一個真正 Owner；
+- 一個 Business Rule 只可以有一個 Domain truth source；
+- Adaptive 只可以提供 Token／Available Area／Density／Grid／Typography，不得成為第二 Component Owner；
+- 如發現第二 Owner、Override、Observer、Compatibility Layer 或舊 Runtime 同時控制：**STOP，先收口 Ownership，再修改功能**；
+- 第一次 Fix 無效，第一檢查項必須係 Ownership Conflict，不得直接疊第二層 Fix。
+
 ---
 
 ## 強制閱讀順序
@@ -24,12 +38,13 @@
 1. `docs/SMT_DEVELOPMENT_CHARTER_V1.0.md`
 2. `docs/MFKG_STANDARD_V1.0.md`
 3. `docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`
-4. `SMT_AI_START_HERE.md`
-5. `SMT_CONTEXT_MIN.md`
-6. 與任務相關的 `docs/ai-context/SMT_CODE_MAP.md` 章節
-7. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md` 的相關章節
-8. Bug／修改工作必讀 `SMT_CHANGE_IMPACT.md`
-9. 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
+4. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`
+5. `SMT_AI_START_HERE.md`
+6. `SMT_CONTEXT_MIN.md`
+7. 與任務相關的 `docs/ai-context/SMT_CODE_MAP.md` 章節
+8. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md` 的相關章節
+9. Bug／修改工作必讀 `SMT_CHANGE_IMPACT.md`
+10. 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
 
 ---
 
@@ -40,7 +55,9 @@
 - 已閱讀 Development Charter；
 - 已閱讀 MFKG Standard；
 - 已閱讀 Adaptive Application Standard；
+- 已閱讀 Component Ownership Registry；
 - 本次需求所屬 Domain；
+- Registry 指定唯一 Owner；
 - 將新增／修改邊個 MFKG Node／Edge；
 - 將修改的正式責任來源；
 - 是否會新增第二套邏輯、Observer、Override、Compatibility Layer 或 Patch；
@@ -49,7 +66,7 @@
 - Checkout／Responsive／資料／打印／跨端依賴的影響；
 - 測試及回滾方法。
 
-如方案與三份 PRIMARY STANDARD 衝突：**STOP，不得自行繞過。** 只有產品負責人明確要求「修改／更新標準」先可以改變最高標準。
+如方案與三份 PRIMARY STANDARD 或 Ownership Registry 衝突：**STOP，不得自行繞過。** 只有產品負責人明確要求「修改／更新標準」先可以改變最高標準。
 
 ---
 
@@ -115,11 +132,12 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 1. 安全、資料完整、付款／訂單不可逆風險。
 2. 產品負責人明確要求修改／更新最高標準的新決策。
 3. SMT Development Charter + MFKG Standard + Adaptive Application Standard。
-4. 產品負責人在目前對話的最新明確確認（不得默認推翻三份最高標準）。
-5. `docs/ai-context/SMT_DECISION_LEDGER.md` 中 `LOCKED`／`CURRENT` 決策。
-6. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`。
-7. `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 的程式及驗證證據。
-8. 舊基線、舊效果圖、舊 log；只作背景，不得推翻上列資料。
+4. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`。
+5. 產品負責人在目前對話的最新明確確認（不得默認推翻最高標準）。
+6. `docs/ai-context/SMT_DECISION_LEDGER.md` 中 `LOCKED`／`CURRENT` 決策。
+7. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`。
+8. `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 的程式及驗證證據。
+9. 舊基線、舊效果圖、舊 log；只作背景，不得推翻上列資料。
 
 安全、資料完整、離線可操作及繁體中文不得低於舊基線。
 
@@ -132,10 +150,10 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 - 修改前查 `SMT_CHANGE_IMPACT.md`；修改後更新狀態、決策、程式地圖、MFKG 及 Chat 接力包。
 - 所有主卡同時只可開一張；頂欄、底欄及結帳區不得被內容推動或遮蓋。
 - 不可聲稱已完成未做的 API、硬件或實機驗收。
-- 第一次 Fix 失敗必須 STOP 查根因，禁止直接疊第二層 Fix。
+- 第一次 Fix 失敗必須 STOP 查根因及 Ownership Conflict，禁止直接疊第二層 Fix。
 - 禁止以 MutationObserver／DOM 掃描補自己已有 State；禁止永久 Patch／Override／Hotfix 層。
 - 禁止所有 State Change 重畫整個 App；優先局部 Surface Update。
-- 已封板 Component 預設不可修改；新需求只可改真正責任來源。
+- 已封板 Component 預設不可修改；新需求只可改 Registry 指定真正責任來源。
 - token 接近結束時，按 `SMT_CHAT_HANDOFF_PROTOCOL.md` 產生 checkpoint，不得以 token 不足停止開發。
 
 ## 驗證
