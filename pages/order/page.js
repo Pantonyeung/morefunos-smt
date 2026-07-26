@@ -538,6 +538,7 @@ function render(){
     renderStarted=true;
     requestAnimationFrame(()=>{positionActiveCard();restoreCartViewport(state,0);});
     window.parent?.postMessage?.({type:'morefun:overlay-state',open:Boolean(modal||confirmState)},'*');
+    window.dispatchEvent(new Event('morefun:layout-invalidated'));
     return;
   }
 
@@ -556,6 +557,7 @@ function render(){
   if(renderKeys.bottom!==bottomKey){replaceOuter('.bottom-nav',bottomHtml);renderKeys.bottom=bottomKey;}
   if(renderKeys.modal!==modalKey){refreshModalSurface(state);renderKeys.modal=modalKey;}
   window.parent?.postMessage?.({type:'morefun:overlay-state',open:Boolean(modal||confirmState)},'*');
+  window.dispatchEvent(new Event('morefun:layout-invalidated'));
 }
 function completeDineCancellation(){
   const context=store.get().dineContext;

@@ -144,8 +144,7 @@
 
   const resizeObserver=new ResizeObserver(schedule);
   resizeObserver.observe(document.documentElement);
-  const mutationObserver=new MutationObserver(schedule);
-  mutationObserver.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+  addEventListener('morefun:layout-invalidated',schedule);
   addEventListener('resize',schedule,{passive:true});
   addEventListener('storage',schedule);
   document.addEventListener('DOMContentLoaded',schedule,{once:true});
