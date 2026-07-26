@@ -1,0 +1,125 @@
+name: order-page-batch-core-v1
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/order-page-batch-core-v1.yml']
+permissions:
+  contents: write
+jobs:
+  integrate-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply confirmed order page core improvements
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # 1) Order Domain: single packaging-fee source of truth.
+          p=Path('pages/order/order-domain.js'); t=p.read_text()
+          marker="export const SERVICE_DINE_IN='堂食';\n"
+          insert="""export const TAKEAWAY_PACKAGING_FEE_PER_UNIT=1;\nconst PACKAGING_FEE_EXEMPT_CATEGORIES=new Set(['飯團','飲品']);\n\nexport function packagingUnitsForLine(line){\n  if(normalizeServiceMode(line?.serviceMode,SERVICE_TAKEAWAY)!==SERVICE_TAKEAWAY)return 0;\n  if(PACKAGING_FEE_EXEMPT_CATEGORIES.has(String(line?.category||'')))return 0;\n  return Math.max(0,Number(line?.qty)||0);\n}\nexport function packagingFeeForLine(line){return packagingUnitsForLine(line)*TAKEAWAY_PACKAGING_FEE_PER_UNIT;}\nexport function cartPricingSummary(cart=[]){\n  const rows=Array.isArray(cart)?cart:[];\n  const foodSubtotal=rows.reduce((sum,line)=>sum+Number(line?.total??Number(line?.unitPrice||0)*Number(line?.qty||0)),0);\n  const packagingUnits=rows.reduce((sum,line)=>sum+packagingUnitsForLine(line),0);\n  const packagingFee=rows.reduce((sum,line)=>sum+packagingFeeForLine(line),0);\n  return {foodSubtotal,packagingUnits,packagingFee,total:foodSubtotal+packagingFee};\n}\n\n"""
+          if 'export function cartPricingSummary' not in t:
+            if marker not in t: raise SystemExit('order-domain service marker missing')
+            t=t.replace(marker,marker+'\n'+insert,1)
+          p.write_text(t)
+
+          # 2) Checkout Domain: discounts apply to food, packaging remains explicit and non-discounted.
+          p=Path('pages/checkout/checkout-domain.js'); t=p.read_text()
+          if "../order/order-domain.js" not in t:
+            t=t.replace("import {recordCheckoutOperator} from '../../shared/operations.js';\n","import {recordCheckoutOperator} from '../../shared/operations.js';\nimport {cartPricingSummary,packagingFeeForLine} from '../order/order-domain.js';\n",1)
+          start=t.index("export function applyCheckoutDiscount(cart,discount={type:'none'},channel='現場'){")
+          end=t.index('\nexport function enterKeypadValue',start)
+          repl="""export function applyCheckoutDiscount(cart,discount={type:'none'},channel='現場'){\n  const base=cartPricingSummary(cart);\n  const subtotal=roundMoney(base.total),foodSubtotal=roundMoney(base.foodSubtotal),packagingFee=roundMoney(base.packagingFee);\n  const common={foodSubtotal,packagingUnits:base.packagingUnits,packagingFee,subtotal};\n  if(!discount||discount.type==='none')return {...common,discountAmount:0,payable:subtotal,appliedUnits:0};\n  if(isPlatform(channel))throw new Error('平台訂單不可使用本店優惠');\n  let discountAmount=0;\n  let appliedUnits=0;\n  if(discount.type==='student'){\n    let remaining=Math.max(0,Math.floor(Number(discount.studentCount)||0));\n    for(const line of cart||[]){\n      for(const eligible of eligibleStudentUnits(line)){\n        if(!remaining)break;\n        const units=Math.min(remaining,eligible.qty);\n        discountAmount+=eligible.base*.5*units;\n        appliedUnits+=units;\n        remaining-=units;\n      }\n    }\n  }else if(discount.type==='group'){\n    const percent=Math.max(0,Math.min(100,Number(discount.percent)||0));\n    discountAmount=foodSubtotal*percent/100;\n  }\n  discountAmount=roundMoney(discountAmount);\n  return {...common,discountAmount,payable:roundMoney(Math.max(0,subtotal-discountAmount)),appliedUnits};\n}\n"""
+          t=t[:start]+repl+t[end:]
+          t=t.replace("subtotal:pricing.subtotal,discountAmount:pricing.discountAmount,amount:pricing.payable,","foodSubtotal:pricing.foodSubtotal,packagingFee:pricing.packagingFee,packagingUnits:pricing.packagingUnits,subtotal:pricing.subtotal,discountAmount:pricing.discountAmount,amount:pricing.payable,",1)
+          t=t.replace("items:(cart||[]).map(line=>({...line})),cart:(cart||[]).map(line=>({...line})),audit:[...audit]","items:(cart||[]).map(line=>({...line,packagingFee:packagingFeeForLine(line)})),cart:(cart||[]).map(line=>({...line,packagingFee:packagingFeeForLine(line)})),audit:[...audit]",1)
+          p.write_text(t)
+
+          # 3) Order Page: pricing strip, description setting, drawer affordance.
+          p=Path('pages/order/page.js'); t=p.read_text()
+          old="inferOrderServiceMode} from './order-domain.js';"
+          new="inferOrderServiceMode,cartPricingSummary} from './order-domain.js';"
+          if old in t:t=t.replace(old,new,1)
+          t=t.replace("function cartTotal(cart){return cart.reduce((sum,line)=>sum+Number(line.total||0),0);}","function cartTotal(cart){return cartPricingSummary(cart).total;}",1)
+          marker="function findDrinkTarget(cart){"
+          if 'function cartPricingStrip(state)' not in t:
+            insert="""function cartPricingStrip(state){\n  if(!state.cart.length)return '';\n  const pricing=cartPricingSummary(state.cart);\n  return '<div class=\"cart-pricing-strip\"><span>餐點 <b>'+money(pricing.foodSubtotal)+'</b></span><span class=\"packaging\">包裝費 '+pricing.packagingUnits+' 件 <b>'+money(pricing.packagingFee)+'</b></span><strong>合計 '+money(pricing.total)+'</strong></div>';\n}\n"""
+            t=t.replace(marker,insert+marker,1)
+          t=t.replace("'+cartHtml+'<section class=\"catalog\">'","'+cartHtml+'<section class=\"catalog\">'",1)
+          old_surface="+'<div class=\"cart-list\">'+cartRows()+'</div>'+pendingArea()+'<footer>"
+          # Direct exact replacement in cartSurface source.
+          t=t.replace("+'<div class=\"cart-list\">'+cartRows()+'</div>'+pendingArea()+'<footer>","+'<div class=\"cart-list\">'+cartRows()+'</div>'+cartPricingStrip(state)+pendingArea()+'<footer>",1)
+          # Quick drawer header hint.
+          t=t.replace("<header><strong>快捷飲品｜待補 '+missing+'</strong><button data-action=\"toggle-quick-drawer\">×</button></header>","<header><strong>快捷飲品｜待補 '+missing+'</strong><span class=\"quick-scroll-hint\">左右滑動查看更多 ›</span><button data-action=\"toggle-quick-drawer\">×</button></header>",1)
+          # Description toggle in display settings.
+          needle="<div class=\"setting-row\"><div><strong>顯示產品 Code</strong><small>例如 F4、B1、S1</small></div><button class=\"switch '+(c.showCode?'on':'')+'\" data-action=\"toggle-code\"><i></i></button></div></aside>"
+          repl=needle.replace('</aside>',"<div class=\"setting-row\"><div><strong>顯示產品描述</strong><small>大圖卡名稱下方顯示套餐內容／產品描述</small></div><button class=\"switch '+(c.showDescription!==false?'on':'')+'\" data-action=\"toggle-description\"><i></i></button></div></aside>")
+          if needle in t:t=t.replace(needle,repl,1)
+          t=t.replace("else if(action==='toggle-code')updateSettings(s=>{s.catalog.showCode=!s.catalog.showCode;});","else if(action==='toggle-code')updateSettings(s=>{s.catalog.showCode=!s.catalog.showCode;});\n  else if(action==='toggle-description')updateSettings(s=>{s.catalog.showDescription=s.catalog.showDescription===false;});",1)
+          p.write_text(t)
+
+          # 4) Order component CSS: compact pricing row + horizontal-scroll affordance.
+          p=Path('pages/order/cart.css'); t=p.read_text()
+          marker='.cart footer .primary:disabled'
+          if '.cart-pricing-strip{' not in t:
+            css=""".cart-pricing-strip{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:10px;padding:6px 10px;border-top:1px solid #eee5de;background:#fffdfb;color:#79665a;font-size:12px;font-weight:850}.cart-pricing-strip span{white-space:nowrap}.cart-pricing-strip b{color:#4f4037}.cart-pricing-strip .packaging{color:#b84216}.cart-pricing-strip>strong{justify-self:end;color:#2f2722;font-size:14px}\n.quick-drawer-panel>header{display:grid;grid-template-columns:auto 1fr 36px;align-items:center;gap:10px}.quick-scroll-hint{justify-self:end;color:#8b7a6e;font-size:11px;font-weight:800;white-space:nowrap}.quick-drawer-panel>div:last-child{scroll-snap-type:x proximity}.quick-drawer-panel .drink-choice-card{scroll-snap-align:start}\n"""
+            t=t.replace(marker,css+marker,1)
+          p.write_text(t)
+
+          # 5) Checkout UI shows packaging fee explicitly.
+          p=Path('pages/checkout/page.js'); t=p.read_text()
+          t=t.replace('<span>原價<b>${money(completedRecord.subtotal)}</b></span><span>優惠', '<span>餐點<b>${money(completedRecord.foodSubtotal??(completedRecord.subtotal-completedRecord.packagingFee))}</b></span><span>包裝費<b>${money(completedRecord.packagingFee||0)}</b></span><span>原價<b>${money(completedRecord.subtotal)}</b></span><span>優惠',1)
+          t=t.replace('<div class="summary"><span>原價 <b>${money(result.subtotal)}</b></span><span>優惠', '<div class="summary"><span>餐點 <b>${money(result.foodSubtotal)}</b></span><span>包裝費 <b>${money(result.packagingFee)}</b></span><span>優惠',1)
+          p.write_text(t)
+
+          # 6) Print Domain: receipt always organized; mixed dine/takeaway production and packing split.
+          p=Path('pages/more/print-domain.js'); t=p.read_text()
+          if "../order/order-domain.js" not in t:
+            t=t.replace("import {orderDisplayNumber} from '../../shared/order-identity.js';\n","import {orderDisplayNumber} from '../../shared/order-identity.js';\nimport {organizeCartForDisplay,packagingFeeForLine} from '../order/order-domain.js';\n",1)
+          t=t.replace("function receiptLines(order){\n  const subtotal=number(order.subtotal??order.amount??order.total),discount=number(order.discountAmount),amount=number(order.amount??order.total),paid=number(order.receivedAmount??order.paidAmount??amount),change=number(order.changeAmount);\n  return [`原價：$${subtotal.toFixed(0)}`,`優惠：-$${discount.toFixed(0)}`,`應付：$${amount.toFixed(0)}`,`付款：${order.paymentMethod||'待核實'}`,`實收：$${paid.toFixed(0)}`,`找續：$${change.toFixed(0)}`];\n}","function receiptLines(order){\n  const subtotal=number(order.subtotal??order.amount??order.total),foodSubtotal=number(order.foodSubtotal??subtotal-number(order.packagingFee)),packagingFee=number(order.packagingFee),discount=number(order.discountAmount),amount=number(order.amount??order.total),paid=number(order.receivedAmount??order.paidAmount??amount),change=number(order.changeAmount);\n  return [`餐點：$${foodSubtotal.toFixed(0)}`,`包裝費：$${packagingFee.toFixed(0)}`,`原價：$${subtotal.toFixed(0)}`,`優惠：-$${discount.toFixed(0)}`,`應付：$${amount.toFixed(0)}`,`付款：${order.paymentMethod||'待核實'}`,`實收：$${paid.toFixed(0)}`,`找續：$${change.toFixed(0)}`];\n}",1)
+          # organized receipt + service heading
+          t=t.replace("if(template.documentType==='receipt')lines=[...header(order,'顧客小票'),...channelLines(order),...detailLines(items),...receiptLines(order)];","if(template.documentType==='receipt')lines=[...header(order,'顧客小票'),...channelLines(order),...detailLines(organizeCartForDisplay(items)),...receiptLines(order)];",1)
+          t=t.replace("if(template.documentType==='production')lines=[...header(order,'製作單'),...channelLines(order),...summaryLines(summary),...detailLines(items),'請按訂單配置製作'];","if(template.documentType==='production')lines=[...header(order,'製作單'),...(order.printServiceMode?[`服務：${order.printServiceMode}`]:[]),...channelLines(order),...summaryLines(summary),...detailLines(items),'請按訂單配置製作'];",1)
+          t=t.replace("if(template.documentType==='packing')lines=[...header(order,'打包單'),...channelLines(order),...summaryLines(summary),...detailLines(items),`總袋數：____　餐具：____`];","if(template.documentType==='packing')lines=[...header(order,'打包單'),...(order.printServiceMode?[`服務：${order.printServiceMode}`]:[]),...channelLines(order),...summaryLines(summary),...detailLines(items),`總袋數：____　餐具：____`];",1)
+          # insert service variants helper before createPrintJobs
+          marker='export function createPrintJobs(order,state,{now=Date.now(),documents=['
+          if 'function serviceModeDocuments' not in t:
+            helper="""function serviceModeDocuments(order,type){\n  if(!['production','packing'].includes(type))return [null];\n  const items=order?.items||order?.cart||[];\n  const modes=['外賣','堂食'].map(mode=>({mode,items:items.filter(item=>(item.serviceMode||'外賣')===mode)})).filter(group=>group.items.length);\n  if(modes.length<=1)return [null];\n  return modes;\n}\n\n"""
+            t=t.replace(marker,helper+marker,1)
+          t=t.replace("const variants=type==='label'?labelDocuments(order):[null];","const variants=type==='label'?labelDocuments(order):serviceModeDocuments(order,type);",1)
+          old="const printOrder=variant?{...order,labelItem:variant.item,labelPieceIndex:variant.pieceIndex,labelPieceTotal:variant.pieceTotal}:order;"
+          new="const printOrder=type==='label'&&variant?{...order,labelItem:variant.item,labelPieceIndex:variant.pieceIndex,labelPieceTotal:variant.pieceTotal}:variant?.items?{...order,items:variant.items,cart:variant.items,printServiceMode:variant.mode}:order;"
+          if old in t:t=t.replace(old,new,1)
+          p.write_text(t)
+
+          # 7) Cache revisions.
+          p=Path('pages/order/index.html'); t=p.read_text().replace('order-cart-core-v9','order-cart-core-v10').replace('order-core-v16','order-core-v17');p.write_text(t)
+          p=Path('pages/checkout/index.html'); t=p.read_text().replace('checkout-v1-5','checkout-v1-6').replace('checkout-v1-4','checkout-v1-6');p.write_text(t)
+
+          # 8) Regression test for packaging/domain/printing contracts.
+          Path('tests/order-packaging-fee.test.mjs').write_text("""import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport {cartPricingSummary,packagingFeeForLine,SERVICE_TAKEAWAY,SERVICE_DINE_IN} from '../pages/order/order-domain.js';\nimport {applyCheckoutDiscount} from '../pages/checkout/checkout-domain.js';\nimport {defaultPrinterState,createPrintJobs} from '../pages/more/print-domain.js';\n\nconst row=(category,qty=1,serviceMode=SERVICE_TAKEAWAY,total=10)=>({lineId:category+qty,category,name:category,qty,unitPrice:total/qty,total,serviceMode,options:{}});\n\ntest('takeaway packaging fee exempts standalone riceballs and drinks',()=>{\n  const cart=[row('飯團',2,SERVICE_TAKEAWAY,40),row('飲品',2,SERVICE_TAKEAWAY,20),row('便當',2,SERVICE_TAKEAWAY,100),row('小食',1,SERVICE_DINE_IN,20)];\n  assert.equal(packagingFeeForLine(cart[0]),0);assert.equal(packagingFeeForLine(cart[1]),0);assert.equal(packagingFeeForLine(cart[2]),2);assert.equal(packagingFeeForLine(cart[3]),0);\n  assert.deepEqual(cartPricingSummary(cart),{foodSubtotal:180,packagingUnits:2,packagingFee:2,total:182});\n});\n\ntest('checkout discount does not discount packaging fee',()=>{\n  const cart=[row('便當',2,SERVICE_TAKEAWAY,100)];\n  const result=applyCheckoutDiscount(cart,{type:'group',percent:10},'現場');\n  assert.equal(result.foodSubtotal,100);assert.equal(result.packagingFee,2);assert.equal(result.subtotal,102);assert.equal(result.discountAmount,10);assert.equal(result.payable,92);\n});\n\ntest('mixed service order splits production and packing jobs',()=>{\n  const order={id:'TEST-MIX',source:'現場',acceptedAt:Date.now(),items:[row('便當',1,SERVICE_TAKEAWAY,50),row('小食',1,SERVICE_DINE_IN,20)]};\n  const state=defaultPrinterState();state.printers.forEach(p=>{if(p.transport==='network')p.host='127.0.0.1';});\n  const next=createPrintJobs(order,state,{documents:['production','packing']});\n  assert.equal(next.jobs.length,4);\n  const text=next.jobs.map(job=>job.document?.text||'').join('\\n');assert.match(text,/服務：外賣/);assert.match(text,/服務：堂食/);\n});\n""",encoding='utf-8')
+          PY
+      - name: Run complete regression suite
+        shell: bash
+        run: |
+          node --check pages/order/order-domain.js
+          node --check pages/order/page.js
+          node --check pages/checkout/checkout-domain.js
+          node --check pages/checkout/page.js
+          node --check pages/more/print-domain.js
+          node --test tests/*.test.mjs
+      - name: Commit verified core changes
+        shell: bash
+        run: |
+          git config user.name 'MoreFun SMT QA'
+          git config user.email 'actions@morefun.local'
+          git add pages/order/order-domain.js pages/order/page.js pages/order/cart.css pages/order/index.html pages/checkout/checkout-domain.js pages/checkout/page.js pages/checkout/index.html pages/more/print-domain.js tests/order-packaging-fee.test.mjs
+          git commit -m 'feat(order): complete service pricing and order workflow integration'
+          git push origin HEAD:smt-functional-completeness-v1
