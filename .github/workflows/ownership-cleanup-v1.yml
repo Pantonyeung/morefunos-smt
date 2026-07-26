@@ -1,0 +1,39 @@
+name: ownership-cleanup-v1
+
+on:
+  push:
+    branches: [ownership-cleanup-v1]
+    paths:
+      - '.github/workflows/ownership-cleanup-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: contains(github.event.head_commit.message, 'trigger isolated V1 V2 cleanup')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ownership-cleanup-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Consolidate V1/V2 owners
+        run: node scripts/ownership-cleanup-once.mjs
+      - name: Ownership audit
+        run: node scripts/audit-component-ownership.mjs
+      - name: AI context validation
+        run: node scripts/validate-ai-context.mjs
+      - name: Full regression
+        run: node --test tests/*.test.mjs
+      - name: Commit verified cleanup and remove one-off tooling
+        run: |
+          rm -f scripts/ownership-cleanup-once.mjs .github/workflows/ownership-cleanup-v1.yml
+          git config user.name 'MoreFun Ownership QA'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'refactor(ownership): consolidate cart and drink card owners'
+          git push origin HEAD:ownership-cleanup-v1
