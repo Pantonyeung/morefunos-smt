@@ -70,6 +70,14 @@ const checks=[
     ]
   },
   {
+    id:'ADAPTIVE_ORDERS_TOKEN_ONLY',
+    description:'Adaptive core must not directly style Orders page components',
+    authority:'pages/orders/page.css consumes shared responsive/adaptive tokens',
+    forbidden:[
+      ['shared/adaptive-layout.css','body[data-page="orders"]']
+    ]
+  },
+  {
     id:'DRINK_CARD_VISUAL_AUTHORITY',
     description:'Drink Choice Card internal visual belongs to pages/order/page.css until a dedicated component stylesheet is introduced',
     authority:'pages/order/page.css',
@@ -113,8 +121,8 @@ const knownMigrations=[
   {
     id:'V6_ADAPTIVE_DIRECT_COMPONENT_VISUALS',
     files:['shared/adaptive-layout.css'],
-    needles:['body[data-page="order"] .product-card','body[data-page="orders"] .order-card'],
-    note:'replace direct component styling with tokens consumed by component/page visual authority'
+    needles:['body[data-page="order"] .product-card'],
+    note:'replace remaining order product direct styling with tokens consumed by component/page visual authority'
   },
   {
     id:'V7_RESPONSIVE_PAGE_DIRECT_VISUALS',
