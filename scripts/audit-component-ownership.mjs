@@ -12,6 +12,7 @@ const checks=[
     owner:'app-shell.css',
     forbidden:[
       ['shared/page-base.css','.global-shell-status'],
+      ['shared/page-base.css','.global-statusbar{'],
       ['shared/responsive-pages.css','.global-shell-status'],
       ['shared/adaptive-layout.css','.global-shell-status']
     ]
@@ -22,8 +23,20 @@ const checks=[
     owner:'app-shell.css',
     forbidden:[
       ['shared/page-base.css','.global-bottom-nav'],
+      ['shared/page-base.css','.bottom-nav{'],
       ['shared/responsive-pages.css','.global-bottom-nav'],
       ['shared/adaptive-layout.css','.global-bottom-nav']
+    ]
+  },
+  {
+    id:'STATUS_ACTION_EXPLICIT_REGISTRATION',
+    description:'Global status actions must use render-time registration, never DOM observers',
+    owner:'shared/shell.js + shared/page-bridge.js + shared/status-actions.js',
+    forbidden:[
+      ['shared/status-actions.js','MutationObserver'],
+      ['shared/status-actions.js','childActionNodes'],
+      ['shared/page-bridge.js','statusActionNodes'],
+      ['shared/page-bridge.js','MutationObserver']
     ]
   },
   {
@@ -33,6 +46,17 @@ const checks=[
     forbidden:[
       ['pages/order/page.css','.seq-service'],
       ['shared/responsive-pages.css','.seq-service']
+    ]
+  },
+  {
+    id:'ADAPTIVE_CART_TOKEN_ONLY',
+    description:'Adaptive core may provide cart tokens but may not directly style cart components',
+    owner:'pages/order/cart.css',
+    forbidden:[
+      ['shared/adaptive-layout.css','body[data-page="order"] .cart-row'],
+      ['shared/adaptive-layout.css','body[data-page="order"] .cart-img'],
+      ['shared/adaptive-layout.css','body[data-page="order"] .pending-area'],
+      ['shared/adaptive-layout.css','body[data-page="order"] .cart footer']
     ]
   },
   {
@@ -76,11 +100,6 @@ const knownMigrations=[
     needles:['.cart-row','.cart-img','.pending-area','.cart footer']
   },
   {
-    id:'V3_STATUS_ACTION_DOM_OBSERVER',
-    files:['shared/status-actions.js'],
-    needles:['MutationObserver','childActionNodes']
-  },
-  {
     id:'V5_LEGACY_CHILD_GLOBAL_CHROME',
     files:['shared/shell.js','shared/page-base.css'],
     needles:['renderGlobalStatusBar','renderBottomNav','.global-statusbar','.bottom-nav']
@@ -88,7 +107,7 @@ const knownMigrations=[
   {
     id:'V6_ADAPTIVE_DIRECT_COMPONENT_SELECTORS',
     files:['shared/adaptive-layout.css'],
-    needles:['body[data-page="order"] .product-card','body[data-page="order"] .cart-row','body[data-page="orders"] .order-card']
+    needles:['body[data-page="order"] .product-card','body[data-page="orders"] .order-card']
   },
   {
     id:'V7_RESPONSIVE_PAGES_DIRECT_COMPONENT_SELECTORS',
@@ -129,7 +148,7 @@ for(const migration of knownMigrations){
 }
 
 if(hardFailures){
-  console.error(`\nOwnership audit failed: ${hardFailures} new/unregistered ownership violation(s).`);
+  console.error(`\nOwnership audit failed: ${hardFailures} ownership violation(s).`);
   process.exit(1);
 }
 
