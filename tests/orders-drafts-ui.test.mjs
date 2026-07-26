@@ -55,9 +55,9 @@ test('orders page uses the three approved channel columns and payment methods',(
 });
 
 test('每件產品保存獨立堂食或外賣選擇',()=>{
-  assert.match(orderPage,/service-mode/);
-  assert.match(orderPage,/data-action=\"service-mode\"/);
-  assert.match(orderPage,/serviceMode:line\.serviceMode/);
+  assert.match(orderPage,/toggle-line-service/);
+  assert.match(orderPage,/data-action="toggle-line-service"/);
+  assert.match(orderPage,/line\.serviceMode===SERVICE_DINE_IN/);
 });
 
 test('reverse checkout reuse loads the original cart then navigates to the locked ordering page',()=>{

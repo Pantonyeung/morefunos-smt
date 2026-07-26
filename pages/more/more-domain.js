@@ -56,67 +56,61 @@ export function buildOpeningCashState(dayCloses=[],adjustments=[],businessDate='
   };
 }
 
+const HK_OFFSET_MS=8*60*60*1000;
+const DAY_MS=24*60*60*1000;
+
+function hkParts(timestamp){
+  const date=new Date(number(timestamp)+HK_OFFSET_MS);
+  return {year:date.getUTCFullYear(),month:date.getUTCMonth()+1,day:date.getUTCDate(),hour:date.getUTCHours()};
+}
 function localDateId(timestamp){
-  const date=new Date(timestamp);
-  return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
+  const part=hkParts(timestamp);
+  return [part.year,String(part.month).padStart(2,'0'),String(part.day).padStart(2,'0')].join('-');
 }
-
+function hkEpoch(year,month,day,hour=0){
+  return Date.UTC(Number(year),Number(month)-1,Number(day),Number(hour)-8,0,0,0);
+}
 export function businessWindow(now=Date.now(),startHour=5){
-  const point=new Date(number(now));
-  const start=new Date(point);
-  start.setHours(startHour,0,0,0);
-  if(point.getTime()<start.getTime())start.setDate(start.getDate()-1);
-  const end=new Date(start);
-  end.setDate(end.getDate()+1);
-  return {id:localDateId(start.getTime()),start:start.getTime(),end:end.getTime(),startHour};
+  const point=hkParts(now);
+  let start=hkEpoch(point.year,point.month,point.day,startHour);
+  if(point.hour<Number(startHour))start-=DAY_MS;
+  return {id:localDateId(start),start,end:start+DAY_MS,startHour};
 }
-
 function dateAtBusinessStart(dateId,startHour=5){
   const match=String(dateId||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if(!match)throw new Error('日期格式無效');
-  const date=new Date(Number(match[1]),Number(match[2])-1,Number(match[3]),Number(startHour)||0,0,0,0);
-  if(localDateId(date.getTime())!==dateId)throw new Error('日期格式無效');
-  return date;
+  const timestamp=hkEpoch(Number(match[1]),Number(match[2]),Number(match[3]),startHour);
+  if(localDateId(timestamp)!==dateId)throw new Error('日期格式無效');
+  return new Date(timestamp);
 }
-
 function shiftMonthsClamped(date,months){
-  const shifted=new Date(date),day=shifted.getDate();
-  shifted.setDate(1);
-  shifted.setMonth(shifted.getMonth()+Number(months));
-  const lastDay=new Date(shifted.getFullYear(),shifted.getMonth()+1,0).getDate();
-  shifted.setDate(Math.min(day,lastDay));
-  return shifted;
+  const part=hkParts(date.getTime());
+  const first=new Date(Date.UTC(part.year,part.month-1+Number(months),1));
+  const year=first.getUTCFullYear(),month=first.getUTCMonth()+1;
+  const lastDay=new Date(Date.UTC(year,month,0)).getUTCDate();
+  return new Date(hkEpoch(year,month,Math.min(part.day,lastDay),part.hour));
 }
-
 export function buildReportRange(preset='today',{now=Date.now(),startHour=5,startDate='',endDate=''}={}){
-  const today=businessWindow(now,startHour),todayStart=new Date(today.start),todayEnd=new Date(today.end);
-  let start=new Date(todayStart),end=new Date(todayEnd),label='今日';
-  if(preset==='yesterday'){
-    start.setDate(start.getDate()-1);end=new Date(todayStart);label='昨日';
-  }else if(preset==='7d'){
-    start.setDate(start.getDate()-6);label='最近 7 日';
-  }else if(preset==='30d'){
-    start.setDate(start.getDate()-29);label='最近 30 日';
-  }else if(preset==='3m'){
-    start=shiftMonthsClamped(todayStart,-3);label='最近 3 個月';
-  }else if(preset==='6m'){
-    start=shiftMonthsClamped(todayStart,-6);label='最近 6 個月';
-  }else if(preset==='custom'){
-    start=dateAtBusinessStart(startDate,startHour);
-    const inclusiveEnd=dateAtBusinessStart(endDate,startHour);
-    if(inclusiveEnd.getTime()<start.getTime())throw new Error('結束日期不可早於開始日期');
-    if(inclusiveEnd.getTime()>todayStart.getTime())throw new Error('結束日期不可選擇未來營業日');
-    end=new Date(inclusiveEnd);end.setDate(end.getDate()+1);
-    const earliest=shiftMonthsClamped(todayStart,-6);
-    if(start.getTime()<earliest.getTime())throw new Error('SMT 每次最多查詢最近六個月');
+  const today=businessWindow(now,startHour);
+  let start=today.start,end=today.end,label='今日';
+  if(preset==='yesterday'){start=today.start-DAY_MS;end=today.start;label='昨日';}
+  else if(preset==='7d'){start=today.start-(6*DAY_MS);label='最近 7 日';}
+  else if(preset==='30d'){start=today.start-(29*DAY_MS);label='最近 30 日';}
+  else if(preset==='3m'){start=shiftMonthsClamped(new Date(today.start),-3).getTime();label='最近 3 個月';}
+  else if(preset==='6m'){start=shiftMonthsClamped(new Date(today.start),-6).getTime();label='最近 6 個月';}
+  else if(preset==='custom'){
+    start=dateAtBusinessStart(startDate,startHour).getTime();
+    const inclusiveEnd=dateAtBusinessStart(endDate,startHour).getTime();
+    if(inclusiveEnd<start)throw new Error('結束日期不可早於開始日期');
+    if(inclusiveEnd>today.start)throw new Error('結束日期不可選擇未來營業日');
+    end=inclusiveEnd+DAY_MS;
+    const earliest=shiftMonthsClamped(new Date(today.start),-6).getTime();
+    if(start<earliest)throw new Error('SMT 每次最多查詢最近六個月');
     label=startDate===endDate?startDate:`${startDate} 至 ${endDate}`;
   }else if(preset!=='today')throw new Error('找不到報表日期範圍');
-  const inclusiveEnd=new Date(end);inclusiveEnd.setDate(inclusiveEnd.getDate()-1);
-  const resolvedStartDate=localDateId(start.getTime()),resolvedEndDate=localDateId(inclusiveEnd.getTime());
-  return {
-    id:preset==='today'?today.id:`${resolvedStartDate}_${resolvedEndDate}`,
-    preset,label,start:start.getTime(),end:end.getTime(),startDate:resolvedStartDate,endDate:resolvedEndDate,startHour
-  };
+  const inclusiveEnd=end-DAY_MS;
+  const resolvedStartDate=localDateId(start),resolvedEndDate=localDateId(inclusiveEnd);
+  return {id:preset==='today'?today.id:`${resolvedStartDate}_${resolvedEndDate}`,preset,label,start,end,startDate:resolvedStartDate,endDate:resolvedEndDate,startHour};
 }
 
 function orderTime(order){
@@ -283,7 +277,7 @@ export function buildOperationalReport(orders,{now=Date.now(),startHour=5,range=
     const values={gross,discounts:discount,amount:net,expected:legs.reduce((sum,leg)=>sum+leg.values.expected,0),received:legs.reduce((sum,leg)=>sum+leg.values.received,0),refunds:refund,pending};
     addBreakdown(channels,String(order.source||'未分類'),order,values);
     legs.forEach(leg=>addBreakdown(payments,leg.name,order,leg.values));
-    const hour=new Date(orderTime(order)).getHours();
+    const hour=hkParts(orderTime(order)).hour;
     const hourKey=String(hour).padStart(2,'0')+':00';
     addBreakdown(hours,hourKey,order,values);
     (order.items||order.cart||[]).forEach(item=>{

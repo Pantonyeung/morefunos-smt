@@ -39,7 +39,7 @@ test('五個主要頁面共用同一最近訂單顯示規則',()=>{
 });
 
 test('底欄高度、選中膠囊、字體及圖標只由共用樣式控制',()=>{
-  assert.match(baseCss,/\.bottom-nav\s*\{[^}]*height:\s*76px/s);
+  assert.match(baseCss,/\.bottom-nav\s*\{[^}]*height:\s*auto[^}]*min-height:\s*calc\(var\(--bottom-nav-height\)/s);
   assert.match(baseCss,/\.shell-nav-icon/);
   assert.match(baseCss,/--choice-pill-radius:\s*999px/);
   assert.match(baseCss,/\.shell-nav-button\s*\{[^}]*border-radius:\s*var\(--choice-pill-radius\)/s);

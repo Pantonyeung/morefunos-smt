@@ -49,7 +49,7 @@ test('order shell keeps the bottom navigation inside the fixed canvas', () => {
 
 test('checkout call to action shows the payable total', () => {
   assert.match(page,/const checkoutLabel=state\.dineContext\?'落單到 '/);
-  assert.match(page,/:\s*'結帳 '\+money\(cartTotal\(state\.cart\)\)/);
+  assert.match(page,/hasCart\?'結帳 '\+money\(cartTotal\(state\.cart\)\)/);
   assert.doesNotMatch(page,/>先處理</);
 });
 
@@ -110,9 +110,9 @@ test('quick drink adjustment stays compact without repeating its image', () => {
 
 test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', async () => {
   const loader=await readFile(new URL('../app-loader.js',import.meta.url),'utf8');
-  assert.match(loader,/logicalHeight/);
+  assert.match(loader,/getResponsiveProfile/);
   assert.match(loader,/morefun-smt-ui-scale/);
-  assert.match(loader,/morefun:set-ui-scale/);
+  assert.match(loader,/morefun-smt-ui-scale/);
 });
 
 test('root height chain and scroll regions keep both bars fixed', async () => {
@@ -205,7 +205,7 @@ test('order cards distinguish sold-out orange from paused red without greying', 
 
 test('paused products sort to the end of their current order category', () => {
   assert.match(page,/sortPausedLast/);
-  assert.match(page,/const filtered=sortPausedLast/);
+  assert.match(page,/return sortPausedLast\(categoryProducts\.filter/);
 });
 
 test('accepting a verified pending order creates a running order with a 30 minute deadline', () => {

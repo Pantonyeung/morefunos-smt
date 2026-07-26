@@ -191,9 +191,10 @@ function orderedDrinks(){
   return [...configured,...drinks.map(item=>item.id).filter(id=>!configured.includes(id))].map(id=>drinkMap.get(id)).filter(Boolean);
 }
 function productTemplate(){return store.get().settings.catalog.defaultTemplate;}
-function drinkChoiceCard(d,action='select-drink',selected=false,context='default'){
+function drinkChoiceCard(d,action='select-drink',selected=false,context='default',count=0){
   const imageMode=store.get().settings.quickDrinks.showImages!==false;
-  return '<button class="drink-choice-card drink-card--'+context+' '+(imageMode?'is-image':'is-text')+' '+(selected?'selected':'')+'" data-action="'+action+'" data-id="'+d.id+'"><span>'+escapeHtml(d.name)+'</span>'+(imageMode?imageBlock(d.image,d.name,'drink-choice-img'):'')+'</button>';
+  const badge=count?'<em class="drink-choice-count">✓ '+count+'</em>':'';
+  return '<button class="drink-choice-card drink-card--'+context+' '+(imageMode?'is-image':'is-text')+' '+(selected?'selected ':'')+(count?'has-assignment':'')+'" data-action="'+action+'" data-id="'+escapeHtml(d.id)+'" data-value="'+escapeHtml(d.id)+'" aria-label="'+escapeHtml(d.name)+(count?'，已選 '+count+' 份':'')+'">'+(imageMode?imageBlock(d.image,d.name,'drink-choice-img'):'')+'<span>'+escapeHtml(d.name)+'</span>'+badge+'</button>';
 }
 function productCard(p){
   const template=productTemplate();const showCode=store.get().settings.catalog.showCode;const showDescription=store.get().settings.catalog.showDescription;
@@ -351,7 +352,7 @@ function requiredSelectionPanel(group){
   const drinkAssignmentCounts=new Map();
   if(group==='drink')Object.values(assignments).forEach(id=>{if(id)drinkAssignmentCounts.set(id,(drinkAssignmentCounts.get(id)||0)+1);});
   let choices='';
-  if(group==='drink')choices='<div class="required-drink-grid">'+drinks.filter(item=>item.available!==false).map(item=>{const count=drinkAssignmentCounts.get(item.id)||0;return '<button data-action="completion-required-choice" data-value="'+escapeHtml(item.id)+'" class="'+(active&&assignments[active.id]===item.id?'selected ':'')+(count?'has-assignment':'')+'" aria-label="'+escapeHtml(item.name)+(count?'，已選 '+count+' 份':'')+'">'+imageBlock(item.image,item.name,'required-choice-img')+'<span>'+escapeHtml(item.name)+'</span>'+(count?'<em class="drink-choice-count">✓ '+count+'</em>':'')+'</button>';}).join('')+'</div>';
+  if(group==='drink')choices='<div class="required-drink-grid">'+drinks.filter(item=>item.available!==false).map(item=>drinkChoiceCard(item,'completion-required-choice',Boolean(active&&assignments[active.id]===item.id),'completion',drinkAssignmentCounts.get(item.id)||0)).join('')+'</div>';
   else choices='<div class="required-option-grid">'+(optionSets[group]||[]).map(value=>'<button data-action="completion-required-choice" data-value="'+escapeHtml(value)+'" class="'+(active&&assignments[active.id]===value?'selected':'')+'">'+escapeHtml(value)+'</button>').join('')+'</div>';
   const selected=active?assignments[active.id]:'';
   return '<div class="required-workflow-head"><div><small>必須完成｜'+label+'</small><strong>已分配 '+done+' / '+targets.length+'</strong><span>每一份都會顯示指定結果，避免配錯餐點。</span></div><button data-action="completion-back">返回必選總覽</button></div><div class="required-workflow-grid"><section class="required-target-pane"><h3>要補選嘅餐點</h3><div class="required-target-list">'+targetHtml+'</div></section><section class="required-choice-pane"><div class="required-active-target"><small>目前指定</small><strong>'+(active?completionTargetLabel(active):'已完成')+'</strong><span>'+(selected?'目前：'+escapeHtml(group==='drink'?(drinkMap.get(selected)?.name||selected):selected):'請選擇 '+label)+'</span></div>'+choices+(selected&&done<targets.length?'<button class="required-fill" data-action="completion-fill-remaining" data-value="'+escapeHtml(selected)+'">其餘未選全部用同一選項</button>':'')+'</section></div><footer class="required-workflow-actions"><button data-action="completion-back">返回</button><button class="primary" data-action="apply-required-group" '+(done===targets.length&&targets.length?'':'disabled')+'>確認 '+label+'｜'+done+' 份</button></footer>';

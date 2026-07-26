@@ -119,9 +119,18 @@ function setShellRouteUi(key,{loading=false}={}){
   if(shellContext)shellContext.textContent=checkout?'結帳進行中｜交易模式':loading?'正在準備 '+(labels[key]||key)+'…':'營業操作中';
 }
 
+function loaderErrorDocument(message){
+  return '<!doctype html><html lang="zh-HK"><meta charset="UTF-8"><style>body{margin:0;display:grid;place-items:center;height:100vh;font-family:-apple-system,BlinkMacSystemFont,"PingFang HK",sans-serif;background:#fff8f3;color:#382b24}.card{padding:28px;border:1px solid #ead9ce;border-radius:16px;background:#fff;text-align:center}</style><body><section class="card"><strong>頁面未能載入</strong><p>'+String(message||'請重新整理後再試')+'</p></section></body></html>';
+}
 function showLoaderError(message,target=activeFrame){
-  if(target!==activeFrame){console.error('PAGE_TRANSITION_FAILED',message);if(target?.dataset.route===pending){pending='';delete stage.dataset.pendingRoute;}target?.classList.remove('is-loading');if(routeFeedback)routeFeedback.hidden=true;return;}
-  target.srcdoc='<!doctype html><html lang="zh-HK"><meta charset="UTF-8"><style>body{margin:0;display:grid;place-items:center;height:100vh;font-family:-apple-system,BlinkMacSystemFont,"PingFang HK",sans-serif;background:#fff8f3;color:#382b24}.card{padding:28px;border:1px solid #ead9ce;border-radius:16px;background:#fff;text-align:center}</style><body><section class="card"><strong>頁面未能載入</strong><p>'+String(message||'請重新整理後再試')+'</p></section></body></html>';
+  if(!target)return;
+  const key=target.dataset.route||pending||current||'order';
+  const mayReveal=target===activeFrame||key===pending||(!childReady&&key===current);
+  if(!mayReveal){console.error('PAGE_TRANSITION_FAILED',message);return;}
+  clearTimeout(watchdogTimer);
+  if(target!==activeFrame)target.addEventListener('load',()=>{readyRoutes.add(key);setActiveFrame(target,key);},{once:true});
+  target.srcdoc=loaderErrorDocument(message);
+  if(target===activeFrame)setShellRouteUi(key,{loading:false});
 }
 
 function attachFrame(frame,key){
@@ -229,6 +238,13 @@ window.visualViewport?.addEventListener('scroll',scheduleProfileUpdate,{passive:
 addEventListener('message',event=>{
   const frame=findSourceFrame(event.source);if(!frame)return;
   const message=event.data||{};
+  if(message.type==='morefun:page-runtime-error'){
+    const key=frame.dataset.route||message.page||pending||current||'order';
+    console.error('PAGE_RUNTIME_ERROR',key,message.message||'');
+    if(!readyRoutes.has(key)||key===pending||(!childReady&&key===current))showLoaderError((labels[key]||'頁面')+'啟動失敗，資料仍保存在本機。',frame);
+    else if(frame===activeFrame&&shellContext)shellContext.textContent='操作異常｜資料已保留';
+    return;
+  }
   if(message.type==='morefun:overlay-state'){
     setChildOverlayState(frame,Boolean(message.open));
     return;
