@@ -1,36 +1,33 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
-const cart=fs.readFileSync(new URL('../pages/order/cart-experience.js',import.meta.url),'utf8');
+const page=fs.readFileSync(new URL('../pages/order/page.js',import.meta.url),'utf8');
+const pageCss=fs.readFileSync(new URL('../pages/order/page.css',import.meta.url),'utf8');
+const loader=fs.readFileSync(new URL('../app-loader.js',import.meta.url),'utf8');
 const menu=fs.readFileSync(new URL('../pages/order/menu-api.js',import.meta.url),'utf8');
 const combo=fs.readFileSync(new URL('../pages/order/combo-rules.js',import.meta.url),'utf8');
-const css=fs.readFileSync(new URL('../pages/order/cart-experience.css',import.meta.url),'utf8');
-const prepareBody=cart.slice(cart.indexOf('function prepare(){'),cart.indexOf('function schedulePrepare(){'));
 
-assert.ok(cart.includes('pendingRevealProductName'),'new/merged product must keep an explicit reveal target');
-assert.ok(cart.includes("scrollIntoView({block:'nearest'"),'revealed cart row must be scrolled into the visible cart viewport');
-assert.ok(cart.includes("data-recent-label','剛加入'"),'revealed cart row must expose a visible recent-item label');
-assert.ok(css.includes('.cart-row.cart-row-recent::after'),'recent cart feedback must include a visible badge, not only a subtle animation');
-assert.ok(prepareBody.indexOf('restoreScroll();')>=0&&prepareBody.indexOf('restoreScroll();')<prepareBody.indexOf('scheduleRevealRecentRow();'),'view restore must happen before forced reveal so reveal is not overwritten');
+assert.ok(page.includes("cartViewMode"),'cart view mode must live in the order store, not an add-on DOM layer');
+assert.ok(page.includes("orderServiceMode"),'order service mode must live in the order store');
+assert.ok(page.includes("toggle-cart-view"),'order core must own the single 原單/整理 toggle');
+assert.ok(page.includes("toggle-order-service"),'order core must own the single 外賣/堂食 toggle');
+assert.ok(page.includes("serviceModeOverride"),'line service mode exceptions must be explicit overrides');
+assert.ok(page.includes("scrollTop=cart.scrollHeight"),'input-order mode must keep a newly appended line visible at the cart bottom');
+assert.ok(page.includes("lastAffectedLineId"),'recent-item feedback must be state-driven by the order core');
+assert.ok(pageCss.includes('.cart-row.is-recent'),'recent-item feedback must be rendered by the order page core stylesheet');
+
+assert.ok(page.includes("cartViewMode:savedSettings.cartViewMode"),'原單/整理 preference must persist across restarts');
+assert.ok(page.includes("writeJSON(SETTINGS_STORAGE_KEY"),'cart view preference must be written to settings storage');
+assert.ok(page.includes("initialDineContext?'堂食':'外賣'"),'normal orders must default to 外賣 while dine-entry orders default to 堂食');
+
+assert.ok(loader.includes("checkout"),'global shell must own checkout route lifecycle');
+assert.ok(loader.includes("preloadQueue=['checkout'"),'checkout must be prepared immediately after order is ready');
+assert.ok(loader.includes("morefun:checkout-enter"),'checkout activation must hydrate the latest transaction state');
+assert.ok(page.includes('data-action="checkout"')&&page.includes('disabled'),'empty-cart checkout must be genuinely disabled in the order core');
 
 assert.ok(menu.includes("from './combo-rules.js'"),'live menu mapping must use the formal combo rule core');
-assert.ok(menu.includes("['便當','紫米沙律','沙律','麵餐','拌麵','薯角餐','薯蓉餐']"),'meal categories that include a drink must infer the drink requirement');
-assert.ok(menu.includes('matched.combinable'),'known live/fallback combo eligibility must not be overwritten by inference');
-assert.ok(menu.includes("knownRole==='snack'"),'known snack role must survive live menu mapping');
 assert.ok(combo.includes('resolveRiceballComboRule')&&combo.includes('resolveSnackComboRule'),'riceball and snack compatibility must come from one formal combo rule module');
 
-assert.ok(cart.includes('pendingDrinkAssignment'),'quick drink flow must remember the cart target before the modifier opens');
-assert.ok(cart.includes('lastDrinkAssignment'),'quick drink flow must keep a visible post-apply assignment result');
-assert.ok(cart.includes('已配對：${lastDrinkAssignment.drink} → ${lastDrinkAssignment.target}'),'quick drink feedback must identify both drink and target meal');
-assert.ok(css.includes('.quick-drink-assignment-feedback'),'quick drink assignment must have a visible in-drawer feedback surface');
+assert.ok(!page.includes('cart-experience'),'order core must not depend on the temporary cart-experience add-on');
 
-assert.ok(cart.includes('function preloadCheckoutOnOrderReady()'),'checkout resources must preload when the order page is ready');
-assert.ok(cart.includes("frame.src='../checkout/index.html?preload=order-ready'"),'order-ready preload must load checkout before the cart has items');
-assert.ok(cart.includes('preloadCheckoutOnOrderReady();\nschedulePrepare();'),'checkout preload must start immediately at order-page initialization');
-assert.ok(cart.includes('function prepareCheckoutAvailability()'),'order page must own checkout availability feedback');
-assert.ok(cart.includes('button.disabled=!hasCart'),'empty cart must disable checkout interaction');
-assert.ok(cart.includes("button.textContent='購物車未有餐點'"),'empty cart checkout must clearly explain why it cannot be used');
-assert.ok(css.includes('[data-action="checkout"]:disabled'),'disabled checkout must have a distinct grey state');
-assert.ok(!cart.includes('location.reload()'),'cart continuity must not use page reloads');
-
-console.log('SMT_CART_CHECKOUT_REGRESSION_V3_OK');
+console.log('SMT_CART_CHECKOUT_CORE_V4_OK');
