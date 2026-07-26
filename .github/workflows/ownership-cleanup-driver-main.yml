@@ -1,18 +1,16 @@
 name: ownership-cleanup-driver-main
 
-# second-push trigger: workflow already exists on default branch before this commit
 on:
-  push:
+  pull_request:
     branches: [main]
-    paths:
-      - '.github/workflows/ownership-cleanup-driver-main.yml'
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   cleanup:
-    if: contains(github.event.head_commit.message, 'trigger isolated ownership cleanup from default branch')
+    if: github.head_ref == 'ownership-cleanup-v1'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,26 +20,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run V1/V2 ownership migration
-        run: node scripts/ownership-cleanup-once.mjs
+      - name: Run V1/V2 ownership migration when pending
+        run: |
+          if [ -f scripts/ownership-cleanup-once.mjs ]; then
+            node scripts/ownership-cleanup-once.mjs
+          else
+            echo 'ownership migration already applied'
+          fi
       - name: Ownership audit
         run: node scripts/audit-component-ownership.mjs
       - name: AI context validation
         run: node scripts/validate-ai-context.mjs
       - name: Full regression
         run: node --test tests/*.test.mjs
-      - name: Commit verified cleanup branch
+      - name: Commit verified cleanup branch when changed
         run: |
           rm -f scripts/ownership-cleanup-once.mjs .github/workflows/ownership-cleanup-v1.yml
           git config user.name 'MoreFun Ownership QA'
           git config user.email 'actions@users.noreply.github.com'
           git add -A
-          git commit -m 'refactor(ownership): consolidate cart and drink card owners'
-          git push origin HEAD:ownership-cleanup-v1
-      - name: Remove one-off driver from main
-        run: |
-          git fetch origin main
-          git checkout -B main origin/main
-          git rm .github/workflows/ownership-cleanup-driver-main.yml
-          git commit -m 'chore(ownership): remove one-off cleanup driver'
-          git push origin HEAD:main
+          if git diff --cached --quiet; then
+            echo 'No cleanup changes to commit'
+          else
+            git commit -m 'refactor(ownership): consolidate cart and drink card owners'
+            git push origin HEAD:ownership-cleanup-v1
+          fi
