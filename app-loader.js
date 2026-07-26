@@ -36,17 +36,21 @@ function route(){const key=(location.hash.replace(/^#\/?/,'')||'order').split('?
 function pageUrl(key,mode='normal'){const base=routes[key]+'?build='+encodeURIComponent(BUILD);return mode==='normal'?base:base+'&'+mode+'='+Date.now();}
 function isCheckoutTransaction(key=current){return key==='checkout';}
 
+function setChildOverlayState(frame,open){
+  frame?.classList.toggle('has-shell-overlay',Boolean(open));
+  if(frame===activeFrame)shellApp?.classList.toggle('child-overlay-active',Boolean(open));
+}
 function syncChildOverlay(frame){
   try{
     const doc=frame?.contentDocument;
     const open=Boolean(doc?.querySelector?.('.dialog-layer,.confirm-layer,.overlay-scrim,.anchored-popover'));
-    frame?.classList.toggle('has-shell-overlay',open);
-    shellApp?.classList.toggle('child-overlay-active',open&&frame===activeFrame);
+    setChildOverlayState(frame,open);
   }catch(_error){}
 }
 
 function installChildOverlayObserver(frame){
   try{
+    if(frame?.dataset?.route==='order')return;
     const doc=frame?.contentDocument;
     if(!doc?.documentElement||doc.documentElement.dataset.shellOverlayObserver==='1')return;
     doc.documentElement.dataset.shellOverlayObserver='1';
@@ -123,7 +127,8 @@ function setActiveFrame(frame,key){
   frame.id='page';frame.classList.remove('is-loading');frame.classList.add('is-active');frame.setAttribute('aria-hidden','false');frame.removeAttribute('tabindex');
   activeFrame=frame;current=key;pending='';childReady=true;clearTimeout(watchdogTimer);stage.dataset.route=current;delete stage.dataset.pendingRoute;
   if(key==='checkout')checkoutExitArmed='';
-  setShellRouteUi(key,{loading:false});syncChildOverlay(frame);
+  setShellRouteUi(key,{loading:false});
+  if(key!=='order')syncChildOverlay(frame);else setChildOverlayState(frame,frame.classList.contains('has-shell-overlay'));
   try{
     if(key==='checkout')frame.contentWindow?.postMessage({type:'morefun:checkout-enter',route:key},'*');
     frame.contentWindow?.postMessage({type:'morefun:page-activate',route:key},'*');
@@ -209,6 +214,10 @@ window.visualViewport?.addEventListener('scroll',scheduleProfileUpdate,{passive:
 addEventListener('message',event=>{
   const frame=findSourceFrame(event.source);if(!frame)return;
   const message=event.data||{};
+  if(message.type==='morefun:overlay-state'){
+    setChildOverlayState(frame,Boolean(message.open));
+    return;
+  }
   if(message.type==='morefun:page-ready'){
     const key=frame.dataset.route||message.page||pending||current;readyRoutes.add(key);frame.classList.remove('is-loading');applyProfileToFrame(frame);
     if(preloadingRoute===key){preloadingRoute='';setTimeout(preloadNext,40);}
