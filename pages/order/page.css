@@ -472,7 +472,7 @@ button:active,
 .link-candidates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
 .link-candidates button { min-height:64px; border:1px solid var(--line); border-radius:10px; background:#fff; font-weight:850; padding:8px; }
 .link-candidates button.selected { border-color:var(--orange); background:var(--orange-soft); color:var(--orange); }
-.specified-link-card { width:min(25vw,520px); }
+.specified-link-card{width:min(620px,34vw);max-height:calc(100vh - 150px);display:flex;flex-direction:column;overflow:hidden}.specified-link-card .pairing-body{flex:1;min-height:0;overflow:auto}.specified-link-card>footer{flex:none;background:#fff}
 .drink-base-qty { display:flex; justify-content:space-between; align-items:center; padding:14px; border-bottom:1px solid var(--line); }
 .drink-base-qty > span:last-child,.drink-group header > span { display:grid; grid-template-columns:42px 38px 42px; align-items:center; text-align:center; gap:6px; }
 .drink-base-qty button,.drink-group header > span button { height:38px; border:1px solid var(--line); border-radius:9px; background:#fff; font-weight:900; }

@@ -64,7 +64,7 @@ function makeLine(productId,qty=1,{options={},drinkAssignments=[],linkedComboId=
   const p=productMap.get(productId);
   qty=Math.max(1,Number(qty)||1);
   return {
-    lineId:stableId('line'),productId,name:p.name,image:p.image,category:p.category,qty,
+    lineId:stableId('line'),productId,name:p.name,image:p.image,category:p.category,categories:[...(p.categories||[p.category]).filter(Boolean)],qty,
     unitPrice:p.price,total:p.price*qty,options:safeClone(options),
     studentDiscountEligible:p.studentDiscountEligible===true,specialDrinkSurcharge:Number(p.specialDrinkSurcharge)||0,
     drinkAssignments:safeClone(drinkAssignments),drinkSlots:(p.drinkSlots||0)*qty,
@@ -79,7 +79,7 @@ function normalizeCart(cart,defaultMode=SERVICE_TAKEAWAY){
     const qty=Math.max(1,Number(line.qty)||1);
     const unitPrice=Number(line.unitPrice??p.price??0);
     const serviceMode=normalizeServiceMode(line.serviceMode,defaultMode);
-    return {...line,lineId:line.lineId||stableId('line'),name:line.name||p.name||'餐點',image:line.image||p.image||'',category:line.category||p.category||'',qty,unitPrice,total:unitPrice*qty,serviceMode,serviceModeOverride:line.serviceModeOverride||'',options:{...(line.options||{})},studentDiscountEligible:line.studentDiscountEligible===true||p.studentDiscountEligible===true,specialDrinkSurcharge:Number(line.specialDrinkSurcharge??p.specialDrinkSurcharge)||0,drinkAssignments:Array.isArray(line.drinkAssignments)?line.drinkAssignments:[],drinkSlots:Number(line.drinkSlots??(p.drinkSlots||0)*qty),required:Array.isArray(line.required)?line.required:[...(p.required||[])],combinable:Boolean(line.combinable??p.combinable),linkRole:line.linkRole||p.linkRole||'',linkedComboId:line.linkedComboId||'',linkedQty:Number(line.linkedQty||0),createdOrder:Number.isFinite(line.createdOrder)?line.createdOrder:index};
+    return {...line,lineId:line.lineId||stableId('line'),name:line.name||p.name||'餐點',image:line.image||p.image||'',category:line.category||p.category||'',categories:Array.isArray(line.categories)?line.categories:[...(p.categories||[line.category||p.category]).filter(Boolean)],qty,unitPrice,total:unitPrice*qty,serviceMode,serviceModeOverride:line.serviceModeOverride||'',options:{...(line.options||{})},studentDiscountEligible:line.studentDiscountEligible===true||p.studentDiscountEligible===true,specialDrinkSurcharge:Number(line.specialDrinkSurcharge??p.specialDrinkSurcharge)||0,drinkAssignments:Array.isArray(line.drinkAssignments)?line.drinkAssignments:[],drinkSlots:Number(line.drinkSlots??(p.drinkSlots||0)*qty),required:Array.isArray(line.required)?line.required:[...(p.required||[])],combinable:Boolean(line.combinable??p.combinable),linkRole:line.linkRole||p.linkRole||'',linkedComboId:line.linkedComboId||'',linkedQty:Number(line.linkedQty||0),createdOrder:Number.isFinite(line.createdOrder)?line.createdOrder:index};
   }).sort((a,b)=>a.createdOrder-b.createdOrder);
 }
 function mergeKey(line){return JSON.stringify({productId:line.productId,serviceMode:line.serviceMode,options:line.options,drinks:line.drinkAssignments.map(d=>[d.drinkId,d.sweetness||'',d.ice||'']),linkedComboId:line.linkedComboId});}

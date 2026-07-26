@@ -6,11 +6,22 @@ export const SERVICE_TAKEAWAY='外賣';
 export const SERVICE_DINE_IN='堂食';
 
 export const TAKEAWAY_PACKAGING_FEE_PER_UNIT=1;
-const PACKAGING_FEE_EXEMPT_CATEGORIES=new Set(['飯團','飲品']);
 
+function isStandaloneRiceball(line){
+  if(line?.lineType==='combo')return false;
+  if(line?.combinable===true)return true;
+  const categories=[line?.category,...(Array.isArray(line?.categories)?line.categories:[])].map(String);
+  return categories.some(value=>value==='飯團'||value.includes('單點飯團'));
+}
+function isStandaloneDrink(line){
+  if(line?.lineType==='combo')return false;
+  if(line?.linkRole==='drink')return true;
+  const categories=[line?.category,...(Array.isArray(line?.categories)?line.categories:[])].map(String);
+  return categories.some(value=>value==='飲品'||value.includes('單點飲品'));
+}
 export function packagingUnitsForLine(line){
   if(normalizeServiceMode(line?.serviceMode,SERVICE_TAKEAWAY)!==SERVICE_TAKEAWAY)return 0;
-  if(PACKAGING_FEE_EXEMPT_CATEGORIES.has(String(line?.category||'')))return 0;
+  if(isStandaloneRiceball(line)||isStandaloneDrink(line))return 0;
   return Math.max(0,Number(line?.qty)||0);
 }
 export function packagingFeeForLine(line){return packagingUnitsForLine(line)*TAKEAWAY_PACKAGING_FEE_PER_UNIT;}
