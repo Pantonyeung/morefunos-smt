@@ -48,7 +48,7 @@
   --page-padding-x:12px;
   --topbar-height:clamp(58px,7.2vh,64px);
   --bottom-nav-height:clamp(58px,7vh,64px);
-  --control-min-height:40px;
+  --control-min-height:44px;
   --modal-max-width:400px;
   --product-columns:4;
   --product-columns-secondary:3;
@@ -69,10 +69,10 @@
   --page-padding-x:10px;
   --topbar-height:56px;
   --bottom-nav-height:58px;
-  --control-min-height:38px;
+  --control-min-height:44px;
   --modal-max-width:360px;
-  --product-columns:3;
-  --product-columns-secondary:2;
+  --product-columns:4;
+  --product-columns-secondary:3;
   --responsive-font-scale:.84;
   --order-product-hero-height:102px;
   --order-cart-image-size:48px;
