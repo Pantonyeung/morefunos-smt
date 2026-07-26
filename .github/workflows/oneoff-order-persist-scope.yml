@@ -1,0 +1,50 @@
+name: oneoff-order-persist-scope
+
+on:
+  push:
+    branches:
+      - smt-functional-completeness-v1
+    paths:
+      - .github/workflows/oneoff-order-persist-scope.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - name: Add scoped persistence support
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          runtime=Path('shared/runtime.js')
+          text=runtime.read_text()
+          old="""  function persist(){\n    if(!options.storageKey)return;\n    try{localStorage.setItem(options.storageKey,JSON.stringify(state));}\n    catch(error){console.warn('STORE_PERSIST_FAILED',error);}\n  }"""
+          new="""  function persist(){\n    if(!options.storageKey)return;\n    try{\n      const persisted=typeof options.persistState==='function'?options.persistState(state):state;\n      localStorage.setItem(options.storageKey,JSON.stringify(persisted));\n    }\n    catch(error){console.warn('STORE_PERSIST_FAILED',error);}\n  }"""
+          if old not in text:
+            raise SystemExit('runtime persist block not found')
+          runtime.write_text(text.replace(old,new,1))
+
+          page=Path('pages/order/page.js')
+          text=page.read_text()
+          old="{storageKey:ORDER_STORAGE_KEY,normalize:"
+          new="{storageKey:ORDER_STORAGE_KEY,persistState:state=>({cart:state.cart,dineContext:state.dineContext,orderServiceMode:state.orderServiceMode,cartViewMode:state.cartViewMode,quickMode:state.quickMode,draftSession:state.draftSession,pendingOrders:state.pendingOrders,runningOrders:state.runningOrders,completedOrders:state.completedOrders,operations:state.operations,settings:state.settings}),normalize:"
+          if old not in text:
+            raise SystemExit('order store options target not found')
+          page.write_text(text.replace(old,new,1))
+          PY
+      - name: Verify scoped persistence
+        run: |
+          grep -q "persistState" shared/runtime.js
+          grep -q "persistState:state" pages/order/page.js
+      - name: Commit
+        run: |
+          git config user.name "morefun-refactor-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add shared/runtime.js pages/order/page.js
+          git commit -m "perf(order): persist operational state only" || exit 0
+          git push origin HEAD:smt-functional-completeness-v1
