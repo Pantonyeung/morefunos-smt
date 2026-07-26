@@ -1,3 +1,58 @@
+export const CART_VIEW_INPUT='input';
+export const CART_VIEW_ORGANIZED='organized';
+export const SERVICE_TAKEAWAY='外賣';
+export const SERVICE_DINE_IN='堂食';
+
+const ORGANIZED_CATEGORY_ORDER=['飯團','飯團套餐','便當','紫米沙律','沙律','麵餐','拌麵','薯角餐','薯蓉餐','套餐小食','小食','飲品','其他'];
+
+export function normalizeCartViewMode(value){
+  return value===CART_VIEW_ORGANIZED?CART_VIEW_ORGANIZED:CART_VIEW_INPUT;
+}
+
+export function normalizeServiceMode(value,fallback=SERVICE_TAKEAWAY){
+  return value===SERVICE_DINE_IN?SERVICE_DINE_IN:value===SERVICE_TAKEAWAY?SERVICE_TAKEAWAY:fallback;
+}
+
+export function resolveInitialOrderServiceMode(dineContext,savedMode){
+  if(dineContext)return SERVICE_DINE_IN;
+  return normalizeServiceMode(savedMode,SERVICE_TAKEAWAY);
+}
+
+export function applyOrderServiceMode(cart,mode){
+  const serviceMode=normalizeServiceMode(mode,SERVICE_TAKEAWAY);
+  return (cart||[]).map(line=>({...line,serviceMode,serviceModeOverride:''}));
+}
+
+export function toggleLineServiceMode(cart,lineId,orderServiceMode){
+  return (cart||[]).map(line=>{
+    if(line.lineId!==lineId)return line;
+    const current=normalizeServiceMode(line.serviceMode,orderServiceMode);
+    const serviceMode=current===SERVICE_DINE_IN?SERVICE_TAKEAWAY:SERVICE_DINE_IN;
+    return {...line,serviceMode,serviceModeOverride:serviceMode===orderServiceMode?'':serviceMode};
+  });
+}
+
+export function organizeCartForDisplay(cart){
+  const rank=new Map(ORGANIZED_CATEGORY_ORDER.map((category,index)=>[category,index]));
+  return [...(cart||[])].sort((a,b)=>{
+    const aCategory=a.category||'其他',bCategory=b.category||'其他';
+    const aRank=rank.has(aCategory)?rank.get(aCategory):ORGANIZED_CATEGORY_ORDER.length;
+    const bRank=rank.has(bCategory)?rank.get(bCategory):ORGANIZED_CATEGORY_ORDER.length;
+    return aRank-bRank||Number(a.createdOrder||0)-Number(b.createdOrder||0);
+  });
+}
+
+export function cartForView(cart,viewMode){
+  return normalizeCartViewMode(viewMode)===CART_VIEW_ORGANIZED?organizeCartForDisplay(cart):[...(cart||[])].sort((a,b)=>Number(a.createdOrder||0)-Number(b.createdOrder||0));
+}
+
+export function inferOrderServiceMode(cart,dineContext){
+  if(dineContext)return SERVICE_DINE_IN;
+  const rows=Array.isArray(cart)?cart:[];
+  if(rows.length&&rows.every(line=>normalizeServiceMode(line.serviceMode)===SERVICE_DINE_IN))return SERVICE_DINE_IN;
+  return SERVICE_TAKEAWAY;
+}
+
 export function updateCartLineQuantity(cart,lineId,delta,drinkSlotsByProduct={}){
   return cart.flatMap(line=>{
     if(line.lineId!==lineId)return [line];
@@ -60,6 +115,7 @@ export function combineRiceballSet(cart,selection,options={}){
   result.push({
     lineId:options.lineId||'riceball-combo-'+Date.now(),lineType:'combo',productId:'riceball-combo',name:'飯糰套餐',category:'飯團套餐',
     image:mainResult.taken.image||'',qty:1,unitPrice:comboPrice,total:comboPrice,required:['drink'],drinkSlots:1,drinkAssignments,
+    serviceMode:mainResult.taken.serviceMode||SERVICE_TAKEAWAY,serviceModeOverride:mainResult.taken.serviceModeOverride||'',
     options:{},createdOrder:Number(options.createdOrder||Date.now()),
     combo:{id:options.comboId||'combo-'+Date.now(),kind:'riceball-set',source:options.source||'custom',components,missingRoles,singleTotal,comboPrice,discount:Math.max(0,singleTotal-comboPrice)}
   });
@@ -75,7 +131,7 @@ export function dissolveRiceballSet(cart,comboLineId,options={}){
       lineId:makeId(item.role),lineType:'product',productId:item.productId,name:item.name,image:item.image||'',
       category:item.role==='main'?'飯團':item.role==='snack'?'小食':'飲品',qty,
       unitPrice:Number(item.unitPrice||0),total:Number(item.unitPrice||0)*qty,options:{...(item.options||{})},
-      required:[],drinkSlots:0,drinkAssignments:[],createdOrder:Number(line.createdOrder||Date.now())
+      required:[],drinkSlots:0,drinkAssignments:[],serviceMode:line.serviceMode||SERVICE_TAKEAWAY,serviceModeOverride:line.serviceModeOverride||'',createdOrder:Number(line.createdOrder||Date.now())
     }));
   });
 }
