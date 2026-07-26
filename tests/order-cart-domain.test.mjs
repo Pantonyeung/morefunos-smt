@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict';
+import {ORDER_STORAGE_KEY} from '../shared/store.js';
 import {
   CART_VIEW_INPUT,CART_VIEW_ORGANIZED,SERVICE_TAKEAWAY,SERVICE_DINE_IN,
   resolveInitialOrderServiceMode,applyOrderServiceMode,toggleLineServiceMode,cartForView
 } from '../pages/order/order-domain.js';
+
+const storage=new Map();
+globalThis.localStorage={
+  getItem:key=>storage.has(key)?storage.get(key):null,
+  setItem:(key,value)=>storage.set(key,String(value)),
+  removeItem:key=>storage.delete(key)
+};
 
 const base=[
   {lineId:'1',name:'雞翼',category:'小食',qty:1,createdOrder:1,serviceMode:SERVICE_TAKEAWAY,serviceModeOverride:''},
@@ -10,8 +18,14 @@ const base=[
   {lineId:'3',name:'便當',category:'便當',qty:1,createdOrder:3,serviceMode:SERVICE_TAKEAWAY,serviceModeOverride:''},
 ];
 
+storage.clear();
 assert.equal(resolveInitialOrderServiceMode(null,null),SERVICE_TAKEAWAY,'normal entry defaults to takeaway');
 assert.equal(resolveInitialOrderServiceMode({tableId:'1'},SERVICE_TAKEAWAY),SERVICE_DINE_IN,'dine entry forces dine-in');
+
+localStorage.setItem(ORDER_STORAGE_KEY,JSON.stringify({cart:[],orderServiceMode:SERVICE_DINE_IN}));
+assert.equal(resolveInitialOrderServiceMode(null,SERVICE_DINE_IN),SERVICE_TAKEAWAY,'empty ordinary session must reset to takeaway after restart');
+localStorage.setItem(ORDER_STORAGE_KEY,JSON.stringify({cart:[base[0]],orderServiceMode:SERVICE_DINE_IN}));
+assert.equal(resolveInitialOrderServiceMode(null,SERVICE_DINE_IN),SERVICE_DINE_IN,'unfinished cart may restore its active service mode');
 
 const dine=applyOrderServiceMode(base,SERVICE_DINE_IN);
 assert.ok(dine.every(line=>line.serviceMode===SERVICE_DINE_IN&&!line.serviceModeOverride),'global switch updates every line and clears exceptions');
