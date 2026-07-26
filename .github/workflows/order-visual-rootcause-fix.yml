@@ -1,0 +1,91 @@
+name: order-visual-rootcause-fix
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/order-visual-rootcause-fix.yml']
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fix true component owners
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          page = Path('pages/order/page.js')
+          s = page.read_text()
+          old = "return '<button class=\"drink-choice-card drink-card--'+context+' '+(imageMode?'is-image':'is-text')+' '+(selected?'selected ':'')+(count?'has-assignment':'')+'\" data-action=\"'+action+'\" data-id=\"'+escapeHtml(d.id)+'\" data-value=\"'+escapeHtml(d.id)+'\" aria-label=\"'+escapeHtml(d.name)+(count?'，已選 '+count+' 份':'')+'\">'+(imageMode?imageBlock(d.image,d.name,'drink-choice-img'):'')+'<span>'+escapeHtml(d.name)+'</span>'+badge+'</button>';"
+          new = "return '<button class=\"drink-choice-card drink-card--'+context+' '+(imageMode?'is-image':'is-text')+' '+(selected?'selected ':'')+(count?'has-assignment':'')+'\" data-action=\"'+action+'\" data-id=\"'+escapeHtml(d.id)+'\" data-value=\"'+escapeHtml(d.id)+'\" aria-label=\"'+escapeHtml(d.name)+(count?'，已選 '+count+' 份':'')+'\"><span class=\"drink-choice-name\">'+escapeHtml(d.name)+'</span>'+(imageMode?imageBlock(d.image,d.name,'drink-choice-img'):'')+badge+'</button>';"
+          if old not in s:
+              raise SystemExit('drinkChoiceCard source pattern not found')
+          page.write_text(s.replace(old,new,1))
+
+          adaptive_css = Path('shared/adaptive-layout.css')
+          s = adaptive_css.read_text()
+          s = s.replace('  --adaptive-cart-image:72px;\n', '  --adaptive-cart-image:72px;\n  --adaptive-cart-marker:65px;\n', 1)
+          old = '  grid-template-columns:32px var(--adaptive-cart-image) minmax(0,1fr) auto;'
+          new = '  grid-template-columns:var(--adaptive-cart-marker) var(--adaptive-cart-image) minmax(0,1fr) auto;'
+          if old not in s:
+              raise SystemExit('adaptive cart grid pattern not found')
+          adaptive_css.write_text(s.replace(old,new,1))
+
+          adaptive_js = Path('shared/adaptive-layout.js')
+          s = adaptive_js.read_text()
+          old = "    root.style.setProperty('--adaptive-cart-scale',String(scale));\n    root.style.setProperty('--adaptive-cart-image',`${clamp(72*scale,46,78)}px`);"
+          new = "    root.style.setProperty('--adaptive-cart-scale',String(scale));\n    const imageSize=clamp(72*scale,46,78);\n    root.style.setProperty('--adaptive-cart-image',`${imageSize}px`);\n    root.style.setProperty('--adaptive-cart-marker',`${Math.round(imageSize*.9)}px`);"
+          if old not in s:
+              raise SystemExit('adaptive cart JS pattern not found')
+          adaptive_js.write_text(s.replace(old,new,1))
+
+          cart = Path('pages/order/cart.css')
+          s = cart.read_text()
+          replacements = {
+            '.cart-row{position:relative;grid-template-columns:54px 60px minmax(0,1fr) auto;': '.cart-row{position:relative;grid-template-columns:var(--adaptive-cart-marker,54px) var(--adaptive-cart-image,60px) minmax(0,1fr) auto;',
+            '.cart-row.no-image{grid-template-columns:54px minmax(0,1fr) auto}': '.cart-row.no-image{grid-template-columns:var(--adaptive-cart-marker,54px) minmax(0,1fr) auto}',
+            '.cart-img{width:60px;height:60px;': '.cart-img{width:var(--adaptive-cart-image,60px);height:var(--adaptive-cart-image,60px);',
+            '.cart-row .cart-img .image-fallback{display:none}': 'body[data-page="order"] .cart-row .cart-img>.image-fallback{display:none}',
+            '.cart-row>.seq-service{position:static;width:54px;height:60px;align-self:center;display:grid;grid-template-rows:26px 34px;': '.cart-row>.seq-service{position:static;width:var(--adaptive-cart-marker,54px);height:var(--adaptive-cart-marker,54px);align-self:center;display:grid;grid-template-rows:44% 56%;',
+            '.cart-row>.seq-service>.seq{position:static;grid-row:2;width:100%;height:34px;margin:0;padding:0;border:0;border-radius:0;background:#fff;color:#4f4037;font-size:19px;line-height:34px;text-align:center;display:block;font-weight:950}': '.cart-row>.seq-service>.seq{position:static;grid-row:2;width:100%;height:100%;margin:0;padding:0;border:0;border-radius:0;background:#fff;color:#4f4037;font-size:20px;line-height:1;text-align:center;display:grid;place-items:center;font-weight:950}',
+            '.cart-row>.seq-service>.line-service-toggle{position:static;grid-row:1;width:100%;min-width:0;height:26px;margin:0;padding:0;border:0;border-bottom:1px solid #e2d9d2;border-radius:0;background:#f5f1ed;color:#66584f;font-size:17px;line-height:25px;text-align:center;font-weight:950;box-shadow:none}': '.cart-row>.seq-service>.line-service-toggle{position:static;grid-row:1;width:100%;min-width:0;height:100%;margin:0;padding:0;border:0;border-bottom:1px solid #e2d9d2;border-radius:0;background:#f3f0ed;color:#5f554e;font-size:18px;line-height:1;text-align:center;font-weight:950;box-shadow:none;display:grid;place-items:center}',
+            '.required-drink-grid .drink-choice-card>span{': '.required-drink-grid .drink-choice-card>.drink-choice-name{',
+            '.quick-drawer-panel .drink-choice-card>span{': '.quick-drawer-panel .drink-choice-card>.drink-choice-name{',
+          }
+          for old,new in replacements.items():
+              if old not in s:
+                  raise SystemExit('cart pattern not found: '+old[:80])
+              s=s.replace(old,new,1)
+          cart.write_text(s)
+
+          index = Path('pages/order/index.html')
+          s=index.read_text()
+          s=s.replace('adaptive-layout.css?v=adaptive-proportion-v2','adaptive-layout.css?v=adaptive-proportion-v3')
+          s=s.replace('cart.css?v=order-cart-core-v11','cart.css?v=order-cart-core-v12')
+          s=s.replace('adaptive-layout.js?v=adaptive-event-v1','adaptive-layout.js?v=adaptive-event-v2')
+          s=s.replace('page.js?v=order-core-v18','page.js?v=order-core-v19')
+          index.write_text(s)
+
+          test=Path('tests/order-visual-core-contract.test.mjs')
+          test.write_text('''import fs from 'node:fs';\nimport assert from 'node:assert/strict';\nconst page=fs.readFileSync(new URL('../pages/order/page.js',import.meta.url),'utf8');\nconst cart=fs.readFileSync(new URL('../pages/order/cart.css',import.meta.url),'utf8');\nconst adaptive=fs.readFileSync(new URL('../shared/adaptive-layout.css',import.meta.url),'utf8');\nconst adaptiveJs=fs.readFileSync(new URL('../shared/adaptive-layout.js',import.meta.url),'utf8');\nassert.ok(page.includes('class=\\"drink-choice-name\\"'),'drink name needs its own DOM class');\nassert.ok(!cart.includes('.drink-choice-card>span{'),'generic span selector must not collapse image wrapper');\nassert.ok(cart.includes('.drink-choice-card>.drink-choice-name{'),'drink name selector must be explicit');\nassert.ok(adaptive.includes('grid-template-columns:var(--adaptive-cart-marker) var(--adaptive-cart-image)'),'adaptive cart must own marker geometry');\nassert.ok(!adaptive.includes('grid-template-columns:32px var(--adaptive-cart-image)'),'legacy 32px marker must not return');\nassert.ok(adaptiveJs.includes("--adaptive-cart-marker'),'adaptive runtime must derive marker from image size');\nassert.ok(cart.includes('width:var(--adaptive-cart-marker'),'cart badge must consume adaptive marker token');\nassert.ok(cart.includes('cart-img>.image-fallback{display:none}'),'cart fallback label must stay hidden');\nconsole.log('ORDER_VISUAL_CORE_CONTRACT_OK');\n''')
+          PY
+      - name: Run regression tests
+        run: |
+          node --test tests/*.test.mjs
+          node --check pages/order/page.js
+          node --check shared/adaptive-layout.js
+      - name: Commit verified core fix
+        run: |
+          git config user.name 'morefun-qa-bot'
+          git config user.email 'morefun-qa-bot@users.noreply.github.com'
+          git add pages/order/page.js pages/order/cart.css pages/order/index.html shared/adaptive-layout.css shared/adaptive-layout.js tests/order-visual-core-contract.test.mjs
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix(order): correct drink card and cart marker owners'
+          git push origin HEAD:smt-functional-completeness-v1
