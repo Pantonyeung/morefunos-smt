@@ -106,12 +106,15 @@ Shell 只接 render-time action descriptors；禁止 MutationObserver／child DO
 只保留 explicit `morefun:overlay-state`。
 
 ### V5 — Legacy Child Global Chrome Runtime
-- Child Page 仍可能 render legacy Global Status/Bottom Nav 作 standalone 結構。
-- 正式 Global Shell 已有唯一 Chrome。
 
-狀態：**MIGRATION REQUIRED**
+狀態：**CLEARED / STANDALONE QA ONLY**
 
-處理方式：正式 Runtime 逐頁停止建立第二套 Global Chrome；若 standalone QA 仍需要，必須 QA-only，不能成為 Runtime Authority。
+`shared/shell.js` 已成為唯一 compatibility gate：
+- 正式嵌入 Global Shell 時，`renderGlobalStatusBar()` 只註冊 Action Descriptor 並返回空 DOM；
+- 正式嵌入 Global Shell 時，`renderBottomNav()` 返回空 DOM；
+- 只有 `window.parent === window` 的 standalone QA 開頁先輸出 legacy child chrome。
+
+因此正式 Runtime 不再同時存在第二套 Global Status Bar／Bottom Navigation。
 
 ### V6 — Adaptive CSS 仍直接進入部分 Page Component
 - Cart direct selectors 已移除。
@@ -129,17 +132,18 @@ Shell 只接 render-time action descriptors；禁止 MutationObserver／child DO
 
 ### V8 — Shared Page Base Global Chrome Visual
 
-狀態：**VISUAL CLEARED / RUNTIME GUARD REMAINS**
+狀態：**VISUAL CLEARED / STANDALONE QA SUPPORT ONLY**
 
-`page-base.css` 已退出 Global Chrome Visual；待 V5 完成後移除 legacy guard。
+`page-base.css` 已退出正式 Global Chrome Visual Authority；standalone QA 如需 legacy chrome，只可由 QA 模式消費，不得成為正式 Runtime Authority。
 
 ## 7. Authority Cleanup 順序
 
 1. V1 Cart internal visual：逐組搬遷，不重畫 1920。
-2. V5 Legacy Child Chrome：停止正式 Runtime 建第二套 Global UI。
-3. V6 Adaptive direct selectors：逐 Page 轉 Token。
-4. V7 Responsive Page direct selectors：逐 Page 轉 Token。
-5. 視實際重用程度，再決定 Product Card／Drink Card 是否拆成獨立 component stylesheet；**不為拆檔而拆檔。**
+2. V6 Adaptive direct selectors：逐 Page 轉 Token。
+3. V7 Responsive Page direct selectors：逐 Page 轉 Token。
+4. 視實際重用程度，再決定 Product Card／Drink Card 是否拆成獨立 component stylesheet；**不為拆檔而拆檔。**
+
+V2／V3／V4／V5／V8 已完成正式責任收口；後續禁止重新引入第二 Authority。
 
 ## 8. 修改前 Authority Gate
 
