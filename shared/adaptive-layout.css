@@ -113,24 +113,5 @@ body[data-page="soldout"] .supply-product.text .card-open{
   padding:var(--adaptive-cart-pad) calc(var(--adaptive-cart-pad) * 1.15);
 }
 
-body[data-page="orders"],body[data-page="orders"] #app{width:100%;max-width:100%;min-width:0}
-body[data-page="orders"] .orders-layout{container-type:size;container-name:orders-area}
-body[data-page="orders"] .stats article{padding:clamp(10px,2.1vh,18px) clamp(12px,2.6vw,22px)}
-body[data-page="orders"] .detail{padding:clamp(12px,2.6cqh,20px)}
-body[data-page="orders"] .detail>header{padding-bottom:clamp(8px,1.8cqh,14px)}
-body[data-page="orders"] .meta{gap:clamp(6px,1.25cqh,10px);padding:clamp(8px,1.8cqh,14px) 0}
-body[data-page="orders"] .meta span{padding:clamp(8px,1.55cqh,12px)}
-body[data-page="orders"] .items article{padding:clamp(8px,1.8cqh,14px) 4px}
-body[data-page="orders"] .total{padding:clamp(10px,2cqh,16px) 0}
-body[data-page="orders"] .lanes{container-type:size;container-name:orders-lanes}
-body[data-page="orders"] .lane>header{padding:clamp(9px,2.05cqh,16px)}
-body[data-page="orders"] .lane-scroll{padding:clamp(6px,1.3cqh,10px)}
-body[data-page="orders"] .order-card{margin-bottom:clamp(6px,1.3cqh,10px);padding:clamp(9px,1.8cqh,14px)}
-body[data-page="orders"] .order-card header strong{font-size:max(var(--min-readable-font),clamp(16px,2.55cqh,20px))}
-body[data-page="orders"] .order-card div{padding:clamp(7px,1.55cqh,12px) 0;font-size:max(var(--min-readable-font),clamp(14px,2.15cqh,17px))}
-body[data-page="orders"] .order-card footer{font-size:max(var(--min-readable-font),clamp(12px,1.65cqh,13px))}
-body[data-page="orders"] .detail h2{font-size:max(calc(var(--min-readable-font) * 1.45),clamp(24px,4cqh,32px))}
-body[data-page="orders"] .detail>header>span{font-size:max(var(--min-readable-font),clamp(17px,2.7cqh,22px))}
-
 :root[data-readability-mode="small"] .product-description{display:none}
 :root[data-readability-mode="large"] .product-description{-webkit-line-clamp:1}
