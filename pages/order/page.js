@@ -537,6 +537,7 @@ function render(){
     Object.assign(renderKeys,{top:topKey,cart:cartKey,category:categoryKey,products:productsKey,quick:quickKey,bottom:bottomKey,modal:modalKey});
     renderStarted=true;
     requestAnimationFrame(()=>{positionActiveCard();restoreCartViewport(state,0);});
+    window.parent?.postMessage?.({type:'morefun:overlay-state',open:Boolean(modal||confirmState)},'*');
     return;
   }
 
@@ -554,6 +555,7 @@ function render(){
   if(renderKeys.quick!==quickKey){const node=refreshQuickSurface(quickHtml);if(node)bindImageFallbacks(node);renderKeys.quick=quickKey;}
   if(renderKeys.bottom!==bottomKey){replaceOuter('.bottom-nav',bottomHtml);renderKeys.bottom=bottomKey;}
   if(renderKeys.modal!==modalKey){refreshModalSurface(state);renderKeys.modal=modalKey;}
+  window.parent?.postMessage?.({type:'morefun:overlay-state',open:Boolean(modal||confirmState)},'*');
 }
 function completeDineCancellation(){
   const context=store.get().dineContext;
