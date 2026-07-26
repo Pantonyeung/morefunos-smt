@@ -210,7 +210,7 @@ function cartLineRow(line,index,state){
   const recent=line.lineId===state.lastAffectedLineId;
   const override=Boolean(line.serviceModeOverride);
   const modeLabel=line.serviceMode===SERVICE_DINE_IN?'堂':'外';
-  return '<article class="cart-row '+(showImages?'':'no-image')+' '+(recent?'is-recent':'')+'" data-line-id="'+escapeHtml(line.lineId)+'"><span class="seq">'+(index+1)+'</span>'+(showImages?imageBlock(line.image,line.name,'cart-img'):'')+'<span class="cart-copy"><strong>'+escapeHtml(line.name)+'</strong><small>'+escapeHtml(describe(line))+'</small><span class="service-mode"><button class="line-service-toggle '+(override?'is-override':'')+'" data-action="toggle-line-service" data-id="'+escapeHtml(line.lineId)+'" aria-label="切換'+escapeHtml(line.name)+'堂食外賣">'+modeLabel+'</button>'+(recent?'<em class="recent-badge">剛加入</em>':'')+'</span></span><b class="cart-price">'+money(line.total)+'</b><span class="cart-actions"><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="-1">−</button><strong>'+line.qty+'</strong><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="1">＋</button><button class="edit-button" data-action="edit-line" data-id="'+line.lineId+'">修改</button></span></article>';
+  return '<article class="cart-row '+(showImages?'':'no-image')+' '+(recent?'is-recent':'')+'" data-line-id="'+escapeHtml(line.lineId)+'"><span class="seq-service"><span class="seq">'+(index+1)+'</span><button class="line-service-toggle '+(override?'is-override':'')+'" data-action="toggle-line-service" data-id="'+escapeHtml(line.lineId)+'" aria-label="切換'+escapeHtml(line.name)+'堂食外賣">'+modeLabel+'</button></span>'+(showImages?imageBlock(line.image,line.name,'cart-img'):'')+'<span class="cart-copy"><strong>'+escapeHtml(line.name)+'</strong><small>'+escapeHtml(describe(line))+'</small>'+(recent?'<em class="recent-badge">剛加入</em>':'')+'</span><b class="cart-price">'+money(line.total)+'</b><span class="cart-actions"><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="-1">−</button><strong>'+line.qty+'</strong><button data-action="cart-qty" data-id="'+line.lineId+'" data-delta="1">＋</button><button class="edit-button" data-action="edit-line" data-id="'+line.lineId+'">修改</button></span></article>';
 }
 function cartRows(){
   const state=store.get(),cart=cartForView(state.cart,state.cartViewMode);if(!cart.length)return '<div class="empty">購物車未有餐點</div>';
@@ -318,11 +318,68 @@ function comboEditorModal(){
   const missing=!selected('drink');
   return '<aside class="product-settings-card modal-card combo-editor-card"><header class="settings-product-head"><div><small>修改套餐</small><h2>'+escapeHtml(line.name)+'</h2><strong>'+money(line.total)+'</strong></div><button data-action="dismiss-modal">×</button></header><div class="product-settings-body card-scroll"><p class="combo-help">飯團、小食及飲品會以一張套餐顯示；飲品可以稍後由快捷飲品補選。</p>'+roleCard('main','飯團／主餐',1)+roleCard('snack','小食',2)+roleCard('drink','飲品',3)+'</div><footer class="product-settings-actions combo-actions"><button class="danger" data-action="request-dissolve-combo">拆開套餐</button><button data-action="dismiss-modal">返回</button><button class="primary" data-action="apply-combo-edit">確認修改</button></footer>'+(missing?'<p class="missing-hint">尚欠：飲品 1 份</p>':'')+'</aside>';
 }
-function completionModal(){
-  const state=store.get(),required=pendingSummary(state.cart),link=linkUpSummary(state.cart),assist=state.settings.quickDrinks.quickAssist!==false;
-  return '<aside class="completion-card modal-card"><header><strong>統一整理</strong><button data-action="dismiss-modal">×</button></header><div class="completion-section required"><div><small>必須完成</small><strong>'+(required.total?'共欠 '+required.total+' 項':'全部完成')+'</strong><span>未完成項目會阻止結帳</span></div>'+['rice','sauce','snack','drink'].filter(k=>required[k]).map(k=>'<button data-action="complete-group" data-group="'+k+'"><span>'+({rice:'飯底',sauce:'醬汁',snack:'小食',drink:'飲品'}[k])+'</span><b>'+required[k]+' 份</b><em>選擇</em></button>').join('')+'</div><div class="completion-section optional"><div><small>可補選</small><strong>唔影響結帳</strong><span>單點飯團可加小食及飲品升級套餐</span></div></div><div class="completion-section linkup"><div><small>可組合套餐</small><strong>'+link.count+' 份</strong><span>飯團 '+link.riceballs+'｜小食 '+link.snacks+'｜飲品 '+link.drinks+'</span></div>'+(link.count?'<button class="primary" data-action="linkup-all" data-count="'+link.count+'">一鍵組合</button>':'')+'</div>'+(assist&&required.drink?'<div class="completion-drinks"><strong>選擇飲品</strong><div>'+drinks.map(d=>drinkChoiceCard(d,'completion-drink',modal?.type==='drink'&&modal.drinkId===d.id,'completion')).join('')+'</div></div>':'')+'</aside>';
+function requiredGroupLabel(group){return {rice:'飯底',sauce:'醬汁',snack:'小食',drink:'飲品'}[group]||'必選';}
+function requiredTargets(cart,group){
+  const targets=[];
+  (cart||[]).forEach((line,lineIndex)=>{
+    if(!(line.required||[]).includes(group))return;
+    if(group==='drink'){
+      const missing=Math.max(0,Number(line.drinkSlots||0)-(line.drinkAssignments||[]).length);
+      for(let unitIndex=0;unitIndex<missing;unitIndex++)targets.push({id:line.lineId+':drink:'+unitIndex,lineId:line.lineId,lineIndex,unitIndex,name:line.name,qty:line.qty});
+      return;
+    }
+    if(line.options?.[group])return;
+    for(let unitIndex=0;unitIndex<Math.max(1,Number(line.qty||1));unitIndex++)targets.push({id:line.lineId+':'+group+':'+unitIndex,lineId:line.lineId,lineIndex,unitIndex,name:line.name,qty:line.qty});
+  });
+  return targets;
 }
-function optionButtons(group,values,selected,multi=false){return '<div class="option-chips">'+values.map(value=>'<button data-action="detail-option" data-group="'+group+'" data-value="'+escapeHtml(value)+'" data-multi="'+multi+'" class="'+((multi?selected.includes(value):selected===value)?'selected':'')+'">'+escapeHtml(value)+'</button>').join('')+'</div>';}
+function completionDraft(group=''){
+  const current=modal?.draft||{};
+  if(!group)return {...current,activeGroup:'',activeTarget:'',assignments:current.assignments||{}};
+  const targets=requiredTargets(store.get().cart,group),assignments=current.activeGroup===group?(current.assignments||{}):{};
+  const activeTarget=(current.activeGroup===group&&targets.some(target=>target.id===current.activeTarget))?current.activeTarget:(targets.find(target=>!assignments[target.id])?.id||targets[0]?.id||'');
+  return {activeGroup:group,activeTarget,assignments};
+}
+function completionTargetLabel(target){return String(target.lineIndex+1).padStart(2,'0')+'｜'+escapeHtml(target.name)+(target.qty>1?'｜第 '+(target.unitIndex+1)+' 份':'');}
+function requiredSelectionPanel(group){
+  const draft=completionDraft(group);modal.draft=draft;
+  const targets=requiredTargets(store.get().cart,group),assignments=draft.assignments||{},active=targets.find(target=>target.id===draft.activeTarget)||targets[0];
+  const done=targets.filter(target=>assignments[target.id]).length,label=requiredGroupLabel(group);
+  const targetHtml=targets.map(target=>'<button class="required-target '+(target.id===active?.id?'active ':'')+(assignments[target.id]?'complete':'')+'" data-action="completion-target" data-id="'+escapeHtml(target.id)+'"><span><b>'+completionTargetLabel(target)+'</b><small>'+(assignments[target.id]?'已選：'+escapeHtml(group==='drink'?(drinkMap.get(assignments[target.id])?.name||assignments[target.id]):assignments[target.id]):'尚未選擇')+'</small></span><em>'+(assignments[target.id]?'✓':'待選')+'</em></button>').join('');
+  let choices='';
+  if(group==='drink')choices='<div class="required-drink-grid">'+drinks.filter(item=>item.available!==false).map(item=>'<button data-action="completion-required-choice" data-value="'+escapeHtml(item.id)+'" class="'+(active&&assignments[active.id]===item.id?'selected':'')+'">'+imageBlock(item.image,item.name,'required-choice-img')+'<span>'+escapeHtml(item.name)+'</span></button>').join('')+'</div>';
+  else choices='<div class="required-option-grid">'+(optionSets[group]||[]).map(value=>'<button data-action="completion-required-choice" data-value="'+escapeHtml(value)+'" class="'+(active&&assignments[active.id]===value?'selected':'')+'">'+escapeHtml(value)+'</button>').join('')+'</div>';
+  const selected=active?assignments[active.id]:'';
+  return '<div class="required-workflow-head"><div><small>必須完成｜'+label+'</small><strong>已分配 '+done+' / '+targets.length+'</strong><span>每一份都會顯示指定結果，避免配錯餐點。</span></div><button data-action="completion-back">返回必選總覽</button></div><div class="required-workflow-grid"><section class="required-target-pane"><h3>要補選嘅餐點</h3><div class="required-target-list">'+targetHtml+'</div></section><section class="required-choice-pane"><div class="required-active-target"><small>目前指定</small><strong>'+(active?completionTargetLabel(active):'已完成')+'</strong><span>'+(selected?'目前：'+escapeHtml(group==='drink'?(drinkMap.get(selected)?.name||selected):selected):'請選擇 '+label)+'</span></div>'+choices+(selected&&done<targets.length?'<button class="required-fill" data-action="completion-fill-remaining" data-value="'+escapeHtml(selected)+'">其餘未選全部用同一選項</button>':'')+'</section></div><footer class="required-workflow-actions"><button data-action="completion-back">返回</button><button class="primary" data-action="apply-required-group" '+(done===targets.length&&targets.length?'':'disabled')+'>確認 '+label+'｜'+done+' 份</button></footer>';
+}
+function splitLineForRequired(line,group,values){
+  if(!values.length)return [line];
+  if(values.every(value=>value===values[0]))return [{...line,options:{...(line.options||{}),[group]:values[0]}}];
+  const qty=Math.max(1,Number(line.qty||1)),slotsPerUnit=qty?Math.max(0,Math.round(Number(line.drinkSlots||0)/qty)):0,drinkAssignments=[...(line.drinkAssignments||[])];
+  return values.map((value,index)=>({...line,lineId:index===0?line.lineId:stableId('line'),qty:1,total:Number(line.unitPrice||0),options:{...(line.options||{}),[group]:value},drinkSlots:slotsPerUnit,drinkAssignments:slotsPerUnit?drinkAssignments.slice(index*slotsPerUnit,(index+1)*slotsPerUnit):[],createdOrder:Number(line.createdOrder||0)+(index*0.0001)}));
+}
+function applyRequiredGroup(){
+  const group=modal?.draft?.activeGroup;if(!group)return;
+  const targets=requiredTargets(store.get().cart,group),assignments=modal.draft.assignments||{};
+  if(targets.some(target=>!assignments[target.id])){showToast('仲有必選項未完成');return;}
+  store.set(state=>{
+    if(group==='drink'){
+      const byLine=new Map();targets.forEach(target=>{if(!byLine.has(target.lineId))byLine.set(target.lineId,[]);byLine.get(target.lineId).push(assignments[target.id]);});
+      state.cart=state.cart.map(line=>{const ids=byLine.get(line.lineId);if(!ids)return line;return {...line,drinkAssignments:(line.drinkAssignments||[]).concat(ids.map(id=>drinkSelection(id)))};});
+    }else{
+      const byLine=new Map();targets.forEach(target=>{if(!byLine.has(target.lineId))byLine.set(target.lineId,[]);byLine.get(target.lineId).push(assignments[target.id]);});
+      state.cart=state.cart.flatMap(line=>{const values=byLine.get(line.lineId);return values?splitLineForRequired(line,group,values):[line];});
+    }
+    state.lastAffectedLineId=targets.at(-1)?.lineId||'';state.lastMutationKind='changed';return state;
+  });
+  const remaining=pendingSummary(store.get().cart);modal={type:'completion',dirty:false,draft:{activeGroup:'',activeTarget:'',assignments:{}}};render();showToast(requiredGroupLabel(group)+'已完成');
+}
+function completionModal(){
+  const state=store.get(),required=pendingSummary(state.cart),link=linkUpSummary(state.cart);
+  if(modal?.draft?.activeGroup)return '<aside class="completion-card modal-card required-workflow"><header><div><small>結帳前必須完成</small><strong>快速補選</strong></div><button data-action="dismiss-modal">×</button></header>'+requiredSelectionPanel(modal.draft.activeGroup)+'</aside>';
+  return '<aside class="completion-card modal-card"><header><div><small>結帳前檢查</small><strong>必選快速補齊</strong></div><button data-action="dismiss-modal">×</button></header><div class="completion-section required"><div><small>必須完成</small><strong>'+(required.total?'共欠 '+required.total+' 項':'全部完成')+'</strong><span>只處理會阻礙結帳嘅必選；普通口味修改仍然喺產品「修改」處理。</span></div>'+['rice','sauce','snack','drink'].filter(k=>required[k]).map(k=>'<button data-action="complete-group" data-group="'+k+'"><span>'+requiredGroupLabel(k)+'</span><b>'+required[k]+' 份</b><em>快速分配</em></button>').join('')+'</div><div class="completion-section optional"><div><small>普通修改</small><strong>唔影響結帳</strong><span>走青瓜、走蔥、少辣等，請由對應產品「修改」卡處理。</span></div></div><div class="completion-section linkup"><div><small>可組合套餐</small><strong>'+link.count+' 份</strong><span>飯團 '+link.riceballs+'｜小食 '+link.snacks+'｜飲品 '+link.drinks+'</span></div>'+(link.count?'<button class="primary" data-action="linkup-all" data-count="'+link.count+'">一鍵組合</button>':'')+'</div></aside>';
+}
+function optionButtons(function optionButtons(group,values,selected,multi=false){return '<div class="option-chips">'+values.map(value=>'<button data-action="detail-option" data-group="'+group+'" data-value="'+escapeHtml(value)+'" data-multi="'+multi+'" class="'+((multi?selected.includes(value):selected===value)?'selected':'')+'">'+escapeHtml(value)+'</button>').join('')+'</div>';}
 function detailGroups(product,draft){
   const rows=[];
   if(product.required.includes('rice'))rows.push('<section><header><strong>飯底</strong><span class="required-tag">必選</span></header>'+optionButtons('rice',optionSets.rice,draft.options.rice||'')+'</section>');
@@ -346,7 +403,6 @@ function drinkModifierModal(){
   const groups=draft.groups||[];const total=draft.qty+groups.reduce((n,g)=>n+g.qty,0);
   return '<aside class="modifier-card modal-card"><header><strong>'+d.name+'</strong><button data-action="dismiss-modal">×</button></header><div class="drink-base-qty"><span>正常</span><span><button data-action="modifier-qty" data-delta="-1">−</button><b>'+draft.qty+'</b><button data-action="modifier-qty" data-delta="1">＋</button></span></div><div class="drink-groups">'+groups.map((g,index)=>'<section class="drink-group '+(g.open?'open':'')+'"><header><button class="group-summary" data-action="toggle-drink-adjustment" data-index="'+index+'">'+([g.sweetness,g.ice].filter(Boolean).join('・')||'選擇調整')+' ×'+g.qty+'</button><span><button data-action="group-qty" data-index="'+index+'" data-delta="-1">−</button><b>'+g.qty+'</b><button data-action="group-qty" data-index="'+index+'" data-delta="1">＋</button></span></header>'+(g.open?'<div class="adjustment-options">'+(d.sweet?optionButtons('group-sweetness-'+index,['多甜','少甜','走甜'],g.sweetness||''):'')+(d.ice?optionButtons('group-ice-'+index,['少冰','多冰'],g.ice||''):'')+'</div>':'')+'</section>').join('')+'</div><button data-action="add-drink-group" class="add-group">＋ 新增調整</button><button class="primary wide" data-action="apply-drink" '+(total?'':'disabled')+'>套用 '+total+' 份</button></aside>';
 }
-function bulkOptionModal(){const values=optionSets[modal.group]||[];const label={rice:'飯底',sauce:'醬汁',snack:'小食'}[modal.group]||'選項';return '<aside class="modifier-card modal-card"><header><strong>統一補'+label+'</strong><button data-action="dismiss-modal">×</button></header><section><strong>選擇'+label+' <small>套用到所有未完成項目</small></strong>'+optionButtons('bulk',values,modal.draft.value||'')+'</section><button class="primary wide" data-action="apply-bulk" '+(modal.draft.value?'':'disabled')+'>確認套用</button></aside>';}
 function searchModal(){const query=store.get().searchQuery;return '<aside class="side-card modal-card search-card"><header><div><small>產品搜尋</small><strong>名稱或編號</strong></div><button data-action="dismiss-modal">×</button></header><div class="search-field"><input autofocus data-action="search-query" value="'+escapeHtml(query)+'" placeholder="例如：F4、雞絲、奶茶"><button data-action="clear-search" '+(query?'':'disabled')+'>清除</button></div><p>搜尋結果會即時顯示；分類排序及供應狀態仍然保留。</p></aside>';}
 function categoryButton(cat,state){return '<button data-action="category" data-value="'+escapeHtml(cat)+'" class="'+(cat===state.category?'active':'')+'">'+escapeHtml(cat)+'</button>';}
 function categoryBar(state){
@@ -374,7 +430,6 @@ function activeModal(){
   if(modal.type==='completion')return completionModal();
   if(modal.type==='product')return productDetailModal();
   if(modal.type==='drink')return drinkModifierModal();
-  if(modal.type==='bulk')return bulkOptionModal();
   if(modal.type==='search')return searchModal();
   if(modal.type==='pending')return pendingPanel();
   if(modal.type==='pending-detail')return pendingDetailModal();
@@ -441,7 +496,7 @@ function requestDineCancellation(){
 function markDirty(){if(modal)modal.dirty=true;}
 function requestDismiss(){
   if(!modal)return;
-  if(modal.dirty&&['product','drink','bulk'].includes(modal.type)){confirmState={title:'尚未套用修改',message:'返回後今次選擇將不會保存。',returnModal:modal.type==='drink'&&modal.parent?modal.parent:null};render();return;}
+  if(modal.dirty&&['product','drink'].includes(modal.type)){confirmState={title:'尚未套用修改',message:'返回後今次選擇將不會保存。',returnModal:modal.type==='drink'&&modal.parent?modal.parent:null};render();return;}
   modal=modal.type==='drink'&&modal.parent?modal.parent:null;confirmState=null;render();
 }
 function openProduct(productId,lineId='',anchor=null){
@@ -509,7 +564,7 @@ function handle(button){
   else if(action==='toggle-cart-view')saveCartViewMode(store.get().cartViewMode===CART_VIEW_ORGANIZED?CART_VIEW_INPUT:CART_VIEW_ORGANIZED);
   else if(action==='toggle-cart-category')store.set(state=>{const category=button.dataset.value;const collapsed=state.collapsedCartCategories.includes(category);return {...state,collapsedCartCategories:collapsed?state.collapsedCartCategories.filter(item=>item!==category):state.collapsedCartCategories.concat(category)};});
   else if(action==='edit-line'){const line=store.get().cart.find(x=>x.lineId===button.dataset.id);if(line?.lineType==='combo'){modal={type:'combo',lineId:line.lineId,anchor:anchorRect(button),dirty:false,draft:{components:safeClone(line.combo?.components||[])}};render();}else if(line)openProduct(line.productId,line.lineId,anchorRect(button));}
-  else if(action==='open-completion'){modal={type:'completion',dirty:false};render();}
+  else if(action==='open-completion'){modal={type:'completion',dirty:false,draft:{activeGroup:'',activeTarget:'',assignments:{}}};render();}
   else if(action==='open-quick-settings'){modal={type:'quick',anchor:anchorRect(button),dirty:false};render();}
   else if(action==='open-settings'){modal={type:'settings',anchor:anchorRect(button),dirty:false};render();}
   else if(action==='open-health'){modal={type:'health',anchor:anchorRect(button),dirty:false};render();}
@@ -570,7 +625,6 @@ function handle(button){
   else if(action==='detail-option'){
     markDirty();const g=button.dataset.group,v=button.dataset.value,multi=button.dataset.multi==='true';
     if(modal.type==='drink'){if(g==='sweetness')modal.draft.sweetness=modal.draft.sweetness===v?'':v;if(g==='ice')modal.draft.ice=modal.draft.ice===v?'':v;if(g.startsWith('group-sweetness-')){const x=Number(g.split('-').pop()),group=modal.draft.groups[x];group.sweetness=group.sweetness===v?'':v;}if(g.startsWith('group-ice-')){const x=Number(g.split('-').pop()),group=modal.draft.groups[x];group.ice=group.ice===v?'':v;}}
-    else if(modal.type==='bulk')modal.draft.value=modal.draft.value===v?'':v;
     else if(multi){const arr=modal.draft.options[g]||[];modal.draft.options[g]=arr.includes(v)?arr.filter(x=>x!==v):arr.concat(v);}else modal.draft.options[g]=modal.draft.options[g]===v?'':v;
     render();
   }
@@ -588,9 +642,18 @@ function handle(button){
     if(store.get().settings.quickDrinks.quickAssist===false){showToast('快捷補選已關閉');return;}
     const target=findDrinkTarget(store.get().cart),missing=pendingSummary(store.get().cart).drink;if(!missing||!target){showToast('目前沒有待補飲品');return;}pendingDrinkAssignment={lineId:target.lineId,name:target.name};openDrink(button.dataset.id,'global',missing,anchorRect(button));
   }
-  else if(action==='completion-drink')openDrink(button.dataset.id,'global',pendingSummary(store.get().cart).drink,anchorRect(button));
-  else if(action==='complete-group'){const g=button.dataset.group;if(g==='drink'){showToast('請在下方選擇飲品');return;}modal={type:'bulk',group:g,dirty:false,draft:{value:''}};render();}
-  else if(action==='apply-bulk'){const g=modal.group,value=modal.draft.value;store.set(state=>{state.cart=state.cart.map(line=>line.required.includes(g)&&!line.options[g]?{...line,options:{...line.options,[g]:value}}:line);return state;});modal={type:'completion',dirty:false};render();showToast('已統一補選 '+value);}
+  else if(action==='complete-group'){modal.draft=completionDraft(button.dataset.group);modal.dirty=false;render();}
+  else if(action==='completion-back'){modal.draft={activeGroup:'',activeTarget:'',assignments:{}};modal.dirty=false;render();}
+  else if(action==='completion-target'){modal.draft.activeTarget=button.dataset.id;render();}
+  else if(action==='completion-required-choice'){
+    const target=modal.draft.activeTarget,value=button.dataset.value;if(!target)return;
+    modal.draft.assignments={...(modal.draft.assignments||{}),[target]:value};modal.dirty=true;
+    const targets=requiredTargets(store.get().cart,modal.draft.activeGroup),next=targets.find(item=>!modal.draft.assignments[item.id]);if(next)modal.draft.activeTarget=next.id;render();
+  }
+  else if(action==='completion-fill-remaining'){
+    const value=button.dataset.value,targets=requiredTargets(store.get().cart,modal.draft.activeGroup);targets.forEach(target=>{if(!modal.draft.assignments[target.id])modal.draft.assignments[target.id]=value;});modal.dirty=true;render();
+  }
+  else if(action==='apply-required-group')applyRequiredGroup();
   else if(action==='linkup-all')applyLinkUp(Number(button.dataset.count)||0);
   else if(action==='open-specified-link'){const count=pairingGroupCount(store.get().cart),groups=Array.from({length:count},()=>({main:'',snack:'',drink:''}));if(!count){showToast('需要主餐及小食才可指定配對');return;}modal={type:'specified-link',anchor:anchorRect(button),dirty:false,draft:{groups,active:0}};render();}
   else if(action==='select-pairing-group'){modal.draft.active=Number(button.dataset.index)||0;render();}
