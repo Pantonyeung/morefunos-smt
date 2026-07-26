@@ -14,7 +14,8 @@ const required=[
   ':root[data-responsive-profile="compact"] body[data-page="more"] .more-analysis'
 ];
 for(const token of required)assert.ok(css.includes(token),`missing responsive More contract: ${token}`);
-assert.ok(loader.includes('body[data-page="more"] .more-heading{display:none!important}'),'global shell must own the More page title');
+const baseCss=fs.readFileSync(new URL('../shared/page-base.css',import.meta.url),'utf8');
+assert.ok(baseCss.includes(':root[data-global-shell="1"] body[data-page="more"] .more-heading{display:none}'),'global shell must own the More page title');
 assert.ok(loader.includes("shellApp?.classList.toggle('child-overlay-active'"),'child modal must signal the outer shell');
 assert.ok(shellCss.includes('#shell-app.child-overlay-active #page-host{position:fixed;inset:0'),'child modal must expand over the complete shell viewport');
 assert.ok(shellCss.includes('#shell-app.child-overlay-active .global-shell-status,#shell-app.child-overlay-active .global-bottom-nav'),'outer shell chrome must be included in modal blocking state');
