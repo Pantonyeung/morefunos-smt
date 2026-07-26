@@ -5,7 +5,7 @@ import {money,imageBlock,bindImageFallbacks,showToast,escapeHtml} from '../../sh
 import {orderPageConfig as defaults} from './page-config.js';
 import {categories as fallbackCategories,products as fallbackProducts,drinks as fallbackDrinks,optionSets} from './page-data.js';
 import {loadMenuCatalog,MENU_CACHE_KEY} from './menu-api.js';
-import {acceptPendingOrder,combineRiceballSet,dissolveRiceballSet,completeExpiredOrders,createWhatsAppLink,updateCartLineQuantity,CART_VIEW_INPUT,CART_VIEW_ORGANIZED,SERVICE_TAKEAWAY,SERVICE_DINE_IN,normalizeCartViewMode,normalizeServiceMode,resolveInitialOrderServiceMode,applyOrderServiceMode,toggleLineServiceMode,cartForView,inferOrderServiceMode} from './order-domain.js';
+import {acceptPendingOrder,combineRiceballSet,dissolveRiceballSet,completeExpiredOrders,createWhatsAppLink,updateCartLineQuantity,CART_VIEW_INPUT,CART_VIEW_ORGANIZED,SERVICE_TAKEAWAY,SERVICE_DINE_IN,normalizeCartViewMode,normalizeServiceMode,resolveInitialOrderServiceMode,applyOrderServiceMode,toggleLineServiceMode,cartForView,inferOrderServiceMode,cartPricingSummary} from './order-domain.js';
 import {commitTableOrder,createInitialDineState,cleanupEmptyDineSessions} from '../dine/dine-domain.js';
 import {defaultPrinterState,importExternalPrintJobs} from '../more/print-domain.js';
 import {buildCategoryLayout,normalizeCategoryLayout} from './category-layout.js';
@@ -124,7 +124,7 @@ function pendingSummary(cart){
   cart.forEach(line=>missingGroups(line).forEach(item=>{out[item.group]+=item.count;out.total+=item.count;}));
   return out;
 }
-function cartTotal(cart){return cart.reduce((sum,line)=>sum+Number(line.total||0),0);}
+function cartTotal(cart){return cartPricingSummary(cart).total;}
 function linkUpSummary(cart){
   const available=cart.filter(line=>line.lineType!=='combo'&&!line.linkedComboId);
   const riceballs=available.filter(line=>line.combinable).reduce((n,line)=>n+line.qty,0);
@@ -232,6 +232,11 @@ function cartSummary(state){
   const counts=new Map();cartForView(state.cart,CART_VIEW_ORGANIZED).forEach(line=>{const category=line.category||'其他';counts.set(category,(counts.get(category)||0)+Number(line.qty||0));});
   return '<div class="cart-summary-strip">'+[...counts].map(([category,count])=>'<span>'+escapeHtml(category)+' <b>'+count+'</b></span>').join('<span>｜</span>')+'</div>';
 }
+function cartPricingStrip(state){
+  if(!state.cart.length)return '';
+  const pricing=cartPricingSummary(state.cart);
+  return '<div class="cart-pricing-strip"><span>餐點 <b>'+money(pricing.foodSubtotal)+'</b></span><span class="packaging">包裝費 '+pricing.packagingUnits+' 件 <b>'+money(pricing.packagingFee)+'</b></span><strong>合計 '+money(pricing.total)+'</strong></div>';
+}
 function findDrinkTarget(cart){return (cart||[]).find(line=>Math.max(0,Number(line.drinkSlots||0)-(line.drinkAssignments||[]).length)>0)||null;}
 function pendingArea(){
   const state=store.get();const required=pendingSummary(state.cart);const link=linkUpSummary(state.cart);
@@ -241,7 +246,7 @@ function quickDrinks(){
   const state=store.get();if(state.settings.quickDrinks.visible===false)return '';
   const order=orderedDrinks(),missing=pendingSummary(state.cart).drink,target=findDrinkTarget(state.cart);
   const context=(target||lastDrinkAssignment)?'<div class="quick-drink-context">'+(target?'<strong>正在補：'+escapeHtml(target.name)+'</strong>':'')+(lastDrinkAssignment?'<em>已配對：'+escapeHtml(lastDrinkAssignment.drink)+' → '+escapeHtml(lastDrinkAssignment.target)+'</em>':'')+'</div>':'';
-  return '<section class="quick-drawer '+(state.quickDrawerOpen?'open':'')+'"><button class="quick-drawer-handle" data-action="toggle-quick-drawer"><span>快捷飲品</span><em>待補 '+missing+'</em><b>'+(state.quickDrawerOpen?'⌄':'⌃')+'</b></button>'+(state.quickDrawerOpen?'<div class="quick-drawer-panel"><header><strong>快捷飲品｜待補 '+missing+'</strong><button data-action="toggle-quick-drawer">×</button></header>'+context+'<div>'+order.filter(d=>d.available!==false).map(d=>drinkChoiceCard(d,'quick-drink',modal?.type==='drink'&&modal.drinkId===d.id,'drawer')).join('')+'</div></div>':'')+'</section>';
+  return '<section class="quick-drawer '+(state.quickDrawerOpen?'open':'')+'"><button class="quick-drawer-handle" data-action="toggle-quick-drawer"><span>快捷飲品</span><em>待補 '+missing+'</em><b>'+(state.quickDrawerOpen?'⌄':'⌃')+'</b></button>'+(state.quickDrawerOpen?'<div class="quick-drawer-panel"><header><strong>快捷飲品｜待補 '+missing+'</strong><span class="quick-scroll-hint">左右滑動查看更多 ›</span><button data-action="toggle-quick-drawer">×</button></header>'+context+'<div>'+order.filter(d=>d.available!==false).map(d=>drinkChoiceCard(d,'quick-drink',modal?.type==='drink'&&modal.drinkId===d.id,'drawer')).join('')+'</div></div>':'')+'</section>';
 }
 function operationLabel(state){if(state.operations.immediateStopped||!state.operations.acceptingOrders)return '已停止接單';if(state.operations.scheduledClose)return '接單至 '+state.operations.scheduledClose;return '接單中';}
 function healthIssueCount(state){return Object.values(state.health).filter(item=>!item.ok).length;}
@@ -288,7 +293,7 @@ function quickSettingsModal(){
 }
 function settingsModal(){
   const state=store.get();const c=state.settings.catalog,w=Number(state.settings.cart.widthPercent||32);
-  return '<aside class="side-card modal-card"><header><strong>顯示設定</strong><button data-action="dismiss-modal">×</button></header><div class="setting-block"><strong>購物籃比例</strong><div class="segmented three">'+[25,30,32].map(x=>'<button data-action="cart-width" data-value="'+x+'" class="'+(w===x?'active':'')+'">'+x+' / '+(100-x)+'</button>').join('')+'</div></div><div class="setting-row"><div><strong>顯示購物車產品圖片</strong><small>關閉後保留名稱、描述、價格與操作</small></div><button class="switch '+(state.settings.cart.showImages!==false?'on':'')+'" data-action="toggle-cart-images"><i></i></button></div><div class="setting-block"><strong>產品卡</strong><div class="segmented three"><button data-action="setting-card" data-value="large" class="'+(c.defaultTemplate==='large'?'active':'')+'">大圖</button><button data-action="setting-card" data-value="small" class="'+(c.defaultTemplate==='small'?'active':'')+'">小圖</button><button data-action="setting-card" data-value="text" class="'+(c.defaultTemplate==='text'?'active':'')+'">純文字</button></div></div><div class="setting-row"><div><strong>顯示產品 Code</strong><small>例如 F4、B1、S1</small></div><button class="switch '+(c.showCode?'on':'')+'" data-action="toggle-code"><i></i></button></div></aside>';
+  return '<aside class="side-card modal-card"><header><strong>顯示設定</strong><button data-action="dismiss-modal">×</button></header><div class="setting-block"><strong>購物籃比例</strong><div class="segmented three">'+[25,30,32].map(x=>'<button data-action="cart-width" data-value="'+x+'" class="'+(w===x?'active':'')+'">'+x+' / '+(100-x)+'</button>').join('')+'</div></div><div class="setting-row"><div><strong>顯示購物車產品圖片</strong><small>關閉後保留名稱、描述、價格與操作</small></div><button class="switch '+(state.settings.cart.showImages!==false?'on':'')+'" data-action="toggle-cart-images"><i></i></button></div><div class="setting-block"><strong>產品卡</strong><div class="segmented three"><button data-action="setting-card" data-value="large" class="'+(c.defaultTemplate==='large'?'active':'')+'">大圖</button><button data-action="setting-card" data-value="small" class="'+(c.defaultTemplate==='small'?'active':'')+'">小圖</button><button data-action="setting-card" data-value="text" class="'+(c.defaultTemplate==='text'?'active':'')+'">純文字</button></div></div><div class="setting-row"><div><strong>顯示產品 Code</strong><small>例如 F4、B1、S1</small></div><button class="switch '+(c.showCode?'on':'')+'" data-action="toggle-code"><i></i></button></div><div class="setting-row"><div><strong>顯示產品描述</strong><small>大圖卡名稱下方顯示套餐內容／產品描述</small></div><button class="switch '+(c.showDescription!==false?'on':'')+'" data-action="toggle-description"><i></i></button></div></aside>';
 }
 function healthModal(){const state=store.get();return '<aside class="side-card modal-card"><header><strong>系統狀態</strong><button data-action="dismiss-modal">×</button></header><div class="health-list">'+Object.values(state.health).map(item=>'<div class="health-row '+(item.ok?'ok':'bad')+'"><span>'+(item.ok?'✓':'!')+'</span><div><strong>'+item.label+'</strong><small>'+item.detail+'</small></div><b>'+(item.ok?'正常':'異常')+'</b></div>').join('')+'</div></aside>';}
 function statusModal(){
@@ -721,6 +726,7 @@ function handle(button,anchorOverride=null){
   else if(action==='cart-merge')updateSettings(s=>{s.cart.mergeMode=button.dataset.value;});
   else if(action==='toggle-cart-images')updateSettings(s=>{s.cart.showImages=s.cart.showImages===false;});
   else if(action==='toggle-code')updateSettings(s=>{s.catalog.showCode=!s.catalog.showCode;});
+  else if(action==='toggle-description')updateSettings(s=>{s.catalog.showDescription=s.catalog.showDescription===false;});
   else if(action==='toggle-accepting')store.set(state=>{state.operations.acceptingOrders=!state.operations.acceptingOrders;state.operations.immediateStopped=false;return state;});
   else if(action==='save-close-time'){const v=document.getElementById('scheduled-close')?.value||'';store.set(state=>{state.operations.scheduledClose=v;return state;});showToast('接單時間已更新');}
   else if(action==='immediate-stop')store.set(state=>{state.operations.acceptingOrders=false;state.operations.immediateStopped=true;return state;});

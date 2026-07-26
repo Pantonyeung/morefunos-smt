@@ -1,4 +1,5 @@
 import {orderDisplayNumber} from '../../shared/order-identity.js';
+import {organizeCartForDisplay,packagingFeeForLine} from '../order/order-domain.js';
 
 const clone=value=>value===undefined?undefined:JSON.parse(JSON.stringify(value));
 const number=value=>Number.isFinite(Number(value))?Number(value):0;
@@ -115,8 +116,8 @@ function labelDocuments(order){
 }
 
 function receiptLines(order){
-  const subtotal=number(order.subtotal??order.amount??order.total),discount=number(order.discountAmount),amount=number(order.amount??order.total),paid=number(order.receivedAmount??order.paidAmount??amount),change=number(order.changeAmount);
-  return [`原價：$${subtotal.toFixed(0)}`,`優惠：-$${discount.toFixed(0)}`,`應付：$${amount.toFixed(0)}`,`付款：${order.paymentMethod||'待核實'}`,`實收：$${paid.toFixed(0)}`,`找續：$${change.toFixed(0)}`];
+  const subtotal=number(order.subtotal??order.amount??order.total),foodSubtotal=number(order.foodSubtotal??subtotal-number(order.packagingFee)),packagingFee=number(order.packagingFee),discount=number(order.discountAmount),amount=number(order.amount??order.total),paid=number(order.receivedAmount??order.paidAmount??amount),change=number(order.changeAmount);
+  return [`餐點：$${foodSubtotal.toFixed(0)}`,`包裝費：$${packagingFee.toFixed(0)}`,`原價：$${subtotal.toFixed(0)}`,`優惠：-$${discount.toFixed(0)}`,`應付：$${amount.toFixed(0)}`,`付款：${order.paymentMethod||'待核實'}`,`實收：$${paid.toFixed(0)}`,`找續：$${change.toFixed(0)}`];
 }
 
 function labelLines(order,item,pieceIndex,pieceTotal){
@@ -130,9 +131,9 @@ export function renderPrintDocument(template,order){
   if(!template||!['receipt','production','packing','label'].includes(template.documentType))throw new Error('打印格式不支援');
   const items=order?.items||order?.cart||[],summary=aggregateProductionSummary(items);
   let lines=[];
-  if(template.documentType==='receipt')lines=[...header(order,'顧客小票'),...channelLines(order),...detailLines(items),...receiptLines(order)];
-  if(template.documentType==='production')lines=[...header(order,'製作單'),...channelLines(order),...summaryLines(summary),...detailLines(items),'請按訂單配置製作'];
-  if(template.documentType==='packing')lines=[...header(order,'打包單'),...channelLines(order),...summaryLines(summary),...detailLines(items),`總袋數：____　餐具：____`];
+  if(template.documentType==='receipt')lines=[...header(order,'顧客小票'),...channelLines(order),...detailLines(organizeCartForDisplay(items)),...receiptLines(order)];
+  if(template.documentType==='production')lines=[...header(order,'製作單'),...(order.printServiceMode?[`服務：${order.printServiceMode}`]:[]),...channelLines(order),...summaryLines(summary),...detailLines(items),'請按訂單配置製作'];
+  if(template.documentType==='packing')lines=[...header(order,'打包單'),...(order.printServiceMode?[`服務：${order.printServiceMode}`]:[]),...channelLines(order),...summaryLines(summary),...detailLines(items),`總袋數：____　餐具：____`];
   if(template.documentType==='label'){
     const selected=order?.labelItem?{item:order.labelItem,pieceIndex:number(order.labelPieceIndex)||1,pieceTotal:number(order.labelPieceTotal)||1}:labelDocuments(order)[0];
     lines=selected?labelLines(order,selected.item,selected.pieceIndex,selected.pieceTotal):['磨飯',`訂單：${orderDisplayNumber(order)==='—'?'測試工作':orderDisplayNumber(order)}`,'沒有需要打印標籤的產品'];
@@ -150,17 +151,25 @@ function selectedTemplate(state,printer,type){
 }
 function jobId(order,type,now,index=0){return `PRINT-${order.id||'TEST'}-${type}-${number(now)}-${index+1}`;}
 
+function serviceModeDocuments(order,type){
+  if(!['production','packing'].includes(type))return [null];
+  const items=order?.items||order?.cart||[];
+  const modes=['外賣','堂食'].map(mode=>({mode,items:items.filter(item=>(item.serviceMode||'外賣')===mode)})).filter(group=>group.items.length);
+  if(modes.length<=1)return [null];
+  return modes;
+}
+
 export function createPrintJobs(order,state,{now=Date.now(),documents=['receipt','production','packing','label'],isReprint=false}={}){
   const jobs=[];
   let sequence=0;
   documents.forEach(type=>{
-    const variants=type==='label'?labelDocuments(order):[null];
+    const variants=type==='label'?labelDocuments(order):serviceModeDocuments(order,type);
     variants.forEach(variant=>{
     const printer=selectedPrinter(state,type),template=selectedTemplate(state,printer,type);
     const validation=printer?validatePrinter(printer):{ok:false,errors:['未有可用打印機']};
     const errors=[...validation.errors];
     if(!template)errors.push('未有已發佈打印格式');
-    const printOrder=variant?{...order,labelItem:variant.item,labelPieceIndex:variant.pieceIndex,labelPieceTotal:variant.pieceTotal}:order;
+    const printOrder=type==='label'&&variant?{...order,labelItem:variant.item,labelPieceIndex:variant.pieceIndex,labelPieceTotal:variant.pieceTotal}:variant?.items?{...order,items:variant.items,cart:variant.items,printServiceMode:variant.mode}:order;
     const document=template?renderPrintDocument(template,printOrder):null;
     const copies=type==='label'?1:Math.max(1,number(printer?.copies)||1);
     const createdAt=number(now)+sequence;

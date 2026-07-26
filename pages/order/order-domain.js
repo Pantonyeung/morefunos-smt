@@ -5,6 +5,24 @@ export const CART_VIEW_ORGANIZED='organized';
 export const SERVICE_TAKEAWAY='外賣';
 export const SERVICE_DINE_IN='堂食';
 
+export const TAKEAWAY_PACKAGING_FEE_PER_UNIT=1;
+const PACKAGING_FEE_EXEMPT_CATEGORIES=new Set(['飯團','飲品']);
+
+export function packagingUnitsForLine(line){
+  if(normalizeServiceMode(line?.serviceMode,SERVICE_TAKEAWAY)!==SERVICE_TAKEAWAY)return 0;
+  if(PACKAGING_FEE_EXEMPT_CATEGORIES.has(String(line?.category||'')))return 0;
+  return Math.max(0,Number(line?.qty)||0);
+}
+export function packagingFeeForLine(line){return packagingUnitsForLine(line)*TAKEAWAY_PACKAGING_FEE_PER_UNIT;}
+export function cartPricingSummary(cart=[]){
+  const rows=Array.isArray(cart)?cart:[];
+  const foodSubtotal=rows.reduce((sum,line)=>sum+Number(line?.total??Number(line?.unitPrice||0)*Number(line?.qty||0)),0);
+  const packagingUnits=rows.reduce((sum,line)=>sum+packagingUnitsForLine(line),0);
+  const packagingFee=rows.reduce((sum,line)=>sum+packagingFeeForLine(line),0);
+  return {foodSubtotal,packagingUnits,packagingFee,total:foodSubtotal+packagingFee};
+}
+
+
 const ORGANIZED_CATEGORY_ORDER=['飯團','飯團套餐','便當','紫米沙律','沙律','麵餐','拌麵','薯角餐','薯蓉餐','套餐小食','小食','飲品','其他'];
 
 export function normalizeCartViewMode(value){

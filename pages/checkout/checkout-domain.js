@@ -1,4 +1,5 @@
 import {recordCheckoutOperator} from '../../shared/operations.js';
+import {cartPricingSummary,packagingFeeForLine} from '../order/order-domain.js';
 
 const roundMoney=value=>Math.round((Number(value)||0)*100)/100;
 const subtotalOf=cart=>roundMoney((cart||[]).reduce((sum,line)=>sum+Number(line.total ?? Number(line.unitPrice||0)*Number(line.qty||0)),0));
@@ -31,8 +32,10 @@ const eligibleStudentUnits=line=>{
 };
 
 export function applyCheckoutDiscount(cart,discount={type:'none'},channel='現場'){
-  const subtotal=subtotalOf(cart);
-  if(!discount||discount.type==='none')return {subtotal,discountAmount:0,payable:subtotal,appliedUnits:0};
+  const base=cartPricingSummary(cart);
+  const subtotal=roundMoney(base.total),foodSubtotal=roundMoney(base.foodSubtotal),packagingFee=roundMoney(base.packagingFee);
+  const common={foodSubtotal,packagingUnits:base.packagingUnits,packagingFee,subtotal};
+  if(!discount||discount.type==='none')return {...common,discountAmount:0,payable:subtotal,appliedUnits:0};
   if(isPlatform(channel))throw new Error('平台訂單不可使用本店優惠');
   let discountAmount=0;
   let appliedUnits=0;
@@ -49,10 +52,10 @@ export function applyCheckoutDiscount(cart,discount={type:'none'},channel='現�
     }
   }else if(discount.type==='group'){
     const percent=Math.max(0,Math.min(100,Number(discount.percent)||0));
-    discountAmount=subtotal*percent/100;
+    discountAmount=foodSubtotal*percent/100;
   }
   discountAmount=roundMoney(discountAmount);
-  return {subtotal,discountAmount,payable:roundMoney(Math.max(0,subtotal-discountAmount)),appliedUnits};
+  return {...common,discountAmount,payable:roundMoney(Math.max(0,subtotal-discountAmount)),appliedUnits};
 }
 
 export function enterKeypadValue(current,key){
@@ -77,13 +80,13 @@ export function buildCheckoutRecord({id,identity=null,cart,channel,payment,prici
   const base={
     ...(identity||{}),id:identity?.id||id,group:policy.group,
     source:channel,acceptedAt:now,itemCount:(cart||[]).reduce((n,line)=>n+Number(line.qty||0),0),
-    subtotal:pricing.subtotal,discountAmount:pricing.discountAmount,amount:pricing.payable,
+    foodSubtotal:pricing.foodSubtotal,packagingFee:pricing.packagingFee,packagingUnits:pricing.packagingUnits,subtotal:pricing.subtotal,discountAmount:pricing.discountAmount,amount:pricing.payable,
     discount:{...discount,appliedUnits:pricing.appliedUnits},paymentMethod,paymentStatus:pending?'付款待核實':policy.initialPaymentStatus,
     reconciliationStatus:pending?'pending':policy.group==='platform'?'platform_paid':'not_required',channelData:{...channelData},
     paidAmount:pending?0:roundMoney(pricing.payable),
     receivedAmount:pending?0:roundMoney(paymentMethod==='現金'?receivedAmount:pricing.payable),
     changeAmount:pending?0:roundMoney(paymentMethod==='現金'?Math.max(0,Number(receivedAmount||0)-Number(pricing.payable||0)):0),printStatus:'正常',
-    items:(cart||[]).map(line=>({...line})),cart:(cart||[]).map(line=>({...line})),audit:[...audit]
+    items:(cart||[]).map(line=>({...line,packagingFee:packagingFeeForLine(line)})),cart:(cart||[]).map(line=>({...line,packagingFee:packagingFeeForLine(line)})),audit:[...audit]
   };
   if(policy.group==='platform'){
     base.platformSalesGross=pricing.subtotal;
