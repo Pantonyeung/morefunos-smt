@@ -9,6 +9,10 @@ const navItems=[
 ];
 
 function icon(paths){return `<svg class="shell-nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;}
+function isEmbeddedInGlobalShell(){
+  if(typeof window==='undefined')return false;
+  try{return Boolean(window.parent&&window.parent!==window);}catch(_error){return true;}
+}
 function registerPageActions(rightActions=''){
   if(typeof document==='undefined'||!rightActions)return rightActions;
   const template=document.createElement('template');
@@ -26,9 +30,11 @@ function registerPageActions(rightActions=''){
 
 export function renderGlobalStatusBar({terminalId='SMT',operationLabel='接單中',operationTone='online',lastOrder='—',context='',rightActions=''}={}){
   const registeredActions=registerPageActions(rightActions);
+  if(isEmbeddedInGlobalShell())return '';
   return `<header class="topbar global-statusbar"><div class="brand shell-brand"><span class="shell-brand-mark">磨</span><strong>磨飯 SMT</strong></div><span class="shell-terminal">${escape(terminalId)}</span>${context?`<span class="shell-context">${escape(context)}</span>`:''}<span class="shell-operation ${escape(operationTone)}"><i></i>${escape(operationLabel)}</span><div class="shell-last-order"><small>最近訂單</small><strong>${escape(lastOrder||'—')}</strong></div><div class="spacer"></div><div class="shell-actions">${registeredActions}</div></header>`;
 }
 
 export function renderBottomNav(activeRoute,{badges={}}={}){
+  if(isEmbeddedInGlobalShell())return '';
   return `<nav class="bottom-nav shell-bottom-nav" aria-label="主要功能">${navItems.map(([route,label,paths])=>`<button class="shell-nav-button ${activeRoute===route?'active':''}" data-action="shell-navigate" data-route="${route}" ${activeRoute===route?'aria-current="page"':''}>${icon(paths)}<span>${label}</span>${badges[route]?`<b class="shell-nav-badge">${escape(badges[route])}</b>`:''}</button>`).join('')}</nav>`;
 }
