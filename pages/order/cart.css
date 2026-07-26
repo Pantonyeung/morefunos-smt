@@ -30,7 +30,7 @@ body[data-page="order"] .cart-row .cart-img>.image-fallback{display:none}
 .quick-drink-context em{font-style:normal;color:#b84216;font-weight:950;overflow:hidden;text-overflow:ellipsis}
 .cart-pricing-strip{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:10px;padding:6px 10px;border-top:1px solid #eee5de;background:#fffdfb;color:#79665a;font-size:12px;font-weight:850}.cart-pricing-strip span{white-space:nowrap}.cart-pricing-strip b{color:#4f4037}.cart-pricing-strip .packaging{color:#b84216}.cart-pricing-strip>strong{justify-self:end;color:#2f2722;font-size:14px}
 .quick-drawer-panel>header{display:grid;grid-template-columns:auto 1fr 36px;align-items:center;gap:10px}.quick-drawer-tools{justify-self:end;display:flex;align-items:center;gap:10px}.quick-drawer-tools>button{min-height:32px;padding:0 10px;border:1px solid #e3d6cd;border-radius:9px;background:#fff;color:#6f5b4f;font-size:11px;font-weight:900}.quick-drawer-tools>button:active{background:#fff1e8;color:#b84216}
-.quick-scroll-hint{justify-self:end;color:#8b7a6e;font-size:11px;font-weight:800;white-space:nowrap}.quick-drawer-panel>div:last-child{scroll-snap-type:x proximity}.quick-drawer-panel .drink-choice-card{scroll-snap-align:start}
+.quick-scroll-hint{justify-self:end;color:#8b7a6e;font-size:11px;font-weight:800;white-space:nowrap}.quick-drawer-panel>div:last-child{scroll-snap-type:x proximity}
 .cart footer .primary:disabled{background:#d8d3cf;border-color:#d8d3cf;color:#8d8580;box-shadow:none;cursor:not-allowed}
 .modifier-card:not([data-pointer-side]){left:50%;top:50%;transform:translate(-50%,-50%)}
 .modifier-card section .option-chips:empty::after{content:'暫時未有可用選項';display:block;width:100%;padding:14px;border:1px dashed #d9cec4;border-radius:10px;background:#fbf8f5;color:var(--muted);text-align:center;font-weight:850}
@@ -47,25 +47,11 @@ body[data-page="order"] .cart-row .cart-img>.image-fallback{display:none}
 .required-active-target{display:grid;gap:5px;padding:10px 12px;border:1px solid #ead9ce;border-radius:12px;background:#fffaf6}.required-active-target small{color:var(--orange);font-weight:900}.required-active-target strong{font-size:19px}.required-active-target span{color:var(--muted)}
 .required-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;overflow:auto}.required-option-grid button{min-height:62px;border:1px solid var(--line);border-radius:11px;background:#fff;font-size:17px;font-weight:950}.required-option-grid button.selected{border-color:#ef9b69;background:#fff0e7;color:#b84216;box-shadow:inset 0 0 0 1px rgba(239,91,35,.14)}
 .required-drink-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;overflow-y:auto;overflow-x:hidden;align-content:start;padding-right:2px}
-.required-drink-grid .drink-choice-card{height:172px;min-height:172px;padding:4px;display:grid;grid-template-columns:1fr;grid-template-rows:18px minmax(0,1fr);gap:0;align-items:stretch}
-.required-drink-grid .drink-choice-card>span:not(.drink-choice-img){grid-row:1;min-height:18px;max-height:18px;display:flex;align-items:center;justify-content:center;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1;font-size:12px}
-.required-drink-grid .drink-choice-img{grid-row:2;width:100%;height:100%;min-height:0;border-radius:9px;overflow:hidden;display:grid;place-items:center;background:#fff}
-.required-drink-grid .drink-choice-img>img{width:70%;height:70%;object-fit:contain;object-position:center;transform:none}
-.required-drink-grid .drink-choice-card.selected,.required-drink-grid .drink-choice-card.has-assignment,.quick-drawer-panel .drink-choice-card.selected{border-color:#ef9b69;background:#fff0e7;color:#b84216;box-shadow:inset 0 0 0 2px rgba(239,91,35,.22)}
-.required-drink-grid .drink-choice-card.selected::after,.quick-drawer-panel .drink-choice-card.selected::after{content:'✓';position:absolute;right:7px;top:24px;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:var(--orange);color:#fff;font-size:15px;font-weight:950;box-shadow:0 2px 7px rgba(69,48,32,.16)}
-.required-drink-grid .drink-choice-card.has-assignment::after{display:none}
-.required-drink-grid .drink-choice-count{top:24px}
 .required-fill{min-height:46px;border:1px dashed #d7c3b5;border-radius:10px;background:#fff;color:#6f5b4f;font-weight:900}
 .required-workflow-actions{flex:none;display:grid;grid-template-columns:120px 1fr;gap:10px;padding:12px 18px;border-top:1px solid var(--line);background:#fff}.required-workflow-actions .primary{background:var(--orange);border-color:var(--orange);color:#fff}.required-workflow-actions .primary:disabled{opacity:.42;filter:saturate(.25);cursor:not-allowed}
 .quick-drawer-panel{height:248px}
 .quick-drawer-panel>header{position:relative;z-index:2}
 .quick-drawer-panel>div:last-child{display:flex;gap:10px;min-height:0;overflow-x:auto;overflow-y:hidden;padding:8px 12px 12px}
-.quick-drawer-panel .drink-choice-card{width:188px;min-width:188px;max-width:188px;height:204px;padding:4px;display:grid;grid-template-columns:1fr;grid-template-rows:20px minmax(0,1fr);gap:0;align-items:stretch}
-.quick-drawer-panel .drink-choice-card>span:not(.drink-choice-img){grid-row:1;min-height:20px;max-height:20px;display:flex;align-items:center;justify-content:center;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1;font-size:13px}
-.quick-drawer-panel .drink-choice-img{grid-row:2;width:100%;height:100%;min-height:0;border-radius:9px;overflow:hidden;display:grid;place-items:center;background:#fff}
-.quick-drawer-panel .drink-choice-img>img{width:70%;height:70%;object-fit:contain;object-position:center;transform:none}
-.quick-drawer-panel .image-fallback,.required-drink-grid .image-fallback{font-size:0;color:transparent}
-.quick-drawer-panel .image-fallback::after,.required-drink-grid .image-fallback::after{content:''}
 .modal-card[data-pointer-side]::before{z-index:3;filter:drop-shadow(0 1px 1px rgba(70,50,38,.28));pointer-events:none}
 .modal-card[data-pointer-side="top"]::before{top:-18px;bottom:auto;left:var(--pointer-x);right:auto;transform:translateX(-50%);border:9px solid transparent;border-bottom-color:#fff}
 .modal-card[data-pointer-side="bottom"]::before{bottom:-18px;top:auto;left:var(--pointer-x);right:auto;transform:translateX(-50%);border:9px solid transparent;border-top-color:#fff}
