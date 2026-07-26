@@ -1,0 +1,51 @@
+name: oneoff-shell-profile-dedupe
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/oneoff-shell-profile-dedupe.yml']
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - name: Avoid repeated responsive profile writes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app-loader.js')
+          t=p.read_text()
+          old="""function applyProfileToFrame(frame){
+  if(!frame||!currentProfile)return;
+  frame.style.width='100%';frame.style.height='100%';
+  try{if(frame.contentDocument?.documentElement)applyResponsiveProfile(frame.contentDocument,currentProfile);}catch(error){console.warn('RESPONSIVE_CHILD_PROFILE_FAILED',error);}
+  applyChildShellMode(frame);
+}"""
+          new="""function profileSignature(profile=currentProfile){return profile?profile.name+':'+profile.width+'x'+profile.height:'';}
+function applyProfileToFrame(frame){
+  if(!frame||!currentProfile)return;
+  frame.style.width='100%';frame.style.height='100%';
+  const signature=profileSignature();
+  if(frame.dataset.appliedProfile!==signature){
+    try{if(frame.contentDocument?.documentElement)applyResponsiveProfile(frame.contentDocument,currentProfile);}catch(error){console.warn('RESPONSIVE_CHILD_PROFILE_FAILED',error);}
+    frame.dataset.appliedProfile=signature;
+  }
+  applyChildShellMode(frame);
+}"""
+          if old not in t: raise SystemExit('applyProfileToFrame target not found')
+          p.write_text(t.replace(old,new,1))
+          PY
+      - name: Verify
+        run: |
+          grep -q 'function profileSignature' app-loader.js
+          grep -q 'frame.dataset.appliedProfile!==signature' app-loader.js
+      - name: Commit
+        run: |
+          git config user.name morefun-refactor-bot
+          git config user.email actions@users.noreply.github.com
+          git add app-loader.js
+          git commit -m 'perf(shell): dedupe repeated responsive profile writes' || exit 0
+          git push origin HEAD:smt-functional-completeness-v1
