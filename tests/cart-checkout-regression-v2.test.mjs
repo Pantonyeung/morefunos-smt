@@ -8,6 +8,7 @@ const loader=fs.readFileSync(new URL('../app-loader.js',import.meta.url),'utf8')
 const menu=fs.readFileSync(new URL('../pages/order/menu-api.js',import.meta.url),'utf8');
 const combo=fs.readFileSync(new URL('../pages/order/combo-rules.js',import.meta.url),'utf8');
 const html=fs.readFileSync(new URL('../pages/order/index.html',import.meta.url),'utf8');
+const shellHtml=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 
 assert.ok(page.includes('cartViewMode'),'cart view mode must live in the order store, not an add-on DOM layer');
 assert.ok(page.includes('orderServiceMode'),'order service mode must live in the order store');
@@ -33,7 +34,14 @@ assert.ok(menu.includes("from './combo-rules.js'"),'live menu mapping must use t
 assert.ok(combo.includes('resolveRiceballComboRule')&&combo.includes('resolveSnackComboRule'),'riceball and snack compatibility must come from one formal combo rule module');
 
 assert.ok(!html.includes('cart-experience'),'order page must not load the temporary cart-experience add-on');
-assert.ok(html.includes('cart.css?v=order-cart-core-v1'),'order page must load the formal cart core stylesheet');
+assert.ok(html.includes('cart.css?v=order-cart-core-v2'),'order page must load the current formal cart core stylesheet');
 assert.ok(!page.includes('cart-experience'),'order core must not depend on the temporary cart-experience add-on');
 
-console.log('SMT_CART_CHECKOUT_CORE_V4_OK');
+assert.ok(!shellHtml.includes('dev-preview-entry'),'production shell must not expose or load the developer size preview entry');
+assert.ok(cartCss.includes('.modifier-card:not([data-pointer-side])'),'modifier cards without an anchor must fall back to centered positioning');
+assert.ok(cartCss.includes("暫時未有可用選項"),'empty bulk option sets must render an explicit safe fallback');
+assert.ok(cartCss.includes('.cart-list>.cart-row:nth-child(even)'),'input-order cart must use restrained zebra rows');
+assert.ok(cartCss.includes('.cart-category .cart-row:nth-of-type(even)'),'organized cart must use restrained zebra rows');
+assert.ok(cartCss.includes('.service-mode .line-service-toggle{position:absolute;left:0'),'line service mode must sit with the sequence marker instead of consuming description space');
+
+console.log('SMT_CART_CHECKOUT_CORE_V5_OK');
