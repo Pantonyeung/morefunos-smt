@@ -1,6 +1,6 @@
 # 磨飯 SMT AI 工作入口
 
-> **強制規則：任何 AI、Codex、Work 模式、程式代理、開發者或新對話，在分析、設計或修改 SMT 前，必須先完整閱讀三份 PRIMARY STANDARD 以及 Component Ownership Registry。未完成閱讀，禁止修改程式。**
+> **強制規則：任何 AI、Codex、Work 模式、程式代理、開發者或新對話，在分析、設計或修改 SMT 前，必須先完整閱讀三份 PRIMARY STANDARD、Component Ownership Registry，以及多專業工程與外部參考標準。未完成閱讀，禁止修改程式。**
 
 ## 三份同級最高開發標準
 
@@ -32,6 +32,27 @@
 - 如發現兩個 Layer 同時對同一屬性、同一狀態、同一行為擁有最終決定權：**STOP，先收口 Authority，再修改功能**；
 - 第一次 Fix 無效，第一檢查項必須係 Ownership／Authority Conflict，不得直接疊第二層 Fix。
 
+## 強制多專業工程與外部參考標準
+
+`docs/SMT_EXTERNAL_ENGINEERING_REFERENCE_STANDARD_V1.0.md`
+
+任何重要架構、效能、Adaptive、離線、POS、打印、同步、平台生命週期決策，必須以多專業角度交叉審視，並在有需要時主動核對最新官方資料及成熟產品模式。
+
+至少考慮：
+
+- 產品經理；
+- 前端架構；
+- 後端架構；
+- App 工程；
+- Apple 平台設計／開發；
+- Android 開發；
+- POS 工程；
+- QA／可靠性工程。
+
+外部資料只用於驗證、挑戰假設及找更穩陣做法，不得取代 More Fun 已鎖定 Business Rule、實機證據及資料完整性要求。
+
+如果產品要求同更安全、更可維護、更符合成熟 App／POS 工程原則嘅方法衝突，工程代理有責任直接指出風險、提出替代方案並說明原因；不得只為迎合要求而製造長期技術債。
+
 ---
 
 ## 強制閱讀順序
@@ -42,12 +63,13 @@
 2. `docs/MFKG_STANDARD_V1.0.md`
 3. `docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`
 4. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`
-5. `SMT_AI_START_HERE.md`
-6. `SMT_CONTEXT_MIN.md`
-7. 與任務相關的 `docs/ai-context/SMT_CODE_MAP.md` 章節
-8. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md` 的相關章節
-9. Bug／修改工作必讀 `SMT_CHANGE_IMPACT.md`
-10. 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
+5. `docs/SMT_EXTERNAL_ENGINEERING_REFERENCE_STANDARD_V1.0.md`
+6. `SMT_AI_START_HERE.md`
+7. `SMT_CONTEXT_MIN.md`
+8. 與任務相關的 `docs/ai-context/SMT_CODE_MAP.md` 章節
+9. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md` 的相關章節
+10. Bug／修改工作必讀 `SMT_CHANGE_IMPACT.md`
+11. 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
 
 ---
 
@@ -59,6 +81,7 @@
 - 已閱讀 MFKG Standard；
 - 已閱讀 Adaptive Application Standard；
 - 已閱讀 Component Ownership Registry；
+- 已閱讀多專業工程與外部參考標準；
 - 本次需求所屬 Domain；
 - Registry 指定嘅 Layout／Visual／State／Domain Authority；
 - 將新增／修改邊個 MFKG Node／Edge；
@@ -67,9 +90,10 @@
 - 是否誤用整頁 Scale／第二套 Responsive UI；
 - 是否會碰觸已封板位置；若會，必須證明係本次問題根因；
 - Checkout／Responsive／資料／打印／跨端依賴的影響；
+- 是否需要查閱最新 Apple／Android／Web／POS 官方或成熟產品資料；
 - 測試及回滾方法。
 
-如方案與三份 PRIMARY STANDARD 或 Ownership Registry 衝突：**STOP，不得自行繞過。** 只有產品負責人明確要求「修改／更新標準」先可以改變最高標準。
+如方案與三份 PRIMARY STANDARD、Ownership Registry 或多專業工程標準衝突：**STOP，不得自行繞過。** 只有產品負責人明確要求「修改／更新標準」先可以改變最高標準。
 
 ---
 
@@ -136,11 +160,13 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 2. 產品負責人明確要求修改／更新最高標準的新決策。
 3. SMT Development Charter + MFKG Standard + Adaptive Application Standard。
 4. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`。
-5. 產品負責人在目前對話的最新明確確認（不得默認推翻最高標準）。
-6. `docs/ai-context/SMT_DECISION_LEDGER.md` 中 `LOCKED`／`CURRENT` 決策。
-7. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`。
-8. `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 的程式及驗證證據。
-9. 舊基線、舊效果圖、舊 log；只作背景，不得推翻上列資料。
+5. `docs/SMT_EXTERNAL_ENGINEERING_REFERENCE_STANDARD_V1.0.md`。
+6. 產品負責人在目前對話的最新明確確認（不得默認推翻最高標準）。
+7. `docs/ai-context/SMT_DECISION_LEDGER.md` 中 `LOCKED`／`CURRENT` 決策。
+8. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`。
+9. `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 的程式及驗證證據。
+10. 最新官方 Apple／Android／Web／POS 工程資料，用作技術驗證及風險挑戰，不得推翻 More Fun Business Rule。
+11. 舊基線、舊效果圖、舊 log；只作背景，不得推翻上列資料。
 
 安全、資料完整、離線可操作及繁體中文不得低於舊基線。
 
@@ -157,6 +183,8 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 - 禁止以 MutationObserver／DOM 掃描補自己已有 State；禁止永久 Patch／Override／Hotfix 層。
 - 禁止所有 State Change 重畫整個 App；優先局部 Surface Update。
 - 已封板 Component 預設不可修改；新需求只可改 Registry 指定真正責任來源。
+- 對重要架構、效能、Adaptive、離線、POS、打印、同步問題，應主動查閱最新官方資料；不得用過時記憶取代驗證。
+- 當產品要求與更安全、更可維護的工程方案衝突時，先指出風險並採用能長期維護 SMT 的方案；除非產品負責人明確要求改標準。
 - token 接近結束時，按 `SMT_CHAT_HANDOFF_PROTOCOL.md` 產生 checkpoint，不得以 token 不足停止開發。
 
 ## 驗證
