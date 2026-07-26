@@ -1,0 +1,117 @@
+name: oneoff-runtime-consolidation
+
+on:
+  push:
+    branches:
+      - smt-functional-completeness-v1
+    paths:
+      - .github/workflows/oneoff-runtime-consolidation.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - name: Consolidate startup, modal lifecycle and idle timer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          # page bridge: allow complex pages to own readiness.
+          bridge=Path('shared/page-bridge.js')
+          text=bridge.read_text()
+          old="document.addEventListener('DOMContentLoaded',()=>{applyPreferences();ready();},{once:true});"
+          new="document.addEventListener('DOMContentLoaded',()=>{applyPreferences();if(document.body.dataset.manualReady!=='1')ready();},{once:true});"
+          if old not in text:
+              raise SystemExit('page bridge ready target not found')
+          bridge.write_text(text.replace(old,new,1))
+
+          # order HTML: page owns ready; modal policy external layer removed.
+          index=Path('pages/order/index.html')
+          text=index.read_text()
+          text=text.replace('<body data-page="order">','<body data-page="order" data-manual-ready="1">',1)
+          text=text.replace('    <script src="../../shared/modal-policy.js?v=modal-policy-v1"></script>\n','')
+          text=text.replace('page-bridge.js?v=atomic-ready-v1','page-bridge.js?v=manual-ready-v1')
+          text=text.replace('page.js?v=order-core-v9','page.js?v=order-core-v10')
+          index.write_text(text)
+
+          page=Path('pages/order/page.js')
+          text=page.read_text()
+
+          # Seed first paint from local menu cache where available.
+          old="import {loadMenuCatalog} from './menu-api.js';"
+          new="import {loadMenuCatalog,MENU_CACHE_KEY} from './menu-api.js';"
+          if old not in text:
+              raise SystemExit('menu import target not found')
+          text=text.replace(old,new,1)
+          old="const fallbackCatalog={categories:fallbackCategories,products:fallbackProducts,drinks:fallbackDrinks};\nlet categories=[...fallbackCategories],products=[...fallbackProducts],drinks=[...fallbackDrinks];"
+          new="const fallbackCatalog={categories:fallbackCategories,products:fallbackProducts,drinks:fallbackDrinks};\nconst cachedCatalog=readJSON(MENU_CACHE_KEY,null);\nconst initialCatalog=cachedCatalog?.products?.length?cachedCatalog:fallbackCatalog;\nlet categories=[...(initialCatalog.categories||fallbackCategories)],products=[...(initialCatalog.products||fallbackProducts)],drinks=[...(initialCatalog.drinks||fallbackDrinks)];"
+          if old not in text:
+              raise SystemExit('catalog init target not found')
+          text=text.replace(old,new,1)
+
+          # Modal lifecycle belongs to page state, not an external DOM policy layer.
+          old="function markDirty(){if(modal)modal.dirty=true;}\nfunction requestDismiss(){\n  if(!modal)return;\n  if(modal.dirty&&['product','drink'].includes(modal.type)){confirmState={title:'尚未套用修改',message:'返回後今次選擇將不會保存。',returnModal:modal.type==='drink'&&modal.parent?modal.parent:null};render();return;}\n  modal=modal.type==='drink'&&modal.parent?modal.parent:null;confirmState=null;render();\n}"
+          new="function markDirty(){if(modal)modal.dirty=true;}\nfunction modalSaveAction(current=modal){\n  if(!current)return '';\n  if(current.type==='product')return 'apply-product';\n  if(current.type==='drink')return 'apply-drink';\n  if(current.type==='completion'&&current.draft?.activeGroup)return 'apply-required-group';\n  if(current.type==='combo')return 'apply-combo-edit';\n  if(current.type==='specified-link')return 'apply-specified-link';\n  return '';\n}\nfunction requestDismiss(){\n  if(!modal)return;\n  if(modal.dirty){\n    confirmState={kind:'modal-exit',title:'已經有調整，是否退出？',message:'你可以繼續調整、退出而不保存，或者保存目前修改後退出。',returnModal:modal.type==='drink'&&modal.parent?modal.parent:null,saveAction:modalSaveAction(modal)};\n    render();return;\n  }\n  modal=modal.type==='drink'&&modal.parent?modal.parent:null;confirmState=null;render();\n}"
+          if old not in text:
+              raise SystemExit('modal dismiss block not found')
+          text=text.replace(old,new,1)
+
+          # Add three-way unsaved confirm to the existing confirm renderer.
+          old="  if(!confirmState)return notice;\n  const dissolve=confirmState.kind==='dissolve',dineCancel=confirmState.kind==='dine-cancel';\n  return notice+'<div class=\"confirm-layer\"><section class=\"confirm-card\"><strong>'+confirmState.title+'</strong><p>'+confirmState.message+'</p><div><button data-action=\"confirm-cancel\">'+(dissolve?'返回套餐':dineCancel?'繼續點單':'繼續修改')+'</button><button class=\"danger\" data-action=\"'+(dissolve?'confirm-dissolve':dineCancel?'confirm-dine-cancel':'confirm-discard')+'\">'+(dissolve?'確認拆開':dineCancel?'取消今次點單':'放棄修改')+'</button></div></section></div>';"
+          new="  if(!confirmState)return notice;\n  const modalExit=confirmState.kind==='modal-exit';\n  if(modalExit)return notice+'<div class=\"confirm-layer\"><section class=\"confirm-card\"><strong>'+confirmState.title+'</strong><p>'+confirmState.message+'</p><div><button data-action=\"confirm-cancel\">繼續調整</button><button class=\"danger\" data-action=\"confirm-discard\">退出不保存</button><button class=\"primary\" data-action=\"confirm-save-exit\" '+(confirmState.saveAction?'':'disabled')+'>保存並退出</button></div></section></div>';\n  const dissolve=confirmState.kind==='dissolve',dineCancel=confirmState.kind==='dine-cancel';\n  return notice+'<div class=\"confirm-layer\"><section class=\"confirm-card\"><strong>'+confirmState.title+'</strong><p>'+confirmState.message+'</p><div><button data-action=\"confirm-cancel\">'+(dissolve?'返回套餐':dineCancel?'繼續點單':'繼續修改')+'</button><button class=\"danger\" data-action=\"'+(dissolve?'confirm-dissolve':dineCancel?'confirm-dine-cancel':'confirm-discard')+'\">'+(dissolve?'確認拆開':dineCancel?'取消今次點單':'放棄修改')+'</button></div></section></div>';"
+          if old not in text:
+              raise SystemExit('custom confirm block not found')
+          text=text.replace(old,new,1)
+
+          # Save-and-exit routes through existing core action, not DOM inference.
+          old="  else if(action==='confirm-discard'){modal=confirmState?.returnModal||null;confirmState=null;render();}\n  else if(action==='confirm-dine-cancel')completeDineCancellation();"
+          new="  else if(action==='confirm-discard'){modal=confirmState?.returnModal||null;confirmState=null;render();}\n  else if(action==='confirm-save-exit'){const saveAction=confirmState?.saveAction;confirmState=null;if(saveAction)handle({dataset:{action:saveAction}});else{modal=null;render();}}\n  else if(action==='confirm-dine-cancel')completeDineCancellation();"
+          if old not in text:
+              raise SystemExit('confirm action target not found')
+          text=text.replace(old,new,1)
+
+          # Backdrop dismissal belongs to the page modal lifecycle.
+          old="app.addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});"
+          new="app.addEventListener('click',event=>{if(event.target.classList?.contains('modal-scrim')){event.preventDefault();requestDismiss();return;}const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});"
+          if old not in text:
+              raise SystemExit('app click target not found')
+          text=text.replace(old,new,1)
+
+          # Page readiness after first stable render using cache/fallback catalog.
+          old="render();\nasync function bootstrapLiveMenu(){"
+          new="render();\nwindow.MoreFunPageBridge?.ready?.();\nasync function bootstrapLiveMenu(){"
+          if old not in text:
+              raise SystemExit('initial render target not found')
+          text=text.replace(old,new,1)
+
+          # Prevent 30-second no-op store clone/persist/render cycles.
+          old="setInterval(()=>{store.set(state=>{const next=completeExpiredOrders(state.runningOrders);const completed=next.filter((order,index)=>order.status==='completed'&&state.runningOrders[index]?.status!=='completed');if(!completed.length)return state;state.runningOrders=next.filter(order=>order.status==='running');state.completedOrders=state.completedOrders.concat(completed);return state;});},30000);"
+          new="setInterval(()=>{const current=store.get();if(!current.runningOrders.length)return;const next=completeExpiredOrders(current.runningOrders);const completed=next.filter((order,index)=>order.status==='completed'&&current.runningOrders[index]?.status!=='completed');if(!completed.length)return;store.set(state=>{state.runningOrders=next.filter(order=>order.status==='running');state.completedOrders=state.completedOrders.concat(completed);return state;});},30000);"
+          if old not in text:
+              raise SystemExit('running order timer target not found')
+          text=text.replace(old,new,1)
+
+          page.write_text(text)
+          PY
+      - name: Verify consolidation
+        run: |
+          grep -q "data-manual-ready=\"1\"" pages/order/index.html
+          ! grep -q "modal-policy.js" pages/order/index.html
+          grep -q "modalSaveAction" pages/order/page.js
+          grep -q "confirm-save-exit" pages/order/page.js
+          grep -q "MoreFunPageBridge?.ready" pages/order/page.js
+          grep -q "MENU_CACHE_KEY" pages/order/page.js
+          grep -q "if(!current.runningOrders.length)return" pages/order/page.js
+      - name: Commit
+        run: |
+          git config user.name "morefun-refactor-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add shared/page-bridge.js pages/order/index.html pages/order/page.js
+          git commit -m "perf(order): consolidate modal lifecycle and stable first paint" || exit 0
+          git push origin HEAD:smt-functional-completeness-v1
