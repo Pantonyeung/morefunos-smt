@@ -12,6 +12,9 @@ let prepareFrame=0;
 let resetProductsOnRestore=false;
 let revealFrame=0;
 let checkoutPrewarmed=false;
+let pendingDrinkAssignment=null;
+let lastDrinkAssignment=null;
+let drinkFeedbackTimer=0;
 
 function rememberScroll(){
   const products=app?.querySelector('.products');
@@ -125,15 +128,32 @@ function firstMissingDrinkTarget(){
   return '';
 }
 
+function clearDrinkFeedback(){
+  lastDrinkAssignment=null;
+  schedulePrepare();
+}
+
+function showDrinkAssignmentFeedback(){
+  if(!lastDrinkAssignment)return;
+  clearTimeout(drinkFeedbackTimer);
+  drinkFeedbackTimer=setTimeout(clearDrinkFeedback,3200);
+}
+
 function prepareQuickDrinkTarget(){
   const target=firstMissingDrinkTarget();
   const panelTitle=app?.querySelector('.quick-drawer-panel > header strong');
   const handle=app?.querySelector('.quick-drawer-handle');
+  const drawer=app?.querySelector('.quick-drawer');
   if(handle)handle.setAttribute('aria-label',target?`快捷飲品，正在補 ${target}`:'快捷飲品，目前沒有指定補選目標');
   if(panelTitle){
-    const base=panelTitle.textContent.replace(/｜正在補：.*$/,'');
-    panelTitle.textContent=target?`${base}｜正在補：${target}`:base;
+    const base=panelTitle.textContent.replace(/｜正在補：.*$/,'').replace(/｜已配對：.*$/,'');
+    panelTitle.textContent=lastDrinkAssignment?`${base}｜已配對：${lastDrinkAssignment.drink} → ${lastDrinkAssignment.target}`:target?`${base}｜正在補：${target}`:base;
   }
+  let feedback=drawer?.querySelector('.quick-drink-assignment-feedback');
+  if(lastDrinkAssignment&&drawer){
+    if(!feedback){feedback=document.createElement('div');feedback.className='quick-drink-assignment-feedback';drawer.appendChild(feedback);}
+    feedback.textContent=`已配對：${lastDrinkAssignment.drink} → ${lastDrinkAssignment.target}`;
+  }else feedback?.remove();
 }
 
 function cartRows(){return [...(app?.querySelectorAll('.cart-row[data-line-id]')||[])];}
@@ -165,7 +185,8 @@ function revealRecentRow(){
   target.scrollIntoView({block:'nearest',inline:'nearest',behavior:'auto'});
   requestAnimationFrame(()=>{
     target.classList.add('cart-row-recent');
-    setTimeout(()=>target.classList.remove('cart-row-recent'),1100);
+    target.setAttribute('data-recent-label','剛加入');
+    setTimeout(()=>{target.classList.remove('cart-row-recent');target.removeAttribute('data-recent-label');},1500);
   });
 }
 
@@ -186,16 +207,27 @@ function applyPreferredModeToNewRows(){
   if(candidate)clickLineMode(candidate,preferredServiceMode);
 }
 
-function prewarmCheckout(){
-  if(checkoutPrewarmed||!app?.querySelector('.cart-row'))return;
+function preloadCheckoutOnOrderReady(){
+  if(checkoutPrewarmed)return;
   checkoutPrewarmed=true;
   const frame=document.createElement('iframe');
   frame.className='checkout-prewarm-frame';
   frame.tabIndex=-1;
   frame.setAttribute('aria-hidden','true');
-  frame.src='../checkout/index.html?prewarm=1';
-  frame.addEventListener('load',()=>setTimeout(()=>frame.remove(),80),{once:true});
+  frame.src='../checkout/index.html?preload=order-ready';
+  frame.addEventListener('load',()=>setTimeout(()=>frame.remove(),120),{once:true});
   document.body.appendChild(frame);
+}
+
+function prepareCheckoutAvailability(){
+  const button=app?.querySelector('[data-action="checkout"]');
+  if(!button)return;
+  const hasCart=cartRows().length>0;
+  button.disabled=!hasCart;
+  button.setAttribute('aria-disabled',hasCart?'false':'true');
+  button.classList.toggle('is-disabled',!hasCart);
+  if(!hasCart){button.textContent='購物車未有餐點';button.title='請先加入餐點';}
+  else button.removeAttribute('title');
 }
 
 function prepare(){
@@ -208,7 +240,8 @@ function prepare(){
   updateRecentRows();
   restoreScroll();
   applyPendingServiceMode();
-  prewarmCheckout();
+  prepareCheckoutAvailability();
+  preloadCheckoutOnOrderReady();
   scheduleRevealRecentRow();
 }
 
@@ -236,6 +269,11 @@ function productNameFromTrigger(trigger){
   return trigger.querySelector('.product-copy strong')?.textContent?.trim()||trigger.querySelector('strong')?.textContent?.trim()||'';
 }
 
+function drinkNameFromQuickTrigger(trigger){
+  if(!trigger)return '';
+  return trigger.querySelector('strong')?.textContent?.trim()||trigger.querySelector('.drink-copy strong')?.textContent?.trim()||trigger.textContent?.trim().replace(/\s+/g,' ')||'';
+}
+
 app?.addEventListener('scroll',event=>{
   const target=event.target;
   if(target.matches?.('.products'))view.productsTop=target.scrollTop;
@@ -253,6 +291,15 @@ app?.addEventListener('pointerdown',event=>{
   if(action?.dataset.action==='apply-product'&&!lastEditedLineId){
     const modal=action.closest('.product-settings-card');
     pendingRevealProductName=modal?.querySelector('.settings-product-head h2')?.textContent?.trim()||pendingRevealProductName;
+  }
+  if(action?.dataset.action==='quick-drink'){
+    const target=firstMissingDrinkTarget();
+    if(target)pendingDrinkAssignment={target,drink:drinkNameFromQuickTrigger(action)};
+  }
+  if(action?.dataset.action==='apply-drink'&&pendingDrinkAssignment){
+    lastDrinkAssignment={...pendingDrinkAssignment};
+    pendingDrinkAssignment=null;
+    showDrinkAssignmentFeedback();
   }
 },true);
 
@@ -290,4 +337,5 @@ app?.addEventListener('keydown',event=>{
 new MutationObserver(schedulePrepare).observe(app,{childList:true,subtree:true});
 addEventListener('resize',schedulePrepare,{passive:true});
 window.visualViewport?.addEventListener('resize',schedulePrepare,{passive:true});
+preloadCheckoutOnOrderReady();
 schedulePrepare();
