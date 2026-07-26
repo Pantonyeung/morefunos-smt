@@ -14,9 +14,6 @@
   --green: #39835a;
   --shadow: 0 12px 36px rgba(76, 46, 28, 0.14);
   --choice-pill-radius: 999px;
-  --bottom-nav-pad-y:clamp(3px,.55vh,6px);
-  --bottom-nav-icon-size:clamp(21px,2.45vh,25px);
-  --bottom-nav-item-pad-y:clamp(2px,.35vh,4px);
   font-family: -apple-system, BlinkMacSystemFont, "PingFang HK", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
   color: var(--text);
 }
@@ -42,19 +39,8 @@ button{cursor:pointer}
 .badge{display:inline-grid;place-items:center;min-width:27px;height:27px;border-radius:999px;background:var(--orange);color:#fff;font-size:13px}
 .health-button span{margin-right:6px}
 .workspace{flex:1;min-height:0;padding:var(--page-gap) var(--page-padding-x)}
-.bottom-nav{height:auto;min-height:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);align-items:stretch;gap:10px;padding:var(--bottom-nav-pad-y) 16px calc(var(--bottom-nav-pad-y) + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);flex:none;overflow:visible}
-.bottom-nav button{position:relative;border:1px solid transparent;background:#fff;font-weight:850;font-size:calc(17px * var(--responsive-font-scale));line-height:1.15}
-.shell-nav-button{display:grid;grid-template-rows:var(--bottom-nav-icon-size) auto;place-content:center;place-items:center;gap:2px;min-width:0;padding:var(--bottom-nav-item-pad-y) 12px;border-radius:var(--choice-pill-radius);overflow:visible}
-.shell-nav-button.active{background:var(--orange-soft);border-color:color-mix(in srgb,var(--orange) 44%,white);color:var(--orange);box-shadow:0 3px 12px color-mix(in srgb,var(--orange) 15%,transparent)}
-.shell-nav-icon{width:var(--bottom-nav-icon-size);height:var(--bottom-nav-icon-size);display:block;flex:none}
-.shell-nav-badge{position:absolute;top:3px;left:calc(50% + 10px);min-width:20px;height:20px;padding:0 5px;display:grid;place-items:center;border-radius:999px;background:var(--red);color:#fff;font-size:11px}
-
 :is(.top-btn,.category-page>button,.category-search,.categories>button,.segmented>button,.channels>button,.payments>button,.option-grid>button,.option-chips>button,.source-picker>button,.tabs>button,.status-filter>button,.mode-choice,.issue-quick>button,.method-grid>button,.theme){border-radius:var(--choice-pill-radius)!important}
 :is(.top-btn,.category-page>button,.category-search,.categories>button,.segmented>button,.channels>button,.payments>button,.option-grid>button,.option-chips>button,.source-picker>button,.tabs>button,.status-filter>button,.mode-choice,.issue-quick>button,.method-grid>button,.theme).active{background:var(--orange-soft)!important;border-color:color-mix(in srgb,var(--orange) 56%,white)!important;color:var(--orange)!important;box-shadow:0 3px 11px color-mix(in srgb,var(--orange) 14%,transparent)}
-.global-statusbar{height:var(--topbar-height);min-height:var(--topbar-height)}
-.shell-brand{display:flex;align-items:center;gap:9px;white-space:nowrap}.shell-brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:var(--orange);color:#fff;font-size:19px}.shell-brand strong{font-size:calc(25px * var(--responsive-font-scale))}
-.shell-terminal,.shell-context,.shell-operation{min-height:38px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:#fff;font-weight:850;white-space:nowrap}.shell-terminal{background:var(--orange-soft);color:var(--orange)}.shell-operation{gap:8px}.shell-operation i{width:10px;height:10px;border-radius:50%;background:var(--green)}.shell-operation.offline i{background:var(--red)}
-.shell-last-order{display:grid;gap:1px;min-width:92px}.shell-last-order small{color:var(--muted);font-size:12px}.shell-last-order strong{font-size:calc(20px * var(--responsive-font-scale))}.shell-actions{display:flex;align-items:center;gap:10px;min-width:0}
 .page-statusbar{height:calc(var(--topbar-height) * .82);display:flex;align-items:center;gap:14px;padding:8px calc(var(--page-padding-x) + 8px);background:#fff;border-bottom:1px solid var(--line);flex:none}
 .panel{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .btn{min-height:var(--control-min-height);padding:10px 15px;border:1px solid var(--line);border-radius:11px;background:#fff;font-weight:850}
@@ -84,7 +70,7 @@ button{cursor:pointer}
 .image-shell img{width:100%;height:100%;object-fit:cover}
 .image-fallback{display:grid;place-items:center;width:100%;height:100%;color:#966f58;font-weight:850}
 
-/* Global App Shell core mode: child pages retain their business logic while shell-owned chrome stays outside the page. */
+/* Transitional runtime guard only: global chrome visual ownership lives in app-shell.css. */
 :root[data-global-shell="1"] :is(.global-statusbar,.shell-bottom-nav,.bottom-nav,.topbar.statusbar){display:none}
 :root[data-global-shell="1"] .app{height:100%;min-height:0}
 :root[data-global-shell="1"] .workspace{min-height:0}
