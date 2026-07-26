@@ -471,19 +471,89 @@ function restoreCartViewport(state,previousScroll){
   cartScrollTop=cart.scrollTop;
   clearRecentLater(state.lastAffectedLineId);
 }
-function render(){
-  const oldCart=document.querySelector('.cart-list');const previousScroll=oldCart?oldCart.scrollTop:cartScrollTop;
-  const state=store.get();const pendingCount=pendingOrderCount(state);const searchQuery=state.searchQuery.trim().toLocaleLowerCase('zh-HK');const categoryProducts=state.category==='全部'?products:products.filter(product=>product.category===state.category);const filtered=sortPausedLast(categoryProducts.filter(product=>!searchQuery||String(product.name||'').toLocaleLowerCase('zh-HK').includes(searchQuery)||String(product.code||'').toLocaleLowerCase('zh-HK').includes(searchQuery)));const template=productTemplate();
+let renderStarted=false;
+const renderKeys={top:'',cart:'',category:'',products:'',quick:'',bottom:'',modal:''};
+function surfaceKey(value){try{return JSON.stringify(value);}catch(_error){return String(Date.now());}}
+function cartSurface(state){
   const hasCart=state.cart.length>0;
   const checkoutLabel=state.dineContext?'落單到 '+escapeHtml(state.dineContext.tableId)+' 號枱 '+money(cartTotal(state.cart)):hasCart?'結帳 '+money(cartTotal(state.cart)):'購物車未有餐點';
   const serviceClass=state.orderServiceMode===SERVICE_DINE_IN?'dine':'takeaway';
   const viewClass=state.cartViewMode===CART_VIEW_ORGANIZED?'organized':'input';
-  app.innerHTML='<main>'+topbar()+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%"><aside class="cart"><header><div><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2>'+cartSummary(state)+'</div><span class="cart-header-actions"><span class="cart-mode-controls"><button class="cart-mode-toggle '+serviceClass+'" data-action="toggle-order-service">'+state.orderServiceMode+'</button><button class="cart-mode-toggle cart-view-toggle '+viewClass+'" data-action="toggle-cart-view">'+(state.cartViewMode===CART_VIEW_ORGANIZED?'原單':'整理')+'</button></span>'+(state.dineContext?'<button class="cancel-dine-order" data-action="cancel-dine-order">取消堂食點單</button>':'')+'<button data-action="clear-cart">清空</button></span></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer><button data-action="open-hold-panel">掛單</button><button data-action="open-drafts">取單'+(drafts.length?' '+drafts.length:'')+'</button><button class="primary" data-action="checkout" '+(hasCart?'':'disabled')+'>'+checkoutLabel+'</button></footer></aside><section class="catalog">'+categoryBar(state)+'<div class="products products-'+template+'">'+(filtered.length?filtered.map(productCard).join(''):'<div class="empty search-empty">搵唔到符合「'+escapeHtml(state.searchQuery)+'」嘅產品</div>')+'</div>'+quickDrinks()+'</section></section></section>'+renderBottomNav('order',{badges:{orders:pendingCount}})+'</main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
-  document.body.classList.toggle('has-modal',Boolean(modal));
+  return '<aside class="cart"><header><div><h2>購物車（'+state.cart.reduce((n,l)=>n+l.qty,0)+'）</h2>'+cartSummary(state)+'</div><span class="cart-header-actions"><span class="cart-mode-controls"><button class="cart-mode-toggle '+serviceClass+'" data-action="toggle-order-service">'+state.orderServiceMode+'</button><button class="cart-mode-toggle cart-view-toggle '+viewClass+'" data-action="toggle-cart-view">'+(state.cartViewMode===CART_VIEW_ORGANIZED?'原單':'整理')+'</button></span>'+(state.dineContext?'<button class="cancel-dine-order" data-action="cancel-dine-order">取消堂食點單</button>':'')+'<button data-action="clear-cart">清空</button></span></header><div class="cart-list">'+cartRows()+'</div>'+pendingArea()+'<footer><button data-action="open-hold-panel">掛單</button><button data-action="open-drafts">取單'+(drafts.length?' '+drafts.length:'')+'</button><button class="primary" data-action="checkout" '+(hasCart?'':'disabled')+'>'+checkoutLabel+'</button></footer></aside>';
+}
+function filteredCatalog(state){
+  const searchQuery=state.searchQuery.trim().toLocaleLowerCase('zh-HK');
+  const categoryProducts=state.category==='全部'?products:products.filter(product=>product.category===state.category);
+  return sortPausedLast(categoryProducts.filter(product=>!searchQuery||String(product.name||'').toLocaleLowerCase('zh-HK').includes(searchQuery)||String(product.code||'').toLocaleLowerCase('zh-HK').includes(searchQuery)));
+}
+function productGridSurface(state){
+  const filtered=filteredCatalog(state),template=productTemplate();
+  return '<div class="products products-'+template+'">'+(filtered.length?filtered.map(productCard).join(''):'<div class="empty search-empty">搵唔到符合「'+escapeHtml(state.searchQuery)+'」嘅產品</div>')+'</div>';
+}
+function refreshQrCodes(scope=document){
+  scope.querySelectorAll?.('[data-qr]').forEach(node=>{if(typeof window.qrcode!=='function')return;const qr=window.qrcode(0,'M');qr.addData(node.dataset.qr);qr.make();node.innerHTML=qr.createImgTag(5,8,'WhatsApp QR Code');});
+}
+function replaceOuter(selector,html){
+  const node=document.querySelector(selector);if(!node)return null;
+  node.outerHTML=html;
+  return document.querySelector(selector);
+}
+function refreshQuickSurface(html){
+  const catalog=document.querySelector('.catalog');if(!catalog)return null;
+  const current=catalog.querySelector('.quick-drawer');
+  if(!html){current?.remove();return null;}
+  if(current){current.outerHTML=html;}else catalog.insertAdjacentHTML('beforeend',html);
+  return catalog.querySelector('.quick-drawer');
+}
+function refreshModalSurface(state){
+  const toast=document.getElementById('toast');if(!toast)return;
+  app.querySelectorAll(':scope > .modal-scrim,:scope > .modal-card,:scope > .confirm-layer,:scope > .new-order-toast').forEach(node=>node.remove());
+  toast.insertAdjacentHTML('beforebegin',modalScrim()+activeModal()+customConfirm());
+  if(modal?.type==='settings'){
+    const first=document.querySelector('.side-card .setting-row');
+    first?.insertAdjacentHTML('beforebegin','<div class="setting-block"><strong>購物車相同產品</strong><div class="segmented"><button data-action="cart-merge" data-value="same" class="'+(state.settings.cart.mergeMode!=='never'?'active':'')+'">相同配置合併</button><button data-action="cart-merge" data-value="never" class="'+(state.settings.cart.mergeMode==='never'?'active':'')+'">逐項顯示</button></div></div>');
+  }
   bindImageFallbacks(app);
-  if(modal?.type==='settings'){const first=document.querySelector('.side-card .setting-row');first?.insertAdjacentHTML('beforebegin','<div class="setting-block"><strong>購物車相同產品</strong><div class="segmented"><button data-action="cart-merge" data-value="same" class="'+(state.settings.cart.mergeMode!=='never'?'active':'')+'">相同配置合併</button><button data-action="cart-merge" data-value="never" class="'+(state.settings.cart.mergeMode==='never'?'active':'')+'">逐項顯示</button></div></div>');}
-  document.querySelectorAll('[data-qr]').forEach(node=>{if(typeof window.qrcode!=='function')return;const qr=window.qrcode(0,'M');qr.addData(node.dataset.qr);qr.make();node.innerHTML=qr.createImgTag(5,8,'WhatsApp QR Code');});
-  requestAnimationFrame(()=>{positionActiveCard();restoreCartViewport(state,previousScroll);});
+  refreshQrCodes(app);
+  requestAnimationFrame(()=>positionActiveCard());
+}
+function render(){
+  const state=store.get();
+  const pendingCount=pendingOrderCount(state);
+  const template=productTemplate();
+  const topKey=surfaceKey([state.quickMode,state.operations,state.health,pendingCount,state.dineContext,products.map(item=>[item.id,supplyStatus(item)]),readJSON(ORDER_HISTORY_STORAGE_KEY,[]).length]);
+  const cartKey=surfaceKey([state.cart,state.dineContext,state.orderServiceMode,state.cartViewMode,state.lastAffectedLineId,state.lastMutationKind,state.collapsedCartCategories,state.settings.cart,drafts.length]);
+  const categoryKey=surfaceKey([state.category,state.searchQuery,state.settings.categoryLayout]);
+  const productsKey=surfaceKey([state.category,state.searchQuery,state.quickMode,state.settings.catalog,template,products.map(item=>[item.id,supplyStatus(item)])]);
+  const quickKey=surfaceKey([state.quickDrawerOpen,state.settings.quickDrinks,pendingSummary(state.cart).drink,lastDrinkAssignment,modal?.type==='drink'?modal.drinkId:'',drinks.map(item=>[item.id,item.available])]);
+  const bottomKey=String(pendingCount);
+  const modalKey=surfaceKey([modal,confirmState,newOrderNotice,modal?{cart:state.cart,settings:state.settings,health:state.health,pendingOrders:state.pendingOrders,searchQuery:state.searchQuery,drafts}:null]);
+  const cartHtml=cartSurface(state),categoryHtml=categoryBar(state),productsHtml=productGridSurface(state),quickHtml=quickDrinks(),topHtml=topbar(),bottomHtml=renderBottomNav('order',{badges:{orders:pendingCount}});
+
+  if(!renderStarted){
+    app.innerHTML='<main>'+topHtml+'<section class="workspace"><section class="order-grid" style="--cart-width:'+Number(state.settings.cart.widthPercent||32)+'%">'+cartHtml+'<section class="catalog">'+categoryHtml+productsHtml+quickHtml+'</section></section></section>'+bottomHtml+'</main>'+modalScrim()+activeModal()+customConfirm()+'<div id="toast" class="toast"></div>';
+    document.body.classList.toggle('has-modal',Boolean(modal));
+    bindImageFallbacks(app);refreshQrCodes(app);
+    Object.assign(renderKeys,{top:topKey,cart:cartKey,category:categoryKey,products:productsKey,quick:quickKey,bottom:bottomKey,modal:modalKey});
+    renderStarted=true;
+    requestAnimationFrame(()=>{positionActiveCard();restoreCartViewport(state,0);});
+    return;
+  }
+
+  document.querySelector('.order-grid')?.style.setProperty('--cart-width',Number(state.settings.cart.widthPercent||32)+'%');
+  document.body.classList.toggle('has-modal',Boolean(modal));
+
+  if(renderKeys.top!==topKey){replaceOuter('.topbar',topHtml);renderKeys.top=topKey;}
+  if(renderKeys.cart!==cartKey){
+    const oldCart=document.querySelector('.cart-list'),previousScroll=oldCart?oldCart.scrollTop:cartScrollTop;
+    const node=replaceOuter('.cart',cartHtml);if(node)bindImageFallbacks(node);
+    renderKeys.cart=cartKey;requestAnimationFrame(()=>restoreCartViewport(state,previousScroll));
+  }
+  if(renderKeys.category!==categoryKey){replaceOuter('.category-shell',categoryHtml);renderKeys.category=categoryKey;}
+  if(renderKeys.products!==productsKey){const node=replaceOuter('.products',productsHtml);if(node)bindImageFallbacks(node);renderKeys.products=productsKey;}
+  if(renderKeys.quick!==quickKey){const node=refreshQuickSurface(quickHtml);if(node)bindImageFallbacks(node);renderKeys.quick=quickKey;}
+  if(renderKeys.bottom!==bottomKey){replaceOuter('.bottom-nav',bottomHtml);renderKeys.bottom=bottomKey;}
+  if(renderKeys.modal!==modalKey){refreshModalSurface(state);renderKeys.modal=modalKey;}
 }
 function completeDineCancellation(){
   const context=store.get().dineContext;
