@@ -1,0 +1,47 @@
+name: oneoff-transient-page-only
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/oneoff-transient-page-only.yml']
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - name: Use transient store for non-transactional UI state
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('pages/order/page.js')
+          t=p.read_text()
+          replacements={
+            "quickDrawerTimer=setTimeout(()=>store.set(state=>({...state,quickDrawerOpen:false})),QUICK_DRAWER_IDLE_MS);":"quickDrawerTimer=setTimeout(()=>store.setTransient(state=>({...state,quickDrawerOpen:false})),QUICK_DRAWER_IDLE_MS);",
+            "recentTimer=setTimeout(()=>store.set(state=>state.lastAffectedLineId===lineId?{...state,lastAffectedLineId:'',lastMutationKind:''}:state),1500);":"recentTimer=setTimeout(()=>{const current=store.get();if(current.lastAffectedLineId===lineId)store.setTransient(state=>({...state,lastAffectedLineId:'',lastMutationKind:''}));},1500);",
+            "if(action==='category')store.set(state=>({...state,category:button.dataset.value}));":"if(action==='category')store.setTransient(state=>({...state,category:button.dataset.value}));",
+            "else if(action==='clear-search'){store.set(state=>({...state,searchQuery:''}));}":"else if(action==='clear-search'){store.setTransient(state=>({...state,searchQuery:''}));}",
+            "else if(action==='toggle-cart-category')store.set(state=>{const category=button.dataset.value;const collapsed=state.collapsedCartCategories.includes(category);return {...state,collapsedCartCategories:collapsed?state.collapsedCartCategories.filter(item=>item!==category):state.collapsedCartCategories.concat(category)};});":"else if(action==='toggle-cart-category')store.setTransient(state=>{const category=button.dataset.value;const collapsed=state.collapsedCartCategories.includes(category);return {...state,collapsedCartCategories:collapsed?state.collapsedCartCategories.filter(item=>item!==category):state.collapsedCartCategories.concat(category)};});",
+            "else if(action==='toggle-quick-drawer'){store.set(state=>({...state,quickDrawerOpen:!state.quickDrawerOpen}));scheduleQuickDrawerClose();}":"else if(action==='toggle-quick-drawer'){store.setTransient(state=>({...state,quickDrawerOpen:!state.quickDrawerOpen}));scheduleQuickDrawerClose();}",
+            "if(event.target.matches('[data-action=\"search-query\"]')&&modal?.type==='search'){const value=event.target.value;store.set(state=>({...state,searchQuery:value}));queue.afterRender":"if(event.target.matches('[data-action=\"search-query\"]')&&modal?.type==='search'){const value=event.target.value;store.setTransient(state=>({...state,searchQuery:value}));queue.afterRender"
+          }
+          for old,new in replacements.items():
+            if old not in t:
+              raise SystemExit('missing target: '+old[:120])
+            t=t.replace(old,new,1)
+          p.write_text(t)
+          PY
+      - name: Verify
+        run: |
+          grep -q "category')store.setTransient" pages/order/page.js
+          grep -q "quickDrawerOpen:!state.quickDrawerOpen" pages/order/page.js
+          grep -q "searchQuery:value}));queue.afterRender" pages/order/page.js
+      - name: Commit
+        run: |
+          git config user.name morefun-refactor-bot
+          git config user.email actions@users.noreply.github.com
+          git add pages/order/page.js
+          git commit -m 'perf(order): keep transient UI out of transaction persistence' || exit 0
+          git push origin HEAD:smt-functional-completeness-v1
