@@ -1,0 +1,7 @@
+/* Orders page responsive profile consumer. Shared responsive core supplies tokens only. */
+.topbar{height:var(--topbar-height);min-height:var(--topbar-height);padding-inline:calc(var(--page-padding-x) + 8px)}
+.workspace{padding:var(--page-gap) calc(var(--page-padding-x) + 8px)}
+.stats{gap:var(--page-gap);margin:var(--page-gap) 0}
+.orders-layout{grid-template-columns:minmax(320px,32%) minmax(0,1fr);gap:var(--page-gap)}
+.lanes{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--page-gap)}
+.reverse-card{width:min(520px,calc(100vw - 24px));max-height:var(--modal-max-height);overflow:auto}
