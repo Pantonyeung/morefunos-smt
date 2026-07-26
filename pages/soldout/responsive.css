@@ -3,6 +3,8 @@
 .search-box{width:min(330px,28vw)}
 .supply-panel>header{min-height:var(--topbar-height)}
 .readonly-detail{width:min(680px,calc(100vw - 24px));max-height:var(--modal-max-height);overflow:auto}
+:root[data-readability-mode="small"] .product-description{display:none}
+:root[data-readability-mode="large"] .product-description{-webkit-line-clamp:1}
 
 :root[data-responsive-profile="compact"] .soldout-grid{grid-template-columns:minmax(0,1fr) minmax(0,var(--side-width,32%));gap:10px}
 :root[data-responsive-profile="compact"] .search-box{width:220px;height:40px}
