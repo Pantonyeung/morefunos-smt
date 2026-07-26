@@ -45,12 +45,19 @@ export function createRenderQueue(renderFn){
 export function createStore(initialState,options={}){
   let state=options.normalize?options.normalize(initialState):safeClone(initialState);
   const listeners=new Set();
+  let lastPersistedText='';
+  if(options.storageKey){
+    try{lastPersistedText=localStorage.getItem(options.storageKey)||'';}catch(_error){}
+  }
   function get(){return state;}
   function persist(){
     if(!options.storageKey)return;
     try{
       const persisted=typeof options.persistState==='function'?options.persistState(state):state;
-      localStorage.setItem(options.storageKey,JSON.stringify(persisted));
+      const serialized=JSON.stringify(persisted);
+      if(serialized===lastPersistedText)return;
+      localStorage.setItem(options.storageKey,serialized);
+      lastPersistedText=serialized;
     }
     catch(error){console.warn('STORE_PERSIST_FAILED',error);}
   }
