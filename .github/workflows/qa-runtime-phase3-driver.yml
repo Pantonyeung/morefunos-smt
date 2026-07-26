@@ -1,0 +1,67 @@
+name: qa-runtime-phase3-driver
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/qa-runtime-phase3-driver.yml']
+permissions:
+  contents: write
+jobs:
+  drive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa-runtime-phase3-fix
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Execute isolated repair script embedded in QA workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import textwrap
+          workflow=Path('.github/workflows/qa-runtime-phase3-fix.yml').read_text()
+          marker="python - <<'PY'\n"
+          if marker not in workflow:
+              raise SystemExit('embedded repair script not found')
+          block=workflow.split(marker,1)[1].split("\n          PY",1)[0]
+          exec(compile(textwrap.dedent(block),'<qa-runtime-phase3-fix>','exec'))
+          PY
+      - name: Run full regression and syntax checks
+        shell: bash
+        run: |
+          set +e
+          mkdir -p docs/qa
+          node --test tests/*.test.mjs > /tmp/tests.log 2>&1
+          TEST_STATUS=$?
+          SYNTAX_STATUS=0
+          for f in app-loader.js shared/runtime.js shared/adaptive-layout.js shared/page-bridge.js pages/order/page.js pages/order/order-domain.js pages/order/menu-api.js pages/checkout/page.js pages/more/more-domain.js; do
+            node --check "$f" >> /tmp/syntax.log 2>&1 || SYNTAX_STATUS=1
+          done
+          {
+            echo '# SMT Runtime Phase 3 Final QA'
+            echo
+            echo '## Regression totals'
+            grep -E '^# (tests|pass|fail|cancelled|skipped|todo)' /tmp/tests.log || true
+            echo
+            echo '## Failing tests'
+            grep -E '^not ok' /tmp/tests.log || true
+            echo
+            echo '## Syntax'
+            cat /tmp/syntax.log
+            echo
+            echo "TEST_STATUS=$TEST_STATUS"
+            echo "SYNTAX_STATUS=$SYNTAX_STATUS"
+            if [ "$TEST_STATUS" -eq 0 ] && [ "$SYNTAX_STATUS" -eq 0 ]; then echo 'RESULT=PASS'; else echo 'RESULT=FAIL'; fi
+          } > docs/qa/SMT_RUNTIME_PHASE3_FINAL_QA.md
+          cat docs/qa/SMT_RUNTIME_PHASE3_FINAL_QA.md
+      - name: Commit QA candidate
+        run: |
+          rm -f .github/workflows/qa-runtime-phase3-fix.yml
+          git config user.name morefun-qa-bot
+          git config user.email actions@users.noreply.github.com
+          git add -A
+          git commit -m 'fix(runtime): consolidate phase 3 core and regression contracts' || exit 0
+          git push origin HEAD:qa-runtime-phase3-fix
