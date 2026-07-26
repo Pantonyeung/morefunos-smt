@@ -1,0 +1,40 @@
+name: qa-runtime-failure-summary
+on:
+  push:
+    branches: [smt-functional-completeness-v1]
+    paths: ['.github/workflows/qa-runtime-failure-summary.yml']
+permissions:
+  contents: write
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture failing tests
+        shell: bash
+        run: |
+          set +e
+          mkdir -p docs/qa
+          node --test tests/*.test.mjs > /tmp/test.log 2>&1
+          {
+            echo '# SMT Runtime Phase 3 Failure Summary'
+            echo
+            echo '## Failed subtests / files'
+            grep -E '^(not ok|# Subtest: tests/)|ERR_ASSERTION|ENOENT|AssertionError|The input did not match|Expected|Actual' /tmp/test.log || true
+            echo
+            echo '## Totals'
+            grep -E '^# (tests|pass|fail|cancelled|skipped|todo)' /tmp/test.log || true
+          } > docs/qa/SMT_RUNTIME_PHASE3_FAILURES.md
+          cat docs/qa/SMT_RUNTIME_PHASE3_FAILURES.md
+      - name: Commit failure summary
+        run: |
+          git config user.name morefun-qa-bot
+          git config user.email actions@users.noreply.github.com
+          git add docs/qa/SMT_RUNTIME_PHASE3_FAILURES.md
+          git commit -m 'test(runtime): summarize current regression failures' || exit 0
+          git push origin HEAD:smt-functional-completeness-v1
