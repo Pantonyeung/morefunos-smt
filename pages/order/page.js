@@ -4,7 +4,7 @@ import {clearExpiredBusinessDayDrafts,createDraftRecord,normalizeTerminalId,rest
 import {money,imageBlock,bindImageFallbacks,showToast,escapeHtml} from '../../shared/components.js';
 import {orderPageConfig as defaults} from './page-config.js';
 import {categories as fallbackCategories,products as fallbackProducts,drinks as fallbackDrinks,optionSets} from './page-data.js';
-import {loadMenuCatalog} from './menu-api.js';
+import {loadMenuCatalog,MENU_CACHE_KEY} from './menu-api.js';
 import {acceptPendingOrder,combineRiceballSet,dissolveRiceballSet,completeExpiredOrders,createWhatsAppLink,updateCartLineQuantity,CART_VIEW_INPUT,CART_VIEW_ORGANIZED,SERVICE_TAKEAWAY,SERVICE_DINE_IN,normalizeCartViewMode,normalizeServiceMode,resolveInitialOrderServiceMode,applyOrderServiceMode,toggleLineServiceMode,cartForView,inferOrderServiceMode} from './order-domain.js';
 import {commitTableOrder,createInitialDineState,cleanupEmptyDineSessions} from '../dine/dine-domain.js';
 import {defaultPrinterState,importExternalPrintJobs} from '../more/print-domain.js';
@@ -14,7 +14,9 @@ import {activeDineOrderIdentities,latestOrderDisplayNumber} from '../../shared/o
 
 const app=document.getElementById('app');
 const fallbackCatalog={categories:fallbackCategories,products:fallbackProducts,drinks:fallbackDrinks};
-let categories=[...fallbackCategories],products=[...fallbackProducts],drinks=[...fallbackDrinks];
+const cachedCatalog=readJSON(MENU_CACHE_KEY,null);
+const initialCatalog=cachedCatalog?.products?.length?cachedCatalog:fallbackCatalog;
+let categories=[...(initialCatalog.categories||fallbackCategories)],products=[...(initialCatalog.products||fallbackProducts)],drinks=[...(initialCatalog.drinks||fallbackDrinks)];
 let productMap=new Map(),drinkMap=new Map(),snackProducts=[],drinkProducts=[];
 function indexCatalog(){
   productMap=new Map(products.map(item=>[item.id,item]));
@@ -674,14 +676,14 @@ function handle(button,anchorOverride=null){
     const state=store.get();if(!state.cart.length)return;
     const draft=createDraftRecord({cart:state.cart,terminalId,drafts,counters:draftCounters,session:state.draftSession||null,context:state.dineContext||null});
     draftCounters={...draftCounters,[terminalId]:Number(draft.draftNumber.split('-').at(-1))};writeJSON(DRAFT_COUNTER_STORAGE_KEY,draftCounters);drafts=drafts.concat(draft);writeJSON(DRAFT_STORAGE_KEY,drafts);
-    store.set(next=>({...next,cart:[],draftSession:null,dineContext:null,orderServiceMode:SERVICE_TAKEAWAY,lastAffectedLineId:'',lastMutationKind:''}));modal=null;render();showToast('已暫存 '+draft.draftNumber);
+    store.set(next=>({...next,cart:[],draftSession:null,dineContext:null,orderServiceMode:SERVICE_TAKEAWAY,lastAffectedLineId:'',lastMutationKind:''}));modal=null;queue.afterRender(()=>showToast('已暫存 '+draft.draftNumber));
   }
   else if(action==='open-drafts'){modal={type:'take',selectedDraftId:'',dirty:false};render();}
   else if(action==='restore-draft'){
     const draft=drafts.find(item=>item.id===button.dataset.id);if(!draft)return;
     const restored=restoreDraftForTerminal(draft,terminalId);drafts=drafts.filter(item=>item.id!==draft.id);writeJSON(DRAFT_STORAGE_KEY,drafts);
     const orderServiceMode=inferOrderServiceMode(restored.cart,null);
-    store.set(state=>({...state,cart:normalizeCart(restored.cart,orderServiceMode),draftSession:restored.session,dineContext:null,orderServiceMode,lastAffectedLineId:'',lastMutationKind:''}));modal=null;render();showToast('已取回 '+draft.draftNumber);
+    store.set(state=>({...state,cart:normalizeCart(restored.cart,orderServiceMode),draftSession:restored.session,dineContext:null,orderServiceMode,lastAffectedLineId:'',lastMutationKind:''}));modal=null;queue.afterRender(()=>showToast('已取回 '+draft.draftNumber));
   }
   else if(action==='void-draft'){const draft=drafts.find(item=>item.id===modal?.selectedDraftId);if(!draft)return;if(!window.confirm('確定作廢 '+draft.draftNumber+'？作廢後不能取回。'))return;drafts=drafts.filter(item=>item.id!==draft.id);writeJSON(DRAFT_STORAGE_KEY,drafts);modal={type:'take',selectedDraftId:'',dirty:false};render();showToast('已作廢 '+draft.draftNumber);}
   else if(action==='toggle-quick-drawer'){store.set(state=>({...state,quickDrawerOpen:!state.quickDrawerOpen}));scheduleQuickDrawerClose();}
@@ -699,7 +701,7 @@ function handle(button,anchorOverride=null){
   else if(action==='enlarge-proof'){modal={type:'proof',order:modal.order,anchor:modal.anchor,dirty:false};render();}
   else if(action==='back-to-pending-review'){modal={type:'pending-review',order:modal.order,anchor:modal.anchor,dirty:false};render();}
   else if(action==='report-payment-issue'){showToast('請掃描 WhatsApp QR Code 聯絡客人');}
-  else if(action==='accept-pending-order'){const accepted=acceptPendingOrder(modal.order);store.set(state=>{state.pendingOrders={online:state.pendingOrders.online.filter(x=>x.id!==accepted.id),queue:state.pendingOrders.queue.filter(x=>x.id!==accepted.id)};state.runningOrders=state.runningOrders.concat(accepted);return state;});showToast('已接單 '+accepted.id+'；30分鐘後自動完成');modal=null;render();}
+  else if(action==='accept-pending-order'){const accepted=acceptPendingOrder(modal.order);store.set(state=>{state.pendingOrders={online:state.pendingOrders.online.filter(x=>x.id!==accepted.id),queue:state.pendingOrders.queue.filter(x=>x.id!==accepted.id)};state.runningOrders=state.runningOrders.concat(accepted);return state;});modal=null;queue.afterRender(()=>showToast('已接單 '+accepted.id+'；30分鐘後自動完成'));}
   else if(action==='set-order-mode')store.set(state=>({...state,quickMode:button.dataset.value==='quick'}));
   else if(action==='toggle-quick-drink-strip')updateSettings(s=>{s.quickDrinks.visible=s.quickDrinks.visible===false;});
   else if(action==='quick-display')updateSettings(s=>{s.quickDrinks.showImages=button.dataset.value==='image';});
@@ -752,11 +754,11 @@ function handle(button,anchorOverride=null){
   else if(action==='select-link-drink'){const group=modal.draft.groups[modal.draft.active];group.drink=group.drink===button.dataset.id?'':button.dataset.id;render();}
   else if(action==='apply-specified-link'){
     const groups=safeClone(modal.draft.groups.filter(group=>group.main&&group.snack));
-    store.set(state=>{let next=state.cart;groups.forEach(group=>{const quickId=group.drink?.startsWith('quick:')?group.drink.slice(6):'',quick=quickId?drinkMap.get(quickId):null;next=combineRiceballSet(next,{mainLineId:group.main,snackLineId:group.snack,drinkLineId:quickId?'':group.drink,quickDrink:quick?{productId:quick.id,drinkId:quick.id,name:quick.name,image:quick.image,unitPrice:quick.price,selection:drinkSelection(quick.id)}:null},{comboId:stableId('combo'),lineId:stableId('line'),comboPrice:59,source:'specified'});});state.cart=normalizeCart(next,state.orderServiceMode);state.lastAffectedLineId=state.cart.at(-1)?.lineId||'';state.lastMutationKind='changed';return state;});modal=null;render();showToast('已建立 '+groups.length+' 組指定套餐');
+    store.set(state=>{let next=state.cart;groups.forEach(group=>{const quickId=group.drink?.startsWith('quick:')?group.drink.slice(6):'',quick=quickId?drinkMap.get(quickId):null;next=combineRiceballSet(next,{mainLineId:group.main,snackLineId:group.snack,drinkLineId:quickId?'':group.drink,quickDrink:quick?{productId:quick.id,drinkId:quick.id,name:quick.name,image:quick.image,unitPrice:quick.price,selection:drinkSelection(quick.id)}:null},{comboId:stableId('combo'),lineId:stableId('line'),comboPrice:59,source:'specified'});});state.cart=normalizeCart(next,state.orderServiceMode);state.lastAffectedLineId=state.cart.at(-1)?.lineId||'';state.lastMutationKind='changed';return state;});modal=null;queue.afterRender(()=>showToast('已建立 '+groups.length+' 組指定套餐'));
   }
   else if(action==='select-combo-component'){const role=button.dataset.role,id=button.dataset.id,item=role==='drink'?drinkMap.get(id):productMap.get(id);if(!item)return;modal.draft.components=modal.draft.components.filter(component=>component.role!==role).concat({role,source:role==='drink'?'quick':'catalog',productId:item.id,drinkId:role==='drink'?item.id:'',name:item.name,image:item.image||'',unitPrice:Number(item.price||0),options:{}});modal.dirty=true;render();}
   else if(action==='clear-combo-component'){modal.draft.components=modal.draft.components.filter(component=>component.role!=='drink');modal.dirty=true;render();}
-  else if(action==='apply-combo-edit'){const components=safeClone(modal.draft.components),lineId=modal.lineId,drink=components.find(item=>item.role==='drink');store.set(state=>{state.cart=state.cart.map(line=>line.lineId!==lineId?line:{...line,image:components.find(item=>item.role==='main')?.image||line.image,drinkAssignments:drink?[{drinkId:drink.productId,name:drink.name,image:drink.image||'',sweetness:'',ice:'',source:drink.source}]:[],combo:{...line.combo,components,missingRoles:drink?[]:['drink']}});state.lastAffectedLineId=lineId;state.lastMutationKind='changed';return state;});modal=null;render();showToast('套餐組合已更新');}
+  else if(action==='apply-combo-edit'){const components=safeClone(modal.draft.components),lineId=modal.lineId,drink=components.find(item=>item.role==='drink');store.set(state=>{state.cart=state.cart.map(line=>line.lineId!==lineId?line:{...line,image:components.find(item=>item.role==='main')?.image||line.image,drinkAssignments:drink?[{drinkId:drink.productId,name:drink.name,image:drink.image||'',sweetness:'',ice:'',source:drink.source}]:[],combo:{...line.combo,components,missingRoles:drink?[]:['drink']}});state.lastAffectedLineId=lineId;state.lastMutationKind='changed';return state;});modal=null;queue.afterRender(()=>showToast('套餐組合已更新'));}
   else if(action==='request-dissolve-combo'){const line=store.get().cart.find(item=>item.lineId===modal.lineId);const singles=(line?.combo?.components||[]).reduce((sum,item)=>sum+Number(item.unitPrice||0),0);confirmState={kind:'dissolve',lineId:modal.lineId,title:'拆開套餐？',message:'拆開後會還原為獨立產品，並按單品價格重新計算（'+money(singles)+'）。'};render();}
   else if(action==='later-new-order'){newOrderNotice.visible=false;render();}
   else if(action==='process-new-order'){newOrderNotice.visible=false;modal={type:'pending',anchor:null,dirty:false};render();}
@@ -771,7 +773,7 @@ function handle(button,anchorOverride=null){
 app.addEventListener('morefun:status-action',event=>{const button=event.target.closest('[data-action]');if(!button||button.disabled)return;event.preventDefault();handle(button,event.detail?.anchor||null);});
 app.addEventListener('click',event=>{if(event.target.classList?.contains('modal-scrim')){event.preventDefault();requestDismiss();return;}const button=event.target.closest('[data-action]');if(button&&!button.disabled)handle(button);});
 app.addEventListener('pointerdown',event=>{if(event.target.closest('.quick-drawer-panel'))scheduleQuickDrawerClose();});
-app.addEventListener('input',event=>{if(event.target.matches('[data-action="detail-note"]')&&modal?.type==='product'){modal.draft.note=event.target.value;markDirty();return;}if(event.target.matches('[data-action="search-query"]')&&modal?.type==='search'){const value=event.target.value;store.set(state=>({...state,searchQuery:value}));render();requestAnimationFrame(()=>{const input=document.querySelector('[data-action="search-query"]');if(input){input.focus();input.setSelectionRange(value.length,value.length);}});}});
+app.addEventListener('input',event=>{if(event.target.matches('[data-action="detail-note"]')&&modal?.type==='product'){modal.draft.note=event.target.value;markDirty();return;}if(event.target.matches('[data-action="search-query"]')&&modal?.type==='search'){const value=event.target.value;store.set(state=>({...state,searchQuery:value}));queue.afterRender(()=>{const input=document.querySelector('[data-action="search-query"]');if(input){input.focus();input.setSelectionRange(value.length,value.length);}});}});
 addEventListener('message',event=>{if(event.data?.type==='morefun:page-activate'&&event.data.route==='order'){const current=readJSON(ORDER_STORAGE_KEY,null);if(current?.dineContext&&!store.get().dineContext)store.set(state=>({...state,dineContext:current.dineContext,orderServiceMode:SERVICE_DINE_IN,cart:applyOrderServiceMode(current.cart||[],SERVICE_DINE_IN)}));}});
 render();
 async function bootstrapLiveMenu(){
@@ -782,4 +784,4 @@ async function bootstrapLiveMenu(){
 }
 bootstrapLiveMenu().catch(error=>{console.error('MENU_BOOTSTRAP_FAILED',error);showToast('餐牌連接失敗，已保留本機點單');});
 setTimeout(()=>{if(newOrderNotice?.visible){newOrderNotice.visible=false;render();}},3000);
-setInterval(()=>{store.set(state=>{const next=completeExpiredOrders(state.runningOrders);const completed=next.filter((order,index)=>order.status==='completed'&&state.runningOrders[index]?.status!=='completed');if(!completed.length)return state;state.runningOrders=next.filter(order=>order.status==='running');state.completedOrders=state.completedOrders.concat(completed);return state;});},30000);
+setInterval(()=>{const current=store.get();if(!current.runningOrders.length)return;const next=completeExpiredOrders(current.runningOrders);const completed=next.filter((order,index)=>order.status==='completed'&&current.runningOrders[index]?.status!=='completed');if(!completed.length)return;store.set(state=>{state.runningOrders=next.filter(order=>order.status==='running');state.completedOrders=state.completedOrders.concat(completed);return state;});},30000);
