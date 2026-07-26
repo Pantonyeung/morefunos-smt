@@ -48,6 +48,16 @@ const checks=[
     ]
   },
   {
+    id:'OVERLAY_STATE_SINGLE_TRUTH',
+    description:'Global overlay state must come only from explicit morefun:overlay-state messages',
+    owner:'app-loader.js::message(morefun:overlay-state)',
+    forbidden:[
+      ['app-loader.js','installChildOverlayObserver'],
+      ['app-loader.js','syncChildOverlay'],
+      ['app-loader.js','_shellOverlayObserver']
+    ]
+  },
+  {
     id:'PACKAGING_DOMAIN_SINGLE_OWNER',
     description:'Packaging pricing truth must remain in order-domain.js',
     owner:'pages/order/order-domain.js',
@@ -69,11 +79,6 @@ const knownMigrations=[
     id:'V3_STATUS_ACTION_DOM_OBSERVER',
     files:['shared/status-actions.js'],
     needles:['MutationObserver','childActionNodes']
-  },
-  {
-    id:'V4_OVERLAY_DOM_OBSERVER',
-    files:['app-loader.js'],
-    needles:['installChildOverlayObserver','MutationObserver']
   },
   {
     id:'V5_LEGACY_CHILD_GLOBAL_CHROME',
