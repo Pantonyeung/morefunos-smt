@@ -125,8 +125,11 @@
     const rect=cart.getBoundingClientRect();
     if(!rect.width||!rect.height)return;
     const scale=clamp(Math.min(rect.width/610,rect.height/890),.72,1.15);
+    const imageSize=clamp(72*scale,46,78);
+    const markerSize=clamp(imageSize*.9,42,70);
     root.style.setProperty('--adaptive-cart-scale',String(scale));
-    root.style.setProperty('--adaptive-cart-image',`${clamp(72*scale,46,78)}px`);
+    root.style.setProperty('--adaptive-cart-image',`${imageSize}px`);
+    root.style.setProperty('--adaptive-cart-marker',`${markerSize}px`);
     root.style.setProperty('--adaptive-cart-gap',`${clamp(11*scale,6,12)}px`);
     root.style.setProperty('--adaptive-cart-pad',`${clamp(13*scale,8,14)}px`);
     root.style.setProperty('--adaptive-cart-control',`${clamp(36*scale,30,40)}px`);
@@ -134,6 +137,7 @@
     root.style.setProperty('--adaptive-cart-footer-pad',`${clamp(13*scale,8,14)}px`);
     root.style.setProperty('--adaptive-cart-pending-pad',`${clamp(10*scale,6,11)}px`);
     cart.dataset.adaptiveScale=scale.toFixed(4);
+    cart.dataset.adaptiveMarker=markerSize.toFixed(2);
   }
 
   function currentLayoutSignature(){
