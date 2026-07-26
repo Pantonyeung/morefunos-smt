@@ -28,7 +28,7 @@ let preloadQueue=[];
 let preloadingRoute='';
 let checkoutExitArmed='';
 const SCALE_KEY='morefun-smt-ui-scale';
-let uiScale=Math.max(.82,Math.min(1,Number(localStorage.getItem(SCALE_KEY)||1));
+let uiScale=Math.max(.82,Math.min(1,Number(localStorage.getItem(SCALE_KEY)||1)));
 
 function viewportSize(){const viewport=window.visualViewport;return {width:Math.round(viewport?.width||window.innerWidth),height:Math.round(viewport?.height||window.innerHeight)};}
 function frameList(){return [...allFrames];}
