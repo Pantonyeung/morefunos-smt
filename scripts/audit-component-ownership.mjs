@@ -4,6 +4,7 @@ import path from 'node:path';
 const root=process.cwd();
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 const exists=file=>fs.existsSync(path.join(root,file));
+const count=(text,needle)=>text.split(needle).length-1;
 
 const checks=[
   {
@@ -94,12 +95,27 @@ const checks=[
   }
 ];
 
+/*
+ * V1 migration safety gate.
+ * Legacy Cart internals in page.css are frozen at the footprint that existed
+ * when Authority Model V1.1 was adopted. During migration these counts may
+ * only stay equal or decrease. Any increase means a new second authority was
+ * introduced and must fail immediately.
+ */
+const legacyCartBudget={
+  '.cart-row':6,
+  '.cart-img':1,
+  '.cart-actions':4,
+  '.pending-area':2,
+  '.cart footer':4
+};
+
 const knownMigrations=[
   {
     id:'V1_CART_INTERNAL_VISUAL_AUTHORITY',
     files:['pages/order/page.css','pages/order/cart.css'],
-    needles:['.cart-row','.cart-img','.cart-actions','.pending-area','.cart footer'],
-    note:'page.css legacy cart internals must migrate gradually to cart.css; page.css may retain only page composition'
+    needles:Object.keys(legacyCartBudget),
+    note:'page.css legacy cart internals are frozen; migration may only reduce the legacy footprint while cart.css remains final visual authority'
   },
   {
     id:'V5_LEGACY_CHILD_GLOBAL_CHROME_RUNTIME',
@@ -136,6 +152,19 @@ for(const check of checks){
     }
   }
   if(!failed)console.log(`PASS ${check.id}: authority=${check.authority}`);
+}
+
+if(exists('pages/order/page.css')){
+  const pageCss=read('pages/order/page.css');
+  for(const [needle,budget] of Object.entries(legacyCartBudget)){
+    const actual=count(pageCss,needle);
+    if(actual>budget){
+      hardFailures++;
+      console.error(`FAIL V1_LEGACY_CART_FREEZE: ${needle} count=${actual} exceeds frozen budget=${budget}`);
+    }else{
+      console.log(`PASS V1_LEGACY_CART_FREEZE: ${needle} count=${actual}/${budget}; migration may only decrease`);
+    }
+  }
 }
 
 console.log('\nKNOWN AUTHORITY MIGRATIONS');
