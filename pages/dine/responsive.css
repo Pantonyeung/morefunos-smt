@@ -1,0 +1,4 @@
+/* Dine page responsive profile consumer. Shared responsive core supplies tokens only. */
+.dine-main{min-width:0}
+.side-panel{max-width:calc(100vw - 24px)}
+.pending-review-panel{max-width:min(var(--modal-max-width),calc(100vw - 24px));max-height:var(--modal-max-height)}
