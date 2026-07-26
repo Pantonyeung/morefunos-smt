@@ -1,3 +1,13 @@
+/*
+ * CART COMPONENT VISUAL AUTHORITY
+ * --------------------------------
+ * This file owns Order Cart internal visual geometry and state presentation.
+ * Allowed: cart header controls, cart rows, marker, image, copy, price,
+ * actions, pricing strip, pending/required container, quick-drawer container.
+ * Not allowed: page composition / cart width placement, business pricing,
+ * service-mode truth, Drink Choice Card internal visual, global shell visual.
+ * Adaptive may only provide --adaptive-cart-* numeric tokens consumed here.
+ */
 .cart>header{flex-wrap:wrap;align-items:flex-start;gap:8px}
 .cart-header-actions{flex:1;min-width:0;justify-content:flex-end;flex-wrap:wrap}
 .cart-mode-controls{display:flex;align-items:center;gap:6px}
