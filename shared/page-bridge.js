@@ -16,54 +16,31 @@ function handleShellNavigation(event){
   if(!route||route===document.body.dataset.page)return;
   navigate(route);
 }
-function statusActionNodes(){
-  const selectors=[
-    '.global-statusbar .shell-actions button',
-    '.global-statusbar .top-btn',
-    '.topbar.statusbar .shell-actions button',
-    '.topbar.statusbar .top-btn'
-  ];
-  const nodes=[];
-  selectors.forEach(selector=>document.querySelectorAll(selector).forEach(node=>{if(!nodes.includes(node))nodes.push(node);}));
-  return nodes;
-}
-function statusActionId(node,index){
-  if(node.dataset.shellActionId)return node.dataset.shellActionId;
-  const seed=node.dataset.action||node.dataset.route||node.getAttribute('aria-label')||'action';
-  const id=String(seed).replace(/[^a-zA-Z0-9_-]+/g,'-')+'-'+index;
-  node.dataset.shellActionId=id;
-  return id;
-}
-let publishFrame=0;
-function publishStatusActions(){
-  publishFrame=0;
-  if(!(parent&&parent!==window))return;
-  const actions=statusActionNodes().map((node,index)=>({
-    id:statusActionId(node,index),
-    className:node.className||'',
-    html:node.innerHTML,
-    disabled:Boolean(node.disabled),
-    ariaLabel:node.getAttribute('aria-label')||''
+let statusActions=[];
+function normalizeStatusActions(actions){
+  return (Array.isArray(actions)?actions:[]).map((action,index)=>({
+    id:String(action?.id||`action-${index}`),
+    className:String(action?.className||''),
+    html:String(action?.html||action?.label||''),
+    disabled:Boolean(action?.disabled),
+    ariaLabel:String(action?.ariaLabel||action?.label||'')
   }));
-  parent.postMessage({type:'morefun:status-actions',page:document.body.dataset.page||'unknown',actions},'*');
 }
-function scheduleStatusActions(){if(publishFrame)return;publishFrame=requestAnimationFrame(()=>requestAnimationFrame(publishStatusActions));}
+function publishStatusActions(){
+  if(!(parent&&parent!==window))return;
+  parent.postMessage({type:'morefun:status-actions',page:document.body.dataset.page||'unknown',actions:statusActions},'*');
+}
+function setStatusActions(actions){statusActions=normalizeStatusActions(actions);publishStatusActions();}
 function triggerStatusAction(message){
-  const source=statusActionNodes().find((node,index)=>statusActionId(node,index)===message.id);
-  if(!source||source.disabled)return;
-  let handled=false;
-  try{
-    const actionEvent=new CustomEvent('morefun:status-action',{bubbles:true,cancelable:true,detail:{anchor:message.anchor||null}});
-    handled=!source.dispatchEvent(actionEvent);
-  }catch(_error){}
-  if(!handled)source.click();
-  scheduleStatusActions();
+  const action=statusActions.find(item=>item.id===message.id);
+  if(!action||action.disabled)return;
+  window.dispatchEvent(new CustomEvent('morefun:status-action-trigger',{detail:{id:action.id,anchor:message.anchor||null}}));
 }
 function handleParentMessage(event){
   if(event.source!==parent)return;
   const message=event.data||{};
   if(message.type==='morefun:status-action-trigger'){triggerStatusAction(message);return;}
-  if(message.type==='morefun:page-activate'){scheduleStatusActions();}
+  if(message.type==='morefun:page-activate'){publishStatusActions();}
 }
 function announceReadyAfterStableFrames(){
   const announce=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{ready();publishStatusActions();}));
@@ -71,9 +48,7 @@ function announceReadyAfterStableFrames(){
   else announce();
 }
 applyPreferences();
-document.addEventListener('click',event=>{handleShellNavigation(event);scheduleStatusActions();},true);
-document.addEventListener('change',scheduleStatusActions,true);
-window.addEventListener('morefun:layout-invalidated',scheduleStatusActions);
+document.addEventListener('click',handleShellNavigation,true);
 window.addEventListener('message',handleParentMessage);
 document.addEventListener('DOMContentLoaded',()=>{applyPreferences();announceReadyAfterStableFrames();},{once:true});
-window.MoreFunPageBridge={navigate,ready,applyPreferences,publishStatusActions};
+window.MoreFunPageBridge={navigate,ready,applyPreferences,publishStatusActions,setStatusActions};
