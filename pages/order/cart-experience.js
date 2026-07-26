@@ -11,6 +11,7 @@ let lastEditedLineId='';
 let prepareFrame=0;
 let resetProductsOnRestore=false;
 let revealFrame=0;
+let checkoutPrewarmed=false;
 
 function rememberScroll(){
   const products=app?.querySelector('.products');
@@ -185,6 +186,18 @@ function applyPreferredModeToNewRows(){
   if(candidate)clickLineMode(candidate,preferredServiceMode);
 }
 
+function prewarmCheckout(){
+  if(checkoutPrewarmed||!app?.querySelector('.cart-row'))return;
+  checkoutPrewarmed=true;
+  const frame=document.createElement('iframe');
+  frame.className='checkout-prewarm-frame';
+  frame.tabIndex=-1;
+  frame.setAttribute('aria-hidden','true');
+  frame.src='../checkout/index.html?prewarm=1';
+  frame.addEventListener('load',()=>setTimeout(()=>frame.remove(),80),{once:true});
+  document.body.appendChild(frame);
+}
+
 function prepare(){
   prepareFrame=0;
   prepareCategories();
@@ -195,6 +208,7 @@ function prepare(){
   updateRecentRows();
   restoreScroll();
   applyPendingServiceMode();
+  prewarmCheckout();
   scheduleRevealRecentRow();
 }
 
