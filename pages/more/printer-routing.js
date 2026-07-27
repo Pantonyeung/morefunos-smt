@@ -9,9 +9,9 @@ export function normalizeFallbackMode(value){
 
 export function inferredSupportedDocuments(printer={}){
   if(Array.isArray(printer.supportedDocuments)&&printer.supportedDocuments.length)return [...new Set(printer.supportedDocuments.filter(type=>PRINT_DOCUMENT_TYPES.includes(type)))];
-  const width=Number(printer.paperWidth||0);
   const purposes=Array.isArray(printer.purposes)?printer.purposes:[];
-  const labelLike=width>0&&width<=58||purposes.includes('label')||purposes.includes('label-backup');
+  const explicitMediaKind=printer?.media?.kind;
+  const labelLike=explicitMediaKind==='label'||purposes.includes('label')||purposes.includes('label-backup');
   if(labelLike)return ['label'];
   return ['receipt','production','packing'];
 }
