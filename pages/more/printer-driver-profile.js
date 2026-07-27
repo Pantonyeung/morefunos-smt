@@ -5,11 +5,17 @@ export const LABEL_COMMAND_LANGUAGES=Object.freeze(['tspl','epl','zpl','dpl']);
 
 const normalizeText=value=>String(value??'').trim();
 
+export function supportedCommandLanguagesForMedia(media={}){
+  if(media?.kind==='label')return [...LABEL_COMMAND_LANGUAGES,'raw'];
+  return ['escpos','raw'];
+}
+
 export function normalizePrinterDriver(driver={},media={}){
   const kind=media?.kind==='label'?'label':'roll';
   const fallbackLanguage=kind==='label'?'tspl':'escpos';
   const requested=normalizeText(driver.commandLanguage||driver.language).toLowerCase();
-  const commandLanguage=PRINTER_COMMAND_LANGUAGES.includes(requested)?requested:fallbackLanguage;
+  const supported=supportedCommandLanguagesForMedia(media);
+  const commandLanguage=supported.includes(requested)?requested:fallbackLanguage;
   const encoding=normalizeText(driver.encoding)||'utf-8';
   const cutMode=kind==='roll'&&['full','partial','none'].includes(driver.cutMode)?driver.cutMode:'none';
   const density=Number.isFinite(Number(driver.density))?Number(driver.density):null;
@@ -18,15 +24,13 @@ export function normalizePrinterDriver(driver={},media={}){
 }
 
 export function validatePrinterDriver(driver={},media={}){
-  const normalized=normalizePrinterDriver(driver,media);
+  const requested=normalizeText(driver.commandLanguage||driver.language).toLowerCase();
   const errors=[];
-  if(media?.kind==='label'&&!LABEL_COMMAND_LANGUAGES.includes(normalized.commandLanguage)&&normalized.commandLanguage!=='raw'){
-    errors.push('標籤模式需要標籤打印指令語言或 raw driver');
+  if(requested&&!PRINTER_COMMAND_LANGUAGES.includes(requested))errors.push('打印指令語言不支援');
+  if(requested&&!supportedCommandLanguagesForMedia(media).includes(requested)){
+    errors.push(media?.kind==='label'?'標籤模式需要標籤打印指令語言或 raw driver':'卷紙模式不可使用標籤打印指令語言');
   }
-  if(media?.kind!=='label'&&LABEL_COMMAND_LANGUAGES.includes(normalized.commandLanguage)){
-    errors.push('卷紙模式不可使用標籤打印指令語言');
-  }
-  try{new TextEncoder();}catch{}
+  const normalized=normalizePrinterDriver(driver,media);
   if(!normalized.encoding)errors.push('缺少字符編碼');
   return {ok:errors.length===0,errors,driver:normalized};
 }
@@ -35,9 +39,4 @@ export function applyPrinterDriver(printer={},driver={}){
   const next=clone(printer)||{};
   const normalized=normalizePrinterDriver(driver,next.media||{});
   return {...next,driver:normalized};
-}
-
-export function supportedCommandLanguagesForMedia(media={}){
-  if(media?.kind==='label')return [...LABEL_COMMAND_LANGUAGES,'raw'];
-  return ['escpos','raw'];
 }
