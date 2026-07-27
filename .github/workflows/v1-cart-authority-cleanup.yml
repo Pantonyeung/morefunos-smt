@@ -1,0 +1,62 @@
+name: V1 Cart Authority Cleanup
+
+on:
+  push:
+    branches:
+      - smt-functional-completeness-v1
+    paths:
+      - scripts/cleanup-order-page-cart-legacy.mjs
+      - tests/cleanup-order-page-cart-legacy.test.mjs
+      - tests/cart-visual-authority.test.mjs
+      - pages/order/cart.css
+      - pages/order/index.html
+      - .github/workflows/v1-cart-authority-cleanup.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v1-cart-authority-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify cleanup parser contracts
+        run: node --test tests/cleanup-order-page-cart-legacy.test.mjs tests/cart-visual-authority.test.mjs
+
+      - name: Apply guarded V1 Cart legacy cleanup
+        run: node scripts/cleanup-order-page-cart-legacy.mjs
+
+      - name: Verify V1 migration is physically cleared
+        run: |
+          if grep -Eq '\.cart-row\s*\{|\.cart-img\s*\{|\.cart-actions\s*\{|\.pending-area\s*\{|\.cart[[:space:]]+footer\s*\{' pages/order/page.css; then
+            echo 'V1 Cart legacy selectors still exist in page.css'
+            exit 1
+          fi
+          node scripts/audit-component-ownership.mjs
+          node --test tests/*.test.mjs
+
+      - name: Commit only the cleaned page stylesheet
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pages/order/page.css
+          if git diff --cached --quiet; then
+            echo 'No page.css cleanup change required.'
+            exit 0
+          fi
+          git commit -m 'refactor(order): physically remove V1 cart legacy authority'
+          git push origin HEAD:smt-functional-completeness-v1
