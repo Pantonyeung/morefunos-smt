@@ -1,6 +1,7 @@
 import {applyPrinterTransport,normalizePrinterTransport,PRINTER_TRANSPORT_NETWORK} from './printer-transport.js';
 import {inferredSupportedDocuments,setPrimaryPrinter,setFallbackPrinter,normalizeFallbackMode} from './printer-routing.js';
 import {applyMediaProfile,normalizeMediaProfile,compatibleTemplates,templateSupportsMedia} from './printer-media.js';
+import {applyPrinterDriver,normalizePrinterDriver,validatePrinterDriver} from './printer-driver-profile.js';
 
 const clone=value=>value===undefined?undefined:JSON.parse(JSON.stringify(value));
 
@@ -12,14 +13,15 @@ export function normalizePrinterDevice(printer={}){
     heightMm:base.labelHeight||50
   });
   const withMedia=applyMediaProfile(base,media);
+  const withDriver=applyPrinterDriver(withMedia,normalizePrinterDriver(withMedia.driver||{},withMedia.media));
   return {
-    ...withMedia,
-    name:String(withMedia.name||'打印機'),
-    model:String(withMedia.model||''),
-    copies:Math.max(1,Number(withMedia.copies)||1),
-    timeoutMs:Math.max(1000,Number(withMedia.timeoutMs)||5000),
-    supportedDocuments:inferredSupportedDocuments(withMedia),
-    templateAssignments:{...(withMedia.templateAssignments||{})}
+    ...withDriver,
+    name:String(withDriver.name||'打印機'),
+    model:String(withDriver.model||''),
+    copies:Math.max(1,Number(withDriver.copies)||1),
+    timeoutMs:Math.max(1000,Number(withDriver.timeoutMs)||5000),
+    supportedDocuments:inferredSupportedDocuments(withDriver),
+    templateAssignments:{...(withDriver.templateAssignments||{})}
   };
 }
 
@@ -41,6 +43,18 @@ export function updatePrinterDevice(state,printerId,patch={}){
       heightMm:patch.labelHeight??current.media.heightMm
     };
     updated=applyMediaProfile(updated,requestedMedia);
+  }
+  if(patch.driver||patch.commandLanguage||patch.encoding||patch.cutMode){
+    const requestedDriver={
+      ...(updated.driver||current.driver||{}),
+      ...(patch.driver||{}),
+      commandLanguage:patch.commandLanguage??patch.driver?.commandLanguage??updated.driver?.commandLanguage,
+      encoding:patch.encoding??patch.driver?.encoding??updated.driver?.encoding,
+      cutMode:patch.cutMode??patch.driver?.cutMode??updated.driver?.cutMode
+    };
+    const validation=validatePrinterDriver(requestedDriver,updated.media||{});
+    if(!validation.ok)throw new Error(validation.errors.join('；'));
+    updated=applyPrinterDriver(updated,validation.driver);
   }
   if(Array.isArray(patch.supportedDocuments))updated.supportedDocuments=[...new Set(patch.supportedDocuments)];
   updated=normalizePrinterDevice(updated);
