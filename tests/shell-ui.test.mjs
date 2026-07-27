@@ -7,6 +7,7 @@ try{shell=await import('../shared/shell.js')}catch{}
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 const pages=await Promise.all(['order','orders','dine','soldout','more'].map(name=>read(`pages/${name}/page.js`)));
 const baseCss=await read('shared/page-base.css');
+const shellCss=await read('app-shell.css');
 const runtime=await read('shared/runtime.js');
 const pageCss=await Promise.all(['order','orders','more'].map(name=>read(`pages/${name}/page.css`)));
 
@@ -38,14 +39,13 @@ test('五個主要頁面共用同一最近訂單顯示規則',()=>{
   pages.forEach((page,index)=>assert.match(page,/activeDineOrderIdentities/,`第 ${index+1} 頁未計入活躍堂食流水`));
 });
 
-test('底欄高度、選中膠囊、字體及圖標只由共用樣式控制',()=>{
-  assert.match(baseCss,/\.bottom-nav\s*\{[^}]*height:\s*auto[^}]*min-height:\s*calc\(var\(--bottom-nav-height\)/s);
-  assert.match(baseCss,/\.shell-nav-icon/);
-  assert.match(baseCss,/--choice-pill-radius:\s*999px/);
-  assert.match(baseCss,/\.shell-nav-button\s*\{[^}]*border-radius:\s*var\(--choice-pill-radius\)/s);
-  assert.match(baseCss,/\.shell-nav-button\.active\s*\{[^}]*background:\s*var\(--orange-soft\)[^}]*box-shadow:/s);
-  assert.doesNotMatch(baseCss,/\.shell-nav-button\.active::before/);
-  pageCss.forEach(css=>assert.doesNotMatch(css,/\.bottom-nav\s*\{[^}]*height:/s));
+test('底欄高度、選中膠囊、字體及圖標只由全局 Shell 樣式控制',()=>{
+  assert.match(shellCss,/\.global-bottom-nav\{/);
+  assert.match(shellCss,/grid-template-columns:repeat\(5,1fr\)/);
+  assert.match(shellCss,/\.global-bottom-nav button\{[^}]*border-radius:999px/s);
+  assert.match(shellCss,/\.global-bottom-nav button\.active\{[^}]*background:#fff2e9[^}]*box-shadow:/s);
+  assert.doesNotMatch(baseCss,/\.global-bottom-nav\{/);
+  pageCss.forEach(css=>assert.doesNotMatch(css,/\.global-bottom-nav\{/));
 });
 
 test('分類、頁籤、分段、付款、來源及模式選擇共用膠囊規則',()=>{
