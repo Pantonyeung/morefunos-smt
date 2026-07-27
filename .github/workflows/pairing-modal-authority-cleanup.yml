@@ -55,6 +55,12 @@ jobs:
         run: node scripts/validate-ai-context.mjs
       - name: Full Node regression
         run: node --test tests/*.test.mjs
+      - name: Install browser QA dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Browser regression
+        run: npm run qa:browser
       - name: Confirm clean verified head
         run: |
           if ! git diff --quiet; then
