@@ -147,10 +147,27 @@
 最新已取得嘅機器證據：
 - Authority Audit：硬規則 PASS；
 - Syntax：PASS；
-- Node test suite 曾出現 248 tests / 239 pass / 9 fail；
-- 至少兩個 Fail 已確認係舊 Contract Test 仍要求被淘汰嘅 Status Action DOM scanner 架構，屬測試規格漂移，唔應倒退 Runtime；
-- 未修到全綠之前，禁止聲稱 Automated QA 全綠；
-- Browser QA／實機驗收必須另外記錄。
+- 最近已證明 Node baseline：`248/248 PASS`；
+- 永久 Playwright 五尺寸 Browser Matrix 已接入 `qa-runtime-phase3.yml`，但最新 QA report `Commit:` 尚未追上目前 branch HEAD；
+- 因此只可以寫「舊 Node／Authority／Syntax baseline PASS；Browser pipeline 已建立／最新 HEAD Browser 結果待證實」；
+- 未有 report commit 對齊目前驗證目標前，禁止聲稱最新 Automated QA 全綠；
+- Browser QA／iPad／T2S／實體打印／真實 API 驗收必須另外記錄。
+
+### I. Change Impact Governance／路徑核對
+
+正式 Authority：
+- GitHub 根目錄 `SMT_CHANGE_IMPACT.md`；
+- Jade Note 同名鏡像 `SMT_CHANGE_IMPACT` 只作接手導航，不取代 GitHub。
+
+2026-07-27 接手 fresh-read 發現：
+- `docs/ai-context/SMT_CHANGE_IMPACT.md` 亦存在，但不得因此取代根目錄硬規則文件；
+- commit `b56147a90343d94a450f7d689c1df851b8a93ffa` 已證明根目錄 Change Impact 係目前功能分支祖先正式加入；
+- 單次 contents 404 不足以推翻治理文件存在性。
+
+之後固定核對：
+`explicit branch ref fetch → commit lineage compare → fresh-read AGENTS / root file`
+
+禁止因單次 404 自行改寫 canonical path 或建立第二套 Jade 鏡像。
 
 ## 4. 成功做法｜接手優先複用
 
@@ -160,6 +177,7 @@
 4. Cache chain together：核心 asset 改動必須同步檢查 child／Shell／root cache chain。
 5. Strangler migration：大型 legacy 不一次爆改；新 Authority 自足、舊責任凍結、逐組物理移除。
 6. Evidence levels 分開：程式存在 ≠ Unit Test PASS ≠ Browser QA PASS ≠ 實機驗收 ≠ 最終 Lock。
+7. Governance file disappearance 必須做 branch ref＋commit lineage 雙重核對，唔可以靠單次 404 作結論。
 
 ## 5. 已證明會浪費時間／禁止重試嘅坑
 
@@ -171,6 +189,7 @@
 6. 一次性 QA Driver／Workflow 未確認真正 run 就當作有測試證據。
 7. 只睇 commit message／文件敘述，唔 fresh-read 正式分支現碼。
 8. 舊 Contract Test 與新 Authority 衝突時，為令 test 綠而倒退 Runtime。
+9. 單次 GitHub 404 就判斷治理文件不存在，並立即改寫 Authority path。
 
 ## 6. 下一個接手 AI 開工最短路徑
 
