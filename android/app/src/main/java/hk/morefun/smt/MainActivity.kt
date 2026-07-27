@@ -44,6 +44,7 @@ class MainActivity : Activity() {
         if (::bridge.isInitialized) bridge.close()
         if (::webView.isInitialized) {
             webView.stopLoading()
+            webView.removeJavascriptInterface("MoreFunNative")
             webView.removeAllViews()
             webView.destroy()
         }
@@ -83,22 +84,28 @@ class MainActivity : Activity() {
     }
 
     private fun installBridge(view: WebView) {
-        if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) return
-        WebViewCompat.addWebMessageListener(
-            view,
-            "MoreFunNative",
-            setOf(localOrigin)
-        ) { _, message, sourceOrigin, isMainFrame, replyProxy ->
-            if (!isMainFrame || sourceOrigin.toString() != localOrigin) {
-                replyProxy.postMessage("{\"ok\":false,\"error\":{\"code\":\"INVALID_ORIGIN\",\"message\":\"Bridge origin rejected\"}}")
-                return@addWebMessageListener
-            }
-            bridge.handle(message.data ?: "") { response ->
-                runOnUiThread {
-                    replyProxy.postMessage(response)
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
+            WebViewCompat.addWebMessageListener(
+                view,
+                "MoreFunNative",
+                setOf(localOrigin)
+            ) { _, message, sourceOrigin, isMainFrame, replyProxy ->
+                if (!isMainFrame || sourceOrigin.toString() != localOrigin) {
+                    replyProxy.postMessage("{\"ok\":false,\"error\":{\"code\":\"INVALID_ORIGIN\",\"message\":\"Bridge origin rejected\"}}")
+                    return@addWebMessageListener
+                }
+                bridge.handle(message.data ?: "") { response ->
+                    runOnUiThread {
+                        replyProxy.postMessage(response)
+                    }
                 }
             }
+            return
         }
+
+        // Disaster-backup path for Android 6 / old System WebView only.
+        // Navigation is still restricted to packaged appassets content.
+        view.addJavascriptInterface(LegacyBridgeAdapter(this, view, bridge), "MoreFunNative")
     }
 
     @Suppress("DEPRECATION")
