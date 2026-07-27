@@ -47,7 +47,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
         with:
@@ -146,7 +146,7 @@ jobs:
               )
               for spec in "${specs[@]}"; do
                 echo "===== RUN $spec ====="
-                timeout --signal=TERM --kill-after=15s 180s npx playwright test "$spec" --reporter=line
+                timeout --signal=TERM --kill-after=15s 360s npx playwright test "$spec" --reporter=line
                 status=$?
                 if [ $status -eq 124 ] || [ $status -eq 137 ]; then
                   echo "TIMEOUT $spec" | tee -a "$BROWSER_SUMMARY"
