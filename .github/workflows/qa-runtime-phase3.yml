@@ -2,7 +2,21 @@ name: qa-runtime-phase3
 on:
   push:
     branches: [smt-functional-completeness-v1]
-    paths: ['.github/workflows/qa-runtime-phase3.yml']
+    paths:
+      - '.github/workflows/qa-runtime-phase3.yml'
+      - 'scripts/audit-component-ownership.mjs'
+      - 'tests/**.test.mjs'
+      - 'pages/order/index.html'
+      - 'pages/order/page.css'
+      - 'pages/order/adaptive.css'
+      - 'pages/order/cart.css'
+      - 'pages/order/drink-card.css'
+      - 'pages/order/product-card.css'
+      - 'pages/order/pairing-modal.css'
+      - 'shared/adaptive-layout.css'
+      - 'shared/adaptive-layout.js'
+      - 'shared/responsive-pages.css'
+      - 'shared/page-base.css'
 permissions:
   contents: write
 jobs:
@@ -15,6 +29,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Enforce component ownership boundaries
+        run: node scripts/audit-component-ownership.mjs
       - name: Run regression suite and syntax checks
         shell: bash
         run: |
@@ -24,6 +40,12 @@ jobs:
             echo '# SMT Runtime Phase 3 QA'
             echo
             echo "Commit: $(git rev-parse HEAD)"
+            echo
+            echo '## component ownership audit'
+            echo '```text'
+            node scripts/audit-component-ownership.mjs
+            AUDIT_STATUS=$?
+            echo '```'
             echo
             echo '## node --test tests/*.test.mjs'
             echo '```text'
@@ -40,9 +62,10 @@ jobs:
             done
             echo '```'
             echo
+            echo "AUDIT_STATUS=$AUDIT_STATUS"
             echo "TEST_STATUS=$TEST_STATUS"
             echo "SYNTAX_STATUS=$SYNTAX_STATUS"
-            if [ "$TEST_STATUS" -eq 0 ] && [ "$SYNTAX_STATUS" -eq 0 ]; then
+            if [ "$AUDIT_STATUS" -eq 0 ] && [ "$TEST_STATUS" -eq 0 ] && [ "$SYNTAX_STATUS" -eq 0 ]; then
               echo 'RESULT=PASS'
             else
               echo 'RESULT=FAIL'
