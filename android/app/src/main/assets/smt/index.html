@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>磨飯 SMT Foundation</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"PingFang HK","Noto Sans TC",sans-serif;color:#201b18;background:#f6f2ec}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:28px}.shell{width:min(920px,100%);background:#fff;border:1px solid #ded6cd;border-radius:22px;padding:28px;box-shadow:0 18px 60px rgba(44,34,24,.08)}h1{margin:0 0 6px;font-size:30px}p{margin:0;color:#71675f}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}.card{border:1px solid #e4ddd6;border-radius:16px;padding:16px;background:#fcfaf7}.card small{display:block;color:#8a7e74;margin-bottom:7px}.card strong{font-size:17px;word-break:break-word}.ok{color:#247a48}.bad{color:#a83b2f}pre{white-space:pre-wrap;word-break:break-word;background:#211d1a;color:#f8f5f0;padding:16px;border-radius:14px;max-height:240px;overflow:auto;margin:18px 0 0}button{margin-top:20px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#201b18;color:#fff;font-weight:800;font-size:16px}@media(max-width:680px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <h1>磨飯 SMT｜APK Foundation</h1>
+    <p>本頁只驗證 Android Shell／Native Bridge。唔代表正式 SMT UI 已接入。</p>
+    <section class="grid">
+      <article class="card"><small>Bridge</small><strong id="bridge">檢查中…</strong></article>
+      <article class="card"><small>Capabilities</small><strong id="capabilities">檢查中…</strong></article>
+      <article class="card"><small>Device</small><strong id="device">檢查中…</strong></article>
+      <article class="card"><small>Network</small><strong id="network">檢查中…</strong></article>
+    </section>
+    <button id="refresh" type="button">重新檢查</button>
+    <pre id="log">Bridge diagnostic ready.</pre>
+  </main>
+<script>
+const el=id=>document.getElementById(id);
+let seq=0;
+function call(method,params={}){
+  return new Promise((resolve,reject)=>{
+    if(!window.MoreFunNative?.postMessage){reject(new Error('Native Bridge 未注入'));return;}
+    const id=`web-${Date.now()}-${++seq}`;
+    const raw=window.MoreFunNative.postMessage(JSON.stringify({id,method,params}));
+    try{
+      const data=typeof raw==='string'?JSON.parse(raw):raw;
+      if(data?.ok)resolve(data.result);else reject(new Error(data?.error?.message||'Bridge call failed'));
+    }catch(error){reject(error)}
+  });
+}
+function write(id,text,ok=true){const node=el(id);node.textContent=text;node.className=ok?'ok':'bad'}
+async function run(){
+  try{
+    const version=await call('bridge.getVersion');
+    write('bridge',`${version.appVersion}｜Bridge ${version.bridgeVersion}｜Web ${version.webBundleVersion}`);
+    const caps=await call('bridge.getCapabilities');
+    write('capabilities',(caps.capabilities||[]).join('／')||'無');
+    const device=await call('device.getInfo');
+    write('device',`${device.terminalId}｜${device.manufacturer} ${device.model}｜Android API ${device.sdkInt}`);
+    const network=await call('network.getStatus');
+    write('network',network.connected?`在線｜${network.transport}`:`離線｜${network.transport}`,network.connected);
+    el('log').textContent=JSON.stringify({version,caps,device,network},null,2);
+  }catch(error){
+    ['bridge','capabilities','device','network'].forEach(id=>write(id,error.message,false));
+    el('log').textContent=String(error?.stack||error);
+  }
+}
+el('refresh').addEventListener('click',run);
+run();
+</script>
+</body>
+</html>
