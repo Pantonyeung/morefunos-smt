@@ -9,6 +9,15 @@ test('removes a fully cart-owned rule',()=>{
   assert.equal(result.removedSelectors,1);
 });
 
+test('removes cart rule after a legacy comment while preserving the comment',()=>{
+  const input='/* order-v1-9: legacy */\n.cart-row{display:grid}\n.specified-link-card{width:620px}';
+  const result=cleanupCartLegacy(input);
+  assert.match(result.css,/\/\* order-v1-9: legacy \*\//);
+  assert.doesNotMatch(result.css,/\.cart-row\{/);
+  assert.match(result.css,/\.specified-link-card\{width:620px\}/);
+  assert.equal(result.removedSelectors,1);
+});
+
 test('rewrites mixed page composition selector without deleting catalog',()=>{
   const input='.cart,\n.catalog{background:#fff}.products{display:grid}';
   const result=cleanupCartLegacy(input);
