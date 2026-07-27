@@ -25,6 +25,8 @@ jobs:
           grep -q '@JavascriptInterface' android/app/src/main/java/hk/morefun/smt/LegacyBridgeAdapter.kt
           grep -q 'WebViewFeature.WEB_MESSAGE_LISTENER' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
           grep -q 'WebViewCompat.addWebMessageListener' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          grep -q 'assets/smt/index.html' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          test ! -f android/app/src/main/assets/index.html
           grep -q 'minSdk = 23' android/app/build.gradle.kts
           grep -q 'androidx.webkit:webkit:1.15.0' android/app/build.gradle.kts
           grep -q '"device.info"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
@@ -33,6 +35,20 @@ jobs:
           ! grep -q '"print.sunmi.native"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
           ! grep -q '"offline.queue"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
           ! grep -q '"update.channel"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+
+      - name: Assert legacy Android 6 WebView diagnostic syntax
+        shell: bash
+        run: |
+          file=android/app/src/main/assets/smt/index.html
+          test -f "$file"
+          if grep -En '\?\.|=>|\bconst\b|\blet\b|\basync\b|\bawait\b' "$file"; then
+            echo 'Foundation diagnostic contains syntax that may not parse on old Android 6 WebView.'
+            exit 1
+          fi
+          grep -q 'window.__moreFunLegacyBridgeReceive' "$file"
+          grep -q "mode:'binary'" "$file"
+          grep -q "commandLanguage:'escpos'" "$file"
+          grep -q "commandLanguage:'tspl'" "$file"
 
       - uses: actions/setup-java@v4
         with:
