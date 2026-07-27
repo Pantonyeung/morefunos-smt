@@ -11,5 +11,10 @@ assert.ok(workflow.includes("grep -q '^RESULT=PASS$'"),'workflow must hard-fail 
 assert.ok(workflow.includes('playwright-responsive-report'),'browser diagnostics must remain downloadable as an artifact');
 assert.ok(workflow.includes("tests/**/*.spec.js"),'browser spec changes must trigger permanent QA');
 assert.ok(workflow.includes("pages/order/**"),'order runtime changes must trigger permanent QA');
+assert.ok(workflow.includes('NPM_SETUP_OUTCOME'),'dependency setup outcome must be written into the report path');
+assert.ok(workflow.includes('BROWSER_SETUP_OUTCOME'),'browser installation outcome must be written into the report path');
+assert.ok(workflow.includes('SERVER_SETUP_OUTCOME'),'static server setup outcome must be written into the report path');
+assert.ok(workflow.includes('Browser matrix skipped because QA environment setup did not complete.'),'setup failure must remain explicit instead of silently keeping an old report');
+assert.ok(workflow.includes('if: always()'),'QA reporting must survive non-fatal setup failures');
 
 console.log('SMT_QA_PIPELINE_SINGLE_AUTHORITY_OK');
