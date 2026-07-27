@@ -34,6 +34,9 @@ jobs:
       - name: Apply guarded V1 Cart legacy cleanup
         run: node scripts/cleanup-order-page-cart-legacy.mjs
 
+      - name: Migrate Cart regression assertions to final authority
+        run: node scripts/migrate-order-edit-flow-cart-authority.mjs
+
       - name: Assert V1 legacy selectors are absent
         run: |
           if grep -En '\.cart-row\s*\{|\.cart-img\s*\{|\.cart-actions\s*\{|\.pending-area\s*\{|\.cart[[:space:]]+footer\s*\{' pages/order/page.css; then
@@ -62,9 +65,9 @@ jobs:
         run: |
           git config user.name 'MoreFun Cart Authority QA'
           git config user.email 'actions@users.noreply.github.com'
-          git add pages/order/page.css
+          git add pages/order/page.css tests/order-edit-flow.test.mjs
           if git diff --cached --quiet; then
-            echo 'No page.css cleanup change required.'
+            echo 'No V1 cleanup change required.'
             exit 0
           fi
           git commit -m 'refactor(order): physically remove V1 cart legacy authority'
