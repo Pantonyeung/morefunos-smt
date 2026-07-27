@@ -1,21 +1,25 @@
 import assert from 'node:assert/strict';
-import {printerCanHandle,setPrimaryPrinter,setFallbackPrinter,resolvePrinterRoute,failoverPrintJob} from '../pages/more/printer-routing.js';
+import {printerCanHandle,inferredSupportedDocuments,setPrimaryPrinter,setFallbackPrinter,resolvePrinterRoute,failoverPrintJob} from '../pages/more/printer-routing.js';
 
 const state={
   printers:[
-    {id:'receipt',enabled:true,purposes:['receipt']},
-    {id:'kitchen',enabled:true,purposes:['production','packing','receipt']},
-    {id:'packing',enabled:true,purposes:['packing','receipt']},
-    {id:'label-a',enabled:true,purposes:['label']},
-    {id:'label-b',enabled:true,purposes:['label-backup']}
+    {id:'receipt',enabled:true,paperWidth:80,purposes:['receipt']},
+    {id:'kitchen',enabled:true,paperWidth:80,purposes:['production']},
+    {id:'packing',enabled:true,paperWidth:80,purposes:['packing']},
+    {id:'label-a',enabled:true,paperWidth:50,purposes:['label']},
+    {id:'label-b',enabled:true,paperWidth:50,purposes:['label-backup']}
   ],
   routes:{receipt:'receipt',production:'kitchen',packing:'packing',label:'label-a'},
   fallbackRoutes:{receipt:'packing',packing:'kitchen',label:'label-b'},
   fallbackMode:'manual'
 };
 
+assert.deepEqual(inferredSupportedDocuments(state.printers[0]),['receipt','production','packing']);
+assert.deepEqual(inferredSupportedDocuments(state.printers[3]),['label']);
 assert.equal(printerCanHandle(state.printers[1],'packing'),true);
+assert.equal(printerCanHandle(state.printers[2],'receipt'),true);
 assert.equal(printerCanHandle(state.printers[4],'label'),true);
+assert.equal(printerCanHandle(state.printers[3],'receipt'),false);
 assert.equal(resolvePrinterRoute(state,'packing').printer.id,'packing');
 assert.equal(resolvePrinterRoute(state,'packing',{primaryUnavailable:true}).printer.id,'kitchen');
 assert.equal(resolvePrinterRoute(state,'label',{primaryUnavailable:true}).printer.id,'label-b');
