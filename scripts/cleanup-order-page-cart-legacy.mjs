@@ -87,6 +87,21 @@ function previousBoundary(css,index){
   return Math.max(semi,close)+1;
 }
 
+function peelLeadingComments(prelude){
+  let rest=prelude;
+  let comments='';
+  while(true){
+    const match=rest.match(/^(\s*\/\*[\s\S]*?\*\/)/);
+    if(!match)break;
+    comments+=match[1];
+    rest=rest.slice(match[1].length);
+  }
+  const leadingWhitespace=rest.match(/^\s*/)?.[0]||'';
+  comments+=leadingWhitespace;
+  rest=rest.slice(leadingWhitespace.length);
+  return {comments,selectorText:rest.trim()};
+}
+
 export function cleanupCartLegacy(css){
   let cursor=0;
   let output='';
@@ -100,7 +115,8 @@ export function cleanupCartLegacy(css){
     const boundary=previousBoundary(css,open);
     if(boundary<cursor){output+=css.slice(cursor,open+1);cursor=open+1;continue;}
     const rawPrefix=css.slice(cursor,boundary);
-    const selectorText=css.slice(boundary,open).trim();
+    const prelude=css.slice(boundary,open);
+    const {comments,selectorText}=peelLeadingComments(prelude);
 
     if(selectorText.startsWith('@')){
       const close=findMatchingBrace(css,open);
@@ -121,7 +137,7 @@ export function cleanupCartLegacy(css){
     }
 
     removedSelectors+=removed;
-    output+=rawPrefix;
+    output+=rawPrefix+comments;
     if(kept.length){
       output+=`${kept.join(',\n')} ${css.slice(open,close+1)}`;
       rewrittenRules+=1;
@@ -137,7 +153,7 @@ export function cleanupCartLegacy(css){
 function assertSafeResult(result){
   if(result.removedSelectors<25)throw new Error(`Expected at least 25 cart-owned selectors, removed ${result.removedSelectors}`);
   if(result.removedSelectors>90)throw new Error(`Refusing unexpectedly broad cleanup: ${result.removedSelectors} selectors`);
-  const forbidden=['.cart-row {','.cart-img {','.cart-actions {','.pending-area{','.pending-area {','.cart footer {'];
+  const forbidden=['.cart-row {','.cart-row{','.cart-img {','.cart-img{','.cart-actions {','.cart-actions{','.pending-area{','.pending-area {','.cart footer {','.cart footer{'];
   for(const needle of forbidden){if(result.css.includes(needle))throw new Error(`Cart legacy selector remains: ${needle}`);}
   const mustRemain=['.drink-choice-card','.product-card','.specified-link-card','.catalog'];
   for(const needle of mustRemain){if(!result.css.includes(needle))throw new Error(`Non-cart authority was removed unexpectedly: ${needle}`);}
