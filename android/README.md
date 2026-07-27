@@ -51,5 +51,7 @@ Android Native 只提供裝置／平台能力：WebView Shell、Bridge capabilit
 Base workflow：`.github/workflows/apk-foundation-contract.yml`
 工具鏈：JDK 17、Gradle 9.5.0、AGP 9.3.0、compileSdk/targetSdk 36、Build Tools 36.0.0、minSdk 23、WebKit 1.15.0。
 
+Authority Gate 現時必須驗證 verified `/runtime/` bundle 優先、packaged `assets/smt` factory fallback、Version Vault／Offline Queue／HostActions 真實實作；禁止再用舊 diagnostic-only literal 作完成判斷。
+
 成功標準：`gradle -p android :app:assembleDebug` PASS 並產生 APK artifact。
 CI Build PASS 只代表可編譯；未有實機證據前不得標 Production Lock。
