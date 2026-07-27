@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "project": "morefunos-smt",
-  "branch": "feat/smt-order-page-v1",
-  "baseline": "order-v1-31",
+  "branch": "smt-functional-completeness-v1",
+  "baseline": "smt-functional-completeness-v1",
   "requiredFiles": [
     "AGENTS.md",
     "SMT_AI_START_HERE.md",
