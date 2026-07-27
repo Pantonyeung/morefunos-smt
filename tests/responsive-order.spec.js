@@ -13,7 +13,7 @@ async function orderFrame(page){
 }
 
 for(const [width,height] of sizes){
-  test(`order page fits and remains operable at ${width}x${height}`,async({page})=>{
+  test(`order page fits and keeps component contracts at ${width}x${height}`,async({page})=>{
     await page.setViewportSize({width,height});
     await page.goto(APP,{waitUntil:'domcontentloaded'});
     const frame=await orderFrame(page);
@@ -27,8 +27,17 @@ for(const [width,height] of sizes){
       const catalog=document.querySelector('.catalog')?.getBoundingClientRect();
       const primary=document.querySelector('.cart footer .primary')?.getBoundingClientRect();
       const cards=[...document.querySelectorAll('.product-card:not([disabled])')].slice(0,2).map(node=>node.getBoundingClientRect());
-      return {innerWidth,innerHeight,cart,catalog,primary,cards};
+      const rootStyle=getComputedStyle(document.documentElement);
+      const imageToken=parseFloat(rootStyle.getPropertyValue('--adaptive-cart-image'))||0;
+      const markerToken=parseFloat(rootStyle.getPropertyValue('--adaptive-cart-marker'))||0;
+      const hero=document.querySelector('.product-card.large:not(.no-product-image) .product-hero');
+      const heroImg=hero?.querySelector('img');
+      const heroRect=hero?.getBoundingClientRect();
+      const heroImgRect=heroImg?.getBoundingClientRect();
+      const heroFit=heroImg?getComputedStyle(heroImg).objectFit:'';
+      return {innerWidth,innerHeight,cart,catalog,primary,cards,imageToken,markerToken,heroRect,heroImgRect,heroFit};
     });
+
     for(const rect of [layout.cart,layout.catalog,layout.primary]){
       expect(rect).toBeTruthy();
       expect(rect.left).toBeGreaterThanOrEqual(0);
@@ -42,15 +51,57 @@ for(const [width,height] of sizes){
       expect(overlap).toBeFalsy();
     }
 
-    await frame.locator('.product-card:not([disabled])').first().click({force:true});
-    const modal=frame.locator('.modal-card,.confirm-card').last();
-    if(await modal.count()){
-      await expect(modal).toBeVisible();
-      const rect=await modal.evaluate(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:innerWidth,height:innerHeight};});
-      expect(rect.left).toBeGreaterThanOrEqual(-1);
-      expect(rect.right).toBeLessThanOrEqual(rect.width+1);
-      expect(rect.top).toBeGreaterThanOrEqual(-1);
-      expect(rect.bottom).toBeLessThanOrEqual(rect.height+1);
+    expect(layout.imageToken).toBeGreaterThan(0);
+    expect(layout.markerToken/layout.imageToken).toBeCloseTo(.9,2);
+    if(layout.heroRect&&layout.heroImgRect){
+      expect(layout.heroFit).toBe('contain');
+      expect(layout.heroImgRect.width/layout.heroRect.width).toBeLessThanOrEqual(.72);
+      expect(layout.heroImgRect.height/layout.heroRect.height).toBeLessThanOrEqual(.72);
+      expect(layout.heroImgRect.width/layout.heroRect.width).toBeGreaterThan(.5);
+      expect(layout.heroImgRect.height/layout.heroRect.height).toBeGreaterThan(.5);
+    }
+
+    const quickHandle=frame.locator('[data-action="toggle-quick-drawer"]').first();
+    if(await quickHandle.count()){
+      await quickHandle.click();
+      const drink=frame.locator('.quick-drawer-panel .drink-choice-card.is-image').first();
+      if(await drink.count()){
+        await expect(drink).toBeVisible();
+        const drinkVisual=await drink.evaluate(node=>{
+          const shell=node.querySelector('.drink-choice-img');
+          const img=shell?.querySelector('img');
+          const shellRect=shell?.getBoundingClientRect();
+          const imgRect=img?.getBoundingClientRect();
+          return {fit:img?getComputedStyle(img).objectFit:'',shellRect,imgRect};
+        });
+        if(drinkVisual.shellRect&&drinkVisual.imgRect){
+          expect(drinkVisual.fit).toBe('contain');
+          expect(drinkVisual.imgRect.width/drinkVisual.shellRect.width).toBeLessThanOrEqual(.72);
+          expect(drinkVisual.imgRect.height/drinkVisual.shellRect.height).toBeLessThanOrEqual(.72);
+        }
+      }
+    }
+
+    const pairingButton=frame.locator('[data-action="open-specified-link"]').first();
+    if(await pairingButton.count()){
+      await pairingButton.click();
+      const pairing=frame.locator('.specified-link-card').last();
+      if(await pairing.count()){
+        await expect(pairing).toBeVisible();
+        const modal=await pairing.evaluate(node=>{
+          const r=node.getBoundingClientRect();
+          const footer=node.querySelector('footer')?.getBoundingClientRect();
+          const body=node.querySelector('.pairing-body')?.getBoundingClientRect();
+          return {rect:r,footer,body,viewportHeight:innerHeight};
+        });
+        expect(modal.rect.top).toBeGreaterThanOrEqual(-1);
+        expect(modal.rect.bottom).toBeLessThanOrEqual(modal.viewportHeight+1);
+        if(modal.footer){
+          expect(modal.footer.top).toBeGreaterThanOrEqual(modal.rect.top-1);
+          expect(modal.footer.bottom).toBeLessThanOrEqual(modal.rect.bottom+1);
+        }
+        if(modal.body&&modal.footer)expect(modal.body.bottom).toBeLessThanOrEqual(modal.footer.top+1);
+      }
     }
   });
 }
