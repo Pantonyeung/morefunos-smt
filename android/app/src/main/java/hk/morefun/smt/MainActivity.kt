@@ -41,6 +41,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        if (::bridge.isInitialized) bridge.close()
         if (::webView.isInitialized) {
             webView.stopLoading()
             webView.removeAllViews()
@@ -73,8 +74,7 @@ class MainActivity : Activity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url ?: return true
                 val allowed = url.scheme == "https" && url.host == "appassets.androidplatform.net"
-                if (allowed) return false
-                return true
+                return !allowed
             }
         }
 
@@ -93,8 +93,11 @@ class MainActivity : Activity() {
                 replyProxy.postMessage("{\"ok\":false,\"error\":{\"code\":\"INVALID_ORIGIN\",\"message\":\"Bridge origin rejected\"}}")
                 return@addWebMessageListener
             }
-            val response = bridge.handle(message.data ?: "")
-            replyProxy.postMessage(response)
+            bridge.handle(message.data ?: "") { response ->
+                runOnUiThread {
+                    replyProxy.postMessage(response)
+                }
+            }
         }
     }
 
