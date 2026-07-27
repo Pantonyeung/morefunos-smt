@@ -1,6 +1,6 @@
 # SMT Runtime Phase 3 QA
 
-Commit: 19fb843906f4901141d6cab0a82398249e8c90b4
+Commit: 6efd4de6eb886103d4702b3e08a07fc7cfdcb3e5
 
 ## component ownership audit
 ```text
@@ -41,362 +41,390 @@ TAP version 13
 # Subtest: Work and Chat entries point to current baseline
 ok 1 - Work and Chat entries point to current baseline
   ---
-  duration_ms: 11.508197
+  duration_ms: 9.143439
   type: 'test'
   ...
 # Subtest: knowledge graph edges resolve and carry evidence
 ok 2 - knowledge graph edges resolve and carry evidence
   ---
-  duration_ms: 2.487188
+  duration_ms: 2.285314
   type: 'test'
   ...
 # Subtest: status separates automation from device acceptance
 ok 3 - status separates automation from device acceptance
   ---
-  duration_ms: 3.574941
+  duration_ms: 2.742792
   type: 'test'
   ...
 # SMT_CART_CHECKOUT_CORE_V7_OK
 # Subtest: tests/cart-checkout-regression-v2.test.mjs
 ok 2 - tests/cart-checkout-regression-v2.test.mjs
   ---
-  duration_ms: 41.073219
+  duration_ms: 48.321501
   type: 'test'
   ...
-# Subtest: 分類版面設定只接受每行五至七格、一至兩行及搜尋開關
-ok 5 - 分類版面設定只接受每行五至七格、一至兩行及搜尋開關
+# node:internal/modules/run_main:123
+#     triggerUncaughtException(
+#     ^
+# AssertionError [ERR_ASSERTION]: DOM source order must be 外/堂 first, sequence second
+#     at file:///home/runner/work/morefunos-smt/morefunos-smt/tests/cart-marker-dom-contract.test.mjs:13:8
+#     at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+#     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+#     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+#   generatedMessage: false,
+#   code: 'ERR_ASSERTION',
+#   actual: false,
+#   expected: true,
+#   operator: '==',
+#   diff: 'simple'
+# }
+# Node.js v22.23.1
+# Subtest: tests/cart-marker-dom-contract.test.mjs
+not ok 3 - tests/cart-marker-dom-contract.test.mjs
   ---
-  duration_ms: 2.194431
+  duration_ms: 51.198331
+  type: 'test'
+  location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/cart-marker-dom-contract.test.mjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: 分類版面設定只接受每行五至七格、一至兩行及搜尋開關
+ok 6 - 分類版面設定只接受每行五至七格、一至兩行及搜尋開關
+  ---
+  duration_ms: 1.825463
   type: 'test'
   ...
 # Subtest: 搜尋開啟時佔最後一行最後一格，超出首屏分類保留在可操作溢出清單
-ok 6 - 搜尋開啟時佔最後一行最後一格，超出首屏分類保留在可操作溢出清單
+ok 7 - 搜尋開啟時佔最後一行最後一格，超出首屏分類保留在可操作溢出清單
   ---
-  duration_ms: 0.600793
+  duration_ms: 0.532358
   type: 'test'
   ...
 # Subtest: 學生優惠只將六元或以上合資格特飲的加價減半，普通凍檸茶不減價
-ok 7 - 學生優惠只將六元或以上合資格特飲的加價減半，普通凍檸茶不減價
+ok 8 - 學生優惠只將六元或以上合資格特飲的加價減半，普通凍檸茶不減價
   ---
-  duration_ms: 2.515431
+  duration_ms: 2.063786
   type: 'test'
   ...
 # Subtest: 學生優惠人數不可超過合資格飲品數量
-ok 8 - 學生優惠人數不可超過合資格飲品數量
+ok 9 - 學生優惠人數不可超過合資格飲品數量
   ---
-  duration_ms: 0.472874
+  duration_ms: 0.416557
   type: 'test'
   ...
 # Subtest: 未有明確資格或特飲加價少於六元，一律不可自行推斷為學生優惠
-ok 9 - 未有明確資格或特飲加價少於六元，一律不可自行推斷為學生優惠
+ok 10 - 未有明確資格或特飲加價少於六元，一律不可自行推斷為學生優惠
   ---
-  duration_ms: 0.489043
+  duration_ms: 0.479741
   type: 'test'
   ...
 # Subtest: 團體整單折扣與學生優惠互斥，現場可使用
-ok 10 - 團體整單折扣與學生優惠互斥，現場可使用
+ok 11 - 團體整單折扣與學生優惠互斥，現場可使用
   ---
-  duration_ms: 0.351617
+  duration_ms: 0.273695
   type: 'test'
   ...
 # Subtest: 平台訂單不可使用本店優惠
-ok 11 - 平台訂單不可使用本店優惠
+ok 12 - 平台訂單不可使用本店優惠
   ---
-  duration_ms: 0.763517
+  duration_ms: 0.703622
   type: 'test'
   ...
 # Subtest: 數字鍵盤支援數字、小數、退格及清除
-ok 12 - 數字鍵盤支援數字、小數、退格及清除
+ok 13 - 數字鍵盤支援數字、小數、退格及清除
   ---
-  duration_ms: 0.391692
+  duration_ms: 0.377088
   type: 'test'
   ...
 # Subtest: 數字鍵盤的 00 是獨立雙零鍵
-ok 13 - 數字鍵盤的 00 是獨立雙零鍵
+ok 14 - 數字鍵盤的 00 是獨立雙零鍵
   ---
-  duration_ms: 0.332502
+  duration_ms: 0.331541
   type: 'test'
   ...
 # Subtest: 完成結帳保存優惠、應付金額及實際操作終端
-ok 14 - 完成結帳保存優惠、應付金額及實際操作終端
+ok 15 - 完成結帳保存優惠、應付金額及實際操作終端
   ---
-  duration_ms: 1.496828
+  duration_ms: 1.231925
   type: 'test'
   ...
 # Subtest: 渠道政策只容許現場單選付款方式，其他渠道只收必要參考資料
-ok 15 - 渠道政策只容許現場單選付款方式，其他渠道只收必要參考資料
+ok 16 - 渠道政策只容許現場單選付款方式，其他渠道只收必要參考資料
   ---
-  duration_ms: 1.443738
+  duration_ms: 1.354976
   type: 'test'
   ...
 # Subtest: 現場渠道不提供稍後付款
-ok 16 - 現場渠道不提供稍後付款
+ok 17 - 現場渠道不提供稍後付款
   ---
-  duration_ms: 0.932172
+  duration_ms: 0.859843
   type: 'test'
   ...
 # Subtest: 自有渠道不猜付款方式，平台訂單分開保存佣金及預計結算
-ok 17 - 自有渠道不猜付款方式，平台訂單分開保存佣金及預計結算
+ok 18 - 自有渠道不猜付款方式，平台訂單分開保存佣金及預計結算
   ---
-  duration_ms: 2.400246
+  duration_ms: 1.773056
   type: 'test'
   ...
 # Subtest: 零元訂單不可建立付款紀錄
-ok 18 - 零元訂單不可建立付款紀錄
+ok 19 - 零元訂單不可建立付款紀錄
   ---
-  duration_ms: 0.29958
+  duration_ms: 0.280796
   type: 'test'
   ...
 # Subtest: 結帳頁使用共用三位每日流水及永久訂單識別
-ok 19 - 結帳頁使用共用三位每日流水及永久訂單識別
+ok 20 - 結帳頁使用共用三位每日流水及永久訂單識別
   ---
-  duration_ms: 23.450785
+  duration_ms: 16.574148
   type: 'test'
   ...
 # Subtest: 結帳紀錄同時保存永久編號及每日顯示流水
-ok 20 - 結帳紀錄同時保存永久編號及每日顯示流水
+ok 21 - 結帳紀錄同時保存永久編號及每日顯示流水
   ---
-  duration_ms: 0.563914
+  duration_ms: 0.586218
   type: 'test'
   ...
 # Subtest: 結帳頂部只顯示狀態資料，不保留假快捷金額按鈕
-ok 21 - 結帳頂部只顯示狀態資料，不保留假快捷金額按鈕
+ok 22 - 結帳頂部只顯示狀態資料，不保留假快捷金額按鈕
   ---
-  duration_ms: 1.772161
+  duration_ms: 1.353204
   type: 'test'
   ...
 # Subtest: 結帳頁保留數字鍵盤而不顯示底部主導航
-ok 22 - 結帳頁保留數字鍵盤而不顯示底部主導航
+ok 23 - 結帳頁保留數字鍵盤而不顯示底部主導航
   ---
-  duration_ms: 0.441946
+  duration_ms: 0.338962
   type: 'test'
   ...
 # Subtest: 詳情操作固定提供返回訂單及優惠兩欄
-ok 23 - 詳情操作固定提供返回訂單及優惠兩欄
+ok 24 - 詳情操作固定提供返回訂單及優惠兩欄
   ---
-  duration_ms: 0.237584
+  duration_ms: 0.168629
   type: 'test'
   ...
 # Subtest: 付款區及現金鍵盤由渠道政策動態控制而非所有渠道全部顯示
-ok 24 - 付款區及現金鍵盤由渠道政策動態控制而非所有渠道全部顯示
+ok 25 - 付款區及現金鍵盤由渠道政策動態控制而非所有渠道全部顯示
   ---
-  duration_ms: 0.28933
+  duration_ms: 0.256921
   type: 'test'
   ...
 # Subtest: 結帳完成保留核對卡並提供有原因的更正資料入口
-ok 25 - 結帳完成保留核對卡並提供有原因的更正資料入口
+ok 26 - 結帳完成保留核對卡並提供有原因的更正資料入口
   ---
-  duration_ms: 0.241932
+  duration_ms: 0.203932
   type: 'test'
   ...
 # Subtest: 非現場渠道有對應的備註、取餐碼、核對碼或平台單號欄位
-ok 26 - 非現場渠道有對應的備註、取餐碼、核對碼或平台單號欄位
+ok 27 - 非現場渠道有對應的備註、取餐碼、核對碼或平台單號欄位
   ---
-  duration_ms: 0.227115
+  duration_ms: 0.141539
   type: 'test'
   ...
 # Subtest: 快捷金額固定在大鍵盤上方，現場轉換付款方式亦不收起鍵盤
-ok 27 - 快捷金額固定在大鍵盤上方，現場轉換付款方式亦不收起鍵盤
+ok 28 - 快捷金額固定在大鍵盤上方，現場轉換付款方式亦不收起鍵盤
   ---
-  duration_ms: 0.488162
+  duration_ms: 0.31793
   type: 'test'
   ...
 # Subtest: 已收框是唯一金額輸入顯示並在輸入狀態發光
-ok 28 - 已收框是唯一金額輸入顯示並在輸入狀態發光
+ok 29 - 已收框是唯一金額輸入顯示並在輸入狀態發光
   ---
-  duration_ms: 0.268942
+  duration_ms: 0.253616
   type: 'test'
   ...
 # Subtest: 渠道及付款方式引用大圖標 WebP 資源並採用上圖下字
-ok 29 - 渠道及付款方式引用大圖標 WebP 資源並採用上圖下字
+ok 30 - 渠道及付款方式引用大圖標 WebP 資源並採用上圖下字
   ---
-  duration_ms: 0.666426
+  duration_ms: 0.473731
   type: 'test'
   ...
 # Subtest: 數字鍵盤使用四行放大按鍵
-ok 30 - 數字鍵盤使用四行放大按鍵
+ok 31 - 數字鍵盤使用四行放大按鍵
   ---
-  duration_ms: 0.570326
+  duration_ms: 0.56081
   type: 'test'
   ...
 # Subtest: 零元時確認按鈕停用並顯示清楚原因
-ok 31 - 零元時確認按鈕停用並顯示清楚原因
+ok 32 - 零元時確認按鈕停用並顯示清楚原因
   ---
-  duration_ms: 0.34817
+  duration_ms: 0.309778
   type: 'test'
   ...
 # Subtest: 任何渠道的確認結帳操作永遠固定在付款欄最底
-ok 32 - 任何渠道的確認結帳操作永遠固定在付款欄最底
+ok 33 - 任何渠道的確認結帳操作永遠固定在付款欄最底
   ---
-  duration_ms: 0.300081
+  duration_ms: 0.271802
   type: 'test'
   ...
 # Subtest: 堂食頁固定顯示八張室內枱及戶外枱
-ok 33 - 堂食頁固定顯示八張室內枱及戶外枱
+ok 34 - 堂食頁固定顯示八張室內枱及戶外枱
   ---
-  duration_ms: 8.430255
+  duration_ms: 3.812225
   type: 'test'
   ...
 # Subtest: 三十五分鐘提示只標記枱卡，不增加第三種枱位狀態
-ok 34 - 三十五分鐘提示只標記枱卡，不增加第三種枱位狀態
+ok 35 - 三十五分鐘提示只標記枱卡，不增加第三種枱位狀態
   ---
-  duration_ms: 0.824571
+  duration_ms: 0.494412
   type: 'test'
   ...
 # Subtest: 逐餐品付款可拆數量並鎖定已付款數量
-ok 35 - 逐餐品付款可拆數量並鎖定已付款數量
+ok 36 - 逐餐品付款可拆數量並鎖定已付款數量
   ---
-  duration_ms: 1.26832
+  duration_ms: 0.802578
   type: 'test'
   ...
 # Subtest: 堂食付款歸零會建立現場歷史訂單並即時清空枱位
-ok 36 - 堂食付款歸零會建立現場歷史訂單並即時清空枱位
+ok 37 - 堂食付款歸零會建立現場歷史訂單並即時清空枱位
   ---
-  duration_ms: 2.067103
+  duration_ms: 1.778794
   type: 'test'
   ...
 # Subtest: 堂食正式落單即鎖定流水並保存到製作工作，跨營業日付款亦不改號
-ok 37 - 堂食正式落單即鎖定流水並保存到製作工作，跨營業日付款亦不改號
+ok 38 - 堂食正式落單即鎖定流水並保存到製作工作，跨營業日付款亦不改號
   ---
-  duration_ms: 0.926231
+  duration_ms: 0.676782
   type: 'test'
   ...
 # Subtest: 同時使用中的堂食枱亦會佔用每日流水避免撞號
-ok 38 - 同時使用中的堂食枱亦會佔用每日流水避免撞號
+ok 39 - 同時使用中的堂食枱亦會佔用每日流水避免撞號
   ---
-  duration_ms: 2.080427
+  duration_ms: 0.538748
   type: 'test'
   ...
 # Subtest: 舊版未有識別的堂食枱直接付款時會避開其他活躍枱流水
-ok 39 - 舊版未有識別的堂食枱直接付款時會避開其他活躍枱流水
+ok 40 - 舊版未有識別的堂食枱直接付款時會避開其他活躍枱流水
   ---
-  duration_ms: 0.622494
+  duration_ms: 0.595301
   type: 'test'
   ...
 # Subtest: 載入舊資料時會補救已付清但未清枱的堂食會話，且不重複寫歷史
-ok 40 - 載入舊資料時會補救已付清但未清枱的堂食會話，且不重複寫歷史
+ok 41 - 載入舊資料時會補救已付清但未清枱的堂食會話，且不重複寫歷史
   ---
-  duration_ms: 0.619137
+  duration_ms: 0.592046
   type: 'test'
   ...
 # Subtest: 堂食掃碼提交保持待確認，確認後才加入落單記錄
-ok 41 - 堂食掃碼提交保持待確認，確認後才加入落單記錄
+ok 42 - 堂食掃碼提交保持待確認，確認後才加入落單記錄
   ---
-  duration_ms: 0.742037
+  duration_ms: 0.684483
   type: 'test'
   ...
 # Subtest: 員工堂食點餐會建立指定枱會話內容，金額及批次由同一批餐品計算
-ok 42 - 員工堂食點餐會建立指定枱會話內容，金額及批次由同一批餐品計算
+ok 43 - 員工堂食點餐會建立指定枱會話內容，金額及批次由同一批餐品計算
   ---
-  duration_ms: 1.270074
+  duration_ms: 0.795748
   type: 'test'
   ...
 # Subtest: 堂食枱面摘要提供營運所需時間、餐點及數量資料
-ok 43 - 堂食枱面摘要提供營運所需時間、餐點及數量資料
+ok 44 - 堂食枱面摘要提供營運所需時間、餐點及數量資料
   ---
-  duration_ms: 0.459338
+  duration_ms: 0.322618
   type: 'test'
   ...
 # Subtest: 堂食點餐拒絕寫入已失效的舊會話，避免餐品掛錯枱
-ok 44 - 堂食點餐拒絕寫入已失效的舊會話，避免餐品掛錯枱
+ok 45 - 堂食點餐拒絕寫入已失效的舊會話，避免餐品掛錯枱
   ---
-  duration_ms: 0.48114
+  duration_ms: 0.349237
   type: 'test'
   ...
 # Subtest: 空枱開始點餐只建立意圖，正式提交餐品時才開枱
-ok 45 - 空枱開始點餐只建立意圖，正式提交餐品時才開枱
+ok 46 - 空枱開始點餐只建立意圖，正式提交餐品時才開枱
   ---
-  duration_ms: 0.634927
+  duration_ms: 0.450157
   type: 'test'
   ...
 # Subtest: 舊版本遺留的空堂食會話會安全清理，有餐品的會話不受影響
-ok 46 - 舊版本遺留的空堂食會話會安全清理，有餐品的會話不受影響
+ok 47 - 舊版本遺留的空堂食會話會安全清理，有餐品的會話不受影響
   ---
-  duration_ms: 0.488432
+  duration_ms: 0.322628
   type: 'test'
   ...
 # Subtest: 堂食頁提供簡潔枱詳情、半屏待確認及兩層付款操作
-ok 47 - 堂食頁提供簡潔枱詳情、半屏待確認及兩層付款操作
+ok 48 - 堂食頁提供簡潔枱詳情、半屏待確認及兩層付款操作
   ---
-  duration_ms: 0.51913
+  duration_ms: 0.372321
   type: 'test'
   ...
 # Subtest: 正式堂食頁不會自動建立示範枱或示範訂單，掃碼入口標示第二版保留
-ok 48 - 正式堂食頁不會自動建立示範枱或示範訂單，掃碼入口標示第二版保留
+ok 49 - 正式堂食頁不會自動建立示範枱或示範訂單，掃碼入口標示第二版保留
   ---
-  duration_ms: 0.457836
+  duration_ms: 0.309519
   type: 'test'
   ...
 # Subtest: 堂食枱卡直接顯示開枱、三十五分鐘及首三項餐點摘要
-ok 49 - 堂食枱卡直接顯示開枱、三十五分鐘及首三項餐點摘要
+ok 50 - 堂食枱卡直接顯示開枱、三十五分鐘及首三項餐點摘要
   ---
-  duration_ms: 0.380421
+  duration_ms: 0.25622
   type: 'test'
   ...
 # Subtest: 現有點餐及訂單底欄可以進入獨立堂食頁
-ok 50 - 現有點餐及訂單底欄可以進入獨立堂食頁
+ok 51 - 現有點餐及訂單底欄可以進入獨立堂食頁
   ---
-  duration_ms: 1.24728
+  duration_ms: 0.850309
   type: 'test'
   ...
 # Subtest: 堂食點單提供取消入口並同步清除失效堂食脈絡
-ok 51 - 堂食點單提供取消入口並同步清除失效堂食脈絡
+ok 52 - 堂食點單提供取消入口並同步清除失效堂食脈絡
   ---
-  duration_ms: 0.97872
+  duration_ms: 0.733677
   type: 'test'
   ...
 # Subtest: 點單頁兩個堂食落單入口都會讀取完成歷史避免重複流水
-ok 52 - 點單頁兩個堂食落單入口都會讀取完成歷史避免重複流水
+ok 53 - 點單頁兩個堂食落單入口都會讀取完成歷史避免重複流水
   ---
-  duration_ms: 0.507299
+  duration_ms: 1.19556
   type: 'test'
   ...
 # Subtest: 堂食頁最近訂單使用共用時間排序及三位顯示號碼
-ok 53 - 堂食頁最近訂單使用共用時間排序及三位顯示號碼
+ok 54 - 堂食頁最近訂單使用共用時間排序及三位顯示號碼
   ---
-  duration_ms: 1.12363
+  duration_ms: 0.252865
   type: 'test'
   ...
 # Subtest: draft numbers are sequential within each terminal prefix
-ok 54 - draft numbers are sequential within each terminal prefix
+ok 55 - draft numbers are sequential within each terminal prefix
   ---
-  duration_ms: 1.738379
+  duration_ms: 1.31672
   type: 'test'
   ...
 # Subtest: a removed draft number is never reissued after retrieval
-ok 55 - a removed draft number is never reissued after retrieval
+ok 56 - a removed draft number is never reissued after retrieval
   ---
-  duration_ms: 0.558283
+  duration_ms: 0.484287
   type: 'test'
   ...
 # Subtest: saving a cart records terminal ownership and an audit event
-ok 56 - saving a cart records terminal ownership and an audit event
+ok 57 - saving a cart records terminal ownership and an audit event
   ---
-  duration_ms: 0.307134
+  duration_ms: 0.247186
   type: 'test'
   ...
 # Subtest: taking over another terminal draft preserves lineage
-ok 57 - taking over another terminal draft preserves lineage
+ok 58 - taking over another terminal draft preserves lineage
   ---
-  duration_ms: 0.571698
+  duration_ms: 0.545888
   type: 'test'
   ...
 # Subtest: 日結會清空當時所有草稿，而新營業日草稿不會被誤刪
-ok 58 - 日結會清空當時所有草稿，而新營業日草稿不會被誤刪
+ok 59 - 日結會清空當時所有草稿，而新營業日草稿不會被誤刪
   ---
-  duration_ms: 1.790466
+  duration_ms: 1.844361
   type: 'test'
   ...
 # Subtest: a taken-over cart is renumbered under the terminal that saves it again
-ok 59 - a taken-over cart is renumbered under the terminal that saves it again
+ok 60 - a taken-over cart is renumbered under the terminal that saves it again
   ---
-  duration_ms: 0.424614
+  duration_ms: 0.407323
   type: 'test'
   ...
 # Subtest: checkout records which terminal completed the order
-ok 60 - checkout records which terminal completed the order
+ok 61 - checkout records which terminal completed the order
   ---
-  duration_ms: 0.300853
+  duration_ms: 0.282769
   type: 'test'
   ...
 # node:internal/modules/run_main:123
@@ -416,9 +444,9 @@ ok 60 - checkout records which terminal completed the order
 # }
 # Node.js v22.23.1
 # Subtest: tests/global-status-actions-contract.test.mjs
-not ok 8 - tests/global-status-actions-contract.test.mjs
+not ok 9 - tests/global-status-actions-contract.test.mjs
   ---
-  duration_ms: 57.523323
+  duration_ms: 54.58034
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/global-status-actions-contract.test.mjs:1:1'
   failureType: 'testCodeFailure'
@@ -444,9 +472,9 @@ not ok 8 - tests/global-status-actions-contract.test.mjs
 # }
 # Node.js v22.23.1
 # Subtest: tests/health-seal-contract.test.mjs
-not ok 9 - tests/health-seal-contract.test.mjs
+not ok 10 - tests/health-seal-contract.test.mjs
   ---
-  duration_ms: 44.688233
+  duration_ms: 51.102199
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/health-seal-contract.test.mjs:1:1'
   failureType: 'testCodeFailure'
@@ -456,345 +484,345 @@ not ok 9 - tests/health-seal-contract.test.mjs
   code: 'ERR_TEST_FAILURE'
   ...
 # Subtest: Firebase keyed catalog normalizes categories, products and availability
-ok 63 - Firebase keyed catalog normalizes categories, products and availability
+ok 64 - Firebase keyed catalog normalizes categories, products and availability
   ---
-  duration_ms: 3.157811
+  duration_ms: 2.859424
   type: 'test'
   ...
 # Subtest: remote products use live values while inheriting locked SMT behaviour by code
-ok 64 - remote products use live values while inheriting locked SMT behaviour by code
+ok 65 - remote products use live values while inheriting locked SMT behaviour by code
   ---
-  duration_ms: 2.976753
+  duration_ms: 2.37023
   type: 'test'
   ...
 # Subtest: live drink products become quick drinks and retain modifier capabilities
-ok 65 - live drink products become quick drinks and retain modifier capabilities
+ok 66 - live drink products become quick drinks and retain modifier capabilities
   ---
-  duration_ms: 0.645627
+  duration_ms: 0.630253
   type: 'test'
   ...
 # Subtest: menu loader caches a successful response and falls back to cache offline
-ok 66 - menu loader caches a successful response and falls back to cache offline
+ok 67 - menu loader caches a successful response and falls back to cache offline
   ---
-  duration_ms: 1.539247
+  duration_ms: 1.351702
   type: 'test'
   ...
 # Subtest: runtime uses Firebase RTDB and contains no Apps Script transport
-ok 67 - runtime uses Firebase RTDB and contains no Apps Script transport
+ok 68 - runtime uses Firebase RTDB and contains no Apps Script transport
   ---
-  duration_ms: 10.968268
+  duration_ms: 11.547188
   type: 'test'
   ...
 # Subtest: 共用頁面橋接會從正式設定套用主題及聲音狀態
-ok 68 - 共用頁面橋接會從正式設定套用主題及聲音狀態
+ok 69 - 共用頁面橋接會從正式設定套用主題及聲音狀態
   ---
-  duration_ms: 1.815343
+  duration_ms: 2.713568
   type: 'test'
   ...
 # Subtest: 點單頁重載會讀取更多頁保存的快速模式及產品圖片設定
-ok 69 - 點單頁重載會讀取更多頁保存的快速模式及產品圖片設定
+ok 70 - 點單頁重載會讀取更多頁保存的快速模式及產品圖片設定
   ---
-  duration_ms: 0.173764
+  duration_ms: 0.189311
   type: 'test'
   ...
 # Subtest: 正式結帳會建立中央打印工作而不把排隊當成實體成功
-ok 70 - 正式結帳會建立中央打印工作而不把排隊當成實體成功
+ok 71 - 正式結帳會建立中央打印工作而不把排隊當成實體成功
   ---
-  duration_ms: 0.193382
+  duration_ms: 0.18232
   type: 'test'
   ...
 # Subtest: 訂單重印會即時匯入中央打印工作佇列
-ok 71 - 訂單重印會即時匯入中央打印工作佇列
+ok 72 - 訂單重印會即時匯入中央打印工作佇列
   ---
-  duration_ms: 0.151553
+  duration_ms: 0.15522
   type: 'test'
   ...
 # Subtest: 堂食正式落單後會把堂食打印工作匯入中央佇列
-ok 72 - 堂食正式落單後會把堂食打印工作匯入中央佇列
+ok 73 - 堂食正式落單後會把堂食打印工作匯入中央佇列
   ---
-  duration_ms: 0.144109
+  duration_ms: 0.130723
   type: 'test'
   ...
 # Subtest: 營業日固定由早上五時起計並排除上一營業日訂單
-ok 73 - 營業日固定由早上五時起計並排除上一營業日訂單
+ok 74 - 營業日固定由早上五時起計並排除上一營業日訂單
   ---
-  duration_ms: 31.216629
+  duration_ms: 28.054582
   type: 'test'
   ...
 # Subtest: 報表分開淨銷售、付款、平台結算、待核實及打印異常
-ok 74 - 報表分開淨銷售、付款、平台結算、待核實及打印異常
+ok 75 - 報表分開淨銷售、付款、平台結算、待核實及打印異常
   ---
-  duration_ms: 1.294419
+  duration_ms: 1.242369
   type: 'test'
   ...
 # Subtest: 歷史報表支援今日昨日七日三十日三個月六個月及自訂日期
-ok 75 - 歷史報表支援今日昨日七日三十日三個月六個月及自訂日期
+ok 76 - 歷史報表支援今日昨日七日三十日三個月六個月及自訂日期
   ---
-  duration_ms: 3.761389
+  duration_ms: 1.724764
   type: 'test'
   ...
 # Subtest: 選定歷史範圍會由訂單明細重算而不是只讀今日
-ok 76 - 選定歷史範圍會由訂單明細重算而不是只讀今日
+ok 77 - 選定歷史範圍會由訂單明細重算而不是只讀今日
   ---
-  duration_ms: 2.366483
+  duration_ms: 3.598649
   type: 'test'
   ...
 # Subtest: 付款及渠道分拆提供對數欄位、狀態及對應訂單
-ok 77 - 付款及渠道分拆提供對數欄位、狀態及對應訂單
+ok 78 - 付款及渠道分拆提供對數欄位、狀態及對應訂單
   ---
-  duration_ms: 0.603548
+  duration_ms: 0.616603
   type: 'test'
   ...
 # Subtest: 結帳、堂食及舊核數的付款別名會合併到同一對數方式
-ok 78 - 結帳、堂食及舊核數的付款別名會合併到同一對數方式
+ok 79 - 結帳、堂食及舊核數的付款別名會合併到同一對數方式
   ---
-  duration_ms: 2.435621
+  duration_ms: 0.899742
   type: 'test'
   ...
 # Subtest: 未知付款方式歸入其他而不會製造無限新分類
-ok 79 - 未知付款方式歸入其他而不會製造無限新分類
+ok 80 - 未知付款方式歸入其他而不會製造無限新分類
   ---
-  duration_ms: 0.566819
+  duration_ms: 0.494502
   type: 'test'
   ...
 # Subtest: 堂食分拆付款按每次實收方式對數而不只顯示組合付款
-ok 80 - 堂食分拆付款按每次實收方式對數而不只顯示組合付款
+ok 81 - 堂食分拆付款按每次實收方式對數而不只顯示組合付款
   ---
-  duration_ms: 0.424143
+  duration_ms: 0.616403
   type: 'test'
   ...
 # Subtest: 付款實收讀取真正 paidAmount 並保留短收及多收的正負差額
-ok 81 - 付款實收讀取真正 paidAmount 並保留短收及多收的正負差額
+ok 82 - 付款實收讀取真正 paidAmount 並保留短收及多收的正負差額
   ---
-  duration_ms: 0.883521
+  duration_ms: 0.775338
   type: 'test'
   ...
 # Subtest: 現金對數以收款減找續計算，不會把找續再扣一次
-ok 82 - 現金對數以收款減找續計算，不會把找續再扣一次
+ok 83 - 現金對數以收款減找續計算，不會把找續再扣一次
   ---
-  duration_ms: 0.953642
+  duration_ms: 0.901916
   type: 'test'
   ...
 # Subtest: 平台付款別名統一顯示為平台代收
-ok 83 - 平台付款別名統一顯示為平台代收
+ok 84 - 平台付款別名統一顯示為平台代收
   ---
-  duration_ms: 0.485797
+  duration_ms: 1.363018
   type: 'test'
   ...
 # Subtest: 商品分類、時段及異常資料保留對應訂單供介面下鑽
-ok 84 - 商品分類、時段及異常資料保留對應訂單供介面下鑽
+ok 85 - 商品分類、時段及異常資料保留對應訂單供介面下鑽
   ---
-  duration_ms: 0.63146
+  duration_ms: 0.622692
   type: 'test'
   ...
 # Subtest: 異常報表會由現有 audit 列出付款更改、部分取消、重印及付款問題
-ok 85 - 異常報表會由現有 audit 列出付款更改、部分取消、重印及付款問題
+ok 86 - 異常報表會由現有 audit 列出付款更改、部分取消、重印及付款問題
   ---
-  duration_ms: 0.575345
+  duration_ms: 0.578908
   type: 'test'
   ...
 # Subtest: 異常操作按 audit 發生時間入報表並保留跨日原訂單下鑽
-ok 86 - 異常操作按 audit 發生時間入報表並保留跨日原訂單下鑽
+ok 87 - 異常操作按 audit 發生時間入報表並保留跨日原訂單下鑽
   ---
-  duration_ms: 0.344344
+  duration_ms: 0.314355
   type: 'test'
   ...
 # Subtest: 港幣盤點只提供店舖實際接收的五款紙幣及三款硬幣
-ok 87 - 港幣盤點只提供店舖實際接收的五款紙幣及三款硬幣
+ok 88 - 港幣盤點只提供店舖實際接收的五款紙幣及三款硬幣
   ---
-  duration_ms: 0.454881
+  duration_ms: 0.511257
   type: 'test'
   ...
 # Subtest: 新營業日沿用上次留底並容許開機時加減調整
-ok 88 - 新營業日沿用上次留底並容許開機時加減調整
+ok 89 - 新營業日沿用上次留底並容許開機時加減調整
   ---
-  duration_ms: 0.457435
+  duration_ms: 0.322528
   type: 'test'
   ...
 # Subtest: 未手動調整前按開工底金建議提取及留底，且不會留多過實點現金
-ok 89 - 未手動調整前按開工底金建議提取及留底，且不會留多過實點現金
+ok 90 - 未手動調整前按開工底金建議提取及留底，且不會留多過實點現金
   ---
-  duration_ms: 0.386231
+  duration_ms: 0.370239
   type: 'test'
   ...
 # Subtest: 日結按實點現金反推待核實訂單的現金及非現金部分
-ok 90 - 日結按實點現金反推待核實訂單的現金及非現金部分
+ok 91 - 日結按實點現金反推待核實訂單的現金及非現金部分
   ---
-  duration_ms: 0.505194
+  duration_ms: 0.481833
   type: 'test'
   ...
 # Subtest: 日結保存現金、支出、差異、版本及稽核而不改寫訂單
-ok 91 - 日結保存現金、支出、差異、版本及稽核而不改寫訂單
+ok 92 - 日結保存現金、支出、差異、版本及稽核而不改寫訂單
   ---
-  duration_ms: 2.233704
+  duration_ms: 3.318954
   type: 'test'
   ...
 # Subtest: 超出百分之三差異而沒有原因不可正式日結
-ok 92 - 超出百分之三差異而沒有原因不可正式日結
+ok 93 - 超出百分之三差異而沒有原因不可正式日結
   ---
-  duration_ms: 0.424093
+  duration_ms: 0.453562
   type: 'test'
   ...
 # Subtest: 超出百分之三差異必須明確授權，並保存提取及留底現金
-ok 93 - 超出百分之三差異必須明確授權，並保存提取及留底現金
+ok 94 - 超出百分之三差異必須明確授權，並保存提取及留底現金
   ---
-  duration_ms: 0.838116
+  duration_ms: 0.870749
   type: 'test'
   ...
 # Subtest: 提取及留底現金必須完整分配實點現金
-ok 94 - 提取及留底現金必須完整分配實點現金
+ok 95 - 提取及留底現金必須完整分配實點現金
   ---
-  duration_ms: 0.739442
+  duration_ms: 0.731623
   type: 'test'
   ...
 # Subtest: CSV 匯出包含摘要、訂單及商品明細並正確處理逗號
-ok 95 - CSV 匯出包含摘要、訂單及商品明細並正確處理逗號
+ok 96 - CSV 匯出包含摘要、訂單及商品明細並正確處理逗號
   ---
-  duration_ms: 0.983769
+  duration_ms: 1.159297
   type: 'test'
   ...
 # Subtest: 備份有可重算校驗值，任何內容被改動都會驗證失敗
-ok 96 - 備份有可重算校驗值，任何內容被改動都會驗證失敗
+ok 97 - 備份有可重算校驗值，任何內容被改動都會驗證失敗
   ---
-  duration_ms: 0.949144
+  duration_ms: 0.909998
   type: 'test'
   ...
 # Subtest: 恢復可以只套用設定或完整資料，並拒絕無效備份
-ok 97 - 恢復可以只套用設定或完整資料，並拒絕無效備份
+ok 98 - 恢復可以只套用設定或完整資料，並拒絕無效備份
   ---
-  duration_ms: 0.838567
+  duration_ms: 0.726946
   type: 'test'
   ...
 # Subtest: 系統診斷清楚分開本機能力、同步積壓及未設定更新來源
-ok 98 - 系統診斷清楚分開本機能力、同步積壓及未設定更新來源
+ok 99 - 系統診斷清楚分開本機能力、同步積壓及未設定更新來源
   ---
-  duration_ms: 0.416107
+  duration_ms: 0.418649
   type: 'test'
   ...
 # Subtest: 更多頁已接入正式路由及五項底部導航
-ok 99 - 更多頁已接入正式路由及五項底部導航
+ok 100 - 更多頁已接入正式路由及五項底部導航
   ---
-  duration_ms: 4.711635
+  duration_ms: 3.831363
   type: 'test'
   ...
 # Subtest: 更多主畫面有營業日及六個帶營運狀態的入口
-ok 100 - 更多主畫面有營業日及六個帶營運狀態的入口
+ok 101 - 更多主畫面有營業日及六個帶營運狀態的入口
   ---
-  duration_ms: 0.531463
+  duration_ms: 0.472039
   type: 'test'
   ...
 # Subtest: 更多首頁直接顯示今日營業、渠道及付款分析而毋須進入第二層
-ok 101 - 更多首頁直接顯示今日營業、渠道及付款分析而毋須進入第二層
+ok 102 - 更多首頁直接顯示今日營業、渠道及付款分析而毋須進入第二層
   ---
-  duration_ms: 0.26783
+  duration_ms: 0.23687
   type: 'test'
   ...
 # Subtest: 六個入口均有可讀細節面板而非只顯示簡單訊息
-ok 102 - 六個入口均有可讀細節面板而非只顯示簡單訊息
+ok 103 - 六個入口均有可讀細節面板而非只顯示簡單訊息
   ---
-  duration_ms: 0.398726
+  duration_ms: 0.350429
   type: 'test'
   ...
 # Subtest: 日結、恢復、更新及退出全螢幕均先開二次確認
-ok 103 - 日結、恢復、更新及退出全螢幕均先開二次確認
+ok 104 - 日結、恢復、更新及退出全螢幕均先開二次確認
   ---
-  duration_ms: 0.854387
+  duration_ms: 0.824781
   type: 'test'
   ...
 # Subtest: 六個入口已由死按鈕改成真實本機操作
-ok 104 - 六個入口已由死按鈕改成真實本機操作
+ok 105 - 六個入口已由死按鈕改成真實本機操作
   ---
-  duration_ms: 0.451344
+  duration_ms: 0.467352
   type: 'test'
   ...
 # Subtest: 顯示設定可本機保存，彈窗遮罩不可點空白關閉
-ok 105 - 顯示設定可本機保存，彈窗遮罩不可點空白關閉
+ok 106 - 顯示設定可本機保存，彈窗遮罩不可點空白關閉
   ---
-  duration_ms: 0.369891
+  duration_ms: 0.306373
   type: 'test'
   ...
 # Subtest: 顯示與操作可設定分類每行格數、行數及最後一格搜尋
-ok 106 - 顯示與操作可設定分類每行格數、行數及最後一格搜尋
+ok 107 - 顯示與操作可設定分類每行格數、行數及最後一格搜尋
   ---
-  duration_ms: 0.328254
+  duration_ms: 0.326614
   type: 'test'
   ...
 # Subtest: 更多頁沿用共用基礎樣式並固定頂底欄
-ok 107 - 更多頁沿用共用基礎樣式並固定頂底欄
+ok 108 - 更多頁沿用共用基礎樣式並固定頂底欄
   ---
-  duration_ms: 0.738671
+  duration_ms: 0.578066
   type: 'test'
   ...
 # Subtest: 收銀日結提供點算、支出、差異原因、版本及正式保存
-ok 108 - 收銀日結提供點算、支出、差異原因、版本及正式保存
+ok 109 - 收銀日結提供點算、支出、差異原因、版本及正式保存
   ---
-  duration_ms: 0.750994
+  duration_ms: 0.666757
   type: 'test'
   ...
 # Subtest: 日結提供面額互推、開工底金、提取留底、待核實反推及超額授權
-ok 109 - 日結提供面額互推、開工底金、提取留底、待核實反推及超額授權
+ok 110 - 日結提供面額互推、開工底金、提取留底、待核實反推及超額授權
   ---
-  duration_ms: 0.375852
+  duration_ms: 0.382616
   type: 'test'
   ...
 # Subtest: 開機底金顯示上次留底、調整額及確認後開工現金
-ok 110 - 開機底金顯示上次留底、調整額及確認後開工現金
+ok 111 - 開機底金顯示上次留底、調整額及確認後開工現金
   ---
-  duration_ms: 0.260707
+  duration_ms: 0.205814
   type: 'test'
   ...
 # Subtest: 營業分析同時展示每個渠道及每種付款方式的單數和金額
-ok 111 - 營業分析同時展示每個渠道及每種付款方式的單數和金額
+ok 112 - 營業分析同時展示每個渠道及每種付款方式的單數和金額
   ---
-  duration_ms: 0.169156
+  duration_ms: 0.155139
   type: 'test'
   ...
 # Subtest: 全局共用樣式提供觸控回饋、彈窗動效及減少動效模式
-ok 112 - 全局共用樣式提供觸控回饋、彈窗動效及減少動效模式
+ok 113 - 全局共用樣式提供觸控回饋、彈窗動效及減少動效模式
   ---
-  duration_ms: 0.388125
+  duration_ms: 0.303249
   type: 'test'
   ...
 # Subtest: 報表五個分頁讀取同一選定日期報表並可下載 CSV
-ok 113 - 報表五個分頁讀取同一選定日期報表並可下載 CSV
+ok 114 - 報表五個分頁讀取同一選定日期報表並可下載 CSV
   ---
-  duration_ms: 0.255738
+  duration_ms: 0.217682
   type: 'test'
   ...
 # Subtest: 歷史報表提供七種日期入口及自訂開始結束日期
-ok 114 - 歷史報表提供七種日期入口及自訂開始結束日期
+ok 115 - 歷史報表提供七種日期入口及自訂開始結束日期
   ---
-  duration_ms: 0.350506
+  duration_ms: 0.35781
   type: 'test'
   ...
 # Subtest: 付款對數逐項顯示單數應收實收退款差額狀態並可下鑽
-ok 115 - 付款對數逐項顯示單數應收實收退款差額狀態並可下鑽
+ok 116 - 付款對數逐項顯示單數應收實收退款差額狀態並可下鑽
   ---
-  duration_ms: 0.223748
+  duration_ms: 0.18231
   type: 'test'
   ...
 # Subtest: 商品報表可切換產品及分類並保留時段與日結紀錄
-ok 116 - 商品報表可切換產品及分類並保留時段與日結紀錄
+ok 117 - 商品報表可切換產品及分類並保留時段與日結紀錄
   ---
-  duration_ms: 0.247142
+  duration_ms: 0.167187
   type: 'test'
   ...
 # Subtest: 打印中心可設定網絡設備、選格式、診斷、預覽、重試及改送
-ok 117 - 打印中心可設定網絡設備、選格式、診斷、預覽、重試及改送
+ok 118 - 打印中心可設定網絡設備、選格式、診斷、預覽、重試及改送
   ---
-  duration_ms: 0.424092
+  duration_ms: 0.493361
   type: 'test'
   ...
 # Subtest: 備份中心可以建立、下載、匯入、驗證及分範圍恢復
-ok 118 - 備份中心可以建立、下載、匯入、驗證及分範圍恢復
+ok 119 - 備份中心可以建立、下載、匯入、驗證及分範圍恢復
   ---
-  duration_ms: 0.291555
+  duration_ms: 0.286414
   type: 'test'
   ...
 # Subtest: 系統中心提供真實診斷、操作紀錄、同步重試及更新檢查結果
-ok 119 - 系統中心提供真實診斷、操作紀錄、同步重試及更新檢查結果
+ok 120 - 系統中心提供真實診斷、操作紀錄、同步重試及更新檢查結果
   ---
-  duration_ms: 0.330698
+  duration_ms: 0.306434
   type: 'test'
   ...
 # node:internal/modules/run_main:123
@@ -814,9 +842,9 @@ ok 119 - 系統中心提供真實診斷、操作紀錄、同步重試及更新�
 # }
 # Node.js v22.23.1
 # Subtest: tests/more-responsive-contract.test.mjs
-not ok 14 - tests/more-responsive-contract.test.mjs
+not ok 15 - tests/more-responsive-contract.test.mjs
   ---
-  duration_ms: 46.388061
+  duration_ms: 39.599662
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/more-responsive-contract.test.mjs:1:1'
   failureType: 'testCodeFailure'
@@ -826,388 +854,388 @@ not ok 14 - tests/more-responsive-contract.test.mjs
   code: 'ERR_TEST_FAILURE'
   ...
 # Subtest: standalone riceball is packaging-fee exempt even when display category is popularity
-ok 121 - standalone riceball is packaging-fee exempt even when display category is popularity
+ok 122 - standalone riceball is packaging-fee exempt even when display category is popularity
   ---
-  duration_ms: 4.156067
+  duration_ms: 1.352382
   type: 'test'
   ...
 # Subtest: standalone drink is packaging-fee exempt
-ok 122 - standalone drink is packaging-fee exempt
+ok 123 - standalone drink is packaging-fee exempt
   ---
-  duration_ms: 0.334996
+  duration_ms: 0.345762
   type: 'test'
   ...
 # Subtest: standalone riceball plus discounted drink remains packaging-fee exempt
-ok 123 - standalone riceball plus discounted drink remains packaging-fee exempt
+ok 124 - standalone riceball plus discounted drink remains packaging-fee exempt
   ---
-  duration_ms: 6.047101
+  duration_ms: 2.264874
   type: 'test'
   ...
 # Subtest: riceball combo and other takeaway boxed meals still charge packaging
-ok 124 - riceball combo and other takeaway boxed meals still charge packaging
+ok 125 - riceball combo and other takeaway boxed meals still charge packaging
   ---
-  duration_ms: 0.359632
+  duration_ms: 0.365171
   type: 'test'
   ...
 # SMT_ORDER_CART_DOMAIN_OK
 # Subtest: tests/order-cart-domain.test.mjs
-ok 16 - tests/order-cart-domain.test.mjs
+ok 17 - tests/order-cart-domain.test.mjs
   ---
-  duration_ms: 46.804632
+  duration_ms: 59.870979
   type: 'test'
   ...
 # Subtest: quick mode uses a direct-add product action
-ok 126 - quick mode uses a direct-add product action
+ok 127 - quick mode uses a direct-add product action
   ---
-  duration_ms: 3.483902
+  duration_ms: 3.547172
   type: 'test'
   ...
 # Subtest: cart rows expose separate quantity and edit controls
-ok 127 - cart rows expose separate quantity and edit controls
+ok 128 - cart rows expose separate quantity and edit controls
   ---
-  duration_ms: 0.375261
+  duration_ms: 0.410038
   type: 'test'
   ...
 # Subtest: product editor is a compact anchored card with explicit confirmation
-ok 128 - product editor is a compact anchored card with explicit confirmation
+ok 129 - product editor is a compact anchored card with explicit confirmation
   ---
-  duration_ms: 0.317192
+  duration_ms: 0.342618
   type: 'test'
   ...
 # Subtest: modal backdrop is inert and cannot dismiss changes
-ok 129 - modal backdrop is inert and cannot dismiss changes
+ok 130 - modal backdrop is inert and cannot dismiss changes
   ---
-  duration_ms: 0.25194
+  duration_ms: 0.24287
   type: 'test'
   ...
 # Subtest: cart quantity updates totals, trims drink assignments, and removes zero rows
-ok 130 - cart quantity updates totals, trims drink assignments, and removes zero rows
+ok 131 - cart quantity updates totals, trims drink assignments, and removes zero rows
   ---
-  duration_ms: 1.122949
+  duration_ms: 1.181089
   type: 'test'
   ...
 # Subtest: order shell keeps the bottom navigation inside the fixed canvas
-ok 131 - order shell keeps the bottom navigation inside the fixed canvas
+ok 132 - order shell keeps the bottom navigation inside the fixed canvas
   ---
-  duration_ms: 0.364742
+  duration_ms: 0.36509
   type: 'test'
   ...
 # Subtest: checkout call to action shows the payable total
-ok 132 - checkout call to action shows the payable total
+ok 133 - checkout call to action shows the payable total
   ---
-  duration_ms: 0.344784
+  duration_ms: 0.363047
   type: 'test'
   ...
 # Subtest: quick order mode, drink strip, and quick assist are independent settings
-ok 133 - quick order mode, drink strip, and quick assist are independent settings
+ok 134 - quick order mode, drink strip, and quick assist are independent settings
   ---
-  duration_ms: 0.249195
+  duration_ms: 0.267697
   type: 'test'
   ...
 # Subtest: display settings include the three cart ratios
-ok 134 - display settings include the three cart ratios
+ok 135 - display settings include the three cart ratios
   ---
-  duration_ms: 0.603027
+  duration_ms: 0.573549
   type: 'test'
   ...
 # Subtest: cards are positioned from the pressed control and expose a pointer side
-ok 135 - cards are positioned from the pressed control and expose a pointer side
+ok 136 - cards are positioned from the pressed control and expose a pointer side
   ---
-  duration_ms: 0.693506
+  duration_ms: 0.679286
   type: 'test'
   ...
 # Subtest: pending orders use a vertical split
-ok 136 - pending orders use a vertical split
+ok 137 - pending orders use a vertical split
   ---
-  duration_ms: 0.354913
+  duration_ms: 0.332313
   type: 'test'
   ...
 # Subtest: every expanded card is owned by the single modal controller
-ok 137 - every expanded card is owned by the single modal controller
+ok 138 - every expanded card is owned by the single modal controller
   ---
-  duration_ms: 0.294159
+  duration_ms: 0.307706
   type: 'test'
   ...
 # Subtest: pending order card is actionable and grouped by channel
-ok 138 - pending order card is actionable and grouped by channel
+ok 139 - pending order card is actionable and grouped by channel
   ---
-  duration_ms: 0.172181
+  duration_ms: 0.179046
   type: 'test'
   ...
 # Subtest: anchored cards support all four pointer directions and stay between fixed bars
-ok 139 - anchored cards support all four pointer directions and stay between fixed bars
+ok 140 - anchored cards support all four pointer directions and stay between fixed bars
   ---
-  duration_ms: 0.291505
+  duration_ms: 0.311621
   type: 'test'
   ...
 # Subtest: cart image visibility is configurable
-ok 140 - cart image visibility is configurable
+ok 141 - cart image visibility is configurable
   ---
-  duration_ms: 0.164116
+  duration_ms: 0.192585
   type: 'test'
   ...
 # Subtest: quick drink adjustment stays compact without repeating its image
-ok 141 - quick drink adjustment stays compact without repeating its image
+ok 142 - quick drink adjustment stays compact without repeating its image
   ---
-  duration_ms: 0.33699
+  duration_ms: 0.289088
   type: 'test'
   ...
 # Subtest: shell uses a fixed T2S canvas fitted inside both viewport dimensions
-ok 142 - shell uses a fixed T2S canvas fitted inside both viewport dimensions
+ok 143 - shell uses a fixed T2S canvas fitted inside both viewport dimensions
   ---
-  duration_ms: 24.451897
+  duration_ms: 21.15186
   type: 'test'
   ...
 # Subtest: root height chain and scroll regions keep both bars fixed
-ok 143 - root height chain and scroll regions keep both bars fixed
+ok 144 - root height chain and scroll regions keep both bars fixed
   ---
-  duration_ms: 1.877178
+  duration_ms: 1.692286
   type: 'test'
   ...
 # Subtest: quick drinks are a collapsed upward drawer with reorder controls
-ok 144 - quick drinks are a collapsed upward drawer with reorder controls
+ok 145 - quick drinks are a collapsed upward drawer with reorder controls
   ---
-  duration_ms: 0.327552
+  duration_ms: 0.204573
   type: 'test'
   ...
 # Subtest: drink editor supports multiple configuration groups without forced images
-ok 145 - drink editor supports multiple configuration groups without forced images
+ok 146 - drink editor supports multiple configuration groups without forced images
   ---
-  duration_ms: 0.231393
+  duration_ms: 0.150553
   type: 'test'
   ...
 # Subtest: completion exposes automatic, specified, and demo link-up flows
-ok 146 - completion exposes automatic, specified, and demo link-up flows
+ok 147 - completion exposes automatic, specified, and demo link-up flows
   ---
-  duration_ms: 0.195816
+  duration_ms: 0.11524
   type: 'test'
   ...
 # Subtest: large product grid reserves complete rows and never overlaps cards
-ok 147 - large product grid reserves complete rows and never overlaps cards
+ok 148 - large product grid reserves complete rows and never overlaps cards
   ---
-  duration_ms: 0.337331
+  duration_ms: 0.254948
   type: 'test'
   ...
 # Subtest: collapsed quick drinks use the approved centred pill above navigation
-ok 148 - collapsed quick drinks use the approved centred pill above navigation
+ok 149 - collapsed quick drinks use the approved centred pill above navigation
   ---
-  duration_ms: 0.318485
+  duration_ms: 0.220937
   type: 'test'
   ...
 # Subtest: operational surfaces include sold-out preview and new-order toast
-ok 149 - operational surfaces include sold-out preview and new-order toast
+ok 150 - operational surfaces include sold-out preview and new-order toast
   ---
-  duration_ms: 0.225041
+  duration_ms: 0.155801
   type: 'test'
   ...
 # Subtest: 分類列最右固定搜尋入口並可按名稱或編號篩選產品
-ok 150 - 分類列最右固定搜尋入口並可按名稱或編號篩選產品
+ok 151 - 分類列最右固定搜尋入口並可按名稱或編號篩選產品
   ---
-  duration_ms: 0.472032
+  duration_ms: 0.33044
   type: 'test'
   ...
 # Subtest: 分類列讀取後台全局設定並按五六七格及一兩行輸出版面
-ok 151 - 分類列讀取後台全局設定並按五六七格及一兩行輸出版面
+ok 152 - 分類列讀取後台全局設定並按五六七格及一兩行輸出版面
   ---
-  duration_ms: 0.229479
+  duration_ms: 0.171354
   type: 'test'
   ...
 # Subtest: 新單提示最少一張產品卡闊及兩張產品卡高
-ok 152 - 新單提示最少一張產品卡闊及兩張產品卡高
+ok 153 - 新單提示最少一張產品卡闊及兩張產品卡高
   ---
-  duration_ms: 0.31579
+  duration_ms: 0.205745
   type: 'test'
   ...
 # Subtest: 快捷飲品展開後八秒無操作自動收起並於操作時重時計時
-ok 153 - 快捷飲品展開後八秒無操作自動收起並於操作時重時計時
+ok 154 - 快捷飲品展開後八秒無操作自動收起並於操作時重時計時
   ---
-  duration_ms: 0.259625
+  duration_ms: 0.140148
   type: 'test'
   ...
 # Subtest: sold-out preview reads the same local supply status as the badge
-ok 154 - sold-out preview reads the same local supply status as the badge
+ok 155 - sold-out preview reads the same local supply status as the badge
   ---
-  duration_ms: 0.177341
+  duration_ms: 0.10138
   type: 'test'
   ...
 # Subtest: order cards distinguish sold-out orange from paused red without greying
-ok 155 - order cards distinguish sold-out orange from paused red without greying
+ok 156 - order cards distinguish sold-out orange from paused red without greying
   ---
-  duration_ms: 0.371404
+  duration_ms: 0.26971
   type: 'test'
   ...
 # Subtest: paused products sort to the end of their current order category
-ok 156 - paused products sort to the end of their current order category
+ok 157 - paused products sort to the end of their current order category
   ---
-  duration_ms: 0.2246
+  duration_ms: 0.18246
   type: 'test'
   ...
 # Subtest: accepting a verified pending order creates a running order with a 30 minute deadline
-ok 157 - accepting a verified pending order creates a running order with a 30 minute deadline
+ok 158 - accepting a verified pending order creates a running order with a 30 minute deadline
   ---
-  duration_ms: 0.256348
+  duration_ms: 0.210993
   type: 'test'
   ...
 # Subtest: running orders auto-complete after 30 minutes without intermediate states
-ok 158 - running orders auto-complete after 30 minutes without intermediate states
+ok 159 - running orders auto-complete after 30 minutes without intermediate states
   ---
-  duration_ms: 0.273181
+  duration_ms: 0.243201
   type: 'test'
   ...
 # Subtest: WhatsApp QR target opens the customer chat with the preset message
-ok 159 - WhatsApp QR target opens the customer chat with the preset message
+ok 160 - WhatsApp QR target opens the customer chat with the preset message
   ---
-  duration_ms: 0.250909
+  duration_ms: 0.239094
   type: 'test'
   ...
 # Subtest: pending verification uses start review then confirm order wording
-ok 160 - pending verification uses start review then confirm order wording
+ok 161 - pending verification uses start review then confirm order wording
   ---
-  duration_ms: 0.282257
+  duration_ms: 0.22947
   type: 'test'
   ...
 # Subtest: cart locks price and quantity-edit controls into dedicated regions
-ok 161 - cart locks price and quantity-edit controls into dedicated regions
+ok 162 - cart locks price and quantity-edit controls into dedicated regions
   ---
-  duration_ms: 0.29469
+  duration_ms: 0.253005
   type: 'test'
   ...
 # Subtest: drink adjustment starts compact and expands only after add adjustment
-ok 162 - drink adjustment starts compact and expands only after add adjustment
+ok 163 - drink adjustment starts compact and expands only after add adjustment
   ---
-  duration_ms: 0.243906
+  duration_ms: 0.230531
   type: 'test'
   ...
 # Subtest: specified pairing candidates use a three-column text-card grid
-ok 163 - specified pairing candidates use a three-column text-card grid
+ok 164 - specified pairing candidates use a three-column text-card grid
   ---
-  duration_ms: 3.207124
+  duration_ms: 2.361657
   type: 'test'
   ...
 # Subtest: cart keeps price flush right and actions aligned with the image
-ok 164 - cart keeps price flush right and actions aligned with the image
+ok 165 - cart keeps price flush right and actions aligned with the image
   ---
-  duration_ms: 0.397953
+  duration_ms: 0.355917
   type: 'test'
   ...
 # Subtest: 首次渲染由共用函數提供待處理數量給頂欄及導航
-ok 165 - 首次渲染由共用函數提供待處理數量給頂欄及導航
+ok 166 - 首次渲染由共用函數提供待處理數量給頂欄及導航
   ---
-  duration_ms: 0.548305
+  duration_ms: 0.556324
   type: 'test'
   ...
 # Subtest: 點單頁最近訂單讀取共用歷史而不再寫死舊單號
-ok 166 - 點單頁最近訂單讀取共用歷史而不再寫死舊單號
+ok 167 - 點單頁最近訂單讀取共用歷史而不再寫死舊單號
   ---
-  duration_ms: 0.146294
+  duration_ms: 0.174198
   type: 'test'
   ...
 # Subtest: 子頁啟動錯誤會顯示可見後備畫面而不是白屏
-ok 167 - 子頁啟動錯誤會顯示可見後備畫面而不是白屏
+ok 168 - 子頁啟動錯誤會顯示可見後備畫面而不是白屏
   ---
-  duration_ms: 23.914685
+  duration_ms: 15.796215
   type: 'test'
   ...
 # Subtest: specified pairing creates dynamic labelled groups
-ok 168 - specified pairing creates dynamic labelled groups
+ok 169 - specified pairing creates dynamic labelled groups
   ---
-  duration_ms: 0.271287
+  duration_ms: 0.414824
   type: 'test'
   ...
 # Subtest: all drink selection surfaces share one image-first Drink Choice Card
-ok 169 - all drink selection surfaces share one image-first Drink Choice Card
+ok 170 - all drink selection surfaces share one image-first Drink Choice Card
   ---
-  duration_ms: 0.405367
+  duration_ms: 2.743502
   type: 'test'
   ...
 # Subtest: riceball and snack can become one pending-drink combo without a cart drink
-ok 170 - riceball and snack can become one pending-drink combo without a cart drink
+ok 171 - riceball and snack can become one pending-drink combo without a cart drink
   ---
-  duration_ms: 0.564826
+  duration_ms: 0.723882
   type: 'test'
   ...
 # Subtest: quick drink embeds inside combo without first becoming a cart line
-ok 171 - quick drink embeds inside combo without first becoming a cart line
+ok 172 - quick drink embeds inside combo without first becoming a cart line
   ---
-  duration_ms: 0.272539
+  duration_ms: 0.33099
   type: 'test'
   ...
 # Subtest: cart drink can be consumed into a combo and remaining quantity stays standalone
-ok 172 - cart drink can be consumed into a combo and remaining quantity stays standalone
+ok 173 - cart drink can be consumed into a combo and remaining quantity stays standalone
   ---
-  duration_ms: 0.23536
+  duration_ms: 0.21618
   type: 'test'
   ...
 # Subtest: dissolving a combo restores standalone components at single prices
-ok 173 - dissolving a combo restores standalone components at single prices
+ok 174 - dissolving a combo restores standalone components at single prices
   ---
-  duration_ms: 0.372356
+  duration_ms: 0.470387
   type: 'test'
   ...
 # Subtest: specified pairing offers quick drinks and accepts main plus snack before drink
-ok 174 - specified pairing offers quick drinks and accepts main plus snack before drink
+ok 175 - specified pairing offers quick drinks and accepts main plus snack before drink
   ---
-  duration_ms: 0.134642
+  duration_ms: 0.164033
   type: 'test'
   ...
 # Subtest: order page loads the shared live menu contract with offline fallback
-ok 175 - order page loads the shared live menu contract with offline fallback
+ok 176 - order page loads the shared live menu contract with offline fallback
   ---
-  duration_ms: 0.191117
+  duration_ms: 0.165094
   type: 'test'
   ...
 # Subtest: 每日流水以早上五時為分界並固定三位數
-ok 176 - 每日流水以早上五時為分界並固定三位數
+ok 177 - 每日流水以早上五時為分界並固定三位數
   ---
-  duration_ms: 1.910941
+  duration_ms: 1.817261
   type: 'test'
   ...
 # Subtest: 所有渠道共用同一每日流水並兼容舊 P 編號
-ok 177 - 所有渠道共用同一每日流水並兼容舊 P 編號
+ok 178 - 所有渠道共用同一每日流水並兼容舊 P 編號
   ---
-  duration_ms: 0.48706
+  duration_ms: 0.559128
   type: 'test'
   ...
 # Subtest: 每日流水到 P999 後拒絕循環覆蓋
-ok 178 - 每日流水到 P999 後拒絕循環覆蓋
+ok 179 - 每日流水到 P999 後拒絕循環覆蓋
   ---
-  duration_ms: 0.591085
+  duration_ms: 0.719926
   type: 'test'
   ...
 # Subtest: 顯示號碼支援新舊訂單並按真實時間找最新一張
-ok 179 - 顯示號碼支援新舊訂單並按真實時間找最新一張
+ok 180 - 顯示號碼支援新舊訂單並按真實時間找最新一張
   ---
-  duration_ms: 0.349844
+  duration_ms: 0.44547
   type: 'test'
   ...
 # Subtest: 流水營業日及最近訂單以開單時間為準而不受完成時間延遲影響
-ok 180 - 流水營業日及最近訂單以開單時間為準而不受完成時間延遲影響
+ok 181 - 流水營業日及最近訂單以開單時間為準而不受完成時間延遲影響
   ---
-  duration_ms: 0.352529
+  duration_ms: 0.489474
   type: 'test'
   ...
 # Subtest: 永久編號使用實際日期並在堂食單包含枱號
-ok 181 - 永久編號使用實際日期並在堂食單包含枱號
+ok 182 - 永久編號使用實際日期並在堂食單包含枱號
   ---
-  duration_ms: 0.276386
+  duration_ms: 0.280776
   type: 'test'
   ...
 # Subtest: takeaway packaging fee exempts standalone riceballs and drinks
-ok 182 - takeaway packaging fee exempts standalone riceballs and drinks
+ok 183 - takeaway packaging fee exempts standalone riceballs and drinks
   ---
-  duration_ms: 2.746392
+  duration_ms: 1.893865
   type: 'test'
   ...
 # Subtest: checkout discount does not discount packaging fee
-ok 183 - checkout discount does not discount packaging fee
+ok 184 - checkout discount does not discount packaging fee
   ---
-  duration_ms: 0.629146
+  duration_ms: 0.532449
   type: 'test'
   ...
 # Subtest: mixed service order splits production and packing jobs
-ok 184 - mixed service order splits production and packing jobs
+ok 185 - mixed service order splits production and packing jobs
   ---
-  duration_ms: 59.677305
+  duration_ms: 44.624051
   type: 'test'
   ...
 # node:internal/modules/run_main:123
@@ -1227,9 +1255,9 @@ ok 184 - mixed service order splits production and packing jobs
 # }
 # Node.js v22.23.1
 # Subtest: tests/order-required-completion-core.test.mjs
-not ok 20 - tests/order-required-completion-core.test.mjs
+not ok 21 - tests/order-required-completion-core.test.mjs
   ---
-  duration_ms: 44.926392
+  duration_ms: 46.425049
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/order-required-completion-core.test.mjs:1:1'
   failureType: 'testCodeFailure'
@@ -1239,238 +1267,238 @@ not ok 20 - tests/order-required-completion-core.test.mjs
   code: 'ERR_TEST_FAILURE'
   ...
 # Subtest: order runtime does not load post-render drink enhancer
-ok 186 - order runtime does not load post-render drink enhancer
+ok 187 - order runtime does not load post-render drink enhancer
   ---
-  duration_ms: 1.958861
+  duration_ms: 1.744693
   type: 'test'
   ...
 # Subtest: drink assignment badges render from assignment state
-ok 187 - drink assignment badges render from assignment state
+ok 188 - drink assignment badges render from assignment state
   ---
-  duration_ms: 0.634196
+  duration_ms: 0.453642
   type: 'test'
   ...
 # Subtest: modal policy is owned by order core, not an external runtime layer
-ok 188 - modal policy is owned by order core, not an external runtime layer
+ok 189 - modal policy is owned by order core, not an external runtime layer
   ---
-  duration_ms: 0.526894
+  duration_ms: 0.35754
   type: 'test'
   ...
 # Subtest: order runtime keeps required completion in page state
-ok 189 - order runtime keeps required completion in page state
+ok 190 - order runtime keeps required completion in page state
   ---
-  duration_ms: 0.306122
+  duration_ms: 0.335206
   type: 'test'
   ...
 # Subtest: transient UI state bypasses transaction persistence and full normalization
-ok 190 - transient UI state bypasses transaction persistence and full normalization
+ok 191 - transient UI state bypasses transaction persistence and full normalization
   ---
-  duration_ms: 0.45992
+  duration_ms: 0.357519
   type: 'test'
   ...
 # Subtest: order page uses lazy surface rendering
-ok 191 - order page uses lazy surface rendering
+ok 192 - order page uses lazy surface rendering
   ---
-  duration_ms: 0.313365
+  duration_ms: 0.238342
   type: 'test'
   ...
 # Subtest: 運行訂單滿三十分鐘會持久轉入歷史而唔係只改畫面
-ok 192 - 運行訂單滿三十分鐘會持久轉入歷史而唔係只改畫面
+ok 193 - 運行訂單滿三十分鐘會持久轉入歷史而唔係只改畫面
   ---
-  duration_ms: 3.027889
+  duration_ms: 1.892152
   type: 'test'
   ...
 # Subtest: filters can switch between source, payment exception, print exception and history
-ok 193 - filters can switch between source, payment exception, print exception and history
+ok 194 - filters can switch between source, payment exception, print exception and history
   ---
-  duration_ms: 0.529029
+  duration_ms: 0.33035
   type: 'test'
   ...
 # Subtest: changing channel and payment persists values and audit instead of only showing a toast
-ok 194 - changing channel and payment persists values and audit instead of only showing a toast
+ok 195 - changing channel and payment persists values and audit instead of only showing a toast
   ---
-  duration_ms: 0.395148
+  duration_ms: 0.345352
   type: 'test'
   ...
 # Subtest: 更改渠道會套用正式付款狀態，非現場渠道不可保留舊付款方式
-ok 195 - 更改渠道會套用正式付款狀態，非現場渠道不可保留舊付款方式
+ok 196 - 更改渠道會套用正式付款狀態，非現場渠道不可保留舊付款方式
   ---
-  duration_ms: 0.329937
+  duration_ms: 0.313865
   type: 'test'
   ...
 # Subtest: 待核實訂單可核實付款或標記問題及通知客戶
-ok 196 - 待核實訂單可核實付款或標記問題及通知客戶
+ok 197 - 待核實訂單可核實付款或標記問題及通知客戶
   ---
-  duration_ms: 0.539107
+  duration_ms: 0.435014
   type: 'test'
   ...
 # Subtest: 訂單頁待核實入口共用完整核數及通知客戶操作
-ok 197 - 訂單頁待核實入口共用完整核數及通知客戶操作
+ok 198 - 訂單頁待核實入口共用完整核數及通知客戶操作
   ---
-  duration_ms: 0.30484
+  duration_ms: 0.189601
   type: 'test'
   ...
 # Subtest: 問題原因提供快選亦容許留空，唔會卡住待處理流程
-ok 198 - 問題原因提供快選亦容許留空，唔會卡住待處理流程
+ok 199 - 問題原因提供快選亦容許留空，唔會卡住待處理流程
   ---
-  duration_ms: 0.422039
+  duration_ms: 0.267305
   type: 'test'
   ...
 # Subtest: 打印異常訂單由職員打開後勾選需要重印的文件
-ok 199 - 打印異常訂單由職員打開後勾選需要重印的文件
+ok 200 - 打印異常訂單由職員打開後勾選需要重印的文件
   ---
-  duration_ms: 0.263112
+  duration_ms: 0.207978
   type: 'test'
   ...
 # Subtest: 部分取消使用商品行內加減及一次確認，不再逐項使用下拉選單
-ok 200 - 部分取消使用商品行內加減及一次確認，不再逐項使用下拉選單
+ok 201 - 部分取消使用商品行內加減及一次確認，不再逐項使用下拉選單
   ---
-  duration_ms: 0.712722
+  duration_ms: 0.516665
   type: 'test'
   ...
 # Subtest: partial cancellation keeps cancelled quantity visible and recalculates total
-ok 201 - partial cancellation keeps cancelled quantity visible and recalculates total
+ok 202 - partial cancellation keeps cancelled quantity visible and recalculates total
   ---
-  duration_ms: 0.851221
+  duration_ms: 0.733997
   type: 'test'
   ...
 # Subtest: whole-order cancellation remains in history instead of disappearing
-ok 202 - whole-order cancellation remains in history instead of disappearing
+ok 203 - whole-order cancellation remains in history instead of disappearing
   ---
-  duration_ms: 0.343542
+  duration_ms: 0.35148
   type: 'test'
   ...
 # Subtest: reprint creates a visible print job and clears the exception after retry
-ok 203 - reprint creates a visible print job and clears the exception after retry
+ok 204 - reprint creates a visible print job and clears the exception after retry
   ---
-  duration_ms: 0.297566
+  duration_ms: 0.249559
   type: 'test'
   ...
 # Subtest: 掛單只開左右面板，再由一般掛單或堂食枱號完成操作
-ok 204 - 掛單只開左右面板，再由一般掛單或堂食枱號完成操作
+ok 205 - 掛單只開左右面板，再由一般掛單或堂食枱號完成操作
   ---
-  duration_ms: 1.31097
+  duration_ms: 1.317561
   type: 'test'
   ...
 # Subtest: 取單使用左列表右內容，並固定返回、作廢及取單操作
-ok 205 - 取單使用左列表右內容，並固定返回、作廢及取單操作
+ok 206 - 取單使用左列表右內容，並固定返回、作廢及取單操作
   ---
-  duration_ms: 0.281306
+  duration_ms: 0.359713
   type: 'test'
   ...
 # Subtest: checkout persists the completing terminal and order audit
-ok 206 - checkout persists the completing terminal and order audit
+ok 207 - checkout persists the completing terminal and order audit
   ---
-  duration_ms: 0.211214
+  duration_ms: 0.174999
   type: 'test'
   ...
 # Subtest: bottom navigation opens the independent orders page
-ok 207 - bottom navigation opens the independent orders page
+ok 208 - bottom navigation opens the independent orders page
   ---
-  duration_ms: 0.279933
+  duration_ms: 0.292263
   type: 'test'
   ...
 # Subtest: orders page uses the three approved channel columns and payment methods
-ok 208 - orders page uses the three approved channel columns and payment methods
+ok 209 - orders page uses the three approved channel columns and payment methods
   ---
-  duration_ms: 0.249527
+  duration_ms: 0.229519
   type: 'test'
   ...
 # Subtest: 每件產品保存獨立堂食或外賣選擇
-ok 209 - 每件產品保存獨立堂食或外賣選擇
+ok 210 - 每件產品保存獨立堂食或外賣選擇
   ---
-  duration_ms: 0.230891
+  duration_ms: 0.199987
   type: 'test'
   ...
 # Subtest: reverse checkout reuse loads the original cart then navigates to the locked ordering page
-ok 210 - reverse checkout reuse loads the original cart then navigates to the locked ordering page
+ok 211 - reverse checkout reuse loads the original cart then navigates to the locked ordering page
   ---
-  duration_ms: 0.345105
+  duration_ms: 0.370529
   type: 'test'
   ...
 # Subtest: 預設建立五部設備及四款由管理端發佈的示範格式
-ok 211 - 預設建立五部設備及四款由管理端發佈的示範格式
+ok 212 - 預設建立五部設備及四款由管理端發佈的示範格式
   ---
-  duration_ms: 2.599327
+  duration_ms: 2.301068
   type: 'test'
   ...
 # Subtest: 網絡打印機必須有有效網絡地址、連接埠、紙寬、用途及格式
-ok 212 - 網絡打印機必須有有效網絡地址、連接埠、紙寬、用途及格式
+ok 213 - 網絡打印機必須有有效網絡地址、連接埠、紙寬、用途及格式
   ---
-  duration_ms: 0.908017
+  duration_ms: 0.846634
   type: 'test'
   ...
 # Subtest: 製作及打包統計同時提供每款產品與飲品、飯餐、飯團總數
-ok 213 - 製作及打包統計同時提供每款產品與飲品、飯餐、飯團總數
+ok 214 - 製作及打包統計同時提供每款產品與飲品、飯餐、飯團總數
   ---
-  duration_ms: 13.388751
+  duration_ms: 11.362676
   type: 'test'
   ...
 # Subtest: 四款格式生成可讀預覽，製作單及打包單頂部先顯示合併統計
-ok 214 - 四款格式生成可讀預覽，製作單及打包單頂部先顯示合併統計
+ok 215 - 四款格式生成可讀預覽，製作單及打包單頂部先顯示合併統計
   ---
-  duration_ms: 16.581658
+  duration_ms: 15.069314
   type: 'test'
   ...
 # Subtest: 舊非 P 渠道訂單重印保留原識別而不會顯示測試工作
-ok 215 - 舊非 P 渠道訂單重印保留原識別而不會顯示測試工作
+ok 216 - 舊非 P 渠道訂單重印保留原識別而不會顯示測試工作
   ---
-  duration_ms: 0.580585
+  duration_ms: 0.442845
   type: 'test'
   ...
 # Subtest: 打印工作按用途及格式路由，未設定設備會停在 blocked 而非假成功
-ok 216 - 打印工作按用途及格式路由，未設定設備會停在 blocked 而非假成功
+ok 217 - 打印工作按用途及格式路由，未設定設備會停在 blocked 而非假成功
   ---
-  duration_ms: 3.545256
+  duration_ms: 3.074503
   type: 'test'
   ...
 # Subtest: 重試沿用同一工作並增加嘗試；改送會保存原目的地
-ok 217 - 重試沿用同一工作並增加嘗試；改送會保存原目的地
+ok 218 - 重試沿用同一工作並增加嘗試；改送會保存原目的地
   ---
-  duration_ms: 0.48726
+  duration_ms: 0.483696
   type: 'test'
   ...
 # Subtest: 安卓橋接封包包含傳輸資料、格式內容及冪等工作編號
-ok 218 - 安卓橋接封包包含傳輸資料、格式內容及冪等工作編號
+ok 219 - 安卓橋接封包包含傳輸資料、格式內容及冪等工作編號
   ---
-  duration_ms: 0.473464
+  duration_ms: 0.472119
   type: 'test'
   ...
 # Subtest: 設備診斷會分開設定驗證、瀏覽器限制及安卓橋接狀態
-ok 219 - 設備診斷會分開設定驗證、瀏覽器限制及安卓橋接狀態
+ok 220 - 設備診斷會分開設定驗證、瀏覽器限制及安卓橋接狀態
   ---
-  duration_ms: 0.712061
+  duration_ms: 0.592678
   type: 'test'
   ...
 # Subtest: 現有訂單與堂食打印工作可去重匯入中央工作佇列
-ok 220 - 現有訂單與堂食打印工作可去重匯入中央工作佇列
+ok 221 - 現有訂單與堂食打印工作可去重匯入中央工作佇列
   ---
-  duration_ms: 1.366684
+  duration_ms: 1.239966
   type: 'test'
   ...
 # PRODUCT_CARD_AUTHORITY_CONTRACT_OK
 # Subtest: tests/product-card-authority-contract.test.mjs
-ok 25 - tests/product-card-authority-contract.test.mjs
+ok 26 - tests/product-card-authority-contract.test.mjs
   ---
-  duration_ms: 45.019905
+  duration_ms: 51.195928
   type: 'test'
   ...
 # Subtest: seed frame stays hidden until child ready
-ok 222 - seed frame stays hidden until child ready
+ok 223 - seed frame stays hidden until child ready
   ---
-  duration_ms: 1.231361
+  duration_ms: 1.366053
   type: 'test'
   ...
 # Subtest: unlock does not force reload the active order page
-ok 223 - unlock does not force reload the active order page
+ok 224 - unlock does not force reload the active order page
   ---
-  duration_ms: 0.341669
+  duration_ms: 0.40548
   type: 'test'
   ...
 # Subtest: page ready waits for stable frames
-not ok 224 - page ready waits for stable frames
+not ok 225 - page ready waits for stable frames
   ---
-  duration_ms: 4.35567
+  duration_ms: 3.607632
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/shell-atomic-ready-contract.test.mjs:19:1'
   failureType: 'testCodeFailure'
@@ -1617,9 +1645,9 @@ not ok 224 - page ready waits for stable frames
     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
 # Subtest: order overlay state stays event driven
-not ok 225 - order overlay state stays event driven
+not ok 226 - order overlay state stays event driven
   ---
-  duration_ms: 1.862761
+  duration_ms: 1.786075
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/shell-atomic-ready-contract.test.mjs:23:1'
   failureType: 'testCodeFailure'
@@ -2072,15 +2100,15 @@ not ok 225 - order overlay state stays event driven
     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
 # Subtest: responsive profile writes are deduplicated per frame
-ok 226 - responsive profile writes are deduplicated per frame
+ok 227 - responsive profile writes are deduplicated per frame
   ---
-  duration_ms: 3.342226
+  duration_ms: 0.300144
   type: 'test'
   ...
 # Subtest: inactive preloaded pages do not keep overlay observers running
-not ok 227 - inactive preloaded pages do not keep overlay observers running
+not ok 228 - inactive preloaded pages do not keep overlay observers running
   ---
-  duration_ms: 1.374739
+  duration_ms: 1.181729
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/shell-atomic-ready-contract.test.mjs:33:1'
   failureType: 'testCodeFailure'
@@ -2533,33 +2561,33 @@ not ok 227 - inactive preloaded pages do not keep overlay observers running
     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
 # Subtest: 共用狀態欄永久包含品牌、終端、接單狀態及最近訂單
-ok 228 - 共用狀態欄永久包含品牌、終端、接單狀態及最近訂單
+ok 229 - 共用狀態欄永久包含品牌、終端、接單狀態及最近訂單
   ---
-  duration_ms: 1.295361
+  duration_ms: 1.622352
   type: 'test'
   ...
 # Subtest: 共用底欄固定五項、同一套線性圖標及唯一選中項
-ok 229 - 共用底欄固定五項、同一套線性圖標及唯一選中項
+ok 230 - 共用底欄固定五項、同一套線性圖標及唯一選中項
   ---
-  duration_ms: 1.190195
+  duration_ms: 1.805053
   type: 'test'
   ...
 # Subtest: 五個主要頁面全部使用共用狀態欄及底部導航
-ok 230 - 五個主要頁面全部使用共用狀態欄及底部導航
+ok 231 - 五個主要頁面全部使用共用狀態欄及底部導航
   ---
-  duration_ms: 0.179396
+  duration_ms: 0.191453
   type: 'test'
   ...
 # Subtest: 五個主要頁面共用同一最近訂單顯示規則
-ok 231 - 五個主要頁面共用同一最近訂單顯示規則
+ok 232 - 五個主要頁面共用同一最近訂單顯示規則
   ---
-  duration_ms: 0.231583
+  duration_ms: 0.178494
   type: 'test'
   ...
 # Subtest: 底欄高度、選中膠囊、字體及圖標只由共用樣式控制
-not ok 232 - 底欄高度、選中膠囊、字體及圖標只由共用樣式控制
+not ok 233 - 底欄高度、選中膠囊、字體及圖標只由共用樣式控制
   ---
-  duration_ms: 1.194062
+  duration_ms: 1.110204
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/shell-ui.test.mjs:41:1'
   failureType: 'testCodeFailure'
@@ -2766,87 +2794,87 @@ not ok 232 - 底欄高度、選中膠囊、字體及圖標只由共用樣式控�
     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
 # Subtest: 分類、頁籤、分段、付款、來源及模式選擇共用膠囊規則
-ok 233 - 分類、頁籤、分段、付款、來源及模式選擇共用膠囊規則
+ok 234 - 分類、頁籤、分段、付款、來源及模式選擇共用膠囊規則
   ---
-  duration_ms: 0.332542
+  duration_ms: 0.25005
   type: 'test'
   ...
 # Subtest: 來源彈窗支援四方向箭嘴並由定位器標記實際方向
-ok 234 - 來源彈窗支援四方向箭嘴並由定位器標記實際方向
+ok 235 - 來源彈窗支援四方向箭嘴並由定位器標記實際方向
   ---
-  duration_ms: 0.354583
+  duration_ms: 0.230982
   type: 'test'
   ...
 # Subtest: 售罄頁沿用產品分類與三種點單卡模板
-ok 235 - 售罄頁沿用產品分類與三種點單卡模板
+ok 236 - 售罄頁沿用產品分類與三種點單卡模板
   ---
-  duration_ms: 1.210422
+  duration_ms: 1.110174
   type: 'test'
   ...
 # Subtest: 右欄提供分類售罄列表、收起與圖片顯示切換
-ok 236 - 右欄提供分類售罄列表、收起與圖片顯示切換
+ok 237 - 右欄提供分類售罄列表、收起與圖片顯示切換
   ---
-  duration_ms: 0.252682
+  duration_ms: 0.255929
   type: 'test'
   ...
 # Subtest: 批量模式使用待確認欄及四個固定操作
-ok 237 - 批量模式使用待確認欄及四個固定操作
+ok 238 - 批量模式使用待確認欄及四個固定操作
   ---
-  duration_ms: 0.178413
+  duration_ms: 0.193336
   type: 'test'
   ...
 # Subtest: 正常模式產品詳情提供四個供應狀態操作
-ok 238 - 正常模式產品詳情提供四個供應狀態操作
+ok 239 - 正常模式產品詳情提供四個供應狀態操作
   ---
-  duration_ms: 0.281466
+  duration_ms: 0.243361
   type: 'test'
   ...
 # Subtest: 批量模式點擊整張產品卡即可加入或取消
-ok 239 - 批量模式點擊整張產品卡即可加入或取消
+ok 240 - 批量模式點擊整張產品卡即可加入或取消
   ---
-  duration_ms: 0.185126
+  duration_ms: 0.161689
   type: 'test'
   ...
 # Subtest: 目前分類支援一次性多選、全選及全不選並保留跨分類選取
-ok 240 - 目前分類支援一次性多選、全選及全不選並保留跨分類選取
+ok 241 - 目前分類支援一次性多選、全選及全不選並保留跨分類選取
   ---
-  duration_ms: 0.158386
+  duration_ms: 0.134349
   type: 'test'
   ...
 # Subtest: 提供紫米快捷操作、售罄獨立分類及清晰狀態卡
-ok 241 - 提供紫米快捷操作、售罄獨立分類及清晰狀態卡
+ok 242 - 提供紫米快捷操作、售罄獨立分類及清晰狀態卡
   ---
-  duration_ms: 0.233116
+  duration_ms: 0.219996
   type: 'test'
   ...
 # Subtest: 售罄頁可獨立切換大圖小圖及純文字卡
-ok 242 - 售罄頁可獨立切換大圖小圖及純文字卡
+ok 243 - 售罄頁可獨立切換大圖小圖及純文字卡
   ---
-  duration_ms: 0.202158
+  duration_ms: 0.187688
   type: 'test'
   ...
 # Subtest: 應用程式路由已接入售罄頁
-ok 243 - 應用程式路由已接入售罄頁
+ok 244 - 應用程式路由已接入售罄頁
   ---
-  duration_ms: 0.389718
+  duration_ms: 0.376548
   type: 'test'
   ...
 # Subtest: 售罄頁使用正確餐牌後備參數，網絡失敗亦保留可操作頁面
-ok 244 - 售罄頁使用正確餐牌後備參數，網絡失敗亦保留可操作頁面
+ok 245 - 售罄頁使用正確餐牌後備參數，網絡失敗亦保留可操作頁面
   ---
-  duration_ms: 0.451093
+  duration_ms: 0.474963
   type: 'test'
   ...
 # Subtest: 售罄產品移出原分類並集中到售罄分類，停售仍留原分類
-ok 245 - 售罄產品移出原分類並集中到售罄分類，停售仍留原分類
+ok 246 - 售罄產品移出原分類並集中到售罄分類，停售仍留原分類
   ---
-  duration_ms: 0.206436
+  duration_ms: 0.198934
   type: 'test'
   ...
 # Subtest: 小圖與純文字卡共用點單頁自適應卡尺寸模型
-not ok 246 - 小圖與純文字卡共用點單頁自適應卡尺寸模型
+not ok 247 - 小圖與純文字卡共用點單頁自適應卡尺寸模型
   ---
-  duration_ms: 0.908538
+  duration_ms: 0.92557
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/soldout-page.test.mjs:80:1'
   failureType: 'testCodeFailure'
@@ -2901,15 +2929,15 @@ not ok 246 - 小圖與純文字卡共用點單頁自適應卡尺寸模型
     Test.run (node:internal/test_runner/test:1101:12)
     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
-1..246
-# tests 246
+1..247
+# tests 247
 # suites 0
 # pass 237
-# fail 9
+# fail 10
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 850.477411
+# duration_ms 867.154994
 ```
 
 ## Syntax checks
