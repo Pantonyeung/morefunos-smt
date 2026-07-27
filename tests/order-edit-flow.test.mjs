@@ -6,6 +6,7 @@ import {acceptPendingOrder,combineRiceballSet,dissolveRiceballSet,completeExpire
 const page = await readFile(new URL('../pages/order/page.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../pages/order/page.css', import.meta.url), 'utf8');
 const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');
+const productCss = await readFile(new URL('../pages/order/product-card.css', import.meta.url), 'utf8');
 const drinkCss = await readFile(new URL('../pages/order/drink-card.css', import.meta.url), 'utf8');
 
 test('quick mode uses a direct-add product action', () => {
@@ -145,7 +146,7 @@ test('completion exposes automatic, specified, and demo link-up flows', () => {
 
 test('large product grid reserves complete rows and never overlaps cards', () => {
   assert.match(css,/\.products-large\s*\{[^}]*grid-auto-rows:\s*max-content/);
-  assert.match(css,/\.product-card\.large\s*\{[^}]*min-height:/);
+  assert.match(productCss,/\.product-card\.large\s*\{[^}]*min-height:/);
 });
 
 test('collapsed quick drinks use the approved centred pill above navigation', () => {
@@ -200,9 +201,9 @@ test('sold-out preview reads the same local supply status as the badge', () => {
 
 test('order cards distinguish sold-out orange from paused red without greying', () => {
   assert.match(page,/status==='soldout'\?'sold-out':status==='paused'\?'paused'/);
-  assert.match(css,/\.product-card\.sold-out/);
-  assert.match(css,/\.product-card\.paused/);
-  assert.doesNotMatch(css,/\.product-card\.sold-out[^}]*grayscale/);
+  assert.match(productCss,/\.product-card\.sold-out/);
+  assert.match(productCss,/\.product-card\.paused/);
+  assert.doesNotMatch(productCss,/\.product-card\.sold-out[^}]*grayscale/);
 });
 
 test('paused products sort to the end of their current order category', () => {
