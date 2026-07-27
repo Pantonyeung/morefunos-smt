@@ -1,6 +1,6 @@
 # 磨飯 SMT AI 工作入口
 
-> **強制規則：任何 AI、Codex、Work 模式、程式代理、開發者或新對話，在分析、設計或修改 SMT 前，必須先完整閱讀三份 PRIMARY STANDARD、Component Ownership Registry，以及多專業工程與外部參考標準。未完成閱讀，禁止修改程式。**
+> **強制規則：任何 AI、Codex、Work 模式、程式代理、開發者或新對話，在分析、設計或修改 SMT 前，必須先完整閱讀三份 PRIMARY STANDARD、Component Ownership Registry、多專業工程與外部參考標準，以及 Engineering Success & Pitfalls。未完成閱讀，禁止修改程式。**
 
 ## 三份同級最高開發標準
 
@@ -53,6 +53,12 @@
 
 如果產品要求同更安全、更可維護、更符合成熟 App／POS 工程原則嘅方法衝突，工程代理有責任直接指出風險、提出替代方案並說明原因；不得只為迎合要求而製造長期技術債。
 
+## 強制 Engineering Success & Pitfalls
+
+`docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`
+
+任何 Bug、Regression、Responsive、Authority、Cache、QA／CI 修改前必須先讀。已記錄成功做法不得重新發明第二套；已記錄踩坑不得在沒有新證據下重試。
+
 ---
 
 ## 強制閱讀順序
@@ -64,12 +70,14 @@
 3. `docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`
 4. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`
 5. `docs/SMT_EXTERNAL_ENGINEERING_REFERENCE_STANDARD_V1.0.md`
-6. `SMT_AI_START_HERE.md`
-7. `SMT_CONTEXT_MIN.md`
-8. 與任務相關的 `docs/ai-context/SMT_CODE_MAP.md` 章節
-9. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md` 的相關章節
-10. Bug／修改工作必讀 `SMT_CHANGE_IMPACT.md`
-11. 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
+6. `docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`
+7. `SMT_AI_START_HERE.md`
+8. `SMT_CONTEXT_MIN.md`
+9. 與任務相關的 `docs/ai-context/SMT_CODE_MAP.md` 章節
+10. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md` 的相關章節
+11. Bug／修改工作必讀 `SMT_CHANGE_IMPACT.md`
+12. 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
+13. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`，確認目前自動測試／Browser QA 真實狀態
 
 ---
 
@@ -82,6 +90,8 @@
 - 已閱讀 Adaptive Application Standard；
 - 已閱讀 Component Ownership Registry；
 - 已閱讀多專業工程與外部參考標準；
+- 已閱讀 Engineering Success & Pitfalls；
+- 已閱讀最新 QA report，並分清程式存在／自動測試／Browser QA／實機驗收；
 - 本次需求所屬 Domain；
 - Registry 指定嘅 Layout／Visual／State／Domain Authority；
 - 將新增／修改邊個 MFKG Node／Edge；
@@ -161,12 +171,14 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 3. SMT Development Charter + MFKG Standard + Adaptive Application Standard。
 4. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`。
 5. `docs/SMT_EXTERNAL_ENGINEERING_REFERENCE_STANDARD_V1.0.md`。
-6. 產品負責人在目前對話的最新明確確認（不得默認推翻最高標準）。
-7. `docs/ai-context/SMT_DECISION_LEDGER.md` 中 `LOCKED`／`CURRENT` 決策。
-8. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`。
-9. `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 的程式及驗證證據。
-10. 最新官方 Apple／Android／Web／POS 工程資料，用作技術驗證及風險挑戰，不得推翻 More Fun Business Rule。
-11. 舊基線、舊效果圖、舊 log；只作背景，不得推翻上列資料。
+6. `docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`（已證明有效／失敗的工程經驗，不得無證據重踩）。
+7. 產品負責人在目前對話的最新明確確認（不得默認推翻最高標準）。
+8. `docs/ai-context/SMT_DECISION_LEDGER.md` 中 `LOCKED`／`CURRENT` 決策。
+9. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`。
+10. `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 的程式及驗證證據。
+11. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md` 的機器驗證證據。
+12. 最新官方 Apple／Android／Web／POS 工程資料，用作技術驗證及風險挑戰，不得推翻 More Fun Business Rule。
+13. 舊基線、舊效果圖、舊 log；只作背景，不得推翻上列資料。
 
 安全、資料完整、離線可操作及繁體中文不得低於舊基線。
 
@@ -174,15 +186,16 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 
 ## 工作規則
 
-- 不得把設計確認、程式存在、自動測試、實機通過及最終 Lock 混為一談。
+- 不得把設計確認、程式存在、自動測試、Browser QA、實機通過及最終 Lock 混為一談。
 - 矛盾舊資料標記 `SUPERSEDED`，不要重新詢問已鎖定決策。
-- 修改前查 `SMT_CHANGE_IMPACT.md`；修改後更新狀態、決策、程式地圖、MFKG 及 Chat 接力包。
+- 修改前查 `SMT_CHANGE_IMPACT.md`；修改後更新狀態、決策、程式地圖、MFKG、Engineering Success & Pitfalls 及 Chat 接力包。
 - 所有主卡同時只可開一張；頂欄、底欄及結帳區不得被內容推動或遮蓋。
-- 不可聲稱已完成未做的 API、硬件或實機驗收。
+- 不可聲稱已完成未做的 API、硬件、Browser 或實機驗收。
 - 第一次 Fix 失敗必須 STOP 查根因及 Ownership／Authority Conflict，禁止直接疊第二層 Fix。
 - 禁止以 MutationObserver／DOM 掃描補自己已有 State；禁止永久 Patch／Override／Hotfix 層。
 - 禁止所有 State Change 重畫整個 App；優先局部 Surface Update。
 - 已封板 Component 預設不可修改；新需求只可改 Registry 指定真正責任來源。
+- Debug「改咗但冇變」固定按 `DOM → Authority → selector chain → Adaptive Token → JS runtime write → asset cache → child build → Shell build → root loader → QA evidence` 排查；禁止先加 override。
 - 對重要架構、效能、Adaptive、離線、POS、打印、同步問題，應主動查閱最新官方資料；不得用過時記憶取代驗證。
 - 當產品要求與更安全、更可維護的工程方案衝突時，先指出風險並採用能長期維護 SMT 的方案；除非產品負責人明確要求改標準。
 - token 接近結束時，按 `SMT_CHAT_HANDOFF_PROTOCOL.md` 產生 checkpoint，不得以 token 不足停止開發。
@@ -193,4 +206,7 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 node scripts/validate-ai-context.mjs
 node scripts/audit-component-ownership.mjs
 node --test tests/*.test.mjs
+npm run qa:browser
 ```
+
+只有 `docs/qa/SMT_RUNTIME_PHASE3_QA.md` 同時顯示 Authority、Node、Syntax、Browser 全部成功，先可以寫自動 QA 全綠；實機驗收仍然必須另外記錄。
