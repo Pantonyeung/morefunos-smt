@@ -1,0 +1,26 @@
+name: Required Flow Contract
+
+on:
+  pull_request:
+    branches: [smt-functional-completeness-v1]
+    paths:
+      - 'pages/order/required-flow-domain.js'
+      - 'tests/required-flow-domain.test.mjs'
+      - '.github/workflows/required-flow-contract.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  required-flow-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check Required Flow Domain
+        run: node --check pages/order/required-flow-domain.js
+      - name: Run Required Flow Contract
+        run: node --test tests/required-flow-domain.test.mjs
