@@ -25,5 +25,9 @@ jobs:
         run: node tests/printer-routing.test.mjs
       - name: Five-printer settings contract
         run: node --test tests/printer-settings-model.test.mjs
+      - name: Printer settings UI model contract
+        run: node --test tests/printer-settings-ui-model.test.mjs
+      - name: Printer settings controller contract
+        run: node --test tests/printer-settings-controller.test.mjs
       - name: Full Node regression
         run: node --test tests/*.test.mjs
