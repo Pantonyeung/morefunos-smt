@@ -12,6 +12,7 @@ on:
       - 'scripts/audit-component-ownership.mjs'
       - 'tests/**.test.mjs'
       - 'tests/**/*.spec.js'
+      - 'SMT_CONTEXT_MIN.md'
       - 'app-loader.js'
       - 'app-shell.css'
       - 'pages/order/**'
@@ -26,6 +27,21 @@ on:
     paths:
       - '.browser-qa-trigger'
       - '.github/workflows/qa-runtime-phase3.yml'
+      - 'package.json'
+      - 'playwright.config.cjs'
+      - 'scripts/audit-component-ownership.mjs'
+      - 'tests/**.test.mjs'
+      - 'tests/**/*.spec.js'
+      - 'SMT_CONTEXT_MIN.md'
+      - 'app-loader.js'
+      - 'app-shell.css'
+      - 'pages/order/**'
+      - 'pages/orders/**'
+      - 'pages/dine/**'
+      - 'pages/soldout/**'
+      - 'pages/more/**'
+      - 'shared/**/*.css'
+      - 'shared/**/*.js'
 permissions:
   contents: write
 jobs:
@@ -35,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: smt-functional-completeness-v1
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'smt-functional-completeness-v1' }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -178,10 +194,11 @@ jobs:
             playwright-report/
             test-results/
             browser-regression-summary.txt
+            docs/qa/SMT_RUNTIME_PHASE3_QA.md
           if-no-files-found: ignore
           retention-days: 14
       - name: Commit QA report
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         run: |
           git config user.name morefun-qa-bot
           git config user.email actions@users.noreply.github.com
