@@ -1,62 +1,120 @@
 # SMT Context Min｜新對話最小上下文
 
-你正在協助開發香港餐飲 POS「磨飯 SMT」。現行功能完整性分支 `smt-functional-completeness-v1`。任何 AI／Codex／Work 開始前必須先讀 `AGENTS.md`、`docs/SMT_DEVELOPMENT_CHARTER_V1.0.md`、`docs/MFKG_STANDARD_V1.0.md`、`docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`、`docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`、`docs/SMT_EXTERNAL_ENGINEERING_REFERENCE_STANDARD_V1.0.md`、`docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`、根目錄 `SMT_CHANGE_IMPACT.md` 及最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`。三份最高標準共同構成 SMT Development Standard。舊 Lock 只作安全回滾；功能真相以最高標準、Decision Ledger、Current Lock、Implementation Status、MFKG、正式 Runtime 及最新證據為準。Firebase RTDB 是即時餐牌來源；Google Sheet 只作 Mirror／Control／Fallback 參考，Apps Script 不在正式 POS 運行鏈路。
+你正在協助開發香港餐飲 POS「磨飯 SMT」。正式功能基準分支：`smt-functional-completeness-v1`。
 
-`order-v1-29` 起，點單頁基礎狀態欄是所有主要頁永久全域欄，頁面專用狀態只可附加；底部五項導航共用同一元件、尺寸、圖標及完整選中膠囊。分類、頁籤、渠道、付款、來源、模式及主題等文字式選擇亦共用膠囊語言；產品、訂單及飲品內容卡保留卡片選中框。
+## 開工必讀
+任何 AI／Codex／Work 開始前先讀：
+1. `AGENTS.md`
+2. `docs/SMT_DEVELOPMENT_CHARTER_V1.0.md`
+3. `docs/MFKG_STANDARD_V1.0.md`
+4. `docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`
+5. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`
+6. `docs/SMT_EXTERNAL_ENGINEERING_REFERENCE_STANDARD_V1.0.md`
+7. `docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`
+8. `SMT_CHANGE_IMPACT.md`
+9. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`
 
-核心規則：固定頂／底欄；內容內滾動；同時只開一張卡；背景及空白不可關卡；卡貼近來源且箭嘴精確指向；右手主要確認。購物車價格最右，上價下操作，圖片可關且不留空位。快捷模式點產品直接入車，必選進待補。快捷飲品平時只見底部把手，展開向上；快捷飲品、產品修改套餐飲品、必選整理飲品共用同一 image-first Drink Choice Card 核心，圖片係主要辨認資訊，名稱及選中數量屬次要資訊；容器尺寸可不同但不得另寫第二套 Card。指定配對按數量產生 A–Z。待處理分 App／Web 和電話／WhatsApp；核款才接單，接單後運行30分鐘自動完成。
+GitHub = 程式／工程 Authority；Google Drive = 後端／設定／歷史參考；Jade = AI 接手導航。禁止建立第二套真相。
 
-暫存按終端分開流水（SMT-01／SMM-01）；跨機取回保留來源，再暫存改用接手機新編號；結帳寫入實際結帳終端及完整 audit。
+## 核心硬規則
+- 1920×1080 = 唯一視覺封板模板；1600×900、1440×900、1366×768、1280×800 只做同一 App Adaptive Regression。
+- 一項決策只可有一個 Authority；發現兩套 State／Domain／Visual／Payload 真相先收口再改功能。
+- 程式存在 ≠ 自動測試 PASS ≠ Browser QA PASS ≠ 實機 PASS ≠ 最終 Lock。
+- SMT／SMM 共用同一 Domain／資料模型／Business Rule；SMM 只係手機衍生 UI，打印交 SMT／打印端。
+- D-052：APK-first。先穩定 Android Shell／Bridge／Recovery／Update／Print 底層，再逐步接 Web／UI／業務模組。
 
-渠道付款已分流：只有現場外賣／堂食選付款，現金先顯示鍵盤；電話／WhatsApp及磨飯 App 備用單進入付款待核實；Keeta／Foodpanda為平台已付並記25%佣金預估。完成核對、更正原因、核數／通知隊列及行內部分取消已有本機鏈路，真實 Firebase／通知／硬件 API 尚未接入。
+# CURRENT A／B／C｜2026-07-27
 
-完成度分開：`未做`、`部分做到`、`程式有、實機失敗`、`待實機驗收`、`已鎖定`。自動測試不等於 T2／T2S／新 POS 已鎖定；真實 API、付款上載及硬件必須另有實機證據。
+## A｜五尺寸 Browser QA
+正式 Authority：`.github/workflows/qa-runtime-phase3.yml`。
 
-堂食頁固定為一至八號及戶外九宮格；枱位只分未使用／使用中，35分鐘只作紅色提示。空枱進入點餐只建立意圖，正式提交餐品才開枱；點單頁可取消今次堂食點單，有餐品時二次確認，並同步清除購物車及堂食脈絡。已使用枱取消加單不影響原有餐品。撳枱卡亦可開簡潔詳情；掃碼新增單以右側半屏待確認，確認後才打印。付款支援全數或按餐品及數量分拆，多次使用不同方式。程式現為本機鏈路，真實掃碼、付款及打印接口未完全接入。
+已做：
+- 每個 Playwright spec 180 秒 timeout；
+- PASS／FAIL／TIMEOUT 摘要；
+- Playwright artifact；
+- 最終 `RESULT=PASS` hard gate；
+- 已備份：`backup/qa-runtime-before-browser-summary-20260727`。
 
-售罄管理頁：今日售罄移到獨立售罄分類並以橙色顯示；暫停供應留原分類最後並以紅色顯示；兩者不灰化。點單頁售罄保留原位置、停售排分類最後，頂欄角標、預覽及產品卡共用同一供應狀態。小圖卡已修正父子格線擠壓，仍待多尺寸及實機確認。
+真實狀態：
+- 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md` 仍係舊 `Commit: e2145bc3dd48a46127d1abc33aa035fc1bea24d7`；
+- 因此**禁止聲稱最新五尺寸 PASS**；
+- 舊 bounded QA 已知 Authority／AI Context／Node／Server 前置 PASS，Browser regression 為唯一失敗層；
+- 下一步：令正式 QA 產生對齊最新 base HEAD 嘅 report，再只修真正 fail spec，禁止倒退 Current Authority。
 
-更多頁固定六個入口：收銀與日結、報表與分析、打印與設備、備份與恢復、顯示與操作、系統與更新。報表可查今日、昨日、七日、三十日、三個月、六個月及自訂日期；營業、渠道、付款、商品、異常五頁共用範圍。打印核心使用 `morefun.print.v1`；排隊不等於實體打印成功。
+## B｜Printer Module V1｜PR #17
+Branch：`printer-transport-settings-v1`
+PR：#17 `Printer Module V1｜Transport + Media + Driver + Failover Settings`
+最新 head：`91864cceb0d37e7fbe7ec6994019355a3ffe5ff6` 之後仍有持續提交；接手時必須 fresh-read PR head。
 
-同一同步訂單集合及活躍堂食共用每日顯示流水，早上五時按營業日由 `P001` 重新開始，最多 `P999`；堂食首次正式落單即鎖號，跨日付款不改號；顯示流水不可作資料庫唯一鍵。跨兩部完全獨立實體終端的唯一派號仍須正式後台原子遞增 API，未接通前不可宣稱跨機 Lock。
+已建立：
+- Sunmi／LAN TCP transport；
+- 五部打印機獨立 IP／Port；
+- Media Profile：roll／label，尺寸任意可設，不硬鎖 80／50mm；
+- Driver Profile：`escpos/tspl/epl/zpl/dpl/raw`，encoding／cut／density／speed；
+- Primary／Fallback、manual／auto failover、reroute history；
+- Settings Model／UI Model／Controller／Renderer；
+- `morefun.print.asset.v1` Rendered Asset Contract；
+- ESC/POS raster renderer；
+- TSPL bitmap renderer；
+- Template Layout Plan；
+- Browser/WebView Rasterizer；
+- 單一路徑 Render Pipeline；
+- B↔C `morefun.print.v1` binary Payload Builder；
+- Print Domain 已收口：LAN 正式路徑只接受 Rendered Binary Asset；紙張尺寸跟 Media Profile 驗證。
 
-## 2026-07-27｜CURRENT A／B／C 接手 checkpoint
+正式打印鏈：
+`Print Document → Layout Plan → WebView Raster → ESC/POS/TSPL Binary Asset → morefun.print.v1 Payload → Android TCP Bridge`
 
-### A 線｜永久五尺寸 Browser QA
-- 正式 Browser QA Authority：`.github/workflows/qa-runtime-phase3.yml`；禁止再用 Pairing cleanup workflow 當永久 Browser QA。
-- 正式驗收尺寸：1920×1080、1600×900、1440×900、1366×768、1280×800；同一 Adaptive App，不是五套 UI。
-- 舊 bounded Pairing QA 已證明 Authority／AI Context／Node／Server 前置 PASS，但 Browser regression step FAIL；舊流程曾因單 spec hang 無限卡住。
-- 已備份正式 QA workflow：`backup/qa-runtime-before-browser-summary-20260727`。
-- 正式 QA 已加入每 spec 180 秒 timeout、PASS／FAIL／TIMEOUT 摘要、Playwright artifact、final `RESULT=PASS` hard gate；commit `b4d01454d53188d492082bd7c0e48c86d8c1918a`。
-- 正式 QA 同一 Authority 已再支援 QA PR trigger；base commit `6032dd7dee51d373192aca905c2f6af029fb485c`，PR #16 trigger head `f22cf1bca4bff1ca0af1ec94dbf205099ad3fc3b`。
-- 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md` 暫仍係舊 commit `e2145bc3dd48a46127d1abc33aa035fc1bea24d7`，所以現時禁止聲稱最新五尺寸 PASS；下一步必須等正式 QA report 追上新 HEAD，再只修真實 fail spec，禁止倒退 Current Authority。
+禁止倒退：
+- Native 不解析模板；
+- Native 不揀 fallback；
+- LAN raw TCP write 不等於打印格式成功；
+- ZPL／EPL／DPL 暫只係可設定 Driver Profile，未有 Renderer 前不得聲稱正式支援。
 
-### B 線｜Printer Module V1｜PR #17
-- Branch：`printer-transport-settings-v1`；PR #17：`Printer Module V1｜Transport + Media + Driver + Failover Settings`；保持 Draft／隔離，不直接污染正式 Runtime UI。
-- 已有：Sunmi／LAN transport、每機 IP／Port、Media Profile（卷紙／標籤，尺寸可改）、Primary／Fallback、手動／自動 Failover、reroute history、Settings Model／UI Model／Controller／Renderer。
-- Driver Profile：`escpos`、`tspl`、`epl`、`zpl`、`dpl`、`raw`；字符編碼／切紙／密度／速度屬設備設定。Persisted 舊 driver 與 media 不兼容時正規化到安全預設；員工明確揀不兼容 driver 則阻止。
-- Transport、Media、Command Language、Rendered Asset 分層；LAN TCP 成功不可當完整模板打印成功。
-- 新增 `morefun.print.asset.v1` Rendered Asset Contract：模板結果先變成 exact binary/base64 bytes，Native 不重新理解模板。
-- 第一批真正可實機 Renderer：ESC/POS raster（卷紙）＋ TSPL bitmap（標籤）。ZPL／EPL／DPL 目前只保留 Driver Profile，`rendererAvailable=false`，未完成前不得聲稱可正式打印。
-- Xprinter 官方資料確認 XP-T271U 同時支援 label／receipt mode；標籤模式支援 TSPL／EPL／DPL／ZPL emulation，故 Transport、Media、Command Language 必須分層。
-- PR #17 最新 head checkpoint：`83164dac6c7edc309fe96d2bfefcf3727572a320`；Printer Gate 已包含 transport／media／driver／rendered asset／command renderer／routing／settings／UI model／controller／renderer／full Node regression，但仍需取得最新 CI 證據後先可整合。
-- Android Native 不揀後備機、不重算模板；Web Print Domain 負責 document／template／route／fallback／retry，Driver／Renderer 產生 bytes，Native 只執行指定 target/bytes 並回真實結果。
+整合風險：
+- PR #17 相對 base 已 diverged；最近一次 compare = ahead 55／behind 22，merge-base `7cded53e...`；
+- 呢個符合隔離模組策略，但正式整合前必須由最新 base 建 integration branch，再跑 Printer Contract + 全量 Node + Browser QA；禁止直接硬 merge。
+- GitHub Actions 對 API commit 觸發暫有不穩定；未取得最新 Printer Contract CI evidence 前不得合併。
 
-### C 線｜APK Foundation｜PR #19｜最高工程優先
-- Branch：`apk-foundation-v1`；PR #19：`APK Foundation V1｜Android 6–11 Shell + Versioned Native Bridge`。
-- 策略 D-052：先完成可上機 APK Foundation，再逐步受控更新 Web／UI／業務模組；新增 Native permission／driver／破壞性 Bridge Contract 仍要重發 APK。
-- 單一 APK 兼容基準：T2 Android 6.0.1 / API 23（災難後備）、T2S Android 9 / API 28、新 POS Android 11 / API 30。
-- `minSdk=23`、compile/target=36、AndroidX WebKit 1.15.0；新 WebView 用 origin-restricted WebMessage，舊 WebView 只在 feature 不支援時啟用 `LegacyBridgeAdapter`，兩者共用同一 `BridgeProtocol`。
-- LAN TCP Native Bridge 已有：真 Socket、完成後先回 `printed`、失敗回 error、idempotency ledger；queued 不得當 printed。
-- Native Bridge 已再支援 `content.base64` exact binary bytes；binary 模式原封不動送出 bytes，不自行加換行／切紙／模板命令；文字 diagnostic 模式仍保留。責任仍屬 Transport only。
-- Android 6 兼容改動前備份：`backup/apk-foundation-pre-android6-20260727`。
-- binary Bridge workflow run `30260234182` 已 COMPLETED／SUCCESS：Android 6 Authority Gate、Gradle Build、APK existence、artifact upload 全 PASS；head `e0d2e51d946edb4712d850bae8da1ea50452e371`。
-- 最新 APK artifact：id `8650613654`；GitHub artifact digest `sha256:28121dccaf33ac7482404f98f37abc1ee4f2edf7b836f2884d1396b9a5376d28`。
-- 對話工作區最新實際 APK：`/mnt/data/MoreFun_SMT_APK_Foundation_Android6-11_BinaryPrint_Debug.apk`；1,368,158 bytes；SHA-256 `23944fe0bf028ea861527ce9899e6a3afd93a9369ef9ce33f26035f9cc279ebd`。
-- 本地 diagnostic page 已加入 LAN IP／Port TCP 測試及同一 idempotencyKey 重送測試；此 Gate 只證明 Transport，不等於中文、切紙、標籤模板正式完成。
-- 下一個 C 線實機 Gate：T2 API23 安裝／啟動 → Bridge diagnostic → LAN TCP → duplicate suppression → ESC/POS raster 中文／切紙 Driver Gate → TSPL label bitmap Gate → T2S API28、新 POS API30 回歸。
+## C｜APK Foundation｜PR #19｜最高工程優先
+Branch：`apk-foundation-v1`
+PR：#19 `APK Foundation V1｜Android 6–11 Shell + Versioned Native Bridge`
+最新已驗 head：`36512925d38c66e1993b2ca216898cfe4acd8216`
+
+兼容基準：
+- T2 Android 6.0.1 / API 23 = 災難後備最低線；
+- T2S Android 9 / API 28；
+- 新 POS Android 11 / API 30。
+
+已建立：
+- Kotlin 單 Activity Shell；
+- WebViewAssetLoader；
+- 新 WebView origin-restricted WebMessage；舊 WebView fallback `LegacyBridgeAdapter`；
+- `minSdk=23`、compile/target=36、AndroidX WebKit 1.15.0；
+- Device／Terminal identity；Network status；Kiosk 基礎；
+- LAN TCP Socket；
+- 真實 `printed/failed` callback；
+- idempotency ledger；
+- `content.base64` exact binary bytes；binary 模式不自行加換行／切紙／模板命令。
+
+最新 Build evidence：
+- workflow run `30262432561` = COMPLETED / SUCCESS；
+- Authority Gate、Android SDK、Gradle Build、APK exists、artifact upload 全 PASS；
+- artifact id `8651471180`；GitHub digest `sha256:356b1ee91e1a5d61db05b77f3259a2065a05cbc86a2884763e2188ba15fd2f8b`；
+- 對話工作區 ZIP：`/mnt/data/MoreFun_SMT_APK_Foundation_Latest_Debug.zip`；
+- 解壓 APK：1,367,821 bytes；SHA-256 `c1806dbff77a64cecc55de861dbf20c0084378104f3bb593c1ad60860b6e7fb8`。
+
+注意：Build PASS ≠ 實機 PASS。
+
+下一個 C Gate：
+`T2 API23 安裝／啟動 → Bridge diagnostic → LAN TCP → duplicate suppression → ESC/POS raster 中文／切紙 → TSPL label bitmap → T2S API28 回歸 → 新 POS API30 回歸`
+
+## 備份／Rollback
+- `backup/apk-foundation-pre-android6-20260727`
+- `backup/qa-runtime-before-browser-summary-20260727`
+- 舊 APK artifacts 保留作 rollback，不可當 latest。
 
 ## 強制接手規則
-任何 checkpoint 都要假設下一句可能由另一個 AI 接手。最少保留：目標、Repo／Branch／PR、最新 head、完成／未完成、CI／QA 真實層級、已知根因、禁止倒退事項、備份／rollback、下一步唯一優先、待實機 Gate。禁止只寫「已處理／繼續」。
+任何 checkpoint 都假設下一句可能由另一個 AI 接手。最少保留：目標、Repo／Branch／PR、latest head、完成／未完成、CI／QA 層級、已知根因、禁止倒退事項、backup／rollback、下一步唯一優先、待實機 Gate。
 
-若要改程式，必須 fresh-read 正式 repository 及 `AGENTS.md` 必讀鏈；每輪結束同步 checkpoint。
+若要改程式，必須 fresh-read 正式 repository、`AGENTS.md` 必讀鏈及各 PR 最新 head；聊天摘要不得取代 GitHub Authority。
