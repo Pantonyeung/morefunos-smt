@@ -1,4 +1,4 @@
-# SMT Component Ownership Registry V1.2
+# SMT Component Ownership Registry V1.3
 
 > 狀態：CURRENT / HARD RULE
 > 目的：一個元件可以由多層架構共同組成，但同一項決策只可以有一個唯一 Authority。
@@ -47,7 +47,7 @@
 |---|---|---|---|---|---|---|
 | Order Page Workspace | `pages/order/page.css` | `pages/order/page.js` | `pages/order/page.css` | Page Store | responsive/adaptive tokens | Loader 注入 UI |
 | Category / Search | `page.css` | `page.js` | `page.css` | `category-layout.js` / transient state | adaptive category tokens | Adaptive 重畫 DOM |
-| Product Card | `page.css` | `page.js` | `page.css` + page-owned `adaptive.css` | Catalog | adaptive row tokens | Shared Adaptive 直接改 card internal selector |
+| Product Card | `page.css`／產品列表 | `page.js::productCard` | `pages/order/product-card.css` | Catalog | `--adaptive-product-row-*`／readability tokens | `page.css`／`adaptive.css`／Shared Adaptive 新增第二套 card internal visual |
 | Cart Surface 外部位置 | `page.css` | `page.js` | N/A | Order Store | `--cart-width` | `cart.css` 重排整個 page composition |
 | Cart Component 內部 | N/A | `page.js::cartLineRow/cartSurface` | `pages/order/cart.css` | `order-domain.js` | `--adaptive-cart-*` | `page.css`／Adaptive 重複定義 Cart internal property |
 | 外／堂＋序號 Marker | N/A | `cartLineRow` | `cart.css` | `order-domain.js` service mode | `--adaptive-cart-marker = --adaptive-cart-image × 0.9` | Shared CSS 再定義 marker geometry |
@@ -56,7 +56,7 @@
 | Drink Choice Card | Container 由使用場景決定 | `page.js::drinkChoiceCard` | `pages/order/drink-card.css` | Order state | context class/token | `page.css`／`cart.css`／Adaptive 新增第二套 card internal visual |
 | Quick Drink Drawer | `cart.css` | `page.js` | `cart.css` | Order transient state | adaptive available area | 重寫 Drink Card 本體 |
 | Required Workflow | Modal shell | `page.js` | `cart.css` | `pendingSummary` / Domain | modal bounds tokens | Adaptive 直接改 required internal selector |
-| Specified Pairing | Modal shell | `page.js` | Modal/component CSS | `order-domain.js` | pool/link data | Quick Drink 建第二 pairing domain |
+| Specified Pairing / Combo Edit Task Modal | Modal shell | `page.js` | `pages/order/pairing-modal.css` | `order-domain.js` | viewport bounds / pool-link data | `page.css`／Adaptive 建第二套 bounded modal layout |
 | Modal State / Dirty Exit | Shell bounds | `page.js` | modal primitives + page component CSS | `page.js` single modal state | viewport bounds | 每張 Modal 自己發明退出規則 |
 | Recent Highlight / Auto Scroll | Cart composition | `page.js` | `cart.css` | Store mutation state | N/A | Observer／CSS 自己猜最新項 |
 
@@ -125,7 +125,8 @@ Shell 只接 render-time action descriptors；禁止 MutationObserver／child DO
 狀態：**ARCHITECTURE CONSOLIDATED / WAITING 1920 REGRESSION**
 
 - `shared/adaptive-layout.css` 已收口成純 Token Provider。
-- Order Product 自適應視覺由 `pages/order/adaptive.css` 消費 Token。
+- `pages/order/adaptive.css` 只管理 Product List 可用區／row token 消費，不再管理 Product Card internal geometry。
+- Product Card 內部自適應視覺由 `pages/order/product-card.css` 消費 `--adaptive-product-row-*`／readability tokens。
 - Orders／Soldout component adaptive decisions 已回歸各自 Page Authority。
 - Shared Adaptive 禁止再直接 selector 進 Page Component。
 
@@ -143,15 +144,28 @@ Shell 只接 render-time action descriptors；禁止 MutationObserver／child DO
 
 `page-base.css` 已退出正式 Global Chrome Visual Authority；standalone QA 如需 legacy chrome，只可由 QA 模式消費，不得成為正式 Runtime Authority。
 
+### V9 — Product Card Visual legacy migration
+
+- `pages/order/product-card.css` 已建立為正式 Product Card Internal Visual Authority。
+- 卡片總高度仍由 `--adaptive-product-row-*` 控制；圖片 stage 使用剩餘空間，文字／價格區保留最少 48px 可讀／可操作高度。
+- 大圖圖片元素只佔 stage 約 70% × 70%，使用 `object-fit: contain`，增加留白並完整顯示產品；不再由 Generic `image-shell` 的 `cover` 決定最終呈現。
+- `pages/order/adaptive.css` 已退回 Product List row/token consumer。
+- `pages/order/page.css` 仍保留舊 `.product-card/.product-hero/.product-info/.product-thumb` internal 規則，屬 frozen legacy。
+
+狀態：**AUTHORITY CUTOVER COMPLETE / LEGACY PHYSICAL REMOVAL PENDING / WAITING MULTI-SIZE + REAL-DEVICE REGRESSION**
+
+處理方式：舊 `page.css` Product Card internal 規則只可刪除，不可再擴張；Adaptive 只提供／消費 row token，不得重新接管 card internal geometry。
+
 ## 7. Authority Cleanup 順序
 
 1. V1 Cart legacy physical removal；不得重畫 1920。
 2. V2 Drink Card legacy physical removal。
-3. 做 1920 Cart／Drink Card／Pairing Modal 實機回歸。
-4. V6／V7 只做回歸，不再重新設計。
-5. 視實際重用程度再考慮 Product Card 是否拆成獨立 component stylesheet；**不為拆檔而拆檔。**
+3. V9 Product Card legacy physical removal；保持卡 footprint，驗證 1920／1280 圖片完整顯示及文字可讀。
+4. 做 1920 Cart／Drink Card／Product Card／Pairing Modal 實機回歸。
+5. 做 1280×800 及其餘主要尺寸回歸。
+6. V6／V7 只做回歸，不再重新設計。
 
-V3／V4／V5／V6／V7／V8 已完成架構責任收口；V1／V2 已完成新 Authority cutover，但 legacy CSS 尚未物理移除，因此不得標記為完全 CLEARED。V6／V7 尚未取得實機回歸通過，不得寫成最終驗收完成。
+V3／V4／V5／V6／V7／V8 已完成架構責任收口；V1／V2／V9 已完成新 Authority cutover，但 legacy CSS 尚未物理移除，因此不得標記為完全 CLEARED。V6／V7／V9 尚未取得實機回歸通過，不得寫成最終驗收完成。
 
 ## 8. 修改前 Authority Gate
 
