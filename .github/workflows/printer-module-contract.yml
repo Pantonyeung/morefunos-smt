@@ -31,6 +31,8 @@ jobs:
         run: node --test tests/printer-template-layout.test.mjs
       - name: Printer browser rasterizer contract
         run: node --test tests/printer-browser-rasterizer.test.mjs
+      - name: Printer render pipeline contract
+        run: node --test tests/printer-render-pipeline.test.mjs
       - name: Printer job payload contract
         run: node --test tests/printer-job-payload.test.mjs
       - name: Print Domain authority contract
