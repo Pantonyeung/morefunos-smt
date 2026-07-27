@@ -34,6 +34,28 @@ jobs:
       - name: Apply guarded V2 Drink Card legacy cleanup
         run: node scripts/cleanup-order-page-drink-card-legacy.mjs
 
+      - name: Migrate Drink Card regression assertions to final authority
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const file='tests/order-edit-flow.test.mjs';
+          let text=fs.readFileSync(file,'utf8');
+          const replacements=[
+            ["const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');", "const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');\nconst drinkCss = await readFile(new URL('../pages/order/drink-card.css', import.meta.url), 'utf8');"],
+            ["assert.match(css,/\\.quick-drawer-panel \\.drink-choice-card\\s*\\{/);", "assert.match(drinkCss,/\\.drink-card--drawer/);"],
+            ["assert.match(css,/\\.drink-choice-card\\.selected::after/);", "assert.match(drinkCss,/\\.drink-choice-card\\.selected::before/);"],
+            ["assert.match(css,/\\.drink-card--drawer/);", "assert.match(drinkCss,/\\.drink-card--drawer/);"],
+            ["assert.match(css,/\\.drink-card--detail/);", "assert.match(drinkCss,/\\.drink-card--detail/);"],
+            ["assert.match(css,/\\.drink-card--completion/);", "assert.match(drinkCss,/\\.drink-card--completion/);"],
+            ["assert.match(css,/\\.drink-choice-count/);", "assert.match(drinkCss,/\\.drink-choice-count/);"],
+          ];
+          for(const [from,to] of replacements){
+            if(!text.includes(from))throw new Error('Expected Drink Card regression assertion not found: '+from);
+            text=text.replace(from,to);
+          }
+          fs.writeFileSync(file,text,'utf8');
+          NODE
+
       - name: Assert V2 legacy selectors are absent
         run: |
           if grep -En '\.drink-choice-card|\.drink-choice-img|\.drink-choice-count|\.drink-card--drawer|\.drink-card--detail|\.drink-card--completion' pages/order/page.css; then
@@ -54,9 +76,9 @@ jobs:
         run: |
           git config user.name 'MoreFun Drink Card Authority QA'
           git config user.email 'actions@users.noreply.github.com'
-          git add pages/order/page.css
+          git add pages/order/page.css tests/order-edit-flow.test.mjs
           if git diff --cached --quiet; then
-            echo 'No page.css Drink Card cleanup change required.'
+            echo 'No V2 Drink Card cleanup change required.'
             exit 0
           fi
           git commit -m 'refactor(order): physically remove V2 Drink Card legacy authority'
