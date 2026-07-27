@@ -31,9 +31,11 @@ test('view model exposes media, template, transport and fallback settings from o
   assert.equal(vm.fallbackOptions.some(x=>x.value==='packing-1'),true);
 });
 
-test('list view shows arbitrary label dimensions without hardcoded 50mm',()=>{
+test('list view shows arbitrary roll and label dimensions without hardcoded media sizes',()=>{
   const rows=printerListViewModels(state);
+  const receipt=rows.find(x=>x.id==='receipt-1');
   const label=rows.find(x=>x.id==='label-a');
+  assert.equal(receipt.mediaLabel,'58 mm');
   assert.equal(label.mediaLabel,'60×40 mm');
   assert.equal(label.networkTarget,'10.0.0.22:9102');
 });
