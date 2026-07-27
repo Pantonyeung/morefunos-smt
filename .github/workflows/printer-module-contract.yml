@@ -27,10 +27,12 @@ jobs:
         run: node --test tests/printer-rendered-asset.test.mjs
       - name: Printer command renderer contract
         run: node --test tests/printer-command-renderer.test.mjs
+      - name: Printer template layout contract
+        run: node --test tests/printer-template-layout.test.mjs
       - name: Printer job payload contract
         run: node --test tests/printer-job-payload.test.mjs
       - name: Print Domain authority contract
-        run: node --test tests/printer-domain-authority.test.mjs
+        run: node --test tests/print-domain-authority.test.mjs
       - name: Printer routing contract
         run: node tests/printer-routing.test.mjs
       - name: Five-printer settings contract
