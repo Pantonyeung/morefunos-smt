@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildRequiredTasks,buildRequiredWorkflow,requiredCheckoutGate,requiredTaskId} from '../pages/order/required-flow-domain.js';
+import {buildRequiredTasks,buildRequiredWorkflow,requiredCheckoutGate,requiredTaskId,applyRequiredTaskSelection,clearRequiredTaskSelection} from '../pages/order/required-flow-domain.js';
 
 function line(overrides={}){
   return {
@@ -103,4 +103,51 @@ test('checkout is allowed only when every required task is complete',()=>{
   assert.equal(workflow.nextTask,null);
   assert.equal(workflow.canCheckout,true);
   assert.equal(requiredCheckoutGate(cart).blocked,false);
+});
+
+test('line-level selection applies through the required domain and advances the workflow',()=>{
+  const cart=[line({lineId:'bento',required:['rice','sauce'],options:{}})];
+  const afterRice=applyRequiredTaskSelection(cart,requiredTaskId('bento','rice'),{value:'菜飯'});
+  assert.equal(afterRice[0].options.rice,'菜飯');
+  assert.equal(buildRequiredWorkflow(afterRice).nextTask.group,'sauce');
+  assert.equal(cart[0].options.rice,undefined,'domain mutation must not mutate the input cart');
+});
+
+test('repeated drink selection fills the next slot and never exceeds drinkSlots',()=>{
+  const cart=[line({lineId:'combo',required:['drink'],drinkSlots:2})];
+  const taskId=requiredTaskId('combo','drink');
+  const first=applyRequiredTaskSelection(cart,taskId,{drinkId:'d1',name:'台式奶茶'});
+  const second=applyRequiredTaskSelection(first,taskId,{drinkId:'d2',name:'凍檸茶'});
+  const overflow=applyRequiredTaskSelection(second,taskId,{drinkId:'d3',name:'第三杯'});
+  assert.deepEqual(second[0].drinkAssignments.map(item=>item.drinkId),['d1','d2']);
+  assert.deepEqual(overflow[0].drinkAssignments.map(item=>item.drinkId),['d1','d2']);
+  assert.equal(buildRequiredWorkflow(second).canCheckout,true);
+});
+
+test('specified drink assignment can replace an existing slot without creating a second data model',()=>{
+  const cart=[line({
+    lineId:'combo',required:['drink'],drinkSlots:2,
+    drinkAssignments:[{drinkId:'d1',name:'台式奶茶'},{drinkId:'d2',name:'凍檸茶'}]
+  })];
+  const next=applyRequiredTaskSelection(cart,requiredTaskId('combo','drink'),{drinkId:'d3',name:'玄米冷泡茶'},{assignmentIndex:1});
+  assert.deepEqual(next[0].drinkAssignments.map(item=>item.drinkId),['d1','d3']);
+});
+
+test('clear required selection reopens the same task and checkout gate',()=>{
+  const cart=[line({
+    lineId:'bento',required:['rice','drink'],drinkSlots:1,
+    options:{rice:'肉燥飯'},drinkAssignments:[{drinkId:'d1',name:'台式奶茶'}]
+  })];
+  const noRice=clearRequiredTaskSelection(cart,requiredTaskId('bento','rice'));
+  assert.equal(noRice[0].options.rice,undefined);
+  assert.equal(requiredCheckoutGate(noRice).focusGroup,'rice');
+  const noDrink=clearRequiredTaskSelection(cart,requiredTaskId('bento','drink'),{assignmentIndex:0});
+  assert.equal(noDrink[0].drinkAssignments.length,0);
+  assert.equal(requiredCheckoutGate(noDrink).focusGroup,'drink');
+});
+
+test('invalid or non-required task selection is a safe no-op',()=>{
+  const cart=[line({lineId:'plain',required:[]})];
+  assert.strictEqual(applyRequiredTaskSelection(cart,requiredTaskId('plain','rice'),'菜飯'),cart);
+  assert.strictEqual(clearRequiredTaskSelection(cart,'missing::drink'),cart);
 });
