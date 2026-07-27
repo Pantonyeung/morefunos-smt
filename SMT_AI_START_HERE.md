@@ -2,7 +2,7 @@
 
 > **第一步：完整閱讀 SMT Development Standard 三份 PRIMARY STANDARD。任何 AI／Codex／Work／工程代理未完成閱讀前，禁止分析後直接改碼。**
 
-更新：2026-07-26｜目前功能完整性分支：`smt-functional-completeness-v1`
+更新：2026-07-27｜目前功能完整性分支：`smt-functional-completeness-v1`
 
 ## 三份同級最高標準
 
@@ -47,6 +47,7 @@
 - 第一次 Fix 失敗必須 STOP 查根因，唔可以直接疊第二層 Fix。
 - Adaptive Core 只可控制尺寸／密度／Profile／Available Area；不得建立第二套 Component／Domain／Checkout／Pricing／Print。
 - 重要修改完成後必須同步 MFKG／Decision／Implementation Status／Code Map（按影響範圍）。
+- 每次可驗證成功／踩坑必須追加 `docs/ai-context/SMT_SUCCESS_PITFALL_LOG.md`；禁止下一個 AI 重走已證實無效路線。
 
 ## 現況判斷方式
 
@@ -65,6 +66,7 @@
 ## 按任務載入
 
 - 三份最高標準：`docs/SMT_DEVELOPMENT_CHARTER_V1.0.md` + `docs/MFKG_STANDARD_V1.0.md` + `docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`
+- 成功／踩坑／避錯紀錄：`docs/ai-context/SMT_SUCCESS_PITFALL_LOG.md`
 - 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
 - UI：Current Lock + `docs/ai-context/SMT_CODE_MAP.md`
 - Bug：`SMT_CHANGE_IMPACT.md` + 對應測試
@@ -81,6 +83,7 @@
 Development Charter 已閱讀：是／否
 MFKG Standard 已閱讀：是／否
 Adaptive Application Standard 已閱讀：是／否
+Success / Pitfall Log 已閱讀：是／否
 
 【本次 Domain】
 
