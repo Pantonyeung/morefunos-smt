@@ -120,3 +120,76 @@ export function requiredCheckoutGate(cart=[]){
     focusGroup:workflow.nextTask?.group||''
   };
 }
+
+function normalizeDrinkAssignment(selection){
+  if(!selection||typeof selection!=='object')return null;
+  const drinkId=String(selection.drinkId||selection.productId||selection.id||'').trim();
+  const name=String(selection.name||'').trim();
+  if(!drinkId&&!name)return null;
+  return {
+    ...selection,
+    drinkId,
+    name,
+    sweetness:selection.sweetness||'',
+    ice:selection.ice||''
+  };
+}
+
+function taskForId(cart,taskId){
+  return buildRequiredTasks(cart).find(task=>task.id===taskId)||null;
+}
+
+export function applyRequiredTaskSelection(cart=[],taskId,selection,options={}){
+  const rows=Array.isArray(cart)?cart:[];
+  const task=taskForId(rows,taskId);
+  if(!task)return rows;
+
+  if(task.group!=='drink'){
+    const value=typeof selection==='object'&&selection!==null?selection.value:selection;
+    if(value===undefined||value===null||String(value).trim()==='')return rows;
+    return rows.map(line=>line?.lineId===task.lineId?{
+      ...line,
+      options:{...(line.options||{}),[task.group]:value}
+    }:line);
+  }
+
+  const assignment=normalizeDrinkAssignment(selection);
+  if(!assignment)return rows;
+
+  return rows.map(line=>{
+    if(line?.lineId!==task.lineId)return line;
+    const slots=positiveInt(line.drinkSlots,0);
+    if(slots<=0)return line;
+    const assignments=Array.isArray(line.drinkAssignments)?[...line.drinkAssignments]:[];
+    const requestedIndex=Number.isInteger(options.assignmentIndex)?options.assignmentIndex:assignments.length;
+    if(requestedIndex<0||requestedIndex>=slots||requestedIndex>assignments.length)return line;
+    if(requestedIndex===assignments.length)assignments.push(assignment);
+    else assignments[requestedIndex]=assignment;
+    return {...line,drinkAssignments:assignments.slice(0,slots)};
+  });
+}
+
+export function clearRequiredTaskSelection(cart=[],taskId,options={}){
+  const rows=Array.isArray(cart)?cart:[];
+  const task=taskForId(rows,taskId);
+  if(!task)return rows;
+
+  if(task.group!=='drink'){
+    return rows.map(line=>{
+      if(line?.lineId!==task.lineId)return line;
+      const nextOptions={...(line.options||{})};
+      delete nextOptions[task.group];
+      return {...line,options:nextOptions};
+    });
+  }
+
+  return rows.map(line=>{
+    if(line?.lineId!==task.lineId)return line;
+    const assignments=Array.isArray(line.drinkAssignments)?[...line.drinkAssignments]:[];
+    if(Number.isInteger(options.assignmentIndex)){
+      if(options.assignmentIndex<0||options.assignmentIndex>=assignments.length)return line;
+      assignments.splice(options.assignmentIndex,1);
+    }else assignments.pop();
+    return {...line,drinkAssignments:assignments};
+  });
+}
