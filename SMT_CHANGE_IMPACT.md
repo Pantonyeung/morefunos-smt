@@ -94,7 +94,7 @@
 - Text／Price 可讀區不得因 literal 10% 被壓到不可讀；目前最少 48px。
 
 已知 Migration：
-- V9：`page.css` 舊 Product Card internal rules 仍存在，屬 frozen legacy，只可物理刪除。
+- V9：`page.css` 舊 Product Card internal rules仍存在，屬 frozen legacy，只可物理刪除。
 
 ### D. Pairing Task Modal
 
@@ -148,10 +148,12 @@
 - Authority Audit：硬規則 PASS；
 - Syntax：PASS；
 - 最近已證明 Node baseline：`248/248 PASS`；
-- 永久 Playwright 五尺寸 Browser Matrix 已接入 `qa-runtime-phase3.yml`，但最新 QA report `Commit:` 尚未追上目前 branch HEAD；
-- 因此只可以寫「舊 Node／Authority／Syntax baseline PASS；Browser pipeline 已建立／最新 HEAD Browser 結果待證實」；
+- 正式 Browser QA 唯一 Authority = `.github/workflows/qa-runtime-phase3.yml`；禁止再以 Pairing cleanup workflow 作永久五尺寸 QA；
+- 正式 QA workflow 已加入每 spec 180 秒 timeout、PASS／FAIL／TIMEOUT 摘要、Playwright artifact、final `RESULT=PASS` hard gate；備份 = `backup/qa-runtime-before-browser-summary-20260727`；
+- 正式 QA workflow 已加入 QA PR trigger，但最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md` 仍顯示 `Commit: e2145bc3dd48a46127d1abc33aa035fc1bea24d7`，尚未追上目前驗證目標；
+- 因此只可以寫「舊 Node／Authority／Syntax baseline PASS；Browser pipeline 已收口／最新 HEAD Browser 結果待證實」；
 - 未有 report commit 對齊目前驗證目標前，禁止聲稱最新 Automated QA 全綠；
-- Browser QA／iPad／T2S／實體打印／真實 API 驗收必須另外記錄。
+- Browser QA／T2／T2S／新 POS／實體打印／真實 API 驗收必須另外記錄。
 
 ### I. Change Impact Governance／路徑核對
 
@@ -184,6 +186,29 @@
 - B：Printer Module 繼續獨立完成並經 Contract Gate 驗證。
 - C：APK Foundation 升為最高工程優先；先做可上機嘅 Native Shell／Bridge 骨架。
 
+### K. Printer Driver／Rendered Asset／Native Binary Bridge｜CURRENT
+
+正式責任分層：
+- Print Domain：document／template／route／Primary／Fallback／retry；
+- Printer Transport：Sunmi／LAN TCP/IP、IP／Port；
+- Media Profile：roll／label 及實際寬高；
+- Driver Profile：ESC/POS／TSPL／EPL／ZPL／DPL／raw、encoding／cut／density／speed；
+- Renderer：將模板結果變成 exact bytes；
+- Android Native：只把指定 bytes 寫去指定 target，回真實成功／失敗及 idempotency 結果。
+
+最新隔離實作：
+- PR #17 `printer-transport-settings-v1` 已加入 `morefun.print.asset.v1` Rendered Asset Contract；
+- 第一批 renderer = ESC/POS raster（卷紙）＋ TSPL bitmap（標籤）；ZPL／EPL／DPL 仍未有 renderer，不得標完成；
+- Printer Module Gate 已加入 transport／media／driver／rendered asset／command renderer／routing／settings／UI／full Node contracts；最新 CI 證據仍待取得，未可合併；
+- PR #19 `apk-foundation-v1` Native Bridge 已支援 `content.base64` exact binary bytes；binary 模式禁止自行增加換行／切紙／模板指令；
+- APK Foundation run `30260234182` 已 PASS，head `e0d2e51d946edb4712d850bae8da1ea50452e371`；Android 6 Authority Gate、Build、APK existence、artifact upload 全 PASS；
+- 最新 artifact id `8650613654`，GitHub digest `sha256:28121dccaf33ac7482404f98f37abc1ee4f2edf7b836f2884d1396b9a5376d28`；
+- 實機仍未驗：T2 API23／T2S API28／新 POS API30、ESC/POS 中文／切紙、TSPL label bitmap、斷線／重試／後備機改送。
+
+回滾／備份：
+- Android 6 兼容前：`backup/apk-foundation-pre-android6-20260727`；
+- 正式 Browser QA workflow 改動前：`backup/qa-runtime-before-browser-summary-20260727`。
+
 ## 4. 成功做法｜接手優先複用
 
 1. Authority first：先確定唯一責任來源，再改功能。
@@ -194,6 +219,7 @@
 6. Evidence levels 分開：程式存在 ≠ Unit Test PASS ≠ Browser QA PASS ≠ 實機驗收 ≠ 最終 Lock。
 7. Governance file disappearance 必須做 branch ref＋commit lineage 雙重核對，唔可以靠單次 404 作結論。
 8. APK-first 模組化：先穩定 Native Shell／Bridge／Recovery／Update Contract，再把一般 Web／UI／業務改動留在可獨立測試及受控更新的 Module。
+9. 打印硬件分層：Transport 成功 ≠ Driver／Renderer 成功；Native 傳輸層不得吸收模板或 Failover Authority。
 
 ## 5. 已證明會浪費時間／禁止重試嘅坑
 
@@ -207,15 +233,17 @@
 8. 舊 Contract Test 與新 Authority 衝突時，為令 test 綠而倒退 Runtime。
 9. 單次 GitHub 404 就判斷治理文件不存在，並立即改寫 Authority path。
 10. 為追求「永遠唔重封 APK」而把任意 Native 能力或未驗證遠端程式塞入動態插件機制。
+11. 把 raw TCP write 誤寫成「打印完成」；真正完成要再驗 Driver／Renderer／實體紙張輸出。
 
 ## 6. 下一個接手 AI 開工最短路徑
 
 1. 讀 `AGENTS.md`。
-2. 讀本文件 `SMT_CHANGE_IMPACT.md`。
-3. 讀 `docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`。
-4. 讀最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`。
-5. 讀 Ownership Registry 對應元件。
-6. APK／Native 工作再讀 `docs/SMT_APK_FOUNDATION_DEVELOPMENT_PLAN_V1.0.md`。
-7. Fresh-read 真正要改嘅 Runtime／test 檔案。
-8. A 線 Browser QA 繼續；B 線 Printer Module 繼續；C 線優先補齊 APK Foundation blocker。
-9. 完成後同步 GitHub＋Jade Note。
+2. 讀 `SMT_CONTEXT_MIN.md`。
+3. 讀本文件 `SMT_CHANGE_IMPACT.md`。
+4. 讀 `docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`。
+5. 讀最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`。
+6. 讀 Ownership Registry 對應元件。
+7. APK／Native 工作再讀 `docs/SMT_APK_FOUNDATION_DEVELOPMENT_PLAN_V1.0.md` 同 Device Compatibility Matrix。
+8. Fresh-read 真正要改嘅 Runtime／test 檔案。
+9. A 線 Browser QA 繼續；B 線 Printer Module 繼續；C 線優先補齊 APK Foundation blocker。
+10. 完成後同步 GitHub＋Jade Note。
