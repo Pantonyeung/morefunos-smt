@@ -6,6 +6,7 @@ import {acceptPendingOrder,combineRiceballSet,dissolveRiceballSet,completeExpire
 const page = await readFile(new URL('../pages/order/page.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../pages/order/page.css', import.meta.url), 'utf8');
 const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');
+const drinkCss = await readFile(new URL('../pages/order/drink-card.css', import.meta.url), 'utf8');
 
 test('quick mode uses a direct-add product action', () => {
   assert.match(page, /quick-add-product/);
@@ -105,8 +106,8 @@ test('cart image visibility is configurable', () => {
 test('quick drink adjustment stays compact without repeating its image', () => {
   assert.doesNotMatch(page,/drink-drawer-hero/);
   assert.doesNotMatch(page,/imageBlock\(d\.image,d\.name,'drink-drawer-image'\)/);
-  assert.match(css,/\.quick-drawer-panel \.drink-choice-card\s*\{/);
-  assert.match(css,/\.drink-choice-card\.selected::after/);
+  assert.match(drinkCss,/\.drink-card--drawer/);
+  assert.match(drinkCss,/\.drink-choice-card\.selected::before/);
 });
 
 test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', async () => {
@@ -296,10 +297,10 @@ test('all drink selection surfaces share one image-first Drink Choice Card',()=>
   const imageIndex=page.indexOf("imageMode?imageBlock(d.image,d.name,'drink-choice-img')");
   const nameIndex=page.indexOf("'<span>'+escapeHtml(d.name)");
   assert.ok(imageIndex>=0&&nameIndex>imageIndex,'Drink Choice Card must render image before name');
-  assert.match(css,/\.drink-card--drawer/);
-  assert.match(css,/\.drink-card--detail/);
-  assert.match(css,/\.drink-card--completion/);
-  assert.match(css,/\.drink-choice-count/);
+  assert.match(drinkCss,/\.drink-card--drawer/);
+  assert.match(drinkCss,/\.drink-card--detail/);
+  assert.match(drinkCss,/\.drink-card--completion/);
+  assert.match(drinkCss,/\.drink-choice-count/);
 });
 
 test('riceball and snack can become one pending-drink combo without a cart drink',()=>{
