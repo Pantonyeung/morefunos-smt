@@ -1,0 +1,63 @@
+name: V2 Drink Card Authority Cleanup
+
+on:
+  pull_request:
+    branches:
+      - smt-functional-completeness-v1
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v2-drink-card-authority-cleanup-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: startsWith(github.head_ref, 'v2-drink-card-legacy-cleanup') && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          show-progress: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify V2 cleanup parser contracts
+        run: node --test tests/cleanup-order-page-drink-card-legacy.test.mjs tests/drink-card-visual-authority.test.mjs
+
+      - name: Apply guarded V2 Drink Card legacy cleanup
+        run: node scripts/cleanup-order-page-drink-card-legacy.mjs
+
+      - name: Assert V2 legacy selectors are absent
+        run: |
+          if grep -En '\.drink-choice-card|\.drink-choice-img|\.drink-choice-count|\.drink-card--drawer|\.drink-card--detail|\.drink-card--completion' pages/order/page.css; then
+            echo 'V2 Drink Card legacy selectors still exist in page.css'
+            exit 1
+          fi
+
+      - name: Component ownership audit
+        run: node scripts/audit-component-ownership.mjs
+
+      - name: AI context validation
+        run: node scripts/validate-ai-context.mjs
+
+      - name: Full Node regression
+        run: node --test tests/*.test.mjs
+
+      - name: Commit only verified V2 cleanup output
+        run: |
+          git config user.name 'MoreFun Drink Card Authority QA'
+          git config user.email 'actions@users.noreply.github.com'
+          git add pages/order/page.css
+          if git diff --cached --quiet; then
+            echo 'No page.css Drink Card cleanup change required.'
+            exit 0
+          fi
+          git commit -m 'refactor(order): physically remove V2 Drink Card legacy authority'
+          git push origin HEAD:${{ github.head_ref }}
