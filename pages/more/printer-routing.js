@@ -7,11 +7,18 @@ export function normalizeFallbackMode(value){
   return value==='auto'?'auto':'manual';
 }
 
-export function printerCanHandle(printer,documentType){
-  if(!printer?.enabled)return false;
+export function inferredSupportedDocuments(printer={}){
+  if(Array.isArray(printer.supportedDocuments)&&printer.supportedDocuments.length)return [...new Set(printer.supportedDocuments.filter(type=>PRINT_DOCUMENT_TYPES.includes(type)))];
+  const width=Number(printer.paperWidth||0);
   const purposes=Array.isArray(printer.purposes)?printer.purposes:[];
-  if(documentType==='label')return purposes.includes('label')||purposes.includes('label-backup');
-  return purposes.includes(documentType);
+  const labelLike=width>0&&width<=58||purposes.includes('label')||purposes.includes('label-backup');
+  if(labelLike)return ['label'];
+  return ['receipt','production','packing'];
+}
+
+export function printerCanHandle(printer,documentType){
+  if(!printer?.enabled||!PRINT_DOCUMENT_TYPES.includes(documentType))return false;
+  return inferredSupportedDocuments(printer).includes(documentType);
 }
 
 export function normalizePrinterRouting(state={}){
@@ -25,7 +32,7 @@ export function setPrimaryPrinter(state,documentType,printerId){
   if(!PRINT_DOCUMENT_TYPES.includes(documentType))throw new Error('打印用途不支援');
   const next=normalizePrinterRouting(state);
   const printer=(next.printers||[]).find(row=>row.id===printerId);
-  if(!printerCanHandle(printer,documentType))throw new Error('所選打印機不支援此用途');
+  if(!printerCanHandle(printer,documentType))throw new Error('所選打印機不支援此文件類型');
   next.routes[documentType]=printerId;
   if(next.fallbackRoutes[documentType]===printerId)delete next.fallbackRoutes[documentType];
   return next;
@@ -36,7 +43,7 @@ export function setFallbackPrinter(state,documentType,printerId=''){
   const next=normalizePrinterRouting(state);
   if(!printerId){delete next.fallbackRoutes[documentType];return next;}
   const printer=(next.printers||[]).find(row=>row.id===printerId);
-  if(!printerCanHandle(printer,documentType))throw new Error('所選後備打印機不支援此用途');
+  if(!printerCanHandle(printer,documentType))throw new Error('所選後備打印機不支援此文件類型');
   if(next.routes[documentType]===printerId)throw new Error('主打印機與後備打印機不可相同');
   next.fallbackRoutes[documentType]=printerId;
   return next;
