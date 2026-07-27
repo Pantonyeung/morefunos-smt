@@ -1,5 +1,6 @@
 name: qa-runtime-phase3
 on:
+  workflow_call:
   push:
     branches: [smt-functional-completeness-v1]
     paths:
