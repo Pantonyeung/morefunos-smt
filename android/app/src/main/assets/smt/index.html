@@ -24,18 +24,27 @@
   </main>
 <script>
 const el=id=>document.getElementById(id);
+const pending=new Map();
 let seq=0;
 function call(method,params={}){
   return new Promise((resolve,reject)=>{
     if(!window.MoreFunNative?.postMessage){reject(new Error('Native Bridge 未注入'));return;}
     const id=`web-${Date.now()}-${++seq}`;
-    const raw=window.MoreFunNative.postMessage(JSON.stringify({id,method,params}));
-    try{
-      const data=typeof raw==='string'?JSON.parse(raw):raw;
-      if(data?.ok)resolve(data.result);else reject(new Error(data?.error?.message||'Bridge call failed'));
-    }catch(error){reject(error)}
+    const timeout=setTimeout(()=>{pending.delete(id);reject(new Error(`Bridge timeout: ${method}`));},5000);
+    pending.set(id,{resolve,reject,timeout});
+    window.MoreFunNative.postMessage(JSON.stringify({id,method,params}));
   });
 }
+function onBridgeMessage(event){
+  try{
+    const data=typeof event.data==='string'?JSON.parse(event.data):event.data;
+    const request=pending.get(data?.id);
+    if(!request)return;
+    clearTimeout(request.timeout);pending.delete(data.id);
+    if(data.ok)request.resolve(data.result);else request.reject(new Error(data?.error?.message||'Bridge call failed'));
+  }catch(error){el('log').textContent=String(error?.stack||error);}
+}
+if(window.MoreFunNative)window.MoreFunNative.onmessage=onBridgeMessage;
 function write(id,text,ok=true){const node=el(id);node.textContent=text;node.className=ok?'ok':'bad'}
 async function run(){
   try{
