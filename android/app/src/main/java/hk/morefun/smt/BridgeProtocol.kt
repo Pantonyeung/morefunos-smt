@@ -16,7 +16,8 @@ import java.util.concurrent.Executors
 class BridgeProtocol(
     private val context: Context,
     private val bundleStore: WebBundleStore = WebBundleStore(context),
-    private val offlineQueue: OfflineQueueStore = OfflineQueueStore(context)
+    private val offlineQueue: OfflineQueueStore = OfflineQueueStore(context),
+    private val hostActions: HostActions? = null
 ) {
     private val prefs = context.getSharedPreferences("morefun_smt_foundation", Context.MODE_PRIVATE)
     private val ioExecutor = Executors.newSingleThreadExecutor()
@@ -63,6 +64,11 @@ class BridgeProtocol(
                     params.optString("id")
                 )))
                 "offline.getStatus" -> respond(success(id, offlineQueue.status()))
+                "file.export" -> exportFile(id, params, respond)
+                "file.import" -> importFile(id, params, respond)
+                "runtime.reload" -> hostCall(id, respond) { it.reloadRuntime() }
+                "kiosk.enter" -> hostCall(id, respond) { it.enterKiosk() }
+                "kiosk.exit" -> hostCall(id, respond) { it.exitKiosk() }
                 "diagnostics.get" -> respond(success(id, diagnostics()))
                 else -> respond(error(id, "UNSUPPORTED_METHOD", "未支援 Bridge 方法：$method"))
             }
@@ -76,16 +82,22 @@ class BridgeProtocol(
         offlineQueue.close()
     }
 
-    private fun capabilities(): List<String> = listOf(
-        "device.info",
-        "network.status",
-        "print.lan.tcp",
-        "bundle.verified.install",
-        "bundle.rollback",
-        "offline.queue",
-        "offline.recovery",
-        "diagnostics"
-    )
+    private fun capabilities(): List<String> = buildList {
+        add("device.info")
+        add("network.status")
+        add("print.lan.tcp")
+        add("bundle.verified.install")
+        add("bundle.rollback")
+        add("offline.queue")
+        add("offline.recovery")
+        add("diagnostics")
+        if (hostActions != null) {
+            add("file.import")
+            add("file.export")
+            add("runtime.reload")
+            add("kiosk.control")
+        }
+    }
 
     private fun installBundle(id: String, params: JSONObject, respond: (String) -> Unit) {
         ioExecutor.execute {
@@ -120,6 +132,58 @@ class BridgeProtocol(
             } catch (error: Throwable) {
                 respond(error(id, "BUNDLE_ROLLBACK_FAILED", error.message ?: "Web bundle 回滾失敗"))
             }
+        }
+    }
+
+    private fun exportFile(id: String, params: JSONObject, respond: (String) -> Unit) {
+        val host = hostActions ?: run {
+            respond(error(id, "HOST_ACTION_UNAVAILABLE", "此裝置未提供文件匯出能力"))
+            return
+        }
+        val fileName = params.optString("fileName", "morefun-export.bin")
+        val mimeType = params.optString("mimeType", "application/octet-stream")
+        val base64Data = params.optString("base64")
+        if (base64Data.isBlank()) {
+            respond(error(id, "FILE_CONTENT_MISSING", "匯出內容為空"))
+            return
+        }
+        host.exportFile(fileName, mimeType, base64Data) { result ->
+            result.fold(
+                onSuccess = { respond(success(id, it)) },
+                onFailure = { respond(error(id, "FILE_EXPORT_FAILED", it.message ?: "文件匯出失敗")) }
+            )
+        }
+    }
+
+    private fun importFile(id: String, params: JSONObject, respond: (String) -> Unit) {
+        val host = hostActions ?: run {
+            respond(error(id, "HOST_ACTION_UNAVAILABLE", "此裝置未提供文件匯入能力"))
+            return
+        }
+        val mimeArray = params.optJSONArray("mimeTypes")
+        val mimeTypes = if (mimeArray == null || mimeArray.length() == 0) {
+            arrayOf("application/json", "application/zip", "text/csv")
+        } else {
+            Array(mimeArray.length()) { index -> mimeArray.optString(index, "*/*") }
+        }
+        host.importFile(mimeTypes) { result ->
+            result.fold(
+                onSuccess = { respond(success(id, it)) },
+                onFailure = { respond(error(id, "FILE_IMPORT_FAILED", it.message ?: "文件匯入失敗")) }
+            )
+        }
+    }
+
+    private fun hostCall(id: String, respond: (String) -> Unit, action: (HostActions) -> Unit) {
+        val host = hostActions ?: run {
+            respond(error(id, "HOST_ACTION_UNAVAILABLE", "此裝置未提供 Host 控制能力"))
+            return
+        }
+        try {
+            action(host)
+            respond(success(id, JSONObject().put("status", "ok")))
+        } catch (error: Throwable) {
+            respond(error(id, "HOST_ACTION_FAILED", error.message ?: "Host 操作失敗"))
         }
     }
 
