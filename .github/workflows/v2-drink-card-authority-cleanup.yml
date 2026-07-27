@@ -40,8 +40,13 @@ jobs:
           const fs=require('node:fs');
           const file='tests/order-edit-flow.test.mjs';
           let text=fs.readFileSync(file,'utf8');
+          const cartLine="const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');";
+          const drinkLine="const drinkCss = await readFile(new URL('../pages/order/drink-card.css', import.meta.url), 'utf8');";
+          if(!text.includes(drinkLine)){
+            if(!text.includes(cartLine))throw new Error('Cart CSS test authority line missing');
+            text=text.replace(cartLine,cartLine+'\n'+drinkLine);
+          }
           const replacements=[
-            ["const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');", "const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');\nconst drinkCss = await readFile(new URL('../pages/order/drink-card.css', import.meta.url), 'utf8');"],
             ["assert.match(css,/\\.quick-drawer-panel \\.drink-choice-card\\s*\\{/);", "assert.match(drinkCss,/\\.drink-card--drawer/);"],
             ["assert.match(css,/\\.drink-choice-card\\.selected::after/);", "assert.match(drinkCss,/\\.drink-choice-card\\.selected::before/);"],
             ["assert.match(css,/\\.drink-card--drawer/);", "assert.match(drinkCss,/\\.drink-card--drawer/);"],
@@ -50,9 +55,16 @@ jobs:
             ["assert.match(css,/\\.drink-choice-count/);", "assert.match(drinkCss,/\\.drink-choice-count/);"],
           ];
           for(const [from,to] of replacements){
-            if(!text.includes(from))throw new Error('Expected Drink Card regression assertion not found: '+from);
-            text=text.replace(from,to);
+            if(text.includes(from))text=text.replace(from,to);
           }
+          const required=[
+            "assert.match(drinkCss,/\\.drink-card--drawer/);",
+            "assert.match(drinkCss,/\\.drink-choice-card\\.selected::before/);",
+            "assert.match(drinkCss,/\\.drink-card--detail/);",
+            "assert.match(drinkCss,/\\.drink-card--completion/);",
+            "assert.match(drinkCss,/\\.drink-choice-count/);",
+          ];
+          for(const needle of required){if(!text.includes(needle))throw new Error('Drink Card regression authority missing: '+needle);}
           fs.writeFileSync(file,text,'utf8');
           NODE
 
