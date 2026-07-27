@@ -28,8 +28,12 @@ test('LAN formal payload rejects legacy text document and requires rendered bina
   const job={id:'PRINT-1',documentType:'packing',copies:1};
   assert.throws(()=>buildAndroidPrintPayload(job,rollPrinter,{text:'磨飯',paperWidth:76}),/Rendered Binary Asset/);
   const payload=buildAndroidPrintPayload(job,rollPrinter,asset);
+  assert.equal(payload.jobId,job.id);
+  assert.equal(payload.idempotencyKey,job.id);
   assert.equal(payload.content.mode,'binary');
   assert.equal(payload.content.base64,'AQID');
   assert.equal(payload.target.transport,'tcp');
+  assert.equal(payload.target.host,rollPrinter.host);
+  assert.equal(payload.target.port,rollPrinter.port);
   assert.equal(payload.completion.doNotTreatQueuedAsPrinted,true);
 });
