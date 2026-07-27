@@ -11,12 +11,13 @@ permissions:
 
 concurrency:
   group: pairing-modal-authority-cleanup-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   cleanup:
-    if: startsWith(github.head_ref, 'pairing-modal-legacy-cleanup') && github.actor != 'github-actions[bot]'
+    if: startsWith(github.head_ref, 'pairing-modal-legacy-cleanup')
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,8 +58,20 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: Install browser QA dependencies
         run: |
-          npm ci
+          npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
+      - name: Start SMT static QA server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/smt-http.log 2>&1 &
+          echo $! >/tmp/smt-http.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/smt-http.log
+          exit 1
       - name: Browser regression by spec
         run: |
           set +e
@@ -77,9 +90,12 @@ jobs:
           )
           for spec in "${specs[@]}"; do
             echo "===== RUN $spec ====="
-            npx playwright test "$spec" --reporter=line
+            timeout --signal=TERM --kill-after=15s 180s npx playwright test "$spec" --reporter=line
             status=$?
-            if [ $status -ne 0 ]; then
+            if [ $status -eq 124 ] || [ $status -eq 137 ]; then
+              echo "TIMEOUT $spec"
+              failures=$((failures+1))
+            elif [ $status -ne 0 ]; then
               echo "FAIL $spec"
               failures=$((failures+1))
             else
