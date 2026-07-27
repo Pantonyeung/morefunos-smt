@@ -6,13 +6,13 @@
   <title>磨飯 SMT Foundation</title>
   <style>
     :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"PingFang HK","Noto Sans TC",sans-serif;color:#201b18;background:#f6f2ec}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;padding:28px}.shell{width:min(920px,100%);margin:0 auto;background:#fff;border:1px solid #ded6cd;border-radius:22px;padding:28px;box-shadow:0 18px 60px rgba(44,34,24,.08)}h1,h2{margin:0 0 6px}h1{font-size:30px}h2{font-size:22px;margin-top:28px}p{margin:0;color:#71675f}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}.card{border:1px solid #e4ddd6;border-radius:16px;padding:16px;background:#fcfaf7}.card small{display:block;color:#8a7e74;margin-bottom:7px}.card strong{font-size:17px;word-break:break-word}.ok{color:#247a48}.bad{color:#a83b2f}.fields{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:14px}.field{display:grid;gap:6px}.field label{font-size:13px;color:#71675f}.field input{min-height:48px;border:1px solid #cfc5ba;border-radius:12px;padding:0 12px;font-size:16px}pre{white-space:pre-wrap;word-break:break-word;background:#211d1a;color:#f8f5f0;padding:16px;border-radius:14px;max-height:280px;overflow:auto;margin:18px 0 0}button{margin-top:20px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#201b18;color:#fff;font-weight:800;font-size:16px}button.secondary{background:#7a6f65}.notice{margin-top:12px;padding:12px 14px;border-radius:12px;background:#fff5df;color:#7c5614;font-size:14px;line-height:1.5}@media(max-width:680px){.grid,.fields{grid-template-columns:1fr}}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;padding:28px}.shell{width:min(920px,100%);margin:0 auto;background:#fff;border:1px solid #ded6cd;border-radius:22px;padding:28px;box-shadow:0 18px 60px rgba(44,34,24,.08)}h1,h2{margin:0 0 6px}h1{font-size:30px}h2{font-size:22px;margin-top:28px}p{margin:0;color:#71675f}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}.card{border:1px solid #e4ddd6;border-radius:16px;padding:16px;background:#fcfaf7}.card small{display:block;color:#8a7e74;margin-bottom:7px}.card strong{font-size:17px;word-break:break-word}.ok{color:#247a48}.bad{color:#a83b2f}.fields{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:14px}.field{display:grid;gap:6px}.field label{font-size:13px;color:#71675f}.field input,.field select{min-height:48px;border:1px solid #cfc5ba;border-radius:12px;padding:0 12px;font-size:16px;background:#fff}pre{white-space:pre-wrap;word-break:break-word;background:#211d1a;color:#f8f5f0;padding:16px;border-radius:14px;max-height:300px;overflow:auto;margin:18px 0 0}.actions{display:flex;gap:10px;flex-wrap:wrap}button{margin-top:20px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#201b18;color:#fff;font-weight:800;font-size:16px}button.secondary{background:#7a6f65}.notice{margin-top:12px;padding:12px 14px;border-radius:12px;background:#fff5df;color:#7c5614;font-size:14px;line-height:1.5}@media(max-width:680px){.grid,.fields{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <main class="shell">
     <h1>磨飯 SMT｜APK Foundation</h1>
-    <p>本頁只驗證 Android Shell／Native Bridge／LAN Transport。唔代表正式 SMT UI 或正式打印模板已接入。</p>
+    <p>本頁只驗證 Android Shell／Native Bridge／LAN Transport／打印指令傳輸。唔代表正式 SMT UI 或正式打印模板已接入。</p>
     <section class="grid">
       <article class="card"><small>Bridge</small><strong id="bridge">檢查中…</strong></article>
       <article class="card"><small>Capabilities</small><strong id="capabilities">檢查中…</strong></article>
@@ -21,15 +21,18 @@
     </section>
     <button id="refresh" type="button">重新檢查</button>
 
-    <h2>LAN TCP 實機測試</h2>
-    <p>用嚟確認裝置可以連到指定打印機 IP／Port，同埋 Native Bridge 真正完成 Socket 寫入。</p>
+    <h2>LAN 打印鏈路實機測試</h2>
+    <p>輸入同一內網打印機 IP／Port，再按打印機種類揀測試模式。</p>
     <div class="fields">
       <div class="field"><label for="printerHost">打印機 IP</label><input id="printerHost" inputmode="decimal" placeholder="例如 192.168.1.201"></div>
       <div class="field"><label for="printerPort">Port</label><input id="printerPort" inputmode="numeric" value="9100"></div>
+      <div class="field"><label for="printMode">測試模式</label><select id="printMode"><option value="transport">純文字 Transport</option><option value="escpos">ESC/POS 卷紙 binary</option><option value="tspl">TSPL 標籤 binary</option></select></div>
     </div>
-    <div class="notice">呢一步只係 Transport Gate。標籤機正式輸出需要對應標籤指令語言；中文、切紙、版面亦要另做 Driver／Renderer 實機 Gate，唔會將 TCP 寫入成功當成正式打印完成。</div>
-    <button id="testPrint" type="button">發送 TCP 測試</button>
-    <button id="repeatPrint" class="secondary" type="button">重送同一工作（測防重複）</button>
+    <div class="notice">ESC/POS／TSPL binary 測試只驗證指令 bytes 能否由 Android 6–11 經 LAN 正確送到打印機。正式中文字會由 SMT Renderer 先 rasterize 成 bitmap，再送 binary；唔依賴打印機中文字庫。</div>
+    <div class="actions">
+      <button id="testPrint" type="button">發送新測試工作</button>
+      <button id="repeatPrint" class="secondary" type="button">重送同一工作（測防重複）</button>
+    </div>
     <pre id="log">Bridge diagnostic ready.</pre>
   </main>
 <script>
@@ -74,19 +77,50 @@ async function run(){
     el('log').textContent=String(error?.stack||error);
   }
 }
+function asciiBytes(text){
+  const value=String(text||'');
+  const bytes=new Uint8Array(value.length);
+  for(let i=0;i<value.length;i++)bytes[i]=value.charCodeAt(i)&0x7f;
+  return bytes;
+}
+function concatBytes(parts){
+  const total=parts.reduce((sum,part)=>sum+part.length,0);
+  const out=new Uint8Array(total);let offset=0;
+  parts.forEach(part=>{out.set(part,offset);offset+=part.length;});
+  return out;
+}
+function bytesToBase64(bytes){
+  let binary='';
+  for(let i=0;i<bytes.length;i+=0x4000)binary+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x4000));
+  return btoa(binary);
+}
+function binaryDiagnosticContent(mode,key){
+  if(mode==='escpos'){
+    const bytes=concatBytes([
+      new Uint8Array([0x1b,0x40]),
+      asciiBytes(`MORE FUN SMT ESC/POS TEST\nJOB ${key}\nBINARY BRIDGE OK\n`),
+      new Uint8Array([0x1b,0x64,0x03,0x1d,0x56,0x01])
+    ]);
+    return {mode:'binary',base64:bytesToBase64(bytes),byteLength:bytes.length,commandLanguage:'escpos',assetContract:'diagnostic.v1'};
+  }
+  if(mode==='tspl'){
+    const command=`SIZE 50 mm,30 mm\r\nDENSITY 8\r\nSPEED 4\r\nCLS\r\nTEXT 20,20,\"3\",0,1,1,\"MORE FUN SMT\"\r\nTEXT 20,60,\"3\",0,1,1,\"${key.slice(-12)}\"\r\nPRINT 1,1\r\n`;
+    const bytes=asciiBytes(command);
+    return {mode:'binary',base64:bytesToBase64(bytes),byteLength:bytes.length,commandLanguage:'tspl',assetContract:'diagnostic.v1'};
+  }
+  return null;
+}
 function buildTestPayload({reuse=false}={}){
   if(reuse&&lastTestPayload)return lastTestPayload;
   const host=el('printerHost').value.trim();
   const port=Number(el('printerPort').value||9100);
+  const mode=el('printMode').value;
   const key=`DIAG-${Date.now()}`;
+  const binary=binaryDiagnosticContent(mode,key);
   lastTestPayload={
-    contract:'morefun.print.v1',
-    idempotencyKey:key,
-    jobId:key,
-    documentType:'diagnostic',
-    copies:1,
+    contract:'morefun.print.v1',idempotencyKey:key,jobId:key,documentType:'diagnostic',copies:1,
     target:{transport:'tcp',host,port,timeoutMs:5000},
-    content:{encoding:'US-ASCII',paperWidth:80,text:`MORE FUN SMT TCP TEST\nJOB ${key}\nTRANSPORT ONLY\n`},
+    content:binary||{mode:'text-diagnostic',encoding:'US-ASCII',text:`MORE FUN SMT TCP TEST\nJOB ${key}\nTRANSPORT ONLY\n`},
     completion:{required:true,acceptedStatuses:['printed','failed'],doNotTreatQueuedAsPrinted:true}
   };
   return lastTestPayload;
@@ -94,14 +128,15 @@ function buildTestPayload({reuse=false}={}){
 async function testPrint(reuse=false){
   try{
     const payload=buildTestPayload({reuse});
-    el('log').textContent=`Sending ${payload.jobId} to ${payload.target.host}:${payload.target.port}...`;
+    el('log').textContent=`Sending ${payload.jobId} (${payload.content.mode}/${payload.content.commandLanguage||'text'}) to ${payload.target.host}:${payload.target.port}...`;
     const result=await call('print.lan.tcp',{payload});
-    el('log').textContent=JSON.stringify({request:{jobId:payload.jobId,target:payload.target},result},null,2);
+    el('log').textContent=JSON.stringify({request:{jobId:payload.jobId,target:payload.target,content:{mode:payload.content.mode,commandLanguage:payload.content.commandLanguage,byteLength:payload.content.byteLength}},result},null,2);
   }catch(error){el('log').textContent=String(error?.stack||error);}
 }
 el('refresh').addEventListener('click',run);
 el('testPrint').addEventListener('click',()=>testPrint(false));
 el('repeatPrint').addEventListener('click',()=>testPrint(true));
+el('printMode').addEventListener('change',()=>{lastTestPayload=null;});
 run();
 </script>
 </body>
