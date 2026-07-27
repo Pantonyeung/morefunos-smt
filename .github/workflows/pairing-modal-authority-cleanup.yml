@@ -30,6 +30,19 @@ jobs:
         run: node --test tests/pairing-modal-visual-authority.test.mjs
       - name: Apply guarded Pairing Modal legacy cleanup
         run: node scripts/cleanup-order-page-pairing-modal-legacy.mjs
+      - name: Verify Pairing regression assertions use final authority
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const text=fs.readFileSync('tests/order-edit-flow.test.mjs','utf8');
+          const required=[
+            "const pairingCss = await readFile(new URL('../pages/order/pairing-modal.css', import.meta.url), 'utf8');",
+            "assert.match(pairingCss,/\\.specified-link-card \\.link-candidates\\s*\\{[^}]*grid-template-columns:repeat\\(3/);",
+            "assert.match(pairingCss,/\\.specified-link-card/);",
+          ];
+          for(const needle of required){if(!text.includes(needle))throw new Error('Pairing regression authority missing: '+needle);}
+          if(text.includes('assert.match(css,/\\.specified-link-card/);'))throw new Error('Legacy page.css Pairing assertion remains');
+          NODE
       - name: Assert Pairing legacy selectors are absent
         run: |
           if grep -En '\.specified-link-card|\.pairing-group-tabs|\.pairing-body|\.combo-editor-card|\.combo-help|\.combo-role|\.combo-candidates|\.combo-actions|\.drink-link-candidates' pages/order/page.css; then
@@ -42,14 +55,10 @@ jobs:
         run: node scripts/validate-ai-context.mjs
       - name: Full Node regression
         run: node --test tests/*.test.mjs
-      - name: Commit only verified Pairing cleanup output
+      - name: Confirm clean verified head
         run: |
-          git config user.name 'MoreFun Pairing Authority QA'
-          git config user.email 'actions@users.noreply.github.com'
-          git add pages/order/page.css
-          if git diff --cached --quiet; then
-            echo 'No Pairing cleanup change required.'
-            exit 0
+          if ! git diff --quiet; then
+            echo 'Verified Pairing cleanup head must be clean before merge.'
+            git diff -- pages/order/page.css tests/order-edit-flow.test.mjs
+            exit 1
           fi
-          git commit -m 'refactor(order): physically remove Pairing Modal legacy authority'
-          git push origin HEAD:${{ github.head_ref }}

@@ -8,6 +8,7 @@ const css = await readFile(new URL('../pages/order/page.css', import.meta.url), 
 const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');
 const productCss = await readFile(new URL('../pages/order/product-card.css', import.meta.url), 'utf8');
 const drinkCss = await readFile(new URL('../pages/order/drink-card.css', import.meta.url), 'utf8');
+const pairingCss = await readFile(new URL('../pages/order/pairing-modal.css', import.meta.url), 'utf8');
 
 test('quick mode uses a direct-add product action', () => {
   assert.match(page, /quick-add-product/);
@@ -252,8 +253,8 @@ test('drink adjustment starts compact and expands only after add adjustment',()=
 });
 
 test('specified pairing candidates use a three-column text-card grid',()=>{
-  assert.match(css,/\.link-candidates\s*\{[^}]*grid-template-columns:\s*repeat\(3/);
-  assert.match(css,/\.specified-link-card/);
+  assert.match(pairingCss,/\.specified-link-card \.link-candidates\s*\{[^}]*grid-template-columns:repeat\(3/);
+  assert.match(pairingCss,/\.specified-link-card/);
 });
 
 test('cart keeps price flush right and actions aligned with the image',()=>{
