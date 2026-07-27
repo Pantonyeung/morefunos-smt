@@ -73,6 +73,17 @@ Marker 永遠由 Cart Image × 0.9 派生。
 
 最近 Node/Authority/Syntax baseline：248/248 PASS。
 
+### S-09｜Printer Transport／Driver／Renderer 分層
+已證明最穩定打印責任係：
+`Print Domain → Transport/Media/Driver → Rendered Asset → Native Transport`。
+
+- Print Domain 決定 document／template／route／fallback／retry；
+- Driver／Renderer 產生 exact bytes；
+- Android Native 只寫 bytes 到指定 target，同時回真實成功／失敗及 idempotency；
+- Native 不揀後備機、不重算模板。
+
+APK Foundation `print.lan.tcp` 已支援 exact base64 binary bytes，Android 6–11 Build Gate PASS。第一批 Printer Renderer = ESC/POS raster + TSPL bitmap；其他語言未有 renderer 前不得標完成。
+
 ## 3. 踩坑紀錄
 
 ### K-01｜Selector 與 DOM 不一致
@@ -129,11 +140,19 @@ Repo 可以有 `.spec.js` 但冇 dependency/browser/server/workflow，實際完�
 
 ### K-14｜QA Workflow 本身亦要 Single Authority
 不可兩條 workflow 同時管理同一 Browser Matrix。
-**規則：正式 browser QA 只歸 `qa-runtime-phase3.yml`。**
+**規則：正式 browser QA 只歸 `qa-runtime-phase3.yml`。Pairing／cleanup workflow 只可做自己元件 contract，不可變成第二套永久 Browser Authority。**
 
 ### K-15｜舊 PASS Report 不等於最新 HEAD PASS
 正式 branch 可以在最後一份 QA report 之後繼續前進；如果接手者只見到 `RESULT=PASS` 而冇比較 report 內的 `Commit:` 與目前 branch HEAD，會將未驗證的新改動誤當已通過。
 **規則：任何「最新 QA 已通過」聲明前，必須確認 `QA report Commit == 當前驗證目標 commit / branch HEAD`；不一致時只能寫「舊 baseline PASS／新改動待驗」。**
+
+### K-16｜Raw TCP Write ≠ 正式打印成功
+Socket connect／write 成功只證明 Transport；唔代表中文字、切紙、標籤尺寸、指令語言或模板正確。
+**規則：打印證據必須分 Transport Gate、Driver/Renderer Gate、實體紙張 Gate；禁止將 raw TCP 成功寫成「打印完成」。**
+
+### K-17｜Native 重新理解模板會形成第二 Authority
+如果 Android Native 自己決定 ESC/POS／TSPL 版面、Fallback 或模板內容，會同 Web Print Domain／Renderer 形成雙真相。
+**規則：Native 只接 exact bytes；模板／Driver Renderer 留在 Printer Module。**
 
 ## 4. 當前 Migration Debt
 
@@ -154,9 +173,11 @@ Repo 可以有 `.spec.js` 但冇 dependency/browser/server/workflow，實際完�
 
 必須先確認：
 1. `AGENTS.md`；
-2. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`；
-3. 本文件；
-4. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`；
-5. 正式 branch = `smt-functional-completeness-v1`；
-6. fresh-read 正式 Runtime，不依賴聊天摘要取代現碼；
-7. QA report 內 `Commit:` 必須與本次驗證目標對齊，否則不得把舊 PASS 當最新 PASS。
+2. `SMT_CONTEXT_MIN.md`；
+3. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`；
+4. 本文件；
+5. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`；
+6. 正式 branch = `smt-functional-completeness-v1`；
+7. fresh-read 正式 Runtime，不依賴聊天摘要取代現碼；
+8. QA report 內 `Commit:` 必須與本次驗證目標對齊，否則不得把舊 PASS 當最新 PASS；
+9. Printer／APK 工作必須分清 Transport、Driver/Renderer、實機紙張三層證據。
