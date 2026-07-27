@@ -6,7 +6,7 @@
   <title>磨飯 SMT Foundation</title>
   <style>
     :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"PingFang HK","Noto Sans TC",sans-serif;color:#201b18;background:#f6f2ec}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;padding:28px}.shell{width:min(920px,100%);margin:0 auto;background:#fff;border:1px solid #ded6cd;border-radius:22px;padding:28px;box-shadow:0 18px 60px rgba(44,34,24,.08)}h1,h2{margin:0 0 6px}h1{font-size:30px}h2{font-size:22px;margin-top:28px}p{margin:0;color:#71675f}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}.card{border:1px solid #e4ddd6;border-radius:16px;padding:16px;background:#fcfaf7}.card small{display:block;color:#8a7e74;margin-bottom:7px}.card strong{font-size:17px;word-break:break-word}.ok{color:#247a48}.bad{color:#a83b2f}.fields{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:14px}.field{display:grid;gap:6px}.field label{font-size:13px;color:#71675f}.field input,.field select{min-height:48px;border:1px solid #cfc5ba;border-radius:12px;padding:0 12px;font-size:16px;background:#fff}pre{white-space:pre-wrap;word-break:break-word;background:#211d1a;color:#f8f5f0;padding:16px;border-radius:14px;max-height:300px;overflow:auto;margin:18px 0 0}.actions{display:flex;gap:10px;flex-wrap:wrap}button{margin-top:20px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#201b18;color:#fff;font-weight:800;font-size:16px}button.secondary{background:#7a6f65}.notice{margin-top:12px;padding:12px 14px;border-radius:12px;background:#fff5df;color:#7c5614;font-size:14px;line-height:1.5}@media(max-width:680px){.grid,.fields{grid-template-columns:1fr}}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;padding:28px}.shell{max-width:920px;width:100%;margin:0 auto;background:#fff;border:1px solid #ded6cd;border-radius:22px;padding:28px;box-shadow:0 18px 60px rgba(44,34,24,.08)}h1,h2{margin:0 0 6px}h1{font-size:30px}h2{font-size:22px;margin-top:28px}p{margin:0;color:#71675f}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}.card{border:1px solid #e4ddd6;border-radius:16px;padding:16px;background:#fcfaf7}.card small{display:block;color:#8a7e74;margin-bottom:7px}.card strong{font-size:17px;word-break:break-word}.ok{color:#247a48}.bad{color:#a83b2f}.fields{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:14px}.field{display:grid;gap:6px}.field label{font-size:13px;color:#71675f}.field input,.field select{min-height:48px;border:1px solid #cfc5ba;border-radius:12px;padding:0 12px;font-size:16px;background:#fff}pre{white-space:pre-wrap;word-break:break-word;background:#211d1a;color:#f8f5f0;padding:16px;border-radius:14px;max-height:300px;overflow:auto;margin:18px 0 0}.actions{display:flex;gap:10px;flex-wrap:wrap}button{margin-top:20px;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:#201b18;color:#fff;font-weight:800;font-size:16px}button.secondary{background:#7a6f65}.notice{margin-top:12px;padding:12px 14px;border-radius:12px;background:#fff5df;color:#7c5614;font-size:14px;line-height:1.5}@media(max-width:680px){.grid,.fields{display:block}.card,.field{margin-bottom:12px}}
   </style>
 </head>
 <body>
@@ -36,108 +36,133 @@
     <pre id="log">Bridge diagnostic ready.</pre>
   </main>
 <script>
-const el=id=>document.getElementById(id);
-const pending=new Map();
-let seq=0;
-let lastTestPayload=null;
-function call(method,params={}){
-  return new Promise((resolve,reject)=>{
-    if(!window.MoreFunNative?.postMessage){reject(new Error('Native Bridge 未注入'));return;}
-    const id=`web-${Date.now()}-${++seq}`;
-    const timeout=setTimeout(()=>{pending.delete(id);reject(new Error(`Bridge timeout: ${method}`));},15000);
-    pending.set(id,{resolve,reject,timeout});
-    window.MoreFunNative.postMessage(JSON.stringify({id,method,params}));
-  });
-}
-function onBridgeMessage(event){
-  try{
-    const data=typeof event.data==='string'?JSON.parse(event.data):event.data;
-    const request=pending.get(data?.id);
-    if(!request)return;
-    clearTimeout(request.timeout);pending.delete(data.id);
-    if(data.ok)request.resolve(data.result);else request.reject(new Error(`${data?.error?.code||'BRIDGE_ERROR'}｜${data?.error?.message||'Bridge call failed'}`));
-  }catch(error){el('log').textContent=String(error?.stack||error);}
-}
-window.__moreFunLegacyBridgeReceive=response=>onBridgeMessage({data:response});
-if(window.MoreFunNative)window.MoreFunNative.onmessage=onBridgeMessage;
-function write(id,text,ok=true){const node=el(id);node.textContent=text;node.className=ok?'ok':'bad'}
-async function run(){
-  try{
-    const version=await call('bridge.getVersion');
-    write('bridge',`${version.appVersion}｜Bridge ${version.bridgeVersion}｜Web ${version.webBundleVersion}`);
-    const caps=await call('bridge.getCapabilities');
-    write('capabilities',(caps.capabilities||[]).join('／')||'無');
-    const device=await call('device.getInfo');
-    write('device',`${device.terminalId}｜${device.manufacturer} ${device.model}｜Android API ${device.sdkInt}`);
-    const network=await call('network.getStatus');
-    write('network',network.connected?`在線｜${network.transport}`:`離線｜${network.transport}`,network.connected);
-    el('log').textContent=JSON.stringify({version,caps,device,network},null,2);
-  }catch(error){
-    ['bridge','capabilities','device','network'].forEach(id=>write(id,error.message,false));
-    el('log').textContent=String(error?.stack||error);
+(function(){
+  'use strict';
+  var pending=new Map();
+  var seq=0;
+  var lastTestPayload=null;
+  function el(id){return document.getElementById(id);}
+  function errorText(error){return String(error&&error.stack?error.stack:error);}
+  function call(method,params){
+    params=params||{};
+    return new Promise(function(resolve,reject){
+      if(!window.MoreFunNative||typeof window.MoreFunNative.postMessage!=='function'){
+        reject(new Error('Native Bridge 未注入'));return;
+      }
+      var id='web-'+Date.now()+'-'+(++seq);
+      var timer=setTimeout(function(){pending.delete(id);reject(new Error('Bridge timeout: '+method));},15000);
+      pending.set(id,{resolve:resolve,reject:reject,timeout:timer});
+      window.MoreFunNative.postMessage(JSON.stringify({id:id,method:method,params:params}));
+    });
   }
-}
-function asciiBytes(text){
-  const value=String(text||'');
-  const bytes=new Uint8Array(value.length);
-  for(let i=0;i<value.length;i++)bytes[i]=value.charCodeAt(i)&0x7f;
-  return bytes;
-}
-function concatBytes(parts){
-  const total=parts.reduce((sum,part)=>sum+part.length,0);
-  const out=new Uint8Array(total);let offset=0;
-  parts.forEach(part=>{out.set(part,offset);offset+=part.length;});
-  return out;
-}
-function bytesToBase64(bytes){
-  let binary='';
-  for(let i=0;i<bytes.length;i+=0x4000)binary+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x4000));
-  return btoa(binary);
-}
-function binaryDiagnosticContent(mode,key){
-  if(mode==='escpos'){
-    const bytes=concatBytes([
-      new Uint8Array([0x1b,0x40]),
-      asciiBytes(`MORE FUN SMT ESC/POS TEST\nJOB ${key}\nBINARY BRIDGE OK\n`),
-      new Uint8Array([0x1b,0x64,0x03,0x1d,0x56,0x01])
-    ]);
-    return {mode:'binary',base64:bytesToBase64(bytes),byteLength:bytes.length,commandLanguage:'escpos',assetContract:'diagnostic.v1'};
+  function onBridgeMessage(event){
+    try{
+      var data=typeof event.data==='string'?JSON.parse(event.data):event.data;
+      var request=pending.get(data&&data.id);
+      if(!request)return;
+      clearTimeout(request.timeout);pending.delete(data.id);
+      if(data.ok)request.resolve(data.result);
+      else{
+        var detail=data&&data.error?data.error:{};
+        request.reject(new Error((detail.code||'BRIDGE_ERROR')+'｜'+(detail.message||'Bridge call failed')));
+      }
+    }catch(error){el('log').textContent=errorText(error);}
   }
-  if(mode==='tspl'){
-    const command=`SIZE 50 mm,30 mm\r\nDENSITY 8\r\nSPEED 4\r\nCLS\r\nTEXT 20,20,\"3\",0,1,1,\"MORE FUN SMT\"\r\nTEXT 20,60,\"3\",0,1,1,\"${key.slice(-12)}\"\r\nPRINT 1,1\r\n`;
-    const bytes=asciiBytes(command);
-    return {mode:'binary',base64:bytesToBase64(bytes),byteLength:bytes.length,commandLanguage:'tspl',assetContract:'diagnostic.v1'};
+  window.__moreFunLegacyBridgeReceive=function(response){onBridgeMessage({data:response});};
+  if(window.MoreFunNative)window.MoreFunNative.onmessage=onBridgeMessage;
+  function write(id,text,ok){var node=el(id);node.textContent=text;node.className=ok===false?'bad':'ok';}
+  function failAll(error){
+    var ids=['bridge','capabilities','device','network'];
+    for(var i=0;i<ids.length;i++)write(ids[i],error.message,false);
+    el('log').textContent=errorText(error);
   }
-  return null;
-}
-function buildTestPayload({reuse=false}={}){
-  if(reuse&&lastTestPayload)return lastTestPayload;
-  const host=el('printerHost').value.trim();
-  const port=Number(el('printerPort').value||9100);
-  const mode=el('printMode').value;
-  const key=`DIAG-${Date.now()}`;
-  const binary=binaryDiagnosticContent(mode,key);
-  lastTestPayload={
-    contract:'morefun.print.v1',idempotencyKey:key,jobId:key,documentType:'diagnostic',copies:1,
-    target:{transport:'tcp',host,port,timeoutMs:5000},
-    content:binary||{mode:'text-diagnostic',encoding:'US-ASCII',text:`MORE FUN SMT TCP TEST\nJOB ${key}\nTRANSPORT ONLY\n`},
-    completion:{required:true,acceptedStatuses:['printed','failed'],doNotTreatQueuedAsPrinted:true}
-  };
-  return lastTestPayload;
-}
-async function testPrint(reuse=false){
-  try{
-    const payload=buildTestPayload({reuse});
-    el('log').textContent=`Sending ${payload.jobId} (${payload.content.mode}/${payload.content.commandLanguage||'text'}) to ${payload.target.host}:${payload.target.port}...`;
-    const result=await call('print.lan.tcp',{payload});
-    el('log').textContent=JSON.stringify({request:{jobId:payload.jobId,target:payload.target,content:{mode:payload.content.mode,commandLanguage:payload.content.commandLanguage,byteLength:payload.content.byteLength}},result},null,2);
-  }catch(error){el('log').textContent=String(error?.stack||error);}
-}
-el('refresh').addEventListener('click',run);
-el('testPrint').addEventListener('click',()=>testPrint(false));
-el('repeatPrint').addEventListener('click',()=>testPrint(true));
-el('printMode').addEventListener('change',()=>{lastTestPayload=null;});
-run();
+  function run(){
+    var snapshot={userAgent:navigator.userAgent};
+    call('bridge.getVersion').then(function(version){
+      snapshot.version=version;
+      write('bridge',version.appVersion+'｜Bridge '+version.bridgeVersion+'｜Web '+version.webBundleVersion,true);
+      return call('bridge.getCapabilities');
+    }).then(function(caps){
+      snapshot.caps=caps;
+      write('capabilities',(caps.capabilities||[]).join('／')||'無',true);
+      return call('device.getInfo');
+    }).then(function(device){
+      snapshot.device=device;
+      write('device',device.terminalId+'｜'+device.manufacturer+' '+device.model+'｜Android API '+device.sdkInt,true);
+      return call('network.getStatus');
+    }).then(function(network){
+      snapshot.network=network;
+      write('network',network.connected?'在線｜'+network.transport:'離線｜'+network.transport,network.connected);
+      el('log').textContent=JSON.stringify(snapshot,null,2);
+    }).catch(failAll);
+  }
+  function asciiBytes(text){
+    var value=String(text||'');
+    var bytes=new Uint8Array(value.length);
+    for(var i=0;i<value.length;i++)bytes[i]=value.charCodeAt(i)&0x7f;
+    return bytes;
+  }
+  function concatBytes(parts){
+    var total=0,i,offset=0;
+    for(i=0;i<parts.length;i++)total+=parts[i].length;
+    var out=new Uint8Array(total);
+    for(i=0;i<parts.length;i++){out.set(parts[i],offset);offset+=parts[i].length;}
+    return out;
+  }
+  function bytesToBase64(bytes){
+    var binary='';
+    for(var i=0;i<bytes.length;i+=0x4000)binary+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x4000));
+    return btoa(binary);
+  }
+  function binaryDiagnosticContent(mode,key){
+    var bytes,command;
+    if(mode==='escpos'){
+      bytes=concatBytes([
+        new Uint8Array([0x1b,0x40]),
+        asciiBytes('MORE FUN SMT ESC/POS TEST\nJOB '+key+'\nBINARY BRIDGE OK\n'),
+        new Uint8Array([0x1b,0x64,0x03,0x1d,0x56,0x01])
+      ]);
+      return {mode:'binary',base64:bytesToBase64(bytes),byteLength:bytes.length,commandLanguage:'escpos',assetContract:'diagnostic.v1'};
+    }
+    if(mode==='tspl'){
+      command='SIZE 50 mm,30 mm\r\nDENSITY 8\r\nSPEED 4\r\nCLS\r\nTEXT 20,20,"3",0,1,1,"MORE FUN SMT"\r\nTEXT 20,60,"3",0,1,1,"'+key.slice(-12)+'"\r\nPRINT 1,1\r\n';
+      bytes=asciiBytes(command);
+      return {mode:'binary',base64:bytesToBase64(bytes),byteLength:bytes.length,commandLanguage:'tspl',assetContract:'diagnostic.v1'};
+    }
+    return null;
+  }
+  function buildTestPayload(options){
+    options=options||{};
+    if(options.reuse&&lastTestPayload)return lastTestPayload;
+    var host=el('printerHost').value.trim();
+    var port=Number(el('printerPort').value||9100);
+    var mode=el('printMode').value;
+    var key='DIAG-'+Date.now();
+    var binary=binaryDiagnosticContent(mode,key);
+    lastTestPayload={
+      contract:'morefun.print.v1',idempotencyKey:key,jobId:key,documentType:'diagnostic',copies:1,
+      target:{transport:'tcp',host:host,port:port,timeoutMs:5000},
+      content:binary||{mode:'text-diagnostic',encoding:'US-ASCII',text:'MORE FUN SMT TCP TEST\nJOB '+key+'\nTRANSPORT ONLY\n'},
+      completion:{required:true,acceptedStatuses:['printed','failed'],doNotTreatQueuedAsPrinted:true}
+    };
+    return lastTestPayload;
+  }
+  function testPrint(reuse){
+    var payload;
+    try{
+      payload=buildTestPayload({reuse:reuse===true});
+      el('log').textContent='Sending '+payload.jobId+' ('+payload.content.mode+'/'+(payload.content.commandLanguage||'text')+') to '+payload.target.host+':'+payload.target.port+'...';
+    }catch(error){el('log').textContent=errorText(error);return;}
+    call('print.lan.tcp',{payload:payload}).then(function(result){
+      el('log').textContent=JSON.stringify({request:{jobId:payload.jobId,target:payload.target,content:{mode:payload.content.mode,commandLanguage:payload.content.commandLanguage,byteLength:payload.content.byteLength}},result:result},null,2);
+    }).catch(function(error){el('log').textContent=errorText(error);});
+  }
+  el('refresh').addEventListener('click',run);
+  el('testPrint').addEventListener('click',function(){testPrint(false);});
+  el('repeatPrint').addEventListener('click',function(){testPrint(true);});
+  el('printMode').addEventListener('change',function(){lastTestPayload=null;});
+  run();
+}());
 </script>
 </body>
 </html>
