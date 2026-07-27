@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   cleanup:
-    if: github.head_ref == 'v1-cart-legacy-cleanup'
+    if: github.head_ref == 'v1-cart-legacy-cleanup' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,15 +33,21 @@ jobs:
       - name: Apply guarded V1 Cart legacy cleanup
         run: node scripts/cleanup-order-page-cart-legacy.mjs
 
-      - name: Verify V1 migration is physically cleared
+      - name: Assert V1 legacy selectors are absent
         run: |
-          if grep -Eq '\.cart-row\s*\{|\.cart-img\s*\{|\.cart-actions\s*\{|\.pending-area\s*\{|\.cart[[:space:]]+footer\s*\{' pages/order/page.css; then
+          if grep -En '\.cart-row\s*\{|\.cart-img\s*\{|\.cart-actions\s*\{|\.pending-area\s*\{|\.cart[[:space:]]+footer\s*\{' pages/order/page.css; then
             echo 'V1 Cart legacy selectors still exist in page.css'
             exit 1
           fi
-          node scripts/audit-component-ownership.mjs
-          node scripts/validate-ai-context.mjs
-          node --test tests/*.test.mjs
+
+      - name: Component ownership audit
+        run: node scripts/audit-component-ownership.mjs
+
+      - name: AI context validation
+        run: node scripts/validate-ai-context.mjs
+
+      - name: Full Node regression
+        run: node --test tests/*.test.mjs
 
       - name: Commit only verified cleanup output
         run: |
