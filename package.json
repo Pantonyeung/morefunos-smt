@@ -1,0 +1,13 @@
+{
+  "name": "morefunos-smt-qa",
+  "private": true,
+  "version": "1.0.0",
+  "description": "QA tooling for More Fun SMT responsive and runtime regression checks.",
+  "scripts": {
+    "qa:node": "node scripts/audit-component-ownership.mjs && node --test tests/*.test.mjs",
+    "qa:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  }
+}
