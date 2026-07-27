@@ -26,6 +26,8 @@
 
 ## WebView / Native Bridge 兼容策略
 
+Android OS 版本只係第一層兼容。T2 是否真實可用，同時取決於裝置實際 System WebView 能否解析 Web Bundle。
+
 ### 新版 WebView
 
 優先使用 `WebViewCompat.addWebMessageListener`，只允許 packaged appassets origin。
@@ -34,11 +36,14 @@
 
 當 `WEB_MESSAGE_LISTENER` 不支援時，才啟用 `LegacyBridgeAdapter`。
 
+Foundation diagnostic 必須保持舊 WebView 可解析語法；禁止在該入口直接加入會令舊 WebView parse 失敗的 optional chaining、arrow function、`async/await`、`const/let` 等新語法。正式 SMT Web Bundle 之後如使用新語法，必須有明確 transpile / compatibility build 或實機證據證明 T2 WebView 支援，不能只靠 Android API level 推斷。
+
 限制：
 - WebView 導航仍只允許 `https://appassets.androidplatform.net`。
 - Legacy Bridge 只轉送至同一個 `BridgeProtocol`，不得建立第二套 Business Logic。
 - 未實作 capability 不得回報為已支援。
 - Android 6 fallback 必須以 T2 實機驗證，不能只靠編譯通過。
+- 實機驗收必須記錄 `navigator.userAgent` / WebView 版本證據，供後續決定正式 Web Bundle transpile target。
 
 ## 打印兼容要求
 
@@ -60,6 +65,8 @@ Android 6 災難後備模式至少必須支援：
 ### CI
 - minSdk 23。
 - WebKit 1.15.0。
+- Foundation diagnostic legacy WebView syntax gate PASS。
+- 唯一正式 diagnostic entry = `assets/smt/index.html`；禁止保留第二個死入口造成 Authority 混亂。
 - APK assembleDebug PASS。
 - APK artifact 產出。
 - Bridge Authority PASS。
@@ -71,8 +78,12 @@ Android 6 災難後備模式至少必須支援：
 - Kiosk / 橫屏成功。
 - Bridge Version / Capabilities 可讀。
 - Device / Network status 可讀。
-- LAN 測試打印成功。
-- 中文內容正常。
+- WebView / user-agent 證據已記錄。
+- LAN 純 Transport 測試成功。
+- ESC/POS binary 測試成功（適用卷紙機）。
+- TSPL binary 測試成功（適用標籤機）。
+- 正式 Raster 中文內容正常。
+- 切紙／標籤走紙正常。
 - 斷線時回報失敗而非假成功。
 - 重送同一 idempotencyKey 不重複出紙。
 
