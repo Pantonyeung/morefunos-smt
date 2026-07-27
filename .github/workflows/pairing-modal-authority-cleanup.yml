@@ -76,6 +76,8 @@ jobs:
         run: |
           set +e
           failures=0
+          summary=/tmp/browser-regression-summary.txt
+          : > "$summary"
           specs=(
             tests/responsive-profile.spec.js
             tests/responsive-shell.spec.js
@@ -93,19 +95,29 @@ jobs:
             timeout --signal=TERM --kill-after=15s 180s npx playwright test "$spec" --reporter=line
             status=$?
             if [ $status -eq 124 ] || [ $status -eq 137 ]; then
-              echo "TIMEOUT $spec"
+              echo "TIMEOUT $spec" | tee -a "$summary"
               failures=$((failures+1))
             elif [ $status -ne 0 ]; then
-              echo "FAIL $spec"
+              echo "FAIL $spec exit=$status" | tee -a "$summary"
               failures=$((failures+1))
             else
-              echo "PASS $spec"
+              echo "PASS $spec" | tee -a "$summary"
             fi
           done
-          echo "Browser regression failures: $failures"
+          echo "Browser regression failures: $failures" | tee -a "$summary"
+          cp "$summary" browser-regression-summary.txt
           test $failures -eq 0
+      - name: Upload Browser regression summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-regression-summary
+          path: browser-regression-summary.txt
+          if-no-files-found: warn
+          retention-days: 14
       - name: Confirm clean verified head
         run: |
+          rm -f browser-regression-summary.txt
           if ! git diff --quiet; then
             echo 'Verified Pairing cleanup head must be clean before merge.'
             git diff -- pages/order/page.css tests/order-edit-flow.test.mjs
