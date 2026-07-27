@@ -20,6 +20,7 @@ class MainActivity : Activity(), HostActions {
     private lateinit var webView: WebView
     private lateinit var bridge: BridgeProtocol
     private lateinit var bundleStore: WebBundleStore
+    private var startupRecovery = JSONObject().put("status", "not_started")
 
     private val localOrigin = "https://appassets.androidplatform.net"
     private val startUrl = "$localOrigin/runtime/index.html"
@@ -34,6 +35,7 @@ class MainActivity : Activity(), HostActions {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         bundleStore = WebBundleStore(this)
+        startupRecovery = bundleStore.prepareRuntimeForLaunch()
         bridge = BridgeProtocol(this, bundleStore, hostActions = this)
         enterImmersiveMode()
         webView = createWebView()
@@ -220,6 +222,17 @@ class MainActivity : Activity(), HostActions {
                 val url = request?.url ?: return true
                 val allowed = url.scheme == "https" && url.host == "appassets.androidplatform.net"
                 return !allowed
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                if (url == startUrl && ::webView.isInitialized) {
+                    val payload = JSONObject.quote(startupRecovery.toString())
+                    webView.evaluateJavascript(
+                        "window.dispatchEvent(new CustomEvent('morefun:native-runtime-start',{detail:JSON.parse($payload)}));",
+                        null
+                    )
+                }
             }
         }
 
