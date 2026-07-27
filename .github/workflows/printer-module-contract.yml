@@ -41,5 +41,23 @@ jobs:
         run: node --test tests/printer-settings-controller.test.mjs
       - name: Printer settings renderer contract
         run: node --test tests/printer-settings-renderer.test.mjs
-      - name: Full Node regression
-        run: node --test tests/*.test.mjs
+      - name: Full Node regression by file
+        shell: bash
+        run: |
+          set +e
+          failures=0
+          : > /tmp/node-regression-summary.txt
+          for file in tests/*.test.mjs; do
+            echo "===== RUN $file ====="
+            node --test "$file"
+            status=$?
+            if [ $status -ne 0 ]; then
+              echo "FAIL $file exit=$status" | tee -a /tmp/node-regression-summary.txt
+              failures=$((failures+1))
+            else
+              echo "PASS $file" | tee -a /tmp/node-regression-summary.txt
+            fi
+          done
+          echo "Node regression failures: $failures" | tee -a /tmp/node-regression-summary.txt
+          cat /tmp/node-regression-summary.txt
+          test $failures -eq 0
