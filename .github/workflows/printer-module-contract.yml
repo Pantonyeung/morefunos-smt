@@ -21,11 +21,25 @@ jobs:
         run: node --test tests/printer-transport-settings.test.mjs
       - name: Printer media contract
         run: node --test tests/printer-media-profile.test.mjs
+      - name: Printer driver profile contract
+        run: node --test tests/printer-driver-profile.test.mjs
+      - name: Printer rendered asset contract
+        run: node --test tests/printer-rendered-asset.test.mjs
+      - name: Printer command renderer contract
+        run: node --test tests/printer-command-renderer.test.mjs
+      - name: Printer job payload contract
+        run: node --test tests/printer-job-payload.test.mjs
+      - name: Print Domain authority contract
+        run: node --test tests/printer-domain-authority.test.mjs
       - name: Printer routing contract
         run: node tests/printer-routing.test.mjs
       - name: Five-printer settings contract
         run: node --test tests/printer-settings-model.test.mjs
       - name: Printer settings UI model contract
         run: node --test tests/printer-settings-ui-model.test.mjs
+      - name: Printer settings controller contract
+        run: node --test tests/printer-settings-controller.test.mjs
+      - name: Printer settings renderer contract
+        run: node --test tests/printer-settings-renderer.test.mjs
       - name: Full Node regression
         run: node --test tests/*.test.mjs
