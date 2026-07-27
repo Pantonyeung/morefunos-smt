@@ -59,6 +59,18 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
+      - name: Start SMT static QA server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/smt-http.log 2>&1 &
+          echo $! >/tmp/smt-http.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/smt-http.log
+          exit 1
       - name: Browser regression
         run: npm run qa:browser
       - name: Confirm clean verified head
