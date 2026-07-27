@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "hk.morefun.smt"
-        minSdk = 26
+        minSdk = 23
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0-foundation"
@@ -32,5 +32,5 @@ android {
 }
 
 dependencies {
-    implementation("androidx.webkit:webkit:1.16.0")
+    implementation("androidx.webkit:webkit:1.15.0")
 }
