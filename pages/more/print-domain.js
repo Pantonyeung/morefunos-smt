@@ -1,5 +1,8 @@
 import {orderDisplayNumber} from '../../shared/order-identity.js';
 import {organizeCartForDisplay,packagingFeeForLine} from '../order/order-domain.js';
+import {normalizePrinterDevice} from './printer-settings-model.js';
+import {validatePrinterDriver} from './printer-driver-profile.js';
+import {buildPrinterJobPayload} from './printer-job-payload.js';
 
 const clone=value=>value===undefined?undefined:JSON.parse(JSON.stringify(value));
 const number=value=>Number.isFinite(Number(value))?Number(value):0;
@@ -32,16 +35,26 @@ function validIPv4(value){
 
 export function validatePrinter(printer){
   const errors=[];
+  const transport=printer?.transport;
   if(!String(printer?.name||'').trim())errors.push('缺少打印機名稱');
-  if(!['network','sunmi-native'].includes(printer?.transport))errors.push('連接方式不支援');
-  if(printer?.transport==='network'){
+  if(!['network','sunmi-native'].includes(transport))errors.push('連接方式不支援');
+  if(transport==='network'){
     if(!validIPv4(printer.host))errors.push('網絡地址格式不正確');
     if(!Number.isInteger(Number(printer.port))||Number(printer.port)<1||Number(printer.port)>65535)errors.push('連接埠必須介乎 1 至 65535');
   }
-  if(![50,58,80].includes(Number(printer?.paperWidth)))errors.push('紙寬必須是 50、58 或 80 毫米');
+  const rawWidth=Number(printer?.media?.widthMm??printer?.paperWidth);
+  const mediaKind=printer?.media?.kind||((printer?.purposes||[]).some(value=>String(value).includes('label'))?'label':'roll');
+  const rawHeight=Number(printer?.media?.heightMm??printer?.labelHeight);
+  if(!Number.isFinite(rawWidth)||rawWidth<20)errors.push('紙張寬度最少 20 毫米');
+  if(mediaKind==='label'&&(!Number.isFinite(rawHeight)||rawHeight<10))errors.push('標籤高度最少 10 毫米');
   if(!Array.isArray(printer?.purposes)||!printer.purposes.length)errors.push('最少選擇一個用途');
   const printable=(printer?.purposes||[]).filter(value=>['receipt','production','packing','label'].includes(value));
   printable.forEach(type=>{if(!printer?.templateAssignments?.[type])errors.push(`${type} 未選擇打印格式`);});
+  if(errors.length===0){
+    const device=normalizePrinterDevice(printer);
+    const driverValidation=validatePrinterDriver(device.driver,device.media);
+    errors.push(...driverValidation.errors);
+  }
   return {ok:errors.length===0,errors};
 }
 
@@ -197,13 +210,18 @@ export function reroutePrintJob(job,printer,{now=Date.now()}={}){
   return {...clone(job),printerId:printer.id,status:'queued',bridgeStatus:'waiting_bridge',updatedAt:number(now),history:[...(job?.history||[]),{type:'print_job.rerouted',at:number(now),fromPrinterId,toPrinterId:printer.id}]};
 }
 
-export function buildAndroidPrintPayload(job,printer,document){
+export function buildAndroidPrintPayload(job,printer,content){
   const validation=validatePrinter(printer);
   if(!validation.ok)throw new Error(validation.errors.join('；'));
+  if(printer.transport==='network'){
+    if(!content?.base64)throw new Error('LAN 正式打印必須先產生 Rendered Binary Asset');
+    return buildPrinterJobPayload(job,printer,content);
+  }
+  const document=content;
   return {
     contract:'morefun.print.v1',idempotencyKey:job.id,jobId:job.id,documentType:job.documentType,copies:Math.max(1,number(job.copies)||1),
-    target:printer.transport==='network'?{transport:'tcp',host:printer.host,port:Number(printer.port)}:{transport:'sunmi-native',device:'builtin'},
-    content:{encoding:'utf-8',paperWidth:Number(document.paperWidth||printer.paperWidth),text:document.text,templateId:document.templateId,templateVersion:document.templateVersion},
+    target:{transport:'sunmi-native',device:'builtin'},
+    content:{mode:'text-diagnostic',encoding:'utf-8',paperWidth:Number(document?.paperWidth||printer.paperWidth),text:String(document?.text||''),templateId:document?.templateId,templateVersion:document?.templateVersion},
     completion:{required:true,acceptedStatuses:['printed','failed'],doNotTreatQueuedAsPrinted:true}
   };
 }
