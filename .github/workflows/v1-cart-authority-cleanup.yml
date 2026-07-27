@@ -15,12 +15,12 @@ concurrency:
 
 jobs:
   cleanup:
-    if: github.head_ref == 'v1-cart-legacy-cleanup' && github.actor != 'github-actions[bot]'
+    if: startsWith(github.head_ref, 'v1-cart-legacy-cleanup') && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: v1-cart-legacy-cleanup
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
@@ -59,4 +59,4 @@ jobs:
             exit 0
           fi
           git commit -m 'refactor(order): physically remove V1 cart legacy authority'
-          git push origin HEAD:v1-cart-legacy-cleanup
+          git push origin HEAD:${{ github.head_ref }}
