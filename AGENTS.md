@@ -59,6 +59,16 @@
 
 任何 Bug、Regression、Responsive、Authority、Cache、QA／CI 修改前必須先讀。已記錄成功做法不得重新發明第二套；已記錄踩坑不得在沒有新證據下重試。
 
+## 強制 Change Impact 雙鏡像
+
+`SMT_CHANGE_IMPACT.md`
+
+- **任何 Bug／修改工作必讀；修改前未讀，禁止改程式。**
+- GitHub 正式分支必須存在 `SMT_CHANGE_IMPACT.md`，作工程 Change Impact 正式來源。
+- Jade Note 必須存在同名 `SMT_CHANGE_IMPACT` 鏡像，作新對話／接手 AI 快速導航；Jade 不取代 GitHub。
+- 任何可驗證修改完成後，GitHub Change Impact、Jade 鏡像、Engineering Success & Pitfalls 必須同步更新。
+- 任一邊缺失、明顯過期或與正式 Runtime 衝突：**STOP，先同步文件，再繼續 Bug／修改工作。**
+
 ---
 
 ## 強制閱讀順序
@@ -75,7 +85,7 @@
 8. `SMT_CONTEXT_MIN.md`
 9. 與任務相關的 `docs/ai-context/SMT_CODE_MAP.md` 章節
 10. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md` 的相關章節
-11. Bug／修改工作必讀 `SMT_CHANGE_IMPACT.md`
+11. Bug／修改工作必讀 `SMT_CHANGE_IMPACT.md`，並確認 Jade Note 同名鏡像存在且同步
 12. 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
 13. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`，確認目前自動測試／Browser QA 真實狀態
 
@@ -91,6 +101,7 @@
 - 已閱讀 Component Ownership Registry；
 - 已閱讀多專業工程與外部參考標準；
 - 已閱讀 Engineering Success & Pitfalls；
+- 已閱讀 GitHub `SMT_CHANGE_IMPACT.md`，並確認 Jade Note 同名鏡像存在及同步；
 - 已閱讀最新 QA report，並分清程式存在／自動測試／Browser QA／實機驗收；
 - 本次需求所屬 Domain；
 - Registry 指定嘅 Layout／Visual／State／Domain Authority；
@@ -172,13 +183,14 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 4. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`。
 5. `docs/SMT_EXTERNAL_ENGINEERING_REFERENCE_STANDARD_V1.0.md`。
 6. `docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`（已證明有效／失敗的工程經驗，不得無證據重踩）。
-7. 產品負責人在目前對話的最新明確確認（不得默認推翻最高標準）。
-8. `docs/ai-context/SMT_DECISION_LEDGER.md` 中 `LOCKED`／`CURRENT` 決策。
-9. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`。
-10. `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 的程式及驗證證據。
-11. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md` 的機器驗證證據。
-12. 最新官方 Apple／Android／Web／POS 工程資料，用作技術驗證及風險挑戰，不得推翻 More Fun Business Rule。
-13. 舊基線、舊效果圖、舊 log；只作背景，不得推翻上列資料。
+7. `SMT_CHANGE_IMPACT.md`（Bug／修改前必讀；GitHub 正式來源＋Jade 同名鏡像必須同步）。
+8. 產品負責人在目前對話的最新明確確認（不得默認推翻最高標準）。
+9. `docs/ai-context/SMT_DECISION_LEDGER.md` 中 `LOCKED`／`CURRENT` 決策。
+10. `docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`。
+11. `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 的程式及驗證證據。
+12. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md` 的機器驗證證據。
+13. 最新官方 Apple／Android／Web／POS 工程資料，用作技術驗證及風險挑戰，不得推翻 More Fun Business Rule。
+14. 舊基線、舊效果圖、舊 log；只作背景，不得推翻上列資料。
 
 安全、資料完整、離線可操作及繁體中文不得低於舊基線。
 
@@ -188,7 +200,7 @@ Adaptive Core 可以控制尺寸、Spacing、Density、Grid、Typography、Avail
 
 - 不得把設計確認、程式存在、自動測試、Browser QA、實機通過及最終 Lock 混為一談。
 - 矛盾舊資料標記 `SUPERSEDED`，不要重新詢問已鎖定決策。
-- 修改前查 `SMT_CHANGE_IMPACT.md`；修改後更新狀態、決策、程式地圖、MFKG、Engineering Success & Pitfalls 及 Chat 接力包。
+- 修改前查 `SMT_CHANGE_IMPACT.md`，並確認 Jade Note 同名鏡像存在且同步；修改後更新 GitHub Change Impact、Jade 鏡像、狀態、決策、程式地圖、MFKG、Engineering Success & Pitfalls 及 Chat 接力包。
 - 所有主卡同時只可開一張；頂欄、底欄及結帳區不得被內容推動或遮蓋。
 - 不可聲稱已完成未做的 API、硬件、Browser 或實機驗收。
 - 第一次 Fix 失敗必須 STOP 查根因及 Ownership／Authority Conflict，禁止直接疊第二層 Fix。
