@@ -1,0 +1,56 @@
+/*
+ * PAIRING TASK MODAL VISUAL AUTHORITY
+ * -----------------------------------
+ * Owns the bounded task-layout contract for specified pairing and combo editing.
+ * Header / tabs / footer are fixed surfaces inside the modal; only the body scrolls.
+ * This file does not own pairing business rules or cart data.
+ */
+.specified-link-card,
+.combo-editor-card{
+  width:min(30vw,620px);
+  min-width:540px;
+  max-height:min(88dvh,calc(100dvh - 32px));
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.specified-link-card>header,
+.combo-editor-card>header,
+.pairing-group-tabs,
+.specified-link-card>footer,
+.combo-editor-card>footer{
+  flex:none;
+}
+
+.specified-link-card>.pairing-body,
+.combo-editor-card>.product-settings-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+
+.specified-link-card>.pairing-body{
+  padding:14px 18px 18px;
+}
+
+.specified-link-card>footer,
+.combo-editor-card>footer{
+  position:relative;
+  z-index:1;
+  background:#fff;
+  border-top:1px solid var(--line);
+}
+
+.specified-link-card>footer.single-action{
+  display:grid;
+  grid-template-columns:minmax(104px,.65fr) minmax(180px,1.35fr);
+  gap:10px;
+  padding:12px 18px;
+}
+
+.specified-link-card>footer.single-action button,
+.combo-editor-card>footer button{
+  min-height:48px;
+}
