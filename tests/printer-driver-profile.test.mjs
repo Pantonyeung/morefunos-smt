@@ -19,7 +19,12 @@ test('標籤預設使用 tspl 並可選多種標籤指令語言',()=>{
   assert.deepEqual(supportedCommandLanguagesForMedia({kind:'label'}),['tspl','epl','zpl','dpl','raw']);
 });
 
-test('標籤模式拒絕 escpos，卷紙模式拒絕 tspl',()=>{
+test('舊設定與 media 不兼容時 normalize 會回到安全預設',()=>{
+  assert.equal(normalizePrinterDriver({commandLanguage:'escpos'},{kind:'label'}).commandLanguage,'tspl');
+  assert.equal(normalizePrinterDriver({commandLanguage:'tspl'},{kind:'roll'}).commandLanguage,'escpos');
+});
+
+test('員工明確選擇不兼容 driver 時 validation 必須阻止',()=>{
   assert.equal(validatePrinterDriver({commandLanguage:'escpos'},{kind:'label'}).ok,false);
   assert.equal(validatePrinterDriver({commandLanguage:'tspl'},{kind:'roll'}).ok,false);
 });
