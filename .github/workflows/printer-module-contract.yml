@@ -19,6 +19,8 @@ jobs:
           node-version: 22
       - name: Printer transport contract
         run: node --test tests/printer-transport-settings.test.mjs
+      - name: Printer media contract
+        run: node --test tests/printer-media-profile.test.mjs
       - name: Printer routing contract
         run: node tests/printer-routing.test.mjs
       - name: Five-printer settings contract
