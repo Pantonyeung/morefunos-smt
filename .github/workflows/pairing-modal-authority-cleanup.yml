@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   cleanup:
-    if: startsWith(github.head_ref, 'pairing-modal-legacy-cleanup') && github.actor != 'github-actions[bot]'
+    if: startsWith(github.head_ref, 'pairing-modal-legacy-cleanup')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
