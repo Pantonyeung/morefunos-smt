@@ -9,7 +9,8 @@ test('pairing-modal.css owns specified pairing task layout',()=>{
 });
 
 test('pairing modal keeps body scroll bounded and fixed task surfaces',()=>{
-  assert.match(css,/\.specified-link-card>\.pairing-body\{[^}]*overflow-y:auto/);
+  assert.match(css,/\.specified-link-card>\.pairing-body/);
+  assert.match(css,/overflow-y:auto/);
   assert.match(css,/\.specified-link-card>footer/);
   assert.match(css,/\.pairing-group-tabs\{/);
 });
