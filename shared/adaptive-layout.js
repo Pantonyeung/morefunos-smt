@@ -124,7 +124,9 @@
     if(!cart)return;
     const rect=cart.getBoundingClientRect();
     if(!rect.width||!rect.height)return;
-    const scale=clamp(Math.min(rect.width/610,rect.height/890),.72,1.15);
+    const viewportScale=Math.min(innerWidth/1920,innerHeight/1080);
+    const widthScale=rect.width/600;
+    const scale=clamp(Math.min(viewportScale,widthScale),.72,1.15);
     const imageSize=clamp(72*scale,46,78);
     const markerSize=clamp(imageSize*.9,42,70);
     root.style.setProperty('--adaptive-cart-scale',String(scale));
