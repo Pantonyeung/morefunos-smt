@@ -1,0 +1,26 @@
+name: Order Recovery Contract
+
+on:
+  pull_request:
+    branches: [smt-functional-completeness-v1]
+    paths:
+      - 'pages/orders/order-recovery-domain.js'
+      - 'tests/order-recovery-domain.test.mjs'
+      - '.github/workflows/order-recovery-contract.yml'
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: node --check pages/orders/order-recovery-domain.js
+      - name: Contract
+        run: node --test tests/order-recovery-domain.test.mjs
