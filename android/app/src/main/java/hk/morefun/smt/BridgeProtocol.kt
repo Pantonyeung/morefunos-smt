@@ -13,7 +13,11 @@ import java.nio.charset.Charset
 import java.util.UUID
 import java.util.concurrent.Executors
 
-class BridgeProtocol(private val context: Context) {
+class BridgeProtocol(
+    private val context: Context,
+    private val bundleStore: WebBundleStore = WebBundleStore(context),
+    private val offlineQueue: OfflineQueueStore = OfflineQueueStore(context)
+) {
     private val prefs = context.getSharedPreferences("morefun_smt_foundation", Context.MODE_PRIVATE)
     private val ioExecutor = Executors.newSingleThreadExecutor()
 
@@ -21,21 +25,45 @@ class BridgeProtocol(private val context: Context) {
         try {
             val request = JSONObject(rawMessage)
             val id = request.optString("id", UUID.randomUUID().toString())
+            val params = request.optJSONObject("params") ?: JSONObject()
             when (val method = request.optString("method")) {
                 "bridge.getVersion" -> respond(success(id, JSONObject()
                     .put("bridgeVersion", BuildConfig.BRIDGE_VERSION)
-                    .put("webBundleVersion", BuildConfig.WEB_BUNDLE_VERSION)
+                    .put("webBundleVersion", bundleStore.currentVersion() ?: BuildConfig.WEB_BUNDLE_VERSION)
                     .put("appVersion", BuildConfig.VERSION_NAME)))
                 "bridge.getCapabilities" -> respond(success(id, JSONObject()
                     .put("bridgeVersion", BuildConfig.BRIDGE_VERSION)
-                    .put("capabilities", JSONArray(listOf(
-                        "device.info",
-                        "network.status",
-                        "print.lan.tcp"
-                    )))))
+                    .put("capabilities", JSONArray(capabilities()))))
                 "device.getInfo" -> respond(success(id, deviceInfo()))
                 "network.getStatus" -> respond(success(id, networkStatus()))
-                "print.lan.tcp" -> printLanTcp(id, request.optJSONObject("params") ?: JSONObject(), respond)
+                "print.lan.tcp" -> printLanTcp(id, params, respond)
+                "bundle.getStatus" -> respond(success(id, bundleStore.status()))
+                "bundle.install" -> installBundle(id, params, respond)
+                "bundle.rollback" -> rollbackBundle(id, respond)
+                "offline.enqueue" -> respond(success(id, offlineQueue.enqueue(
+                    params.optString("id"),
+                    params.optString("kind"),
+                    params.optString("idempotencyKey"),
+                    params.optJSONObject("payload") ?: JSONObject()
+                )))
+                "offline.listPending" -> respond(success(id, JSONObject().put(
+                    "items",
+                    offlineQueue.listPending(params.optInt("limit", 100))
+                )))
+                "offline.markComplete" -> respond(success(id, queueResult(
+                    offlineQueue.markComplete(params.optString("id")),
+                    params.optString("id")
+                )))
+                "offline.markFailed" -> respond(success(id, queueResult(
+                    offlineQueue.markFailed(params.optString("id"), params.optString("error")),
+                    params.optString("id")
+                )))
+                "offline.retry" -> respond(success(id, queueResult(
+                    offlineQueue.retry(params.optString("id")),
+                    params.optString("id")
+                )))
+                "offline.getStatus" -> respond(success(id, offlineQueue.status()))
+                "diagnostics.get" -> respond(success(id, diagnostics()))
                 else -> respond(error(id, "UNSUPPORTED_METHOD", "未支援 Bridge 方法：$method"))
             }
         } catch (error: Throwable) {
@@ -45,7 +73,70 @@ class BridgeProtocol(private val context: Context) {
 
     fun close() {
         ioExecutor.shutdownNow()
+        offlineQueue.close()
     }
+
+    private fun capabilities(): List<String> = listOf(
+        "device.info",
+        "network.status",
+        "print.lan.tcp",
+        "bundle.verified.install",
+        "bundle.rollback",
+        "offline.queue",
+        "offline.recovery",
+        "diagnostics"
+    )
+
+    private fun installBundle(id: String, params: JSONObject, respond: (String) -> Unit) {
+        ioExecutor.execute {
+            try {
+                val result = bundleStore.installBase64Zip(
+                    version = params.optString("version"),
+                    expectedSha256 = params.optString("sha256"),
+                    bridgeMin = params.optString("bridgeMin"),
+                    bridgeMax = params.optString("bridgeMax"),
+                    base64Zip = params.optString("base64Zip")
+                )
+                respond(success(id, JSONObject()
+                    .put("status", "installed")
+                    .put("version", result.version)
+                    .put("sha256", result.sha256)
+                    .put("previousVersion", result.previousVersion ?: JSONObject.NULL)
+                    .put("requiresReload", true)))
+            } catch (error: Throwable) {
+                respond(error(id, "BUNDLE_INSTALL_FAILED", error.message ?: "Web bundle 安裝失敗"))
+            }
+        }
+    }
+
+    private fun rollbackBundle(id: String, respond: (String) -> Unit) {
+        ioExecutor.execute {
+            try {
+                val version = bundleStore.rollback()
+                respond(success(id, JSONObject()
+                    .put("status", "rolled_back")
+                    .put("version", version)
+                    .put("requiresReload", true)))
+            } catch (error: Throwable) {
+                respond(error(id, "BUNDLE_ROLLBACK_FAILED", error.message ?: "Web bundle 回滾失敗"))
+            }
+        }
+    }
+
+    private fun queueResult(value: JSONObject?, id: String): JSONObject {
+        require(value != null) { "Offline queue item 不存在：$id" }
+        return value
+    }
+
+    private fun diagnostics(): JSONObject = JSONObject()
+        .put("appVersion", BuildConfig.VERSION_NAME)
+        .put("bridgeVersion", BuildConfig.BRIDGE_VERSION)
+        .put("bundledWebVersion", BuildConfig.WEB_BUNDLE_VERSION)
+        .put("runtimeBundle", bundleStore.status())
+        .put("offlineQueue", offlineQueue.status())
+        .put("device", deviceInfo())
+        .put("network", networkStatus())
+        .put("capabilities", JSONArray(capabilities()))
 
     private fun printLanTcp(id: String, params: JSONObject, respond: (String) -> Unit) {
         ioExecutor.execute {
@@ -164,7 +255,7 @@ class BridgeProtocol(private val context: Context) {
             .put("sdkInt", Build.VERSION.SDK_INT)
             .put("appVersion", BuildConfig.VERSION_NAME)
             .put("bridgeVersion", BuildConfig.BRIDGE_VERSION)
-            .put("webBundleVersion", BuildConfig.WEB_BUNDLE_VERSION)
+            .put("webBundleVersion", bundleStore.currentVersion() ?: BuildConfig.WEB_BUNDLE_VERSION)
     }
 
     private fun networkStatus(): JSONObject {
