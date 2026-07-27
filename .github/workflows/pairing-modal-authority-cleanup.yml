@@ -1,0 +1,55 @@
+name: Pairing Modal Authority Cleanup
+
+on:
+  pull_request:
+    branches:
+      - smt-functional-completeness-v1
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pairing-modal-authority-cleanup-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: startsWith(github.head_ref, 'pairing-modal-legacy-cleanup') && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          show-progress: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify Pairing owner contracts
+        run: node --test tests/pairing-modal-visual-authority.test.mjs
+      - name: Apply guarded Pairing Modal legacy cleanup
+        run: node scripts/cleanup-order-page-pairing-modal-legacy.mjs
+      - name: Assert Pairing legacy selectors are absent
+        run: |
+          if grep -En '\.specified-link-card|\.pairing-group-tabs|\.pairing-body|\.combo-editor-card|\.combo-help|\.combo-role|\.combo-candidates|\.combo-actions|\.drink-link-candidates' pages/order/page.css; then
+            echo 'Pairing Modal legacy selectors still exist in page.css'
+            exit 1
+          fi
+      - name: Component ownership audit
+        run: node scripts/audit-component-ownership.mjs
+      - name: AI context validation
+        run: node scripts/validate-ai-context.mjs
+      - name: Full Node regression
+        run: node --test tests/*.test.mjs
+      - name: Commit only verified Pairing cleanup output
+        run: |
+          git config user.name 'MoreFun Pairing Authority QA'
+          git config user.email 'actions@users.noreply.github.com'
+          git add pages/order/page.css
+          if git diff --cached --quiet; then
+            echo 'No Pairing cleanup change required.'
+            exit 0
+          fi
+          git commit -m 'refactor(order): physically remove Pairing Modal legacy authority'
+          git push origin HEAD:${{ github.head_ref }}
