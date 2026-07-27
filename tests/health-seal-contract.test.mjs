@@ -13,8 +13,12 @@ assert.ok(!fs.existsSync(new URL('../status-actions-proxy.js',import.meta.url)),
 assert.ok(pageBase.includes(':root[data-global-shell="1"]'),'child shell mode must be owned by shared CSS');
 assert.ok(!loader.includes('morefun-global-shell-mode'),'loader must not inject compatibility styles at runtime');
 assert.ok(!loader.includes("createElement('style')"),'loader must not create runtime style patches');
-assert.ok(statusActions.includes('syncChildStatusActions'),'page-specific status actions must remain functional through shared core');
+assert.ok(statusActions.includes('actionsByFrame'),'page-specific status actions must use explicit per-frame descriptor state');
+assert.ok(statusActions.includes("message.type!=='morefun:status-actions'"),'shared status core must accept explicit descriptor messages');
+assert.ok(statusActions.includes("type:'morefun:status-action-trigger'"),'shell must trigger registered child actions by stable explicit id');
+assert.equal(statusActions.includes('MutationObserver'),false,'health seal forbids DOM observer synchronization for status actions');
+assert.equal(statusActions.includes('syncChildStatusActions'),false,'legacy child DOM scanner must stay removed');
 assert.ok(loader.includes("key==='checkout'"),'checkout transaction route must remain explicit');
 assert.ok(loader.includes('checkoutExitArmed'),'checkout exit lock must remain protected');
 assert.ok(startup.includes('opening'),'startup/opening flow must remain present');
-console.log('SMT_HEALTH_SEAL_CONTRACT_OK');
+console.log('SMT_HEALTH_SEAL_DESCRIPTOR_CONTRACT_OK');
