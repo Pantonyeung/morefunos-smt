@@ -1,0 +1,129 @@
+/*
+ * DRINK CHOICE CARD COMPONENT VISUAL AUTHORITY
+ * -------------------------------------------
+ * Owns Drink Choice Card internal visual only.
+ * Container placement belongs to the calling page / modal / drawer.
+ * Business assignment and pricing remain outside this stylesheet.
+ * Legacy .drink-choice-card rules in page.css are frozen during migration.
+ */
+
+.drink-choice-card{
+  width:var(--drink-card-width);
+  min-width:var(--drink-card-width);
+  max-width:var(--drink-card-width);
+  height:var(--drink-card-height);
+  flex:none;
+  position:relative;
+  border:1px solid #e5ddd5;
+  border-radius:12px;
+  background:#fff;
+  box-shadow:var(--lift);
+  padding:7px;
+  font-size:13px;
+  line-height:1.15;
+  font-weight:900;
+  text-align:center;
+  overflow:hidden;
+}
+
+.drink-choice-card>span:not(.drink-choice-img){
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.drink-choice-card.is-image{
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:10% 90%;
+  gap:0;
+  align-items:stretch;
+}
+
+.drink-choice-card.is-image>span:not(.drink-choice-img){
+  grid-row:1;
+  align-self:start;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  line-height:1;
+  padding-top:1px;
+}
+
+.drink-choice-card.is-image>.drink-choice-img{
+  grid-row:2;
+  width:100%;
+  height:100%;
+  min-height:0;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border-radius:9px;
+  background:transparent;
+}
+
+.drink-choice-card.is-image>.drink-choice-img>img{
+  width:70%;
+  height:70%;
+  max-width:70%;
+  max-height:70%;
+  object-fit:contain;
+  object-position:center;
+  display:block;
+}
+
+.drink-choice-card.is-image>.drink-choice-img>.image-fallback{
+  width:70%;
+  height:70%;
+  display:grid;
+  place-items:center;
+}
+
+.drink-choice-card.is-text{
+  display:grid;
+  place-items:center;
+  text-align:center;
+}
+
+.drink-choice-card.is-text .drink-choice-img{
+  display:none;
+}
+
+.drink-choice-card.selected{
+  background:var(--orange-soft);
+  border-color:#f0a578;
+  box-shadow:inset 0 0 0 1px #f0a578,var(--lift);
+}
+
+.drink-choice-count{
+  position:absolute;
+  right:8px;
+  top:8px;
+  min-width:28px;
+  height:28px;
+  padding:0 8px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:var(--orange);
+  color:#fff;
+  font-style:normal;
+  font-weight:950;
+  box-shadow:0 2px 8px rgba(69,48,32,.18);
+}
+
+.drink-card--drawer,
+.drink-card--detail{
+  width:150px;
+  min-width:150px;
+  max-width:150px;
+  height:190px;
+}
+
+.drink-card--completion{
+  width:100%;
+  min-width:0;
+  max-width:none;
+  height:170px;
+}
