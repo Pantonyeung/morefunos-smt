@@ -25,6 +25,8 @@ jobs:
         run: node --test tests/printer-driver-profile.test.mjs
       - name: Printer rendered asset contract
         run: node --test tests/printer-rendered-asset.test.mjs
+      - name: Printer command renderer contract
+        run: node --test tests/printer-command-renderer.test.mjs
       - name: Printer routing contract
         run: node tests/printer-routing.test.mjs
       - name: Five-printer settings contract
