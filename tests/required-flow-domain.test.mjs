@@ -133,6 +133,13 @@ test('specified drink assignment can replace an existing slot without creating a
   assert.deepEqual(next[0].drinkAssignments.map(item=>item.drinkId),['d1','d3']);
 });
 
+test('specified future drink slot cannot create sparse assignments or fake completion',()=>{
+  const cart=[line({lineId:'combo',required:['drink'],drinkSlots:3,drinkAssignments:[]})];
+  const next=applyRequiredTaskSelection(cart,requiredTaskId('combo','drink'),{drinkId:'d3',name:'玄米冷泡茶'},{assignmentIndex:2});
+  assert.deepEqual(next[0].drinkAssignments,[]);
+  assert.equal(buildRequiredWorkflow(next).totalRemaining,3);
+});
+
 test('clear required selection reopens the same task and checkout gate',()=>{
   const cart=[line({
     lineId:'bento',required:['rice','drink'],drinkSlots:1,
