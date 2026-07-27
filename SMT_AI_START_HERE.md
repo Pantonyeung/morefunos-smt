@@ -47,7 +47,7 @@
 - 第一次 Fix 失敗必須 STOP 查根因，唔可以直接疊第二層 Fix。
 - Adaptive Core 只可控制尺寸／密度／Profile／Available Area；不得建立第二套 Component／Domain／Checkout／Pricing／Print。
 - 重要修改完成後必須同步 MFKG／Decision／Implementation Status／Code Map（按影響範圍）。
-- 每次可驗證成功／踩坑必須追加 `docs/ai-context/SMT_SUCCESS_PITFALL_LOG.md`；禁止下一個 AI 重走已證實無效路線。
+- 每次可驗證成功／踩坑必須追加 `docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`；禁止下一個 AI 重走已證實無效路線。
 
 ## 現況判斷方式
 
@@ -66,7 +66,7 @@
 ## 按任務載入
 
 - 三份最高標準：`docs/SMT_DEVELOPMENT_CHARTER_V1.0.md` + `docs/MFKG_STANDARD_V1.0.md` + `docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`
-- 成功／踩坑／避錯紀錄：`docs/ai-context/SMT_SUCCESS_PITFALL_LOG.md`
+- 成功／踩坑／避錯紀錄：`docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`
 - 機器知識圖：`docs/ai-context/SMT_KNOWLEDGE_GRAPH.json`
 - UI：Current Lock + `docs/ai-context/SMT_CODE_MAP.md`
 - Bug：`SMT_CHANGE_IMPACT.md` + 對應測試
