@@ -70,10 +70,39 @@ const checks=[
     ]
   },
   {
-    id:'ADAPTIVE_ORDER_PRODUCT_PAGE_AUTHORITY',
-    description:'Order product adaptive visuals belong to the Order page authority',
-    authority:'pages/order/adaptive.css',
-    forbidden:[['shared/adaptive-layout.css','body[data-page="order"]']]
+    id:'ADAPTIVE_ORDER_PRODUCT_LIST_ONLY',
+    description:'Order adaptive.css owns product-list row/token consumption only, never Product Card internals',
+    authority:'pages/order/adaptive.css list geometry + pages/order/product-card.css internal visual',
+    required:[
+      ['pages/order/adaptive.css','.products-large'],
+      ['pages/order/adaptive.css','--adaptive-product-row-large']
+    ],
+    forbidden:[
+      ['shared/adaptive-layout.css','body[data-page="order"]'],
+      ['pages/order/adaptive.css','.product-card'],
+      ['pages/order/adaptive.css','.product-hero'],
+      ['pages/order/adaptive.css','.product-thumb'],
+      ['pages/order/adaptive.css','.product-info']
+    ]
+  },
+  {
+    id:'PRODUCT_CARD_VISUAL_AUTHORITY',
+    description:'Product Card internal geometry and image presentation belong to product-card.css',
+    authority:'pages/order/product-card.css',
+    required:[
+      ['pages/order/product-card.css','.product-card.large'],
+      ['pages/order/product-card.css','.product-hero>img'],
+      ['pages/order/product-card.css','width:70%'],
+      ['pages/order/product-card.css','height:70%'],
+      ['pages/order/product-card.css','object-fit:contain'],
+      ['pages/order/product-card.css','min-height:48px']
+    ],
+    forbidden:[
+      ['shared/adaptive-layout.css','.product-card'],
+      ['shared/adaptive-layout.css','.product-hero'],
+      ['shared/responsive-pages.css','.product-card'],
+      ['shared/responsive-pages.css','.product-hero']
+    ]
   },
   {
     id:'ADAPTIVE_ORDERS_TOKEN_ONLY',
@@ -181,6 +210,12 @@ const knownMigrations=[
     files:['pages/order/page.css'],
     needles:['.drink-choice-card','.drink-choice-img','.drink-choice-count'],
     note:'drink-card.css is the final component authority; page.css drink-card internals are frozen legacy and may only be physically removed'
+  },
+  {
+    id:'V9_PRODUCT_CARD_LEGACY_PAGE_CSS',
+    files:['pages/order/page.css'],
+    needles:['.product-card','.product-hero','.product-info','.product-thumb'],
+    note:'product-card.css is the final Product Card internal visual authority; page.css Product Card internals are frozen legacy and may only be physically removed'
   },
   {
     id:'PAIRING_MODAL_LEGACY_PAGE_CSS',
