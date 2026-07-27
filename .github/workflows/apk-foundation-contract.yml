@@ -29,12 +29,33 @@ jobs:
           test ! -f android/app/src/main/assets/index.html
           grep -q 'minSdk = 23' android/app/build.gradle.kts
           grep -q 'androidx.webkit:webkit:1.15.0' android/app/build.gradle.kts
-          grep -q '"device.info"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
-          grep -q '"network.status"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
-          grep -q '"print.lan.tcp"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
-          ! grep -q '"print.sunmi.native"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
-          ! grep -q '"offline.queue"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
-          ! grep -q '"update.channel"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+
+          bridge=android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+          grep -q '"device.info"' "$bridge"
+          grep -q '"network.status"' "$bridge"
+          grep -q '"print.lan.tcp"' "$bridge"
+          ! grep -q '"print.sunmi.native"' "$bridge"
+
+          # Declared foundation capabilities must have real implementation owners.
+          grep -q '"bundle.verified.install"' "$bridge"
+          grep -q '"bundle.version-vault"' "$bridge"
+          grep -q '"bundle.health-confirm"' "$bridge"
+          grep -q '"bundle.rollback"' "$bridge"
+          test -f android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
+          grep -q 'fun installBase64Zip' android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
+          grep -q 'fun vault' android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
+          grep -q 'fun rollback' android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
+          grep -q 'prepareRuntimeForLaunch' android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
+
+          grep -q '"offline.queue"' "$bridge"
+          grep -q '"offline.recovery"' "$bridge"
+          test -f android/app/src/main/java/hk/morefun/smt/OfflineQueueStore.kt
+          grep -q 'fun enqueue' android/app/src/main/java/hk/morefun/smt/OfflineQueueStore.kt
+          grep -q 'fun listPending' android/app/src/main/java/hk/morefun/smt/OfflineQueueStore.kt
+          grep -q 'fun retry' android/app/src/main/java/hk/morefun/smt/OfflineQueueStore.kt
+
+          grep -q '"diagnostics"' "$bridge"
+          test -f android/app/src/main/java/hk/morefun/smt/HostActions.kt
 
       - name: Assert legacy Android 6 WebView diagnostic syntax
         shell: bash
