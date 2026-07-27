@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.util.Base64
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.InetSocketAddress
@@ -85,6 +86,7 @@ class BridgeProtocol(private val context: Context) {
             val port = target.optInt("port", 0)
             val timeoutMs = target.optInt("timeoutMs", 5000).coerceIn(1000, 15000)
             val copies = payload.optInt("copies", 1).coerceIn(1, 9)
+            val base64Content = content.optString("base64").trim()
             val text = content.optString("text")
             val encoding = content.optString("encoding", "utf-8")
 
@@ -92,14 +94,30 @@ class BridgeProtocol(private val context: Context) {
                 respond(error(id, "PRINT_TARGET_INVALID", "打印機 IP／Port 無效"))
                 return@execute
             }
-            if (text.isBlank()) {
+            if (base64Content.isBlank() && text.isBlank()) {
                 respond(error(id, "PRINT_CONTENT_MISSING", "打印內容為空"))
                 return@execute
             }
 
             try {
-                val charset = Charset.forName(encoding)
-                val documentBytes = text.toByteArray(charset)
+                val contentMode: String
+                val documentBytes: ByteArray
+                val feedBytes: ByteArray
+                if (base64Content.isNotBlank()) {
+                    contentMode = "binary"
+                    documentBytes = Base64.decode(base64Content, Base64.DEFAULT)
+                    feedBytes = byteArrayOf()
+                } else {
+                    contentMode = "text"
+                    val charset = Charset.forName(encoding)
+                    documentBytes = text.toByteArray(charset)
+                    feedBytes = "\n\n\n".toByteArray(charset)
+                }
+                if (documentBytes.isEmpty()) {
+                    respond(error(id, "PRINT_CONTENT_MISSING", "打印內容解碼後為空"))
+                    return@execute
+                }
+
                 var totalBytes = 0
                 Socket().use { socket ->
                     socket.connect(InetSocketAddress(host, port), timeoutMs)
@@ -107,8 +125,8 @@ class BridgeProtocol(private val context: Context) {
                     socket.getOutputStream().use { output ->
                         repeat(copies) {
                             output.write(documentBytes)
-                            output.write("\n\n\n".toByteArray(charset))
-                            totalBytes += documentBytes.size
+                            if (feedBytes.isNotEmpty()) output.write(feedBytes)
+                            totalBytes += documentBytes.size + feedBytes.size
                         }
                         output.flush()
                     }
@@ -120,6 +138,7 @@ class BridgeProtocol(private val context: Context) {
                     .put("jobId", jobId)
                     .put("idempotencyKey", idempotencyKey)
                     .put("duplicateSuppressed", false)
+                    .put("contentMode", contentMode)
                     .put("bytesWritten", totalBytes)
                     .put("completedAt", completedAt)))
             } catch (error: Throwable) {
