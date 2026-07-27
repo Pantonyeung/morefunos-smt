@@ -18,11 +18,14 @@ const state={
   fallbackMode:'auto'
 };
 
-test('view model exposes media, template and fallback settings from one source',()=>{
+test('view model exposes media, template, transport and fallback settings from one source',()=>{
   const vm=printerSettingsViewModel(state,'receipt-1');
   assert.equal(vm.media.kind,'roll');
   assert.equal(vm.media.widthMm,58);
   assert.deepEqual(vm.templates.map(x=>x.id),['receipt-58']);
+  assert.equal(vm.transport.transport,'network');
+  assert.equal(vm.transport.host,'10.0.0.20');
+  assert.equal(vm.transportOptions.some(x=>x.value==='network'),true);
   assert.equal(vm.fallbackPrinterId,'packing-1');
   assert.equal(vm.fallbackMode,'auto');
   assert.equal(vm.fallbackOptions.some(x=>x.value==='packing-1'),true);
