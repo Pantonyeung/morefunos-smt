@@ -113,14 +113,38 @@ const checks=[
   },
   {
     id:'DRINK_CARD_VISUAL_AUTHORITY',
-    description:'Drink Choice Card internal visual belongs to pages/order/page.css until a dedicated component stylesheet is introduced',
-    authority:'pages/order/page.css',
+    description:'Drink Choice Card internal visual belongs to the dedicated component stylesheet',
+    authority:'pages/order/drink-card.css',
+    required:[
+      ['pages/order/drink-card.css','.drink-choice-card'],
+      ['pages/order/drink-card.css','grid-template-rows:10% 90%'],
+      ['pages/order/drink-card.css','width:70%'],
+      ['pages/order/drink-card.css','object-fit:contain']
+    ],
     forbidden:[
       ['pages/order/cart.css','.drink-choice-card'],
       ['pages/order/cart.css','.drink-choice-img'],
       ['pages/order/cart.css','.drink-choice-count'],
       ['shared/adaptive-layout.css','.drink-choice-card'],
       ['shared/responsive-pages.css','.drink-choice-card']
+    ]
+  },
+  {
+    id:'PAIRING_TASK_MODAL_VISUAL_AUTHORITY',
+    description:'Specified pairing and combo editing bounded task layout belongs to pairing-modal.css',
+    authority:'pages/order/pairing-modal.css',
+    required:[
+      ['pages/order/pairing-modal.css','.specified-link-card'],
+      ['pages/order/pairing-modal.css','.combo-editor-card'],
+      ['pages/order/pairing-modal.css','flex-direction:column'],
+      ['pages/order/pairing-modal.css','min-height:0'],
+      ['pages/order/pairing-modal.css','overflow-y:auto']
+    ],
+    forbidden:[
+      ['shared/adaptive-layout.css','.specified-link-card'],
+      ['shared/responsive-pages.css','.specified-link-card'],
+      ['shared/adaptive-layout.css','.combo-editor-card'],
+      ['shared/responsive-pages.css','.combo-editor-card']
     ]
   },
   {
@@ -150,7 +174,19 @@ const knownMigrations=[
     id:'V1_CART_INTERNAL_VISUAL_AUTHORITY',
     files:['pages/order/page.css','pages/order/cart.css'],
     needles:['.cart-row','.cart-img','.cart-actions','.pending-area','.cart footer'],
-    note:'page.css legacy cart internals are frozen by policy; new cart work belongs to cart.css; migrate one responsibility group at a time with a contract test before removing the legacy rules'
+    note:'page.css legacy cart internals are frozen by policy; cart.css is the final authority; legacy rules may only be removed, never extended'
+  },
+  {
+    id:'V2_DRINK_CARD_LEGACY_PAGE_CSS',
+    files:['pages/order/page.css'],
+    needles:['.drink-choice-card','.drink-choice-img','.drink-choice-count'],
+    note:'drink-card.css is the final component authority; page.css drink-card internals are frozen legacy and may only be physically removed'
+  },
+  {
+    id:'PAIRING_MODAL_LEGACY_PAGE_CSS',
+    files:['pages/order/page.css'],
+    needles:['.specified-link-card','.pairing-group-tabs','.pairing-body','.combo-editor-card'],
+    note:'pairing-modal.css owns the bounded task layout; legacy page.css rules remain migration debt and may only be removed or reduced'
   }
 ];
 
