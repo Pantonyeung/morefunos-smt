@@ -270,7 +270,7 @@ button:active,
 .link-candidates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
 .link-candidates button { min-height:64px; border:1px solid var(--line); border-radius:10px; background:#fff; font-weight:850; padding:8px; }
 .link-candidates button.selected { border-color:var(--orange); background:var(--orange-soft); color:var(--orange); }
-.specified-link-card{width:min(620px,34vw);max-height:calc(100vh - 150px);display:flex;flex-direction:column;overflow:hidden}.specified-link-card .pairing-body{flex:1;min-height:0;overflow:auto}.specified-link-card>footer{flex:none;background:#fff}
+
 .drink-base-qty { display:flex; justify-content:space-between; align-items:center; padding:14px; border-bottom:1px solid var(--line); }
 .drink-base-qty > span:last-child,.drink-group header > span { display:grid; grid-template-columns:42px 38px 42px; align-items:center; text-align:center; gap:6px; }
 .drink-base-qty button,.drink-group header > span button { height:38px; border:1px solid var(--line); border-radius:9px; background:#fff; font-weight:900; }
@@ -1128,20 +1128,20 @@ main{height:100%;min-height:0;overflow:hidden}.workspace{overflow:hidden}.order-
 
 
 
-.specified-link-card { width: min(30vw, 620px); min-width: 540px; max-height: calc(100vh - 170px); }
-.specified-link-card > header { padding: 16px 18px; }
-.specified-link-card > header > div { display: grid; gap: 3px; }
-.specified-link-card > header small { color: var(--orange); font-weight: 850; }
-.pairing-group-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 12px 18px; border-bottom: 1px solid var(--line); background: #fffaf6; }
-.pairing-group-tabs button { flex: 0 0 58px; min-height: 54px; display: grid; place-items: center; gap: 2px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
-.pairing-group-tabs button b { font-size: 18px; }
-.pairing-group-tabs button small { color: var(--muted); }
-.pairing-group-tabs button.active { border-color: var(--orange); background: var(--orange-soft); color: var(--orange); box-shadow: inset 0 0 0 1px #f0a578; }
-.pairing-group-tabs button.complete small { color: var(--green); font-weight: 850; }
-.pairing-body { padding: 14px 18px 18px; }
-.pairing-body > p { margin: 0 0 14px; color: var(--muted); line-height: 1.4; }
-.pairing-body > section { margin-bottom: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
-.pairing-body > section > strong { display: block; margin-bottom: 9px; font-size: 16px; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .link-candidates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
 .link-candidates button { min-width: 0; min-height: 72px; display: grid; align-content: center; gap: 5px; padding: 10px; border: 1px solid #d9cec5; border-radius: 10px; background: #fff; text-align: left; overflow-wrap: anywhere; }
 .link-candidates button span { font-weight: 900; line-height: 1.25; }
@@ -1192,20 +1192,20 @@ main{height:100%;min-height:0;overflow:hidden}.workspace{overflow:hidden}.order-
 
 
 /* order-v1-10: parent combo editing and direct quick-drink pairing */
-.drink-link-candidates button { position: relative; min-height: 82px; }
-.drink-link-candidates button.selected::before { content:""; position:absolute; left:50%; top:-9px; transform:translateX(-50%); border:6px solid transparent; border-bottom-color:var(--orange); }
-.combo-editor-card { width:min(30vw,620px); min-width:540px; max-height:calc(100vh - 170px); }
-.combo-help { margin:0 0 12px; padding:10px 12px; border-radius:10px; background:var(--orange-soft); color:#8b4a25; }
-.combo-role { padding:12px 0; border-bottom:1px solid var(--line); }
-.combo-role>header { display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; }
-.combo-role>header button { border:0; background:transparent; color:var(--orange); font-weight:850; }
-.combo-candidates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
-.combo-candidates button { min-height:68px; display:grid; align-content:center; gap:4px; padding:9px; text-align:left; border:1px solid var(--line); border-radius:9px; background:#fff; }
-.combo-candidates button span { font-weight:900; overflow-wrap:anywhere; }
-.combo-candidates button small { color:var(--muted); }
-.combo-candidates button.selected { border-color:var(--orange); background:var(--orange-soft); color:var(--orange); box-shadow:inset 0 0 0 1px #f0a578; }
-.combo-actions { grid-template-columns:1fr 1fr 1.5fr; }
-.combo-actions .danger { color:var(--danger); border-color:#e8aaa5; background:#fff5f4; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .terminal-chip { padding:6px 10px; border-radius:999px; background:#fff1e8; color:#bd481c; font-weight:800; }
 .drafts-card .draft-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 4px; border-bottom:1px solid var(--line); }
 .drafts-card .draft-row span { min-width:0; }
