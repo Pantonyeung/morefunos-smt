@@ -39,7 +39,9 @@ class BridgeProtocol(
                 "network.getStatus" -> respond(success(id, networkStatus()))
                 "print.lan.tcp" -> printLanTcp(id, params, respond)
                 "bundle.getStatus" -> respond(success(id, bundleStore.status()))
+                "bundle.getVault" -> respond(success(id, JSONObject().put("versions", bundleStore.vault())))
                 "bundle.install" -> installBundle(id, params, respond)
+                "bundle.markHealthy" -> markBundleHealthy(id, params, respond)
                 "bundle.rollback" -> rollbackBundle(id, respond)
                 "offline.enqueue" -> respond(success(id, offlineQueue.enqueue(
                     params.optString("id"),
@@ -87,6 +89,8 @@ class BridgeProtocol(
         add("network.status")
         add("print.lan.tcp")
         add("bundle.verified.install")
+        add("bundle.version-vault")
+        add("bundle.health-confirm")
         add("bundle.rollback")
         add("offline.queue")
         add("offline.recovery")
@@ -110,7 +114,7 @@ class BridgeProtocol(
                     base64Zip = params.optString("base64Zip")
                 )
                 respond(success(id, JSONObject()
-                    .put("status", "installed")
+                    .put("status", "installed_pending_health")
                     .put("version", result.version)
                     .put("sha256", result.sha256)
                     .put("previousVersion", result.previousVersion ?: JSONObject.NULL)
@@ -118,6 +122,15 @@ class BridgeProtocol(
             } catch (error: Throwable) {
                 respond(error(id, "BUNDLE_INSTALL_FAILED", error.message ?: "Web bundle 安裝失敗"))
             }
+        }
+    }
+
+    private fun markBundleHealthy(id: String, params: JSONObject, respond: (String) -> Unit) {
+        try {
+            val version = params.optString("version", bundleStore.currentVersion() ?: "")
+            respond(success(id, bundleStore.markHealthy(version)))
+        } catch (error: Throwable) {
+            respond(error(id, "BUNDLE_HEALTH_CONFIRM_FAILED", error.message ?: "Web bundle 健康確認失敗"))
         }
     }
 
