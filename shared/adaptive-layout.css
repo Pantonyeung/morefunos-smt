@@ -6,7 +6,7 @@
   --adaptive-product-row-text:102px;
   --adaptive-cart-scale:1;
   --adaptive-cart-image:72px;
-  --adaptive-cart-marker:min(65px,var(--adaptive-cart-image));
+  --adaptive-cart-marker:calc(var(--adaptive-cart-image) * .9);
   --adaptive-cart-gap:11px;
   --adaptive-cart-pad:13px;
   --adaptive-cart-control:36px;
