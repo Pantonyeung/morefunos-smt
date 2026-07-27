@@ -27,16 +27,20 @@
 - 正式驗收尺寸：1920×1080、1600×900、1440×900、1366×768、1280×800；同一 Adaptive App，不是五套 UI。
 - 舊 bounded Pairing QA 已證明 Authority／AI Context／Node／Server 前置 PASS，但 Browser regression step FAIL；舊流程曾因單 spec hang 無限卡住。
 - 已備份正式 QA workflow：`backup/qa-runtime-before-browser-summary-20260727`。
-- commit `b4d01454d53188d492082bd7c0e48c86d8c1918a` 已將正式 `qa-runtime-phase3.yml` 收口為每 spec 180 秒 timeout、逐 spec PASS／FAIL／TIMEOUT 摘要、Playwright artifact、final `RESULT=PASS` hard gate。
+- 正式 QA 已加入每 spec 180 秒 timeout、PASS／FAIL／TIMEOUT 摘要、Playwright artifact、final `RESULT=PASS` hard gate；commit `b4d01454d53188d492082bd7c0e48c86d8c1918a`。
+- 正式 QA 同一 Authority 已再支援 QA PR trigger；base commit `6032dd7dee51d373192aca905c2f6af029fb485c`，PR #16 trigger head `f22cf1bca4bff1ca0af1ec94dbf205099ad3fc3b`。
 - 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md` 暫仍係舊 commit `e2145bc3dd48a46127d1abc33aa035fc1bea24d7`，所以現時禁止聲稱最新五尺寸 PASS；下一步必須等正式 QA report 追上新 HEAD，再只修真實 fail spec，禁止倒退 Current Authority。
 
 ### B 線｜Printer Module V1｜PR #17
 - Branch：`printer-transport-settings-v1`；PR #17：`Printer Module V1｜Transport + Media + Driver + Failover Settings`；保持 Draft／隔離，不直接污染正式 Runtime UI。
 - 已有：Sunmi／LAN transport、每機 IP／Port、Media Profile（卷紙／標籤，尺寸可改）、Primary／Fallback、手動／自動 Failover、reroute history、Settings Model／UI Model／Controller／Renderer。
-- 新增 Driver Profile：`escpos`、`tspl`、`epl`、`zpl`、`dpl`、`raw`；字符編碼／切紙策略亦屬設備設定，不再將 LAN TCP 誤當完整打印 driver。
+- Driver Profile：`escpos`、`tspl`、`epl`、`zpl`、`dpl`、`raw`；字符編碼／切紙／密度／速度屬設備設定。Persisted 舊 driver 與 media 不兼容時正規化到安全預設；員工明確揀不兼容 driver 則阻止。
+- Transport、Media、Command Language、Rendered Asset 分層；LAN TCP 成功不可當完整模板打印成功。
+- 新增 `morefun.print.asset.v1` Rendered Asset Contract：模板結果先變成 exact binary/base64 bytes，Native 不重新理解模板。
+- 第一批真正可實機 Renderer：ESC/POS raster（卷紙）＋ TSPL bitmap（標籤）。ZPL／EPL／DPL 目前只保留 Driver Profile，`rendererAvailable=false`，未完成前不得聲稱可正式打印。
 - Xprinter 官方資料確認 XP-T271U 同時支援 label／receipt mode；標籤模式支援 TSPL／EPL／DPL／ZPL emulation，故 Transport、Media、Command Language 必須分層。
-- PR #17 最新 head checkpoint：`eb769368940c89d0b1997b70053ba5510a671465`；Printer Gate 已擴充 driver／renderer contract，仍需取得最新 CI 證據後先可整合。
-- Android Native 不揀後備機、不重算模板；Web Print Domain 負責 document／template／route／fallback／retry，Native 只執行指定 target/bytes 並回真實結果。
+- PR #17 最新 head checkpoint：`83164dac6c7edc309fe96d2bfefcf3727572a320`；Printer Gate 已包含 transport／media／driver／rendered asset／command renderer／routing／settings／UI model／controller／renderer／full Node regression，但仍需取得最新 CI 證據後先可整合。
+- Android Native 不揀後備機、不重算模板；Web Print Domain 負責 document／template／route／fallback／retry，Driver／Renderer 產生 bytes，Native 只執行指定 target/bytes 並回真實結果。
 
 ### C 線｜APK Foundation｜PR #19｜最高工程優先
 - Branch：`apk-foundation-v1`；PR #19：`APK Foundation V1｜Android 6–11 Shell + Versioned Native Bridge`。
@@ -44,11 +48,13 @@
 - 單一 APK 兼容基準：T2 Android 6.0.1 / API 23（災難後備）、T2S Android 9 / API 28、新 POS Android 11 / API 30。
 - `minSdk=23`、compile/target=36、AndroidX WebKit 1.15.0；新 WebView 用 origin-restricted WebMessage，舊 WebView 只在 feature 不支援時啟用 `LegacyBridgeAdapter`，兩者共用同一 `BridgeProtocol`。
 - LAN TCP Native Bridge 已有：真 Socket、完成後先回 `printed`、失敗回 error、idempotency ledger；queued 不得當 printed。
+- Native Bridge 已再支援 `content.base64` exact binary bytes；binary 模式原封不動送出 bytes，不自行加換行／切紙／模板命令；文字 diagnostic 模式仍保留。責任仍屬 Transport only。
 - Android 6 兼容改動前備份：`backup/apk-foundation-pre-android6-20260727`。
-- workflow run `30259155203` 已 PASS：Android 6 Authority Gate、Gradle Build、APK existence、artifact upload 全 PASS；head `eff699126a76c64c1cd1b8cc1d2f48c3d9917c80`。
-- APK artifact：`morefun-smt-foundation-debug-apk`，artifact id `8650202686`，SHA-256 digest `2be01992bfc22c623f91fe599f1ed0e19562e985c102fb8416ae25ae4dc84ae4`。
+- binary Bridge workflow run `30260234182` 已 COMPLETED／SUCCESS：Android 6 Authority Gate、Gradle Build、APK existence、artifact upload 全 PASS；head `e0d2e51d946edb4712d850bae8da1ea50452e371`。
+- 最新 APK artifact：id `8650613654`；GitHub artifact digest `sha256:28121dccaf33ac7482404f98f37abc1ee4f2edf7b836f2884d1396b9a5376d28`。
+- 對話工作區最新實際 APK：`/mnt/data/MoreFun_SMT_APK_Foundation_Android6-11_BinaryPrint_Debug.apk`；1,368,158 bytes；SHA-256 `23944fe0bf028ea861527ce9899e6a3afd93a9369ef9ce33f26035f9cc279ebd`。
 - 本地 diagnostic page 已加入 LAN IP／Port TCP 測試及同一 idempotencyKey 重送測試；此 Gate 只證明 Transport，不等於中文、切紙、標籤模板正式完成。
-- 下一個 C 線實機 Gate：T2 API23 安裝／啟動 → Bridge diagnostic → LAN TCP → duplicate suppression → 再做 ESC/POS 中文／切紙 Driver Gate、標籤 Driver／Renderer Gate → T2S API28、新 POS API30 回歸。
+- 下一個 C 線實機 Gate：T2 API23 安裝／啟動 → Bridge diagnostic → LAN TCP → duplicate suppression → ESC/POS raster 中文／切紙 Driver Gate → TSPL label bitmap Gate → T2S API28、新 POS API30 回歸。
 
 ## 強制接手規則
 任何 checkpoint 都要假設下一句可能由另一個 AI 接手。最少保留：目標、Repo／Branch／PR、最新 head、完成／未完成、CI／QA 真實層級、已知根因、禁止倒退事項、備份／rollback、下一步唯一優先、待實機 Gate。禁止只寫「已處理／繼續」。
