@@ -63,6 +63,8 @@ jobs:
         run: |
           set +e
           mkdir -p docs/qa
+          BROWSER_SUMMARY=browser-regression-summary.txt
+          : > "$BROWSER_SUMMARY"
           {
             echo '# SMT Runtime Phase 3 QA'
             echo
@@ -106,11 +108,44 @@ jobs:
             echo '```text'
             BROWSER_STATUS=1
             if [ "$NPM_STATUS" -eq 0 ] && [ "$BROWSER_INSTALL_STATUS" -eq 0 ] && [ "$SERVER_STATUS" -eq 0 ]; then
-              npm run qa:browser
+              failures=0
+              specs=(
+                tests/responsive-profile.spec.js
+                tests/responsive-shell.spec.js
+                tests/responsive-order.spec.js
+                tests/responsive-checkout.spec.js
+                tests/responsive-secondary-pages.spec.js
+                tests/responsive-architecture-guard.spec.js
+                tests/stress-responsive-matrix.spec.js
+                tests/dev-preview.spec.js
+                tests/responsive-visual-contract.spec.js
+                tests/proportional-layout.spec.js
+              )
+              for spec in "${specs[@]}"; do
+                echo "===== RUN $spec ====="
+                timeout --signal=TERM --kill-after=15s 180s npx playwright test "$spec" --reporter=line
+                status=$?
+                if [ $status -eq 124 ] || [ $status -eq 137 ]; then
+                  echo "TIMEOUT $spec" | tee -a "$BROWSER_SUMMARY"
+                  failures=$((failures+1))
+                elif [ $status -ne 0 ]; then
+                  echo "FAIL $spec exit=$status" | tee -a "$BROWSER_SUMMARY"
+                  failures=$((failures+1))
+                else
+                  echo "PASS $spec" | tee -a "$BROWSER_SUMMARY"
+                fi
+              done
+              echo "Browser regression failures: $failures" | tee -a "$BROWSER_SUMMARY"
+              [ $failures -eq 0 ]
               BROWSER_STATUS=$?
             else
-              echo 'Browser matrix skipped because QA environment setup did not complete.'
+              echo 'Browser matrix skipped because QA environment setup did not complete.' | tee -a "$BROWSER_SUMMARY"
             fi
+            echo '```'
+            echo
+            echo '### Per-spec summary'
+            echo '```text'
+            cat "$BROWSER_SUMMARY"
             echo '```'
             echo
             echo "NPM_STATUS=$NPM_STATUS"
@@ -127,7 +162,7 @@ jobs:
             fi
           } > docs/qa/SMT_RUNTIME_PHASE3_QA.md 2>&1
           cat docs/qa/SMT_RUNTIME_PHASE3_QA.md
-      - name: Upload Playwright report
+      - name: Upload Playwright report and per-spec summary
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -135,6 +170,7 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            browser-regression-summary.txt
           if-no-files-found: ignore
           retention-days: 14
       - name: Commit QA report
