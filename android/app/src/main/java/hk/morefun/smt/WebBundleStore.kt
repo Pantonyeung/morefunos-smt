@@ -2,6 +2,7 @@ package hk.morefun.smt
 
 import android.content.Context
 import android.webkit.WebResourceResponse
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -19,15 +20,71 @@ class WebBundleStore(private val context: Context) {
         val previousVersion: String?
     )
 
-    fun currentVersion(): String? = prefs.getString("web_bundle_current", null)
-    fun previousVersion(): String? = prefs.getString("web_bundle_previous", null)
+    fun currentVersion(): String? = prefs.getString(KEY_CURRENT, null)
+    fun previousVersion(): String? = history().firstOrNull()
+
+    fun prepareRuntimeForLaunch(): JSONObject {
+        val current = currentVersion()
+        if (current != null && !isInstalled(current)) {
+            return rollbackInternal("CURRENT_MISSING")
+        }
+
+        val pending = prefs.getString(KEY_PENDING_HEALTH, null)
+        if (!pending.isNullOrBlank() && pending == current) {
+            val attempted = prefs.getBoolean(KEY_PENDING_ATTEMPTED, false)
+            if (attempted) {
+                return rollbackInternal("UNHEALTHY_RESTART")
+            }
+            prefs.edit().putBoolean(KEY_PENDING_ATTEMPTED, true).apply()
+            return JSONObject()
+                .put("status", "candidate_first_launch")
+                .put("version", pending)
+        }
+
+        return JSONObject()
+            .put("status", "ready")
+            .put("version", current ?: JSONObject.NULL)
+    }
+
+    fun markHealthy(version: String): JSONObject {
+        require(version.isNotBlank() && version == currentVersion()) { "健康確認版本唔係目前 Runtime" }
+        require(isInstalled(version)) { "健康確認版本未安裝" }
+        updateManifest(version) { manifest ->
+            manifest
+                .put("status", "healthy")
+                .put("verifiedAt", System.currentTimeMillis())
+        }
+        prefs.edit()
+            .remove(KEY_PENDING_HEALTH)
+            .remove(KEY_PENDING_ATTEMPTED)
+            .apply()
+        pruneVault()
+        return status().put("healthConfirmed", true)
+    }
 
     fun status(): JSONObject = JSONObject()
         .put("currentVersion", currentVersion() ?: JSONObject.NULL)
         .put("previousGoodVersion", previousVersion() ?: JSONObject.NULL)
         .put("bundledFallbackVersion", BuildConfig.WEB_BUNDLE_VERSION)
-        .put("currentVerified", currentVersion()?.let(::isInstalled) == true)
+        .put("currentVerified", currentVersion()?.let(::isHealthy) == true)
+        .put("pendingHealthVersion", prefs.getString(KEY_PENDING_HEALTH, null) ?: JSONObject.NULL)
         .put("rollbackAvailable", previousVersion()?.let(::isInstalled) == true)
+        .put("vault", vault())
+
+    fun vault(): JSONArray {
+        val out = JSONArray()
+        val current = currentVersion()
+        if (!current.isNullOrBlank()) out.put(versionEntry(current, "current"))
+        history().forEachIndexed { index, version ->
+            out.put(versionEntry(version, if (index == 0) "n-1" else "n-2"))
+        }
+        out.put(JSONObject()
+            .put("version", BuildConfig.WEB_BUNDLE_VERSION)
+            .put("slot", "factory")
+            .put("installed", true)
+            .put("healthy", true))
+        return out
+    }
 
     fun installBase64Zip(
         version: String,
@@ -61,6 +118,8 @@ class WebBundleStore(private val context: Context) {
                     .put("bridgeMin", bridgeMin)
                     .put("bridgeMax", bridgeMax)
                     .put("installedAt", System.currentTimeMillis())
+                    .put("verifiedAt", JSONObject.NULL)
+                    .put("status", "pending_health")
                     .toString()
             )
 
@@ -69,11 +128,16 @@ class WebBundleStore(private val context: Context) {
             require(staging.renameTo(target)) { "Web bundle 安裝搬移失敗" }
 
             val oldCurrent = currentVersion()
-            prefs.edit()
-                .putString("web_bundle_previous", oldCurrent)
-                .putString("web_bundle_current", version)
-                .apply()
+            if (!oldCurrent.isNullOrBlank() && isHealthy(oldCurrent)) {
+                saveHistory(listOf(oldCurrent) + history())
+            }
 
+            prefs.edit()
+                .putString(KEY_CURRENT, version)
+                .putString(KEY_PENDING_HEALTH, version)
+                .putBoolean(KEY_PENDING_ATTEMPTED, false)
+                .apply()
+            pruneVault()
             return InstallResult(version, actualSha256, oldCurrent)
         } finally {
             if (staging.exists()) staging.deleteRecursively()
@@ -81,14 +145,10 @@ class WebBundleStore(private val context: Context) {
     }
 
     fun rollback(): String {
-        val previous = previousVersion()
-        require(!previous.isNullOrBlank() && isInstalled(previous)) { "沒有可用上一個版本" }
-        val current = currentVersion()
-        prefs.edit()
-            .putString("web_bundle_current", previous)
-            .putString("web_bundle_previous", current)
-            .apply()
-        return previous
+        val result = rollbackInternal("MANUAL")
+        val version = result.optString("version")
+        require(version.isNotBlank()) { "沒有可用上一個版本" }
+        return version
     }
 
     fun open(path: String): WebResourceResponse? {
@@ -104,6 +164,103 @@ class WebBundleStore(private val context: Context) {
     fun isInstalled(version: String): Boolean {
         val dir = File(root, version)
         return File(dir, "index.html").isFile && File(dir, "bundle-manifest.json").isFile
+    }
+
+    private fun isHealthy(version: String): Boolean = manifest(version)?.optString("status") == "healthy"
+
+    private fun rollbackInternal(reason: String): JSONObject {
+        val current = currentVersion()
+        val target = history().firstOrNull { isInstalled(it) && isHealthy(it) }
+        if (target.isNullOrBlank()) {
+            prefs.edit()
+                .remove(KEY_CURRENT)
+                .remove(KEY_PENDING_HEALTH)
+                .remove(KEY_PENDING_ATTEMPTED)
+                .apply()
+            return JSONObject()
+                .put("status", "factory_fallback")
+                .put("reason", reason)
+                .put("failedVersion", current ?: JSONObject.NULL)
+                .put("version", BuildConfig.WEB_BUNDLE_VERSION)
+        }
+
+        if (!current.isNullOrBlank() && isInstalled(current)) {
+            updateManifest(current) { it.put("status", "failed_health").put("failedAt", System.currentTimeMillis()) }
+        }
+
+        val remaining = history().filterNot { it == target }
+        saveHistory(remaining)
+        prefs.edit()
+            .putString(KEY_CURRENT, target)
+            .remove(KEY_PENDING_HEALTH)
+            .remove(KEY_PENDING_ATTEMPTED)
+            .apply()
+        pruneVault()
+        return JSONObject()
+            .put("status", "rolled_back")
+            .put("reason", reason)
+            .put("failedVersion", current ?: JSONObject.NULL)
+            .put("version", target)
+    }
+
+    private fun history(): List<String> {
+        val raw = prefs.getString(KEY_HISTORY, "[]") ?: "[]"
+        return try {
+            val array = JSONArray(raw)
+            (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) }.distinct().take(2)
+        } catch (_: Throwable) {
+            emptyList()
+        }
+    }
+
+    private fun saveHistory(versions: List<String>) {
+        val current = currentVersion()
+        val clean = versions
+            .filter { it.isNotBlank() && it != current && isInstalled(it) && isHealthy(it) }
+            .distinct()
+            .take(2)
+        prefs.edit().putString(KEY_HISTORY, JSONArray(clean).toString()).apply()
+    }
+
+    private fun pruneVault() {
+        val keep = buildSet {
+            currentVersion()?.let(::add)
+            addAll(history())
+        }
+        root.listFiles()?.forEach { file ->
+            if (file.isDirectory && !file.name.startsWith(".staging-") && file.name !in keep) {
+                file.deleteRecursively()
+            }
+        }
+    }
+
+    private fun versionEntry(version: String, slot: String): JSONObject {
+        val manifest = manifest(version)
+        return JSONObject()
+            .put("version", version)
+            .put("slot", slot)
+            .put("installed", isInstalled(version))
+            .put("healthy", isHealthy(version))
+            .put("sha256", manifest?.optString("sha256") ?: JSONObject.NULL)
+            .put("bridgeMin", manifest?.optString("bridgeMin") ?: JSONObject.NULL)
+            .put("bridgeMax", manifest?.optString("bridgeMax") ?: JSONObject.NULL)
+            .put("installedAt", manifest?.optLong("installedAt") ?: JSONObject.NULL)
+            .put("verifiedAt", manifest?.opt("verifiedAt") ?: JSONObject.NULL)
+            .put("status", manifest?.optString("status") ?: "unknown")
+    }
+
+    private fun manifest(version: String): JSONObject? = try {
+        val file = File(root, "$version/bundle-manifest.json")
+        if (!file.isFile) null else JSONObject(file.readText())
+    } catch (_: Throwable) {
+        null
+    }
+
+    private fun updateManifest(version: String, transform: (JSONObject) -> JSONObject) {
+        val file = File(root, "$version/bundle-manifest.json")
+        require(file.isFile) { "Web bundle manifest 不存在：$version" }
+        val next = transform(JSONObject(file.readText()))
+        file.writeText(next.toString())
     }
 
     private fun unzipSafely(bytes: ByteArray, destination: File) {
@@ -158,5 +315,12 @@ class WebBundleStore(private val context: Context) {
         "woff" -> "font/woff"
         "woff2" -> "font/woff2"
         else -> "application/octet-stream"
+    }
+
+    companion object {
+        private const val KEY_CURRENT = "web_bundle_current"
+        private const val KEY_HISTORY = "web_bundle_history"
+        private const val KEY_PENDING_HEALTH = "web_bundle_pending_health"
+        private const val KEY_PENDING_ATTEMPTED = "web_bundle_pending_attempted"
     }
 }
