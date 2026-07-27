@@ -18,41 +18,50 @@ jobs:
 
       - name: Assert Native Bridge authority and Android 6 floor
         run: |
+          main=android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          bridge=android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+          bundle=android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
+          offline=android/app/src/main/java/hk/morefun/smt/OfflineQueueStore.kt
+
           test "$(find android/app/src/main/java -name MainActivity.kt | wc -l | tr -d ' ')" = "1"
           test "$(grep -R -l 'addJavascriptInterface' android/app/src/main/java | wc -l | tr -d ' ')" = "1"
-          grep -q 'addJavascriptInterface' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          grep -q 'addJavascriptInterface' "$main"
           test -f android/app/src/main/java/hk/morefun/smt/LegacyBridgeAdapter.kt
           grep -q '@JavascriptInterface' android/app/src/main/java/hk/morefun/smt/LegacyBridgeAdapter.kt
-          grep -q 'WebViewFeature.WEB_MESSAGE_LISTENER' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
-          grep -q 'WebViewCompat.addWebMessageListener' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
-          grep -q 'assets/smt/index.html' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          grep -q 'WebViewFeature.WEB_MESSAGE_LISTENER' "$main"
+          grep -q 'WebViewCompat.addWebMessageListener' "$main"
+
+          # Runtime bootstrap: verified bundle first, packaged smt/ assets as factory fallback.
+          grep -q 'startUrl = "$localOrigin/runtime/index.html"' "$main"
+          grep -q 'bundleStore.prepareRuntimeForLaunch()' "$main"
+          grep -q 'bundleStore.open(path) ?: packagedFallback.handle("smt/$path")' "$main"
+          test -f android/app/src/main/assets/smt/index.html
           test ! -f android/app/src/main/assets/index.html
+
           grep -q 'minSdk = 23' android/app/build.gradle.kts
           grep -q 'androidx.webkit:webkit:1.15.0' android/app/build.gradle.kts
 
-          bridge=android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
           grep -q '"device.info"' "$bridge"
           grep -q '"network.status"' "$bridge"
           grep -q '"print.lan.tcp"' "$bridge"
           ! grep -q '"print.sunmi.native"' "$bridge"
 
-          # Declared foundation capabilities must have real implementation owners.
           grep -q '"bundle.verified.install"' "$bridge"
           grep -q '"bundle.version-vault"' "$bridge"
           grep -q '"bundle.health-confirm"' "$bridge"
           grep -q '"bundle.rollback"' "$bridge"
-          test -f android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
-          grep -q 'fun installBase64Zip' android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
-          grep -q 'fun vault' android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
-          grep -q 'fun rollback' android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
-          grep -q 'prepareRuntimeForLaunch' android/app/src/main/java/hk/morefun/smt/WebBundleStore.kt
+          test -f "$bundle"
+          grep -q 'fun installBase64Zip' "$bundle"
+          grep -q 'fun vault' "$bundle"
+          grep -q 'fun rollback' "$bundle"
+          grep -q 'prepareRuntimeForLaunch' "$bundle"
 
           grep -q '"offline.queue"' "$bridge"
           grep -q '"offline.recovery"' "$bridge"
-          test -f android/app/src/main/java/hk/morefun/smt/OfflineQueueStore.kt
-          grep -q 'fun enqueue' android/app/src/main/java/hk/morefun/smt/OfflineQueueStore.kt
-          grep -q 'fun listPending' android/app/src/main/java/hk/morefun/smt/OfflineQueueStore.kt
-          grep -q 'fun retry' android/app/src/main/java/hk/morefun/smt/OfflineQueueStore.kt
+          test -f "$offline"
+          grep -q 'fun enqueue' "$offline"
+          grep -q 'fun listPending' "$offline"
+          grep -q 'fun retry' "$offline"
 
           grep -q '"diagnostics"' "$bridge"
           test -f android/app/src/main/java/hk/morefun/smt/HostActions.kt
