@@ -1,6 +1,6 @@
 # SMT Runtime Phase 3 QA
 
-Commit: 79c1d42e2ca002112deb1f24d9b8adf711eef3ae
+Commit: 3820735f661a684451d9190e10a0b97573661bad
 
 ## QA environment setup
 ```text
@@ -48,7 +48,7 @@ TAP version 13
 # Subtest: Work and Chat entries point to current baseline
 not ok 1 - Work and Chat entries point to current baseline
   ---
-  duration_ms: 6.143056
+  duration_ms: 11.000184
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/ai-context.test.mjs:8:1'
   failureType: 'testCodeFailure'
@@ -310,1584 +310,1584 @@ not ok 1 - Work and Chat entries point to current baseline
 # Subtest: knowledge graph edges resolve and carry evidence
 ok 2 - knowledge graph edges resolve and carry evidence
   ---
-  duration_ms: 3.170591
+  duration_ms: 5.018974
   type: 'test'
   ...
 # Subtest: status separates automation from device acceptance
 ok 3 - status separates automation from device acceptance
   ---
-  duration_ms: 3.93452
+  duration_ms: 1.384431
   type: 'test'
   ...
 # Subtest: cart adaptive scale must not shrink from cart height at 1920 baseline
 ok 4 - cart adaptive scale must not shrink from cart height at 1920 baseline
   ---
-  duration_ms: 0.705272
+  duration_ms: 0.876848
   type: 'test'
   ...
 # Subtest: cart marker remains exactly 90% of cart image token
 ok 5 - cart marker remains exactly 90% of cart image token
   ---
-  duration_ms: 0.1635
+  duration_ms: 0.178034
   type: 'test'
   ...
 # SMT_CART_CHECKOUT_CORE_V7_OK
 # Subtest: tests/cart-checkout-regression-v2.test.mjs
 ok 3 - tests/cart-checkout-regression-v2.test.mjs
   ---
-  duration_ms: 40.839869
+  duration_ms: 49.396211
   type: 'test'
   ...
 # Subtest: cart.css owns pending action layout before page.css legacy removal
 ok 7 - cart.css owns pending action layout before page.css legacy removal
   ---
-  duration_ms: 1.080278
+  duration_ms: 1.30323
   type: 'test'
   ...
 # Subtest: cart.css owns cart shell internals before page.css legacy removal
 ok 8 - cart.css owns cart shell internals before page.css legacy removal
   ---
-  duration_ms: 0.246344
+  duration_ms: 0.279875
   type: 'test'
   ...
 # Subtest: cart.css preserves the effective two-row cart layout and right-side price/actions
 ok 9 - cart.css preserves the effective two-row cart layout and right-side price/actions
   ---
-  duration_ms: 1.556629
+  duration_ms: 2.094873
   type: 'test'
   ...
 # Subtest: cart.css owns quick drawer container geometry but not drink-card internals
 ok 10 - cart.css owns quick drawer container geometry but not drink-card internals
   ---
-  duration_ms: 0.348205
+  duration_ms: 0.342918
   type: 'test'
   ...
 # Subtest: order page uses the current versioned cart authority asset
 ok 11 - order page uses the current versioned cart authority asset
   ---
-  duration_ms: 0.161694
+  duration_ms: 0.168559
   type: 'test'
   ...
-# (node:2820) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/category-layout.js is not specified and it doesn't parse as CommonJS.
+# (node:3037) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/category-layout.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: 分類版面設定只接受每行五至七格、一至兩行及搜尋開關
 ok 12 - 分類版面設定只接受每行五至七格、一至兩行及搜尋開關
   ---
-  duration_ms: 1.058415
+  duration_ms: 2.089255
   type: 'test'
   ...
 # Subtest: 搜尋開啟時佔最後一行最後一格，超出首屏分類保留在可操作溢出清單
 ok 13 - 搜尋開啟時佔最後一行最後一格，超出首屏分類保留在可操作溢出清單
   ---
-  duration_ms: 0.325453
+  duration_ms: 0.595532
   type: 'test'
   ...
-# (node:2832) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/checkout/checkout-domain.js is not specified and it doesn't parse as CommonJS.
+# (node:3049) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/checkout/checkout-domain.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: 學生優惠只將六元或以上合資格特飲的加價減半，普通凍檸茶不減價
 ok 14 - 學生優惠只將六元或以上合資格特飲的加價減半，普通凍檸茶不減價
   ---
-  duration_ms: 1.155029
+  duration_ms: 2.139429
   type: 'test'
   ...
 # Subtest: 學生優惠人數不可超過合資格飲品數量
 ok 15 - 學生優惠人數不可超過合資格飲品數量
   ---
-  duration_ms: 0.255034
+  duration_ms: 0.384079
   type: 'test'
   ...
 # Subtest: 未有明確資格或特飲加價少於六元，一律不可自行推斷為學生優惠
 ok 16 - 未有明確資格或特飲加價少於六元，一律不可自行推斷為學生優惠
   ---
-  duration_ms: 0.27604
+  duration_ms: 0.427604
   type: 'test'
   ...
 # Subtest: 團體整單折扣與學生優惠互斥，現場可使用
 ok 17 - 團體整單折扣與學生優惠互斥，現場可使用
   ---
-  duration_ms: 0.154423
+  duration_ms: 0.243641
   type: 'test'
   ...
 # Subtest: 平台訂單不可使用本店優惠
 ok 18 - 平台訂單不可使用本店優惠
   ---
-  duration_ms: 0.380353
+  duration_ms: 0.596814
   type: 'test'
   ...
 # Subtest: 數字鍵盤支援數字、小數、退格及清除
 ok 19 - 數字鍵盤支援數字、小數、退格及清除
   ---
-  duration_ms: 0.196116
+  duration_ms: 0.340855
   type: 'test'
   ...
 # Subtest: 數字鍵盤的 00 是獨立雙零鍵
 ok 20 - 數字鍵盤的 00 是獨立雙零鍵
   ---
-  duration_ms: 0.144636
+  duration_ms: 0.238774
   type: 'test'
   ...
 # Subtest: 完成結帳保存優惠、應付金額及實際操作終端
 ok 21 - 完成結帳保存優惠、應付金額及實際操作終端
   ---
-  duration_ms: 0.572615
+  duration_ms: 0.918
   type: 'test'
   ...
 # Subtest: 渠道政策只容許現場單選付款方式，其他渠道只收必要參考資料
 ok 22 - 渠道政策只容許現場單選付款方式，其他渠道只收必要參考資料
   ---
-  duration_ms: 0.803655
+  duration_ms: 1.295559
   type: 'test'
   ...
 # Subtest: 現場渠道不提供稍後付款
 ok 23 - 現場渠道不提供稍後付款
   ---
-  duration_ms: 0.454131
+  duration_ms: 0.778653
   type: 'test'
   ...
 # Subtest: 自有渠道不猜付款方式，平台訂單分開保存佣金及預計結算
 ok 24 - 自有渠道不猜付款方式，平台訂單分開保存佣金及預計結算
   ---
-  duration_ms: 1.422906
+  duration_ms: 2.198126
   type: 'test'
   ...
 # Subtest: 零元訂單不可建立付款紀錄
 ok 25 - 零元訂單不可建立付款紀錄
   ---
-  duration_ms: 0.222444
+  duration_ms: 0.221548
   type: 'test'
   ...
 # Subtest: 結帳頁使用共用三位每日流水及永久訂單識別
 ok 26 - 結帳頁使用共用三位每日流水及永久訂單識別
   ---
-  duration_ms: 22.147023
+  duration_ms: 26.007293
   type: 'test'
   ...
 # Subtest: 結帳紀錄同時保存永久編號及每日顯示流水
 ok 27 - 結帳紀錄同時保存永久編號及每日顯示流水
   ---
-  duration_ms: 0.467175
+  duration_ms: 0.58062
   type: 'test'
   ...
 # Subtest: 結帳頂部只顯示狀態資料，不保留假快捷金額按鈕
 ok 28 - 結帳頂部只顯示狀態資料，不保留假快捷金額按鈕
   ---
-  duration_ms: 1.091685
+  duration_ms: 1.454785
   type: 'test'
   ...
 # Subtest: 結帳頁保留數字鍵盤而不顯示底部主導航
 ok 29 - 結帳頁保留數字鍵盤而不顯示底部主導航
   ---
-  duration_ms: 0.318075
+  duration_ms: 0.432921
   type: 'test'
   ...
 # Subtest: 詳情操作固定提供返回訂單及優惠兩欄
 ok 30 - 詳情操作固定提供返回訂單及優惠兩欄
   ---
-  duration_ms: 0.16646
+  duration_ms: 0.246545
   type: 'test'
   ...
 # Subtest: 付款區及現金鍵盤由渠道政策動態控制而非所有渠道全部顯示
 ok 31 - 付款區及現金鍵盤由渠道政策動態控制而非所有渠道全部顯示
   ---
-  duration_ms: 0.215789
+  duration_ms: 0.2971
   type: 'test'
   ...
 # Subtest: 結帳完成保留核對卡並提供有原因的更正資料入口
 ok 32 - 結帳完成保留核對卡並提供有原因的更正資料入口
   ---
-  duration_ms: 0.216146
+  duration_ms: 0.287927
   type: 'test'
   ...
 # Subtest: 非現場渠道有對應的備註、取餐碼、核對碼或平台單號欄位
 ok 33 - 非現場渠道有對應的備註、取餐碼、核對碼或平台單號欄位
   ---
-  duration_ms: 0.141912
+  duration_ms: 0.191012
   type: 'test'
   ...
 # Subtest: 快捷金額固定在大鍵盤上方，現場轉換付款方式亦不收起鍵盤
 ok 34 - 快捷金額固定在大鍵盤上方，現場轉換付款方式亦不收起鍵盤
   ---
-  duration_ms: 0.319403
+  duration_ms: 0.392221
   type: 'test'
   ...
 # Subtest: 已收框是唯一金額輸入顯示並在輸入狀態發光
 ok 35 - 已收框是唯一金額輸入顯示並在輸入狀態發光
   ---
-  duration_ms: 0.178767
+  duration_ms: 0.219925
   type: 'test'
   ...
 # Subtest: 渠道及付款方式引用大圖標 WebP 資源並採用上圖下字
 ok 36 - 渠道及付款方式引用大圖標 WebP 資源並採用上圖下字
   ---
-  duration_ms: 0.624802
+  duration_ms: 0.569854
   type: 'test'
   ...
 # Subtest: 數字鍵盤使用四行放大按鍵
 ok 37 - 數字鍵盤使用四行放大按鍵
   ---
-  duration_ms: 0.511788
+  duration_ms: 0.496916
   type: 'test'
   ...
 # Subtest: 零元時確認按鈕停用並顯示清楚原因
 ok 38 - 零元時確認按鈕停用並顯示清楚原因
   ---
-  duration_ms: 0.307261
+  duration_ms: 0.293335
   type: 'test'
   ...
 # Subtest: 任何渠道的確認結帳操作永遠固定在付款欄最底
 ok 39 - 任何渠道的確認結帳操作永遠固定在付款欄最底
   ---
-  duration_ms: 0.229129
+  duration_ms: 0.26972
   type: 'test'
   ...
 # Subtest: removes a fully cart-owned rule
 ok 40 - removes a fully cart-owned rule
   ---
-  duration_ms: 2.273021
+  duration_ms: 1.870491
   type: 'test'
   ...
 # Subtest: removes cart rule after a legacy comment while preserving the comment
 ok 41 - removes cart rule after a legacy comment while preserving the comment
   ---
-  duration_ms: 0.644538
+  duration_ms: 0.576264
   type: 'test'
   ...
 # Subtest: rewrites mixed page composition selector without deleting catalog
 ok 42 - rewrites mixed page composition selector without deleting catalog
   ---
-  duration_ms: 0.331862
+  duration_ms: 0.351
   type: 'test'
   ...
 # Subtest: keeps drink-card internals even when nested in quick drawer
 ok 43 - keeps drink-card internals even when nested in quick drawer
   ---
-  duration_ms: 0.34014
+  duration_ms: 0.215499
   type: 'test'
   ...
 # Subtest: keeps product and pairing authorities untouched
 ok 44 - keeps product and pairing authorities untouched
   ---
-  duration_ms: 0.31637
+  duration_ms: 0.245754
   type: 'test'
   ...
 # Subtest: removes pending and cart footer legacy rules
 ok 45 - removes pending and cart footer legacy rules
   ---
-  duration_ms: 0.190168
+  duration_ms: 0.15522
   type: 'test'
   ...
 # Subtest: removes a fully Drink Card owned rule
 ok 46 - removes a fully Drink Card owned rule
   ---
-  duration_ms: 1.453155
+  duration_ms: 1.696553
   type: 'test'
   ...
 # Subtest: rewrites mixed selectors and preserves non-Drink container rules
 ok 47 - rewrites mixed selectors and preserves non-Drink container rules
   ---
-  duration_ms: 0.444919
+  duration_ms: 0.530526
   type: 'test'
   ...
 # Subtest: removes contextual Drink Card overrides without deleting drawer container
 ok 48 - removes contextual Drink Card overrides without deleting drawer container
   ---
-  duration_ms: 0.30979
+  duration_ms: 0.37111
   type: 'test'
   ...
 # Subtest: removes Drink Card variants while keeping Pairing and Product authorities
 ok 49 - removes Drink Card variants while keeping Pairing and Product authorities
   ---
-  duration_ms: 0.249066
+  duration_ms: 0.311622
   type: 'test'
   ...
 # Subtest: already-cleared CSS is stable
 ok 50 - already-cleared CSS is stable
   ---
-  duration_ms: 0.294394
+  duration_ms: 0.339493
   type: 'test'
   ...
 # Subtest: removes Product Card internals while preserving product-list geometry
 ok 51 - removes Product Card internals while preserving product-list geometry
   ---
-  duration_ms: 1.464634
+  duration_ms: 1.742971
   type: 'test'
   ...
 # Subtest: removes supply-state Product Card rules without deleting status-list rules
 ok 52 - removes supply-state Product Card rules without deleting status-list rules
   ---
-  duration_ms: 0.485317
+  duration_ms: 0.55336
   type: 'test'
   ...
 # Subtest: removes contextual Product Card internals and keeps unrelated modal authority
 ok 53 - removes contextual Product Card internals and keeps unrelated modal authority
   ---
-  duration_ms: 0.430211
+  duration_ms: 0.429597
   type: 'test'
   ...
 # Subtest: rewrites mixed selectors without removing products container
 ok 54 - rewrites mixed selectors without removing products container
   ---
-  duration_ms: 0.28745
+  duration_ms: 0.34407
   type: 'test'
   ...
 # Subtest: already-cleared Product Card CSS is stable
 ok 55 - already-cleared Product Card CSS is stable
   ---
-  duration_ms: 0.383076
+  duration_ms: 0.424438
   type: 'test'
   ...
-# (node:2869) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/dine/dine-domain.js is not specified and it doesn't parse as CommonJS.
+# (node:3086) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/dine/dine-domain.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: 堂食頁固定顯示八張室內枱及戶外枱
 ok 56 - 堂食頁固定顯示八張室內枱及戶外枱
   ---
-  duration_ms: 3.323962
+  duration_ms: 5.606795
   type: 'test'
   ...
 # Subtest: 三十五分鐘提示只標記枱卡，不增加第三種枱位狀態
 ok 57 - 三十五分鐘提示只標記枱卡，不增加第三種枱位狀態
   ---
-  duration_ms: 0.333706
+  duration_ms: 0.656453
   type: 'test'
   ...
 # Subtest: 逐餐品付款可拆數量並鎖定已付款數量
 ok 58 - 逐餐品付款可拆數量並鎖定已付款數量
   ---
-  duration_ms: 0.564378
+  duration_ms: 1.001043
   type: 'test'
   ...
 # Subtest: 堂食付款歸零會建立現場歷史訂單並即時清空枱位
 ok 59 - 堂食付款歸零會建立現場歷史訂單並即時清空枱位
   ---
-  duration_ms: 1.319711
+  duration_ms: 2.611648
   type: 'test'
   ...
 # Subtest: 堂食正式落單即鎖定流水並保存到製作工作，跨營業日付款亦不改號
 ok 60 - 堂食正式落單即鎖定流水並保存到製作工作，跨營業日付款亦不改號
   ---
-  duration_ms: 0.518492
+  duration_ms: 1.087771
   type: 'test'
   ...
 # Subtest: 同時使用中的堂食枱亦會佔用每日流水避免撞號
 ok 61 - 同時使用中的堂食枱亦會佔用每日流水避免撞號
   ---
-  duration_ms: 0.618009
+  duration_ms: 0.793856
   type: 'test'
   ...
 # Subtest: 舊版未有識別的堂食枱直接付款時會避開其他活躍枱流水
 ok 62 - 舊版未有識別的堂食枱直接付款時會避開其他活躍枱流水
   ---
-  duration_ms: 1.234917
+  duration_ms: 0.80996
   type: 'test'
   ...
 # Subtest: 載入舊資料時會補救已付清但未清枱的堂食會話，且不重複寫歷史
 ok 63 - 載入舊資料時會補救已付清但未清枱的堂食會話，且不重複寫歷史
   ---
-  duration_ms: 0.842869
+  duration_ms: 0.819274
   type: 'test'
   ...
 # Subtest: 堂食掃碼提交保持待確認，確認後才加入落單記錄
 ok 64 - 堂食掃碼提交保持待確認，確認後才加入落單記錄
   ---
-  duration_ms: 0.783249
+  duration_ms: 0.876418
   type: 'test'
   ...
 # Subtest: 員工堂食點餐會建立指定枱會話內容，金額及批次由同一批餐品計算
 ok 65 - 員工堂食點餐會建立指定枱會話內容，金額及批次由同一批餐品計算
   ---
-  duration_ms: 0.846768
+  duration_ms: 0.995415
   type: 'test'
   ...
 # Subtest: 堂食枱面摘要提供營運所需時間、餐點及數量資料
 ok 66 - 堂食枱面摘要提供營運所需時間、餐點及數量資料
   ---
-  duration_ms: 0.373911
+  duration_ms: 0.414164
   type: 'test'
   ...
 # Subtest: 堂食點餐拒絕寫入已失效的舊會話，避免餐品掛錯枱
 ok 67 - 堂食點餐拒絕寫入已失效的舊會話，避免餐品掛錯枱
   ---
-  duration_ms: 0.350641
+  duration_ms: 0.414724
   type: 'test'
   ...
 # Subtest: 空枱開始點餐只建立意圖，正式提交餐品時才開枱
 ok 68 - 空枱開始點餐只建立意圖，正式提交餐品時才開枱
   ---
-  duration_ms: 0.543001
+  duration_ms: 0.58087
   type: 'test'
   ...
 # Subtest: 舊版本遺留的空堂食會話會安全清理，有餐品的會話不受影響
 ok 69 - 舊版本遺留的空堂食會話會安全清理，有餐品的會話不受影響
   ---
-  duration_ms: 0.357993
+  duration_ms: 0.401925
   type: 'test'
   ...
 # Subtest: 堂食頁提供簡潔枱詳情、半屏待確認及兩層付款操作
 ok 70 - 堂食頁提供簡潔枱詳情、半屏待確認及兩層付款操作
   ---
-  duration_ms: 1.551695
+  duration_ms: 0.50637
   type: 'test'
   ...
 # Subtest: 正式堂食頁不會自動建立示範枱或示範訂單，掃碼入口標示第二版保留
 ok 71 - 正式堂食頁不會自動建立示範枱或示範訂單，掃碼入口標示第二版保留
   ---
-  duration_ms: 0.383403
+  duration_ms: 0.413713
   type: 'test'
   ...
 # Subtest: 堂食枱卡直接顯示開枱、三十五分鐘及首三項餐點摘要
 ok 72 - 堂食枱卡直接顯示開枱、三十五分鐘及首三項餐點摘要
   ---
-  duration_ms: 0.310722
+  duration_ms: 0.318752
   type: 'test'
   ...
 # Subtest: 現有點餐及訂單底欄可以進入獨立堂食頁
 ok 73 - 現有點餐及訂單底欄可以進入獨立堂食頁
   ---
-  duration_ms: 1.431893
+  duration_ms: 1.183293
   type: 'test'
   ...
 # Subtest: 堂食點單提供取消入口並同步清除失效堂食脈絡
 ok 74 - 堂食點單提供取消入口並同步清除失效堂食脈絡
   ---
-  duration_ms: 0.812935
+  duration_ms: 0.852773
   type: 'test'
   ...
 # Subtest: 點單頁兩個堂食落單入口都會讀取完成歷史避免重複流水
 ok 75 - 點單頁兩個堂食落單入口都會讀取完成歷史避免重複流水
   ---
-  duration_ms: 1.311199
+  duration_ms: 1.722431
   type: 'test'
   ...
 # Subtest: 堂食頁最近訂單使用共用時間排序及三位顯示號碼
 ok 76 - 堂食頁最近訂單使用共用時間排序及三位顯示號碼
   ---
-  duration_ms: 0.305189
+  duration_ms: 0.339913
   type: 'test'
   ...
-# (node:2883) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/shared/operations.js is not specified and it doesn't parse as CommonJS.
+# (node:3100) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/shared/operations.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: draft numbers are sequential within each terminal prefix
 ok 77 - draft numbers are sequential within each terminal prefix
   ---
-  duration_ms: 1.012902
+  duration_ms: 1.236261
   type: 'test'
   ...
 # Subtest: a removed draft number is never reissued after retrieval
 ok 78 - a removed draft number is never reissued after retrieval
   ---
-  duration_ms: 0.393646
+  duration_ms: 0.49322
   type: 'test'
   ...
 # Subtest: saving a cart records terminal ownership and an audit event
 ok 79 - saving a cart records terminal ownership and an audit event
   ---
-  duration_ms: 1.390635
+  duration_ms: 1.130825
   type: 'test'
   ...
 # Subtest: taking over another terminal draft preserves lineage
 ok 80 - taking over another terminal draft preserves lineage
   ---
-  duration_ms: 0.455719
+  duration_ms: 0.390689
   type: 'test'
   ...
 # Subtest: 日結會清空當時所有草稿，而新營業日草稿不會被誤刪
 ok 81 - 日結會清空當時所有草稿，而新營業日草稿不會被誤刪
   ---
-  duration_ms: 1.411035
+  duration_ms: 1.378822
   type: 'test'
   ...
 # Subtest: a taken-over cart is renumbered under the terminal that saves it again
 ok 82 - a taken-over cart is renumbered under the terminal that saves it again
   ---
-  duration_ms: 0.311833
+  duration_ms: 0.287556
   type: 'test'
   ...
 # Subtest: checkout records which terminal completed the order
 ok 83 - checkout records which terminal completed the order
   ---
-  duration_ms: 0.230615
+  duration_ms: 0.204433
   type: 'test'
   ...
 # Subtest: drink-card.css owns selected state and external pointer
 ok 84 - drink-card.css owns selected state and external pointer
   ---
-  duration_ms: 0.765169
+  duration_ms: 1.226997
   type: 'test'
   ...
 # Subtest: drink-card.css owns the shared image-first card geometry
 ok 85 - drink-card.css owns the shared image-first card geometry
   ---
-  duration_ms: 0.194833
+  duration_ms: 0.300945
   type: 'test'
   ...
 # Subtest: order page loads the current Drink Card authority asset
 ok 86 - order page loads the current Drink Card authority asset
   ---
-  duration_ms: 0.095975
+  duration_ms: 0.171644
   type: 'test'
   ...
 # GLOBAL_STATUS_ACTION_DESCRIPTOR_CORE_OK
 # Subtest: tests/global-status-actions-contract.test.mjs
 ok 14 - tests/global-status-actions-contract.test.mjs
   ---
-  duration_ms: 40.27438
+  duration_ms: 48.030198
   type: 'test'
   ...
 # SMT_HEALTH_SEAL_DESCRIPTOR_CONTRACT_OK
 # Subtest: tests/health-seal-contract.test.mjs
 ok 15 - tests/health-seal-contract.test.mjs
   ---
-  duration_ms: 32.448974
+  duration_ms: 48.221823
   type: 'test'
   ...
-# (node:2910) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/menu-api.js is not specified and it doesn't parse as CommonJS.
+# (node:3121) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/menu-api.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: Firebase keyed catalog normalizes categories, products and availability
 ok 89 - Firebase keyed catalog normalizes categories, products and availability
   ---
-  duration_ms: 2.113805
+  duration_ms: 2.01868
   type: 'test'
   ...
 # Subtest: remote products use live values while inheriting locked SMT behaviour by code
 ok 90 - remote products use live values while inheriting locked SMT behaviour by code
   ---
-  duration_ms: 2.581301
+  duration_ms: 2.255541
   type: 'test'
   ...
 # Subtest: live drink products become quick drinks and retain modifier capabilities
 ok 91 - live drink products become quick drinks and retain modifier capabilities
   ---
-  duration_ms: 0.498509
+  duration_ms: 0.455515
   type: 'test'
   ...
 # Subtest: menu loader caches a successful response and falls back to cache offline
 ok 92 - menu loader caches a successful response and falls back to cache offline
   ---
-  duration_ms: 1.144452
+  duration_ms: 1.05324
   type: 'test'
   ...
 # Subtest: runtime uses Firebase RTDB and contains no Apps Script transport
 ok 93 - runtime uses Firebase RTDB and contains no Apps Script transport
   ---
-  duration_ms: 8.241919
+  duration_ms: 9.32323
   type: 'test'
   ...
 # Subtest: 共用頁面橋接會從正式設定套用主題及聲音狀態
 ok 94 - 共用頁面橋接會從正式設定套用主題及聲音狀態
   ---
-  duration_ms: 2.157176
+  duration_ms: 2.88254
   type: 'test'
   ...
 # Subtest: 點單頁重載會讀取更多頁保存的快速模式及產品圖片設定
 ok 95 - 點單頁重載會讀取更多頁保存的快速模式及產品圖片設定
   ---
-  duration_ms: 0.220835
+  duration_ms: 0.234948
   type: 'test'
   ...
 # Subtest: 正式結帳會建立中央打印工作而不把排隊當成實體成功
 ok 96 - 正式結帳會建立中央打印工作而不把排隊當成實體成功
   ---
-  duration_ms: 0.239623
+  duration_ms: 0.261117
   type: 'test'
   ...
 # Subtest: 訂單重印會即時匯入中央打印工作佇列
 ok 97 - 訂單重印會即時匯入中央打印工作佇列
   ---
-  duration_ms: 0.155307
+  duration_ms: 0.178464
   type: 'test'
   ...
 # Subtest: 堂食正式落單後會把堂食打印工作匯入中央佇列
 ok 98 - 堂食正式落單後會把堂食打印工作匯入中央佇列
   ---
-  duration_ms: 0.144149
+  duration_ms: 0.17552
   type: 'test'
   ...
-# (node:2924) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/more/more-domain.js is not specified and it doesn't parse as CommonJS.
+# (node:3142) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/more/more-domain.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: 營業日固定由早上五時起計並排除上一營業日訂單
 ok 99 - 營業日固定由早上五時起計並排除上一營業日訂單
   ---
-  duration_ms: 10.292853
+  duration_ms: 11.381388
   type: 'test'
   ...
 # Subtest: 報表分開淨銷售、付款、平台結算、待核實及打印異常
 ok 100 - 報表分開淨銷售、付款、平台結算、待核實及打印異常
   ---
-  duration_ms: 0.708561
+  duration_ms: 0.872672
   type: 'test'
   ...
 # Subtest: 歷史報表支援今日昨日七日三十日三個月六個月及自訂日期
 ok 101 - 歷史報表支援今日昨日七日三十日三個月六個月及自訂日期
   ---
-  duration_ms: 1.748567
+  duration_ms: 2.169012
   type: 'test'
   ...
 # Subtest: 選定歷史範圍會由訂單明細重算而不是只讀今日
 ok 102 - 選定歷史範圍會由訂單明細重算而不是只讀今日
   ---
-  duration_ms: 1.041705
+  duration_ms: 1.295078
   type: 'test'
   ...
 # Subtest: 付款及渠道分拆提供對數欄位、狀態及對應訂單
 ok 103 - 付款及渠道分拆提供對數欄位、狀態及對應訂單
   ---
-  duration_ms: 0.337158
+  duration_ms: 0.529193
   type: 'test'
   ...
 # Subtest: 結帳、堂食及舊核數的付款別名會合併到同一對數方式
 ok 104 - 結帳、堂食及舊核數的付款別名會合併到同一對數方式
   ---
-  duration_ms: 0.549077
+  duration_ms: 0.665326
   type: 'test'
   ...
 # Subtest: 未知付款方式歸入其他而不會製造無限新分類
 ok 105 - 未知付款方式歸入其他而不會製造無限新分類
   ---
-  duration_ms: 0.35983
+  duration_ms: 0.444819
   type: 'test'
   ...
 # Subtest: 堂食分拆付款按每次實收方式對數而不只顯示組合付款
 ok 106 - 堂食分拆付款按每次實收方式對數而不只顯示組合付款
   ---
-  duration_ms: 0.494021
+  duration_ms: 0.403638
   type: 'test'
   ...
 # Subtest: 付款實收讀取真正 paidAmount 並保留短收及多收的正負差額
 ok 107 - 付款實收讀取真正 paidAmount 並保留短收及多收的正負差額
   ---
-  duration_ms: 0.66318
+  duration_ms: 0.559949
   type: 'test'
   ...
 # Subtest: 現金對數以收款減找續計算，不會把找續再扣一次
 ok 108 - 現金對數以收款減找續計算，不會把找續再扣一次
   ---
-  duration_ms: 0.760525
+  duration_ms: 0.599849
   type: 'test'
   ...
 # Subtest: 平台付款別名統一顯示為平台代收
 ok 109 - 平台付款別名統一顯示為平台代收
   ---
-  duration_ms: 0.461783
+  duration_ms: 0.405821
   type: 'test'
   ...
 # Subtest: 商品分類、時段及異常資料保留對應訂單供介面下鑽
 ok 110 - 商品分類、時段及異常資料保留對應訂單供介面下鑽
   ---
-  duration_ms: 0.435028
+  duration_ms: 0.380153
   type: 'test'
   ...
 # Subtest: 異常報表會由現有 audit 列出付款更改、部分取消、重印及付款問題
 ok 111 - 異常報表會由現有 audit 列出付款更改、部分取消、重印及付款問題
   ---
-  duration_ms: 0.453484
+  duration_ms: 0.400984
   type: 'test'
   ...
 # Subtest: 異常操作按 audit 發生時間入報表並保留跨日原訂單下鑽
 ok 112 - 異常操作按 audit 發生時間入報表並保留跨日原訂單下鑽
   ---
-  duration_ms: 0.230481
+  duration_ms: 0.215789
   type: 'test'
   ...
 # Subtest: 港幣盤點只提供店舖實際接收的五款紙幣及三款硬幣
 ok 113 - 港幣盤點只提供店舖實際接收的五款紙幣及三款硬幣
   ---
-  duration_ms: 0.254776
+  duration_ms: 0.312843
   type: 'test'
   ...
 # Subtest: 新營業日沿用上次留底並容許開機時加減調整
 ok 114 - 新營業日沿用上次留底並容許開機時加減調整
   ---
-  duration_ms: 0.188951
+  duration_ms: 0.222159
   type: 'test'
   ...
 # Subtest: 未手動調整前按開工底金建議提取及留底，且不會留多過實點現金
 ok 115 - 未手動調整前按開工底金建議提取及留底，且不會留多過實點現金
   ---
-  duration_ms: 0.203023
+  duration_ms: 0.320695
   type: 'test'
   ...
 # Subtest: 日結按實點現金反推待核實訂單的現金及非現金部分
 ok 116 - 日結按實點現金反推待核實訂單的現金及非現金部分
   ---
-  duration_ms: 0.246467
+  duration_ms: 0.315317
   type: 'test'
   ...
 # Subtest: 日結保存現金、支出、差異、版本及稽核而不改寫訂單
 ok 117 - 日結保存現金、支出、差異、版本及稽核而不改寫訂單
   ---
-  duration_ms: 1.342448
+  duration_ms: 1.630435
   type: 'test'
   ...
 # Subtest: 超出百分之三差異而沒有原因不可正式日結
 ok 118 - 超出百分之三差異而沒有原因不可正式日結
   ---
-  duration_ms: 0.353311
+  duration_ms: 0.288497
   type: 'test'
   ...
 # Subtest: 超出百分之三差異必須明確授權，並保存提取及留底現金
 ok 119 - 超出百分之三差異必須明確授權，並保存提取及留底現金
   ---
-  duration_ms: 0.471563
+  duration_ms: 0.542954
   type: 'test'
   ...
 # Subtest: 提取及留底現金必須完整分配實點現金
 ok 120 - 提取及留底現金必須完整分配實點現金
   ---
-  duration_ms: 0.372943
+  duration_ms: 0.446922
   type: 'test'
   ...
 # Subtest: CSV 匯出包含摘要、訂單及商品明細並正確處理逗號
 ok 121 - CSV 匯出包含摘要、訂單及商品明細並正確處理逗號
   ---
-  duration_ms: 0.549527
+  duration_ms: 0.778504
   type: 'test'
   ...
 # Subtest: 備份有可重算校驗值，任何內容被改動都會驗證失敗
 ok 122 - 備份有可重算校驗值，任何內容被改動都會驗證失敗
   ---
-  duration_ms: 0.482774
+  duration_ms: 0.614931
   type: 'test'
   ...
 # Subtest: 恢復可以只套用設定或完整資料，並拒絕無效備份
 ok 123 - 恢復可以只套用設定或完整資料，並拒絕無效備份
   ---
-  duration_ms: 0.315174
+  duration_ms: 0.469074
   type: 'test'
   ...
 # Subtest: 系統診斷清楚分開本機能力、同步積壓及未設定更新來源
 ok 124 - 系統診斷清楚分開本機能力、同步積壓及未設定更新來源
   ---
-  duration_ms: 0.160864
+  duration_ms: 0.238493
   type: 'test'
   ...
 # Subtest: 更多頁已接入正式路由及五項底部導航
 ok 125 - 更多頁已接入正式路由及五項底部導航
   ---
-  duration_ms: 3.801743
+  duration_ms: 6.355163
   type: 'test'
   ...
 # Subtest: 更多主畫面有營業日及六個帶營運狀態的入口
 ok 126 - 更多主畫面有營業日及六個帶營運狀態的入口
   ---
-  duration_ms: 0.284351
+  duration_ms: 0.464298
   type: 'test'
   ...
 # Subtest: 更多首頁直接顯示今日營業、渠道及付款分析而毋須進入第二層
 ok 127 - 更多首頁直接顯示今日營業、渠道及付款分析而毋須進入第二層
   ---
-  duration_ms: 0.115911
+  duration_ms: 0.281958
   type: 'test'
   ...
 # Subtest: 六個入口均有可讀細節面板而非只顯示簡單訊息
 ok 128 - 六個入口均有可讀細節面板而非只顯示簡單訊息
   ---
-  duration_ms: 0.192945
+  duration_ms: 0.342868
   type: 'test'
   ...
 # Subtest: 日結、恢復、更新及退出全螢幕均先開二次確認
 ok 129 - 日結、恢復、更新及退出全螢幕均先開二次確認
   ---
-  duration_ms: 0.459354
+  duration_ms: 0.774597
   type: 'test'
   ...
 # Subtest: 六個入口已由死按鈕改成真實本機操作
 ok 130 - 六個入口已由死按鈕改成真實本機操作
   ---
-  duration_ms: 0.275311
+  duration_ms: 0.4789
   type: 'test'
   ...
 # Subtest: 顯示設定可本機保存，彈窗遮罩不可點空白關閉
 ok 131 - 顯示設定可本機保存，彈窗遮罩不可點空白關閉
   ---
-  duration_ms: 0.167537
+  duration_ms: 0.332523
   type: 'test'
   ...
 # Subtest: 顯示與操作可設定分類每行格數、行數及最後一格搜尋
 ok 132 - 顯示與操作可設定分類每行格數、行數及最後一格搜尋
   ---
-  duration_ms: 0.192826
+  duration_ms: 0.343469
   type: 'test'
   ...
 # Subtest: 更多頁沿用共用基礎樣式並固定頂底欄
 ok 133 - 更多頁沿用共用基礎樣式並固定頂底欄
   ---
-  duration_ms: 0.310188
+  duration_ms: 0.584947
   type: 'test'
   ...
 # Subtest: 收銀日結提供點算、支出、差異原因、版本及正式保存
 ok 134 - 收銀日結提供點算、支出、差異原因、版本及正式保存
   ---
-  duration_ms: 0.320378
+  duration_ms: 0.600209
   type: 'test'
   ...
 # Subtest: 日結提供面額互推、開工底金、提取留底、待核實反推及超額授權
 ok 135 - 日結提供面額互推、開工底金、提取留底、待核實反推及超額授權
   ---
-  duration_ms: 0.287975
+  duration_ms: 0.429116
   type: 'test'
   ...
 # Subtest: 開機底金顯示上次留底、調整額及確認後開工現金
 ok 136 - 開機底金顯示上次留底、調整額及確認後開工現金
   ---
-  duration_ms: 0.152735
+  duration_ms: 0.257211
   type: 'test'
   ...
 # Subtest: 營業分析同時展示每個渠道及每種付款方式的單數和金額
 ok 137 - 營業分析同時展示每個渠道及每種付款方式的單數和金額
   ---
-  duration_ms: 0.09916
+  duration_ms: 0.151655
   type: 'test'
   ...
 # Subtest: 全局共用樣式提供觸控回饋、彈窗動效及減少動效模式
 ok 138 - 全局共用樣式提供觸控回饋、彈窗動效及減少動效模式
   ---
-  duration_ms: 0.221605
+  duration_ms: 0.310159
   type: 'test'
   ...
 # Subtest: 報表五個分頁讀取同一選定日期報表並可下載 CSV
 ok 139 - 報表五個分頁讀取同一選定日期報表並可下載 CSV
   ---
-  duration_ms: 0.14982
+  duration_ms: 0.246926
   type: 'test'
   ...
 # Subtest: 歷史報表提供七種日期入口及自訂開始結束日期
 ok 140 - 歷史報表提供七種日期入口及自訂開始結束日期
   ---
-  duration_ms: 0.273588
+  duration_ms: 0.287196
   type: 'test'
   ...
 # Subtest: 付款對數逐項顯示單數應收實收退款差額狀態並可下鑽
 ok 141 - 付款對數逐項顯示單數應收實收退款差額狀態並可下鑽
   ---
-  duration_ms: 0.131371
+  duration_ms: 0.130523
   type: 'test'
   ...
 # Subtest: 商品報表可切換產品及分類並保留時段與日結紀錄
 ok 142 - 商品報表可切換產品及分類並保留時段與日結紀錄
   ---
-  duration_ms: 0.10037
+  duration_ms: 0.098957
   type: 'test'
   ...
 # Subtest: 打印中心可設定網絡設備、選格式、診斷、預覽、重試及改送
 ok 143 - 打印中心可設定網絡設備、選格式、診斷、預覽、重試及改送
   ---
-  duration_ms: 0.284981
+  duration_ms: 0.339953
   type: 'test'
   ...
 # Subtest: 備份中心可以建立、下載、匯入、驗證及分範圍恢復
 ok 144 - 備份中心可以建立、下載、匯入、驗證及分範圍恢復
   ---
-  duration_ms: 0.173957
+  duration_ms: 0.281807
   type: 'test'
   ...
 # Subtest: 系統中心提供真實診斷、操作紀錄、同步重試及更新檢查結果
 ok 145 - 系統中心提供真實診斷、操作紀錄、同步重試及更新檢查結果
   ---
-  duration_ms: 0.214419
+  duration_ms: 0.267756
   type: 'test'
   ...
 # MORE_RESPONSIVE_PAGE_AUTHORITY_CONTRACT_OK
 # Subtest: tests/more-responsive-contract.test.mjs
 ok 20 - tests/more-responsive-contract.test.mjs
   ---
-  duration_ms: 44.760223
+  duration_ms: 51.746884
   type: 'test'
   ...
-# (node:2950) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/order-domain.js is not specified and it doesn't parse as CommonJS.
+# (node:3167) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/order-domain.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: standalone riceball is packaging-fee exempt even when display category is popularity
 ok 147 - standalone riceball is packaging-fee exempt even when display category is popularity
   ---
-  duration_ms: 0.838056
+  duration_ms: 1.112217
   type: 'test'
   ...
 # Subtest: standalone drink is packaging-fee exempt
 ok 148 - standalone drink is packaging-fee exempt
   ---
-  duration_ms: 0.192133
+  duration_ms: 0.295268
   type: 'test'
   ...
 # Subtest: standalone riceball plus discounted drink remains packaging-fee exempt
 ok 149 - standalone riceball plus discounted drink remains packaging-fee exempt
   ---
-  duration_ms: 0.26499
+  duration_ms: 0.342337
   type: 'test'
   ...
 # Subtest: riceball combo and other takeaway boxed meals still charge packaging
 ok 150 - riceball combo and other takeaway boxed meals still charge packaging
   ---
-  duration_ms: 0.1388
+  duration_ms: 0.2427
   type: 'test'
   ...
 # SMT_ORDER_CART_DOMAIN_OK
-# (node:2951) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/shared/store.js is not specified and it doesn't parse as CommonJS.
+# (node:3173) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/shared/store.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: tests/order-cart-domain.test.mjs
 ok 22 - tests/order-cart-domain.test.mjs
   ---
-  duration_ms: 39.580197
+  duration_ms: 42.196893
   type: 'test'
   ...
-# (node:2962) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/order-domain.js is not specified and it doesn't parse as CommonJS.
+# (node:3180) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/order-domain.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: quick mode uses a direct-add product action
 ok 152 - quick mode uses a direct-add product action
   ---
-  duration_ms: 2.65204
+  duration_ms: 1.820256
   type: 'test'
   ...
 # Subtest: cart rows expose separate quantity and edit controls
 ok 153 - cart rows expose separate quantity and edit controls
   ---
-  duration_ms: 0.205863
+  duration_ms: 0.225003
   type: 'test'
   ...
 # Subtest: product editor is a compact anchored card with explicit confirmation
 ok 154 - product editor is a compact anchored card with explicit confirmation
   ---
-  duration_ms: 0.315029
+  duration_ms: 0.417659
   type: 'test'
   ...
 # Subtest: modal backdrop is inert and cannot dismiss changes
 ok 155 - modal backdrop is inert and cannot dismiss changes
   ---
-  duration_ms: 0.214397
+  duration_ms: 0.228118
   type: 'test'
   ...
 # Subtest: cart quantity updates totals, trims drink assignments, and removes zero rows
 ok 156 - cart quantity updates totals, trims drink assignments, and removes zero rows
   ---
-  duration_ms: 0.879734
+  duration_ms: 0.966101
   type: 'test'
   ...
 # Subtest: order shell keeps the bottom navigation inside the fixed canvas
 ok 157 - order shell keeps the bottom navigation inside the fixed canvas
   ---
-  duration_ms: 0.269408
+  duration_ms: 0.315347
   type: 'test'
   ...
 # Subtest: checkout call to action shows the payable total
 ok 158 - checkout call to action shows the payable total
   ---
-  duration_ms: 0.269218
+  duration_ms: 0.248408
   type: 'test'
   ...
 # Subtest: quick order mode, drink strip, and quick assist are independent settings
 ok 159 - quick order mode, drink strip, and quick assist are independent settings
   ---
-  duration_ms: 0.23254
+  duration_ms: 0.203852
   type: 'test'
   ...
 # Subtest: display settings include the three cart ratios
 ok 160 - display settings include the three cart ratios
   ---
-  duration_ms: 0.443848
+  duration_ms: 0.43917
   type: 'test'
   ...
 # Subtest: cards are positioned from the pressed control and expose a pointer side
 ok 161 - cards are positioned from the pressed control and expose a pointer side
   ---
-  duration_ms: 0.567161
+  duration_ms: 0.605327
   type: 'test'
   ...
 # Subtest: pending orders use a vertical split
 ok 162 - pending orders use a vertical split
   ---
-  duration_ms: 0.323943
+  duration_ms: 0.302819
   type: 'test'
   ...
 # Subtest: every expanded card is owned by the single modal controller
 ok 163 - every expanded card is owned by the single modal controller
   ---
-  duration_ms: 0.236725
+  duration_ms: 0.260305
   type: 'test'
   ...
 # Subtest: pending order card is actionable and grouped by channel
 ok 164 - pending order card is actionable and grouped by channel
   ---
-  duration_ms: 0.123647
+  duration_ms: 0.155881
   type: 'test'
   ...
 # Subtest: anchored cards support all four pointer directions and stay between fixed bars
 ok 165 - anchored cards support all four pointer directions and stay between fixed bars
   ---
-  duration_ms: 0.244576
+  duration_ms: 0.318972
   type: 'test'
   ...
 # Subtest: cart image visibility is configurable
 ok 166 - cart image visibility is configurable
   ---
-  duration_ms: 0.140405
+  duration_ms: 0.179115
   type: 'test'
   ...
 # Subtest: quick drink adjustment stays compact without repeating its image
 ok 167 - quick drink adjustment stays compact without repeating its image
   ---
-  duration_ms: 0.174756
+  duration_ms: 0.217372
   type: 'test'
   ...
 # Subtest: shell uses a fixed T2S canvas fitted inside both viewport dimensions
 ok 168 - shell uses a fixed T2S canvas fitted inside both viewport dimensions
   ---
-  duration_ms: 14.050744
+  duration_ms: 17.993642
   type: 'test'
   ...
 # Subtest: root height chain and scroll regions keep both bars fixed
 ok 169 - root height chain and scroll regions keep both bars fixed
   ---
-  duration_ms: 1.570998
+  duration_ms: 1.479181
   type: 'test'
   ...
 # Subtest: quick drinks are a collapsed upward drawer with reorder controls
 ok 170 - quick drinks are a collapsed upward drawer with reorder controls
   ---
-  duration_ms: 0.236954
+  duration_ms: 0.326954
   type: 'test'
   ...
 # Subtest: drink editor supports multiple configuration groups without forced images
 ok 171 - drink editor supports multiple configuration groups without forced images
   ---
-  duration_ms: 0.174335
+  duration_ms: 0.228348
   type: 'test'
   ...
 # Subtest: completion exposes automatic, specified, and demo link-up flows
 ok 172 - completion exposes automatic, specified, and demo link-up flows
   ---
-  duration_ms: 0.12441
+  duration_ms: 0.20306
   type: 'test'
   ...
 # Subtest: large product grid reserves complete rows and never overlaps cards
 ok 173 - large product grid reserves complete rows and never overlaps cards
   ---
-  duration_ms: 0.198743
+  duration_ms: 0.252343
   type: 'test'
   ...
 # Subtest: collapsed quick drinks use the approved centred pill above navigation
 ok 174 - collapsed quick drinks use the approved centred pill above navigation
   ---
-  duration_ms: 0.246708
+  duration_ms: 0.2701
   type: 'test'
   ...
 # Subtest: operational surfaces include sold-out preview and new-order toast
 ok 175 - operational surfaces include sold-out preview and new-order toast
   ---
-  duration_ms: 0.177355
+  duration_ms: 0.223972
   type: 'test'
   ...
 # Subtest: 分類列最右固定搜尋入口並可按名稱或編號篩選產品
 ok 176 - 分類列最右固定搜尋入口並可按名稱或編號篩選產品
   ---
-  duration_ms: 0.377637
+  duration_ms: 0.415295
   type: 'test'
   ...
 # Subtest: 分類列讀取後台全局設定並按五六七格及一兩行輸出版面
 ok 177 - 分類列讀取後台全局設定並按五六七格及一兩行輸出版面
   ---
-  duration_ms: 0.201373
+  duration_ms: 0.20239
   type: 'test'
   ...
 # Subtest: 新單提示最少一張產品卡闊及兩張產品卡高
 ok 178 - 新單提示最少一張產品卡闊及兩張產品卡高
   ---
-  duration_ms: 0.256121
+  duration_ms: 0.245764
   type: 'test'
   ...
 # Subtest: 快捷飲品展開後八秒無操作自動收起並於操作時重時計時
 ok 179 - 快捷飲品展開後八秒無操作自動收起並於操作時重時計時
   ---
-  duration_ms: 0.160621
+  duration_ms: 0.199255
   type: 'test'
   ...
 # Subtest: sold-out preview reads the same local supply status as the badge
 ok 180 - sold-out preview reads the same local supply status as the badge
   ---
-  duration_ms: 0.125997
+  duration_ms: 0.167849
   type: 'test'
   ...
 # Subtest: order cards distinguish sold-out orange from paused red without greying
 ok 181 - order cards distinguish sold-out orange from paused red without greying
   ---
-  duration_ms: 0.196962
+  duration_ms: 3.606863
   type: 'test'
   ...
 # Subtest: paused products sort to the end of their current order category
 ok 182 - paused products sort to the end of their current order category
   ---
-  duration_ms: 0.162323
+  duration_ms: 0.207297
   type: 'test'
   ...
 # Subtest: accepting a verified pending order creates a running order with a 30 minute deadline
 ok 183 - accepting a verified pending order creates a running order with a 30 minute deadline
   ---
-  duration_ms: 0.167212
+  duration_ms: 0.20232
   type: 'test'
   ...
 # Subtest: running orders auto-complete after 30 minutes without intermediate states
 ok 184 - running orders auto-complete after 30 minutes without intermediate states
   ---
-  duration_ms: 0.191153
+  duration_ms: 0.237702
   type: 'test'
   ...
 # Subtest: WhatsApp QR target opens the customer chat with the preset message
 ok 185 - WhatsApp QR target opens the customer chat with the preset message
   ---
-  duration_ms: 0.191354
+  duration_ms: 0.638405
   type: 'test'
   ...
 # Subtest: pending verification uses start review then confirm order wording
 ok 186 - pending verification uses start review then confirm order wording
   ---
-  duration_ms: 0.198106
+  duration_ms: 0.238243
   type: 'test'
   ...
 # Subtest: cart locks price and quantity-edit controls into dedicated regions
 ok 187 - cart locks price and quantity-edit controls into dedicated regions
   ---
-  duration_ms: 0.265383
+  duration_ms: 0.289759
   type: 'test'
   ...
 # Subtest: drink adjustment starts compact and expands only after add adjustment
 ok 188 - drink adjustment starts compact and expands only after add adjustment
   ---
-  duration_ms: 0.211876
+  duration_ms: 0.232454
   type: 'test'
   ...
 # Subtest: specified pairing candidates use a three-column text-card grid
 ok 189 - specified pairing candidates use a three-column text-card grid
   ---
-  duration_ms: 0.263923
+  duration_ms: 0.230461
   type: 'test'
   ...
 # Subtest: cart keeps price flush right and actions aligned with the image
 ok 190 - cart keeps price flush right and actions aligned with the image
   ---
-  duration_ms: 0.259993
+  duration_ms: 0.299954
   type: 'test'
   ...
 # Subtest: 首次渲染由共用函數提供待處理數量給頂欄及導航
 ok 191 - 首次渲染由共用函數提供待處理數量給頂欄及導航
   ---
-  duration_ms: 0.476271
+  duration_ms: 0.539309
   type: 'test'
   ...
 # Subtest: 點單頁最近訂單讀取共用歷史而不再寫死舊單號
 ok 192 - 點單頁最近訂單讀取共用歷史而不再寫死舊單號
   ---
-  duration_ms: 0.165058
+  duration_ms: 1.35655
   type: 'test'
   ...
 # Subtest: 子頁啟動錯誤會顯示可見後備畫面而不是白屏
 ok 193 - 子頁啟動錯誤會顯示可見後備畫面而不是白屏
   ---
-  duration_ms: 12.484265
+  duration_ms: 19.89861
   type: 'test'
   ...
 # Subtest: specified pairing creates dynamic labelled groups
 ok 194 - specified pairing creates dynamic labelled groups
   ---
-  duration_ms: 0.256786
+  duration_ms: 0.376287
   type: 'test'
   ...
 # Subtest: all drink selection surfaces share one image-first Drink Choice Card
 ok 195 - all drink selection surfaces share one image-first Drink Choice Card
   ---
-  duration_ms: 0.458519
+  duration_ms: 0.527852
   type: 'test'
   ...
 # Subtest: riceball and snack can become one pending-drink combo without a cart drink
 ok 196 - riceball and snack can become one pending-drink combo without a cart drink
   ---
-  duration_ms: 0.69882
+  duration_ms: 0.764913
   type: 'test'
   ...
 # Subtest: quick drink embeds inside combo without first becoming a cart line
 ok 197 - quick drink embeds inside combo without first becoming a cart line
   ---
-  duration_ms: 0.287524
+  duration_ms: 0.348937
   type: 'test'
   ...
 # Subtest: cart drink can be consumed into a combo and remaining quantity stays standalone
 ok 198 - cart drink can be consumed into a combo and remaining quantity stays standalone
   ---
-  duration_ms: 0.221025
+  duration_ms: 0.271222
   type: 'test'
   ...
 # Subtest: dissolving a combo restores standalone components at single prices
 ok 199 - dissolving a combo restores standalone components at single prices
   ---
-  duration_ms: 0.437475
+  duration_ms: 0.529004
   type: 'test'
   ...
 # Subtest: specified pairing offers quick drinks and accepts main plus snack before drink
 ok 200 - specified pairing offers quick drinks and accepts main plus snack before drink
   ---
-  duration_ms: 0.163384
+  duration_ms: 0.186656
   type: 'test'
   ...
 # Subtest: order page loads the shared live menu contract with offline fallback
 ok 201 - order page loads the shared live menu contract with offline fallback
   ---
-  duration_ms: 0.165081
+  duration_ms: 0.178754
   type: 'test'
   ...
-# (node:2971) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/shared/order-identity.js is not specified and it doesn't parse as CommonJS.
+# (node:3188) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/shared/order-identity.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: 每日流水以早上五時為分界並固定三位數
 ok 202 - 每日流水以早上五時為分界並固定三位數
   ---
-  duration_ms: 1.641475
+  duration_ms: 1.643444
   type: 'test'
   ...
 # Subtest: 所有渠道共用同一每日流水並兼容舊 P 編號
 ok 203 - 所有渠道共用同一每日流水並兼容舊 P 編號
   ---
-  duration_ms: 0.350561
+  duration_ms: 0.517466
   type: 'test'
   ...
 # Subtest: 每日流水到 P999 後拒絕循環覆蓋
 ok 204 - 每日流水到 P999 後拒絕循環覆蓋
   ---
-  duration_ms: 1.96041
+  duration_ms: 2.579511
   type: 'test'
   ...
 # Subtest: 顯示號碼支援新舊訂單並按真實時間找最新一張
 ok 205 - 顯示號碼支援新舊訂單並按真實時間找最新一張
   ---
-  duration_ms: 0.466584
+  duration_ms: 0.443146
   type: 'test'
   ...
 # Subtest: 流水營業日及最近訂單以開單時間為準而不受完成時間延遲影響
 ok 206 - 流水營業日及最近訂單以開單時間為準而不受完成時間延遲影響
   ---
-  duration_ms: 0.429056
+  duration_ms: 0.496325
   type: 'test'
   ...
 # Subtest: 永久編號使用實際日期並在堂食單包含枱號
 ok 207 - 永久編號使用實際日期並在堂食單包含枱號
   ---
-  duration_ms: 0.284044
+  duration_ms: 0.276239
   type: 'test'
   ...
-# (node:2977) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/order-domain.js is not specified and it doesn't parse as CommonJS.
+# (node:3194) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/order/order-domain.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: takeaway packaging fee exempts standalone riceballs and drinks
 ok 208 - takeaway packaging fee exempts standalone riceballs and drinks
   ---
-  duration_ms: 1.399211
+  duration_ms: 2.410049
   type: 'test'
   ...
 # Subtest: checkout discount does not discount packaging fee
 ok 209 - checkout discount does not discount packaging fee
   ---
-  duration_ms: 0.320651
+  duration_ms: 0.588451
   type: 'test'
   ...
 # Subtest: mixed service order splits production and packing jobs
 ok 210 - mixed service order splits production and packing jobs
   ---
-  duration_ms: 19.690144
+  duration_ms: 22.566866
   type: 'test'
   ...
 # SMT_ORDER_REQUIRED_COMPLETION_TOKEN_CORE_OK
 # Subtest: tests/order-required-completion-core.test.mjs
 ok 26 - tests/order-required-completion-core.test.mjs
   ---
-  duration_ms: 42.714777
+  duration_ms: 54.710318
   type: 'test'
   ...
 # Subtest: order runtime does not load post-render drink enhancer
 ok 212 - order runtime does not load post-render drink enhancer
   ---
-  duration_ms: 0.886497
+  duration_ms: 1.196772
   type: 'test'
   ...
 # Subtest: drink assignment badges render from assignment state
 ok 213 - drink assignment badges render from assignment state
   ---
-  duration_ms: 0.356158
+  duration_ms: 0.42562
   type: 'test'
   ...
 # Subtest: modal policy is owned by order core, not an external runtime layer
 ok 214 - modal policy is owned by order core, not an external runtime layer
   ---
-  duration_ms: 0.285375
+  duration_ms: 0.35803
   type: 'test'
   ...
 # Subtest: order runtime keeps required completion in page state
 ok 215 - order runtime keeps required completion in page state
   ---
-  duration_ms: 0.231029
+  duration_ms: 0.264742
   type: 'test'
   ...
 # Subtest: transient UI state bypasses transaction persistence and full normalization
 ok 216 - transient UI state bypasses transaction persistence and full normalization
   ---
-  duration_ms: 0.295859
+  duration_ms: 0.382386
   type: 'test'
   ...
 # Subtest: order page uses lazy surface rendering
 ok 217 - order page uses lazy surface rendering
   ---
-  duration_ms: 0.239732
+  duration_ms: 0.293655
   type: 'test'
   ...
-# (node:2991) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/orders/orders-domain.js is not specified and it doesn't parse as CommonJS.
+# (node:3217) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/orders/orders-domain.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: 運行訂單滿三十分鐘會持久轉入歷史而唔係只改畫面
 ok 218 - 運行訂單滿三十分鐘會持久轉入歷史而唔係只改畫面
   ---
-  duration_ms: 2.11273
+  duration_ms: 2.777904
   type: 'test'
   ...
 # Subtest: filters can switch between source, payment exception, print exception and history
 ok 219 - filters can switch between source, payment exception, print exception and history
   ---
-  duration_ms: 0.356688
+  duration_ms: 0.363658
   type: 'test'
   ...
 # Subtest: changing channel and payment persists values and audit instead of only showing a toast
 ok 220 - changing channel and payment persists values and audit instead of only showing a toast
   ---
-  duration_ms: 3.321729
+  duration_ms: 0.257221
   type: 'test'
   ...
 # Subtest: 更改渠道會套用正式付款狀態，非現場渠道不可保留舊付款方式
 ok 221 - 更改渠道會套用正式付款狀態，非現場渠道不可保留舊付款方式
   ---
-  duration_ms: 0.229494
+  duration_ms: 0.208749
   type: 'test'
   ...
 # Subtest: 待核實訂單可核實付款或標記問題及通知客戶
 ok 222 - 待核實訂單可核實付款或標記問題及通知客戶
   ---
-  duration_ms: 0.454958
+  duration_ms: 0.335066
   type: 'test'
   ...
 # Subtest: 訂單頁待核實入口共用完整核數及通知客戶操作
 ok 223 - 訂單頁待核實入口共用完整核數及通知客戶操作
   ---
-  duration_ms: 0.217687
+  duration_ms: 0.235238
   type: 'test'
   ...
 # Subtest: 問題原因提供快選亦容許留空，唔會卡住待處理流程
 ok 224 - 問題原因提供快選亦容許留空，唔會卡住待處理流程
   ---
-  duration_ms: 0.329113
+  duration_ms: 0.355186
   type: 'test'
   ...
 # Subtest: 打印異常訂單由職員打開後勾選需要重印的文件
 ok 225 - 打印異常訂單由職員打開後勾選需要重印的文件
   ---
-  duration_ms: 0.237742
+  duration_ms: 0.201138
   type: 'test'
   ...
 # Subtest: 部分取消使用商品行內加減及一次確認，不再逐項使用下拉選單
 ok 226 - 部分取消使用商品行內加減及一次確認，不再逐項使用下拉選單
   ---
-  duration_ms: 1.891988
+  duration_ms: 0.545618
   type: 'test'
   ...
 # Subtest: partial cancellation keeps cancelled quantity visible and recalculates total
 ok 227 - partial cancellation keeps cancelled quantity visible and recalculates total
   ---
-  duration_ms: 0.461299
+  duration_ms: 0.539609
   type: 'test'
   ...
 # Subtest: whole-order cancellation remains in history instead of disappearing
 ok 228 - whole-order cancellation remains in history instead of disappearing
   ---
-  duration_ms: 0.160989
+  duration_ms: 0.21598
   type: 'test'
   ...
 # Subtest: reprint creates a visible print job and clears the exception after retry
 ok 229 - reprint creates a visible print job and clears the exception after retry
   ---
-  duration_ms: 0.159527
+  duration_ms: 0.253957
   type: 'test'
   ...
 # Subtest: 掛單只開左右面板，再由一般掛單或堂食枱號完成操作
 ok 230 - 掛單只開左右面板，再由一般掛單或堂食枱號完成操作
   ---
-  duration_ms: 1.172383
+  duration_ms: 1.421265
   type: 'test'
   ...
 # Subtest: 取單使用左列表右內容，並固定返回、作廢及取單操作
 ok 231 - 取單使用左列表右內容，並固定返回、作廢及取單操作
   ---
-  duration_ms: 0.293281
+  duration_ms: 0.371431
   type: 'test'
   ...
 # Subtest: checkout persists the completing terminal and order audit
 ok 232 - checkout persists the completing terminal and order audit
   ---
-  duration_ms: 0.144943
+  duration_ms: 0.213657
   type: 'test'
   ...
 # Subtest: bottom navigation opens the independent orders page
 ok 233 - bottom navigation opens the independent orders page
   ---
-  duration_ms: 0.300975
+  duration_ms: 0.340745
   type: 'test'
   ...
 # Subtest: orders page uses the three approved channel columns and payment methods
 ok 234 - orders page uses the three approved channel columns and payment methods
   ---
-  duration_ms: 0.213956
+  duration_ms: 0.301957
   type: 'test'
   ...
 # Subtest: 每件產品保存獨立堂食或外賣選擇
 ok 235 - 每件產品保存獨立堂食或外賣選擇
   ---
-  duration_ms: 0.15736
+  duration_ms: 0.25693
   type: 'test'
   ...
 # Subtest: reverse checkout reuse loads the original cart then navigates to the locked ordering page
 ok 236 - reverse checkout reuse loads the original cart then navigates to the locked ordering page
   ---
-  duration_ms: 0.316281
+  duration_ms: 0.494332
   type: 'test'
   ...
 # Subtest: pairing-modal.css owns specified pairing task layout
 ok 237 - pairing-modal.css owns specified pairing task layout
   ---
-  duration_ms: 0.693465
+  duration_ms: 1.298704
   type: 'test'
   ...
 # Subtest: pairing modal keeps body scroll bounded and fixed task surfaces
 ok 238 - pairing modal keeps body scroll bounded and fixed task surfaces
   ---
-  duration_ms: 0.146851
+  duration_ms: 0.287696
   type: 'test'
   ...
 # Subtest: pairing candidate visuals are scoped to the modal owner
 ok 239 - pairing candidate visuals are scoped to the modal owner
   ---
-  duration_ms: 0.105954
+  duration_ms: 0.219334
   type: 'test'
   ...
 # Subtest: order page loads current Pairing Modal authority asset
 ok 240 - order page loads current Pairing Modal authority asset
   ---
-  duration_ms: 0.095161
+  duration_ms: 0.176311
   type: 'test'
   ...
-# (node:3031) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/more/print-domain.js is not specified and it doesn't parse as CommonJS.
+# (node:3246) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/pages/more/print-domain.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: 預設建立五部設備及四款由管理端發佈的示範格式
 ok 241 - 預設建立五部設備及四款由管理端發佈的示範格式
   ---
-  duration_ms: 1.941776
+  duration_ms: 2.716824
   type: 'test'
   ...
 # Subtest: 網絡打印機必須有有效網絡地址、連接埠、紙寬、用途及格式
 ok 242 - 網絡打印機必須有有效網絡地址、連接埠、紙寬、用途及格式
   ---
-  duration_ms: 0.68333
+  duration_ms: 0.874385
   type: 'test'
   ...
 # Subtest: 製作及打包統計同時提供每款產品與飲品、飯餐、飯團總數
 ok 243 - 製作及打包統計同時提供每款產品與飲品、飯餐、飯團總數
   ---
-  duration_ms: 10.159194
+  duration_ms: 9.337251
   type: 'test'
   ...
 # Subtest: 四款格式生成可讀預覽，製作單及打包單頂部先顯示合併統計
 ok 244 - 四款格式生成可讀預覽，製作單及打包單頂部先顯示合併統計
   ---
-  duration_ms: 10.974176
+  duration_ms: 13.504343
   type: 'test'
   ...
 # Subtest: 舊非 P 渠道訂單重印保留原識別而不會顯示測試工作
 ok 245 - 舊非 P 渠道訂單重印保留原識別而不會顯示測試工作
   ---
-  duration_ms: 0.435401
+  duration_ms: 0.529744
   type: 'test'
   ...
 # Subtest: 打印工作按用途及格式路由，未設定設備會停在 blocked 而非假成功
 ok 246 - 打印工作按用途及格式路由，未設定設備會停在 blocked 而非假成功
   ---
-  duration_ms: 3.301643
+  duration_ms: 3.204376
   type: 'test'
   ...
 # Subtest: 重試沿用同一工作並增加嘗試；改送會保存原目的地
 ok 247 - 重試沿用同一工作並增加嘗試；改送會保存原目的地
   ---
-  duration_ms: 0.420979
+  duration_ms: 0.453191
   type: 'test'
   ...
 # Subtest: 安卓橋接封包包含傳輸資料、格式內容及冪等工作編號
 ok 248 - 安卓橋接封包包含傳輸資料、格式內容及冪等工作編號
   ---
-  duration_ms: 0.407866
+  duration_ms: 0.455655
   type: 'test'
   ...
 # Subtest: 設備診斷會分開設定驗證、瀏覽器限制及安卓橋接狀態
 ok 249 - 設備診斷會分開設定驗證、瀏覽器限制及安卓橋接狀態
   ---
-  duration_ms: 0.505005
+  duration_ms: 0.592919
   type: 'test'
   ...
 # Subtest: 現有訂單與堂食打印工作可去重匯入中央工作佇列
 ok 250 - 現有訂單與堂食打印工作可去重匯入中央工作佇列
   ---
-  duration_ms: 1.018689
+  duration_ms: 1.177534
   type: 'test'
   ...
 # PRODUCT_CARD_AUTHORITY_CONTRACT_OK
 # Subtest: tests/product-card-authority-contract.test.mjs
 ok 32 - tests/product-card-authority-contract.test.mjs
   ---
-  duration_ms: 33.977874
+  duration_ms: 34.927836
   type: 'test'
   ...
 # Subtest: product-card.css owns the base card shell and typography
 ok 252 - product-card.css owns the base card shell and typography
   ---
-  duration_ms: 1.111161
+  duration_ms: 1.043906
   type: 'test'
   ...
 # Subtest: product-card.css owns no-image and supply states
 ok 253 - product-card.css owns no-image and supply states
   ---
-  duration_ms: 0.1654
+  duration_ms: 0.224933
   type: 'test'
   ...
 # Subtest: product-card.css keeps adaptive row tokens as the only size source
 ok 254 - product-card.css keeps adaptive row tokens as the only size source
   ---
-  duration_ms: 0.249542
+  duration_ms: 0.233616
   type: 'test'
   ...
 # Subtest: order page loads the current Product Card authority asset
 ok 255 - order page loads the current Product Card authority asset
   ---
-  duration_ms: 0.160369
+  duration_ms: 0.126197
   type: 'test'
   ...
 # node:internal/modules/run_main:123
@@ -1909,7 +1909,7 @@ ok 255 - order page loads the current Product Card authority asset
 # Subtest: tests/qa-pipeline-contract.test.mjs
 not ok 34 - tests/qa-pipeline-contract.test.mjs
   ---
-  duration_ms: 36.900295
+  duration_ms: 46.532535
   type: 'test'
   location: '/home/runner/work/morefunos-smt/morefunos-smt/tests/qa-pipeline-contract.test.mjs:1:1'
   failureType: 'testCodeFailure'
@@ -1921,155 +1921,155 @@ not ok 34 - tests/qa-pipeline-contract.test.mjs
 # Subtest: seed frame stays hidden until child ready
 ok 257 - seed frame stays hidden until child ready
   ---
-  duration_ms: 0.619884
+  duration_ms: 1.169863
   type: 'test'
   ...
 # Subtest: unlock does not force reload the active order page
 ok 258 - unlock does not force reload the active order page
   ---
-  duration_ms: 0.1603
+  duration_ms: 0.331862
   type: 'test'
   ...
 # Subtest: page ready waits for stable frames and republishes explicit actions
 ok 259 - page ready waits for stable frames and republishes explicit actions
   ---
-  duration_ms: 0.826568
+  duration_ms: 2.019602
   type: 'test'
   ...
 # Subtest: overlay state stays explicit and event driven
 ok 260 - overlay state stays explicit and event driven
   ---
-  duration_ms: 0.181601
+  duration_ms: 0.308958
   type: 'test'
   ...
 # Subtest: responsive profile writes are deduplicated per frame
 ok 261 - responsive profile writes are deduplicated per frame
   ---
-  duration_ms: 0.151616
+  duration_ms: 0.207978
   type: 'test'
   ...
 # Subtest: inactive pages cannot keep a second overlay truth source
 ok 262 - inactive pages cannot keep a second overlay truth source
   ---
-  duration_ms: 0.096686
+  duration_ms: 0.246215
   type: 'test'
   ...
-# (node:3061) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/shared/shell.js is not specified and it doesn't parse as CommonJS.
+# (node:3281) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/runner/work/morefunos-smt/morefunos-smt/shared/shell.js is not specified and it doesn't parse as CommonJS.
 # Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 # To eliminate this warning, add "type": "module" to /home/runner/work/morefunos-smt/morefunos-smt/package.json.
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: 共用狀態欄永久包含品牌、終端、接單狀態及最近訂單
 ok 263 - 共用狀態欄永久包含品牌、終端、接單狀態及最近訂單
   ---
-  duration_ms: 1.249279
+  duration_ms: 1.739377
   type: 'test'
   ...
 # Subtest: 共用底欄固定五項、同一套線性圖標及唯一選中項
 ok 264 - 共用底欄固定五項、同一套線性圖標及唯一選中項
   ---
-  duration_ms: 0.442045
+  duration_ms: 0.599358
   type: 'test'
   ...
 # Subtest: 五個主要頁面全部使用共用狀態欄及底部導航
 ok 265 - 五個主要頁面全部使用共用狀態欄及底部導航
   ---
-  duration_ms: 0.209535
+  duration_ms: 0.214388
   type: 'test'
   ...
 # Subtest: 五個主要頁面共用同一最近訂單顯示規則
 ok 266 - 五個主要頁面共用同一最近訂單顯示規則
   ---
-  duration_ms: 0.191317
+  duration_ms: 0.252173
   type: 'test'
   ...
 # Subtest: 底欄高度、選中膠囊、字體及圖標只由全局 Shell 樣式控制
 ok 267 - 底欄高度、選中膠囊、字體及圖標只由全局 Shell 樣式控制
   ---
-  duration_ms: 0.410283
+  duration_ms: 0.449015
   type: 'test'
   ...
 # Subtest: 分類、頁籤、分段、付款、來源及模式選擇共用膠囊規則
 ok 268 - 分類、頁籤、分段、付款、來源及模式選擇共用膠囊規則
   ---
-  duration_ms: 0.282621
+  duration_ms: 0.304822
   type: 'test'
   ...
 # Subtest: 來源彈窗支援四方向箭嘴並由定位器標記實際方向
 ok 269 - 來源彈窗支援四方向箭嘴並由定位器標記實際方向
   ---
-  duration_ms: 0.246807
+  duration_ms: 0.260967
   type: 'test'
   ...
 # Subtest: 售罄頁沿用產品分類與三種點單卡模板
 ok 270 - 售罄頁沿用產品分類與三種點單卡模板
   ---
-  duration_ms: 1.168175
+  duration_ms: 1.094912
   type: 'test'
   ...
 # Subtest: 右欄提供分類售罄列表、收起與圖片顯示切換
 ok 271 - 右欄提供分類售罄列表、收起與圖片顯示切換
   ---
-  duration_ms: 0.258931
+  duration_ms: 0.247407
   type: 'test'
   ...
 # Subtest: 批量模式使用待確認欄及四個固定操作
 ok 272 - 批量模式使用待確認欄及四個固定操作
   ---
-  duration_ms: 0.202064
+  duration_ms: 0.163282
   type: 'test'
   ...
 # Subtest: 正常模式產品詳情提供四個供應狀態操作
 ok 273 - 正常模式產品詳情提供四個供應狀態操作
   ---
-  duration_ms: 0.258865
+  duration_ms: 0.336318
   type: 'test'
   ...
 # Subtest: 批量模式點擊整張產品卡即可加入或取消
 ok 274 - 批量模式點擊整張產品卡即可加入或取消
   ---
-  duration_ms: 0.179789
+  duration_ms: 0.218113
   type: 'test'
   ...
 # Subtest: 目前分類支援一次性多選、全選及全不選並保留跨分類選取
 ok 275 - 目前分類支援一次性多選、全選及全不選並保留跨分類選取
   ---
-  duration_ms: 0.160706
+  duration_ms: 0.149371
   type: 'test'
   ...
 # Subtest: 提供紫米快捷操作、售罄獨立分類及清晰狀態卡
 ok 276 - 提供紫米快捷操作、售罄獨立分類及清晰狀態卡
   ---
-  duration_ms: 0.27599
+  duration_ms: 0.240997
   type: 'test'
   ...
 # Subtest: 售罄頁可獨立切換大圖小圖及純文字卡
 ok 277 - 售罄頁可獨立切換大圖小圖及純文字卡
   ---
-  duration_ms: 0.173423
+  duration_ms: 0.221508
   type: 'test'
   ...
 # Subtest: 應用程式路由已接入售罄頁
 ok 278 - 應用程式路由已接入售罄頁
   ---
-  duration_ms: 0.40733
+  duration_ms: 0.400183
   type: 'test'
   ...
 # Subtest: 售罄頁使用正確餐牌後備參數，網絡失敗亦保留可操作頁面
 ok 279 - 售罄頁使用正確餐牌後備參數，網絡失敗亦保留可操作頁面
   ---
-  duration_ms: 0.473445
+  duration_ms: 0.553089
   type: 'test'
   ...
 # Subtest: 售罄產品移出原分類並集中到售罄分類，停售仍留原分類
 ok 280 - 售罄產品移出原分類並集中到售罄分類，停售仍留原分類
   ---
-  duration_ms: 0.211792
+  duration_ms: 0.26298
   type: 'test'
   ...
 # Subtest: 小圖與純文字卡由售罄頁自己消費自適應 Token
 ok 281 - 小圖與純文字卡由售罄頁自己消費自適應 Token
   ---
-  duration_ms: 0.270157
+  duration_ms: 0.262078
   type: 'test'
   ...
 1..281
@@ -2080,7 +2080,7 @@ ok 281 - 小圖與純文字卡由售罄頁自己消費自適應 Token
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 762.088589
+# duration_ms 964.277197
 ```
 
 ## Syntax checks
@@ -2107,7 +2107,7 @@ Running 6 tests using 1 worker
 [4/6] tests/responsive-profile.spec.js:13:3 › responsive profile 1366x768 -> standard
 [5/6] tests/responsive-profile.spec.js:13:3 › responsive profile 1280x800 -> compact
 [6/6] tests/responsive-profile.spec.js:26:1 › 1920 baseline boots after responsive engine integration
-  6 passed (4.1s)
+  6 passed (3.8s)
 PASS tests/responsive-profile.spec.js
 ===== RUN tests/responsive-shell.spec.js =====
 
@@ -2519,7 +2519,7 @@ Running 10 tests using 1 worker
     tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1440x900 
     tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1366x768 
     tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1280x800 
-  5 passed (2.8m)
+  5 passed (2.9m)
 FAIL tests/responsive-shell.spec.js exit=1
 ===== RUN tests/responsive-order.spec.js =====
 
@@ -2856,7 +2856,7 @@ Running 5 tests using 1 worker
 [3/5] tests/responsive-checkout.spec.js:16:3 › checkout controls fit 1440x900
 [4/5] tests/responsive-checkout.spec.js:16:3 › checkout controls fit 1366x768
 [5/5] tests/responsive-checkout.spec.js:16:3 › checkout controls fit 1280x800
-  5 passed (5.2s)
+  5 passed (5.7s)
 PASS tests/responsive-checkout.spec.js
 ===== RUN tests/responsive-secondary-pages.spec.js =====
 
@@ -2873,67 +2873,9 @@ Running 20 tests using 1 worker
 [9/20] tests/responsive-secondary-pages.spec.js:24:5 › dine fits 1366x768
 [10/20] tests/responsive-secondary-pages.spec.js:24:5 › dine fits 1280x800
 [11/20] tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1920x1080
-[12/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1920x1080 (retry #1)
-  1) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1920x1080 ────────────────────────
-
-    Error: soldout iframe not loaded
-
-      14 |   const re=new RegExp(`pages/${route}/index\\.html`);
-      15 |   const frame=page.frame({url:re})||page.frames().find(f=>re.test(f.url()));
-    > 16 |   if(!frame)throw new Error(`${route} iframe not loaded`);
-         |                   ^
-      17 |   await expect(frame.locator(`body[data-page="${route}"]`)).toBeVisible();
-      18 |   await expect(frame.locator('#app')).toBeVisible();
-      19 |   return frame;
-        at routeFrame (/home/runner/work/morefunos-smt/morefunos-smt/tests/responsive-secondary-pages.spec.js:16:19)
-        at /home/runner/work/morefunos-smt/morefunos-smt/tests/responsive-secondary-pages.spec.js:27:19
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/responsive-secondary-pages-soldout-fits-1920x1080/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: test-results/responsive-secondary-pages-soldout-fits-1920x1080/error-context.md
-
-    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/responsive-secondary-pages-soldout-fits-1920x1080/trace.zip
-    Usage:
-
-        npx playwright show-trace test-results/responsive-secondary-pages-soldout-fits-1920x1080/trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
-
-    Error: soldout iframe not loaded
-
-      14 |   const re=new RegExp(`pages/${route}/index\\.html`);
-      15 |   const frame=page.frame({url:re})||page.frames().find(f=>re.test(f.url()));
-    > 16 |   if(!frame)throw new Error(`${route} iframe not loaded`);
-         |                   ^
-      17 |   await expect(frame.locator(`body[data-page="${route}"]`)).toBeVisible();
-      18 |   await expect(frame.locator('#app')).toBeVisible();
-      19 |   return frame;
-        at routeFrame (/home/runner/work/morefunos-smt/morefunos-smt/tests/responsive-secondary-pages.spec.js:16:19)
-        at /home/runner/work/morefunos-smt/morefunos-smt/tests/responsive-secondary-pages.spec.js:27:19
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/responsive-secondary-pages-soldout-fits-1920x1080-retry1/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: test-results/responsive-secondary-pages-soldout-fits-1920x1080-retry1/error-context.md
-
-    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/responsive-secondary-pages-soldout-fits-1920x1080-retry1/trace.zip
-    Usage:
-
-        npx playwright show-trace test-results/responsive-secondary-pages-soldout-fits-1920x1080-retry1/trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-
-[13/20] tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1600x900
-[14/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1600x900 (retry #1)
-  2) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1600x900 ─────────────────────────
+[12/20] tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1600x900
+[13/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1600x900 (retry #1)
+  1) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1600x900 ─────────────────────────
 
     Error: soldout iframe not loaded
 
@@ -2990,40 +2932,10 @@ Running 20 tests using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
 
-[15/20] tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1440x900
-[16/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1440x900 (retry #1)
-  3) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1440x900 ─────────────────────────
-
-    Error: soldout iframe not loaded
-
-      14 |   const re=new RegExp(`pages/${route}/index\\.html`);
-      15 |   const frame=page.frame({url:re})||page.frames().find(f=>re.test(f.url()));
-    > 16 |   if(!frame)throw new Error(`${route} iframe not loaded`);
-         |                   ^
-      17 |   await expect(frame.locator(`body[data-page="${route}"]`)).toBeVisible();
-      18 |   await expect(frame.locator('#app')).toBeVisible();
-      19 |   return frame;
-        at routeFrame (/home/runner/work/morefunos-smt/morefunos-smt/tests/responsive-secondary-pages.spec.js:16:19)
-        at /home/runner/work/morefunos-smt/morefunos-smt/tests/responsive-secondary-pages.spec.js:27:19
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/responsive-secondary-pages-soldout-fits-1440x900/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: test-results/responsive-secondary-pages-soldout-fits-1440x900/error-context.md
-
-    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/responsive-secondary-pages-soldout-fits-1440x900/trace.zip
-    Usage:
-
-        npx playwright show-trace test-results/responsive-secondary-pages-soldout-fits-1440x900/trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-
-[17/20] tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1366x768
-[18/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1366x768 (retry #1)
-  4) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1366x768 ─────────────────────────
+[14/20] tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1440x900
+[15/20] tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1366x768
+[16/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1366x768 (retry #1)
+  2) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1366x768 ─────────────────────────
 
     Error: soldout iframe not loaded
 
@@ -3080,9 +2992,9 @@ Running 20 tests using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
 
-[19/20] tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1280x800
-[20/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1280x800 (retry #1)
-  5) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1280x800 ─────────────────────────
+[17/20] tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1280x800
+[18/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1280x800 (retry #1)
+  3) tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1280x800 ─────────────────────────
 
     Error: soldout iframe not loaded
 
@@ -3110,38 +3022,10 @@ Running 20 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
 
-    Error: soldout iframe not loaded
-
-      14 |   const re=new RegExp(`pages/${route}/index\\.html`);
-      15 |   const frame=page.frame({url:re})||page.frames().find(f=>re.test(f.url()));
-    > 16 |   if(!frame)throw new Error(`${route} iframe not loaded`);
-         |                   ^
-      17 |   await expect(frame.locator(`body[data-page="${route}"]`)).toBeVisible();
-      18 |   await expect(frame.locator('#app')).toBeVisible();
-      19 |   return frame;
-        at routeFrame (/home/runner/work/morefunos-smt/morefunos-smt/tests/responsive-secondary-pages.spec.js:16:19)
-        at /home/runner/work/morefunos-smt/morefunos-smt/tests/responsive-secondary-pages.spec.js:27:19
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    test-results/responsive-secondary-pages-soldout-fits-1280x800-retry1/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: test-results/responsive-secondary-pages-soldout-fits-1280x800-retry1/error-context.md
-
-    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
-    test-results/responsive-secondary-pages-soldout-fits-1280x800-retry1/trace.zip
-    Usage:
-
-        npx playwright show-trace test-results/responsive-secondary-pages-soldout-fits-1280x800-retry1/trace.zip
-
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-
-[21/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1920x1080
-[22/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1920x1080 (retry #1)
-  6) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1920x1080 ───────────────────────────
+[19/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1920x1080
+[20/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1920x1080 (retry #1)
+  4) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1920x1080 ───────────────────────────
 
     Error: more iframe not loaded
 
@@ -3198,9 +3082,9 @@ Running 20 tests using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
 
-[23/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1600x900
-[24/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1600x900 (retry #1)
-  7) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1600x900 ────────────────────────────
+[21/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1600x900
+[22/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1600x900 (retry #1)
+  5) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1600x900 ────────────────────────────
 
     Error: more iframe not loaded
 
@@ -3257,9 +3141,9 @@ Running 20 tests using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
 
-[25/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1440x900
-[26/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1440x900 (retry #1)
-  8) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1440x900 ────────────────────────────
+[23/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1440x900
+[24/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1440x900 (retry #1)
+  6) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1440x900 ────────────────────────────
 
     Error: more iframe not loaded
 
@@ -3316,9 +3200,9 @@ Running 20 tests using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
 
-[27/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1366x768
-[28/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1366x768 (retry #1)
-  9) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1366x768 ────────────────────────────
+[25/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1366x768
+[26/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1366x768 (retry #1)
+  7) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1366x768 ────────────────────────────
 
     Error: more iframe not loaded
 
@@ -3375,9 +3259,9 @@ Running 20 tests using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
 
-[29/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1280x800
-[30/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1280x800 (retry #1)
-  10) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1280x800 ───────────────────────────
+[27/20] tests/responsive-secondary-pages.spec.js:24:5 › more fits 1280x800
+[28/20] (retries) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1280x800 (retry #1)
+  8) tests/responsive-secondary-pages.spec.js:24:5 › more fits 1280x800 ────────────────────────────
 
     Error: more iframe not loaded
 
@@ -3434,19 +3318,17 @@ Running 20 tests using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
 
-  9 failed
-    tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1920x1080 ─────────────────────────
+  7 failed
     tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1600x900 ──────────────────────────
     tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1366x768 ──────────────────────────
-    tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1280x800 ──────────────────────────
     tests/responsive-secondary-pages.spec.js:24:5 › more fits 1920x1080 ────────────────────────────
     tests/responsive-secondary-pages.spec.js:24:5 › more fits 1600x900 ─────────────────────────────
     tests/responsive-secondary-pages.spec.js:24:5 › more fits 1440x900 ─────────────────────────────
     tests/responsive-secondary-pages.spec.js:24:5 › more fits 1366x768 ─────────────────────────────
     tests/responsive-secondary-pages.spec.js:24:5 › more fits 1280x800 ─────────────────────────────
   1 flaky
-    tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1440x900 ──────────────────────────
-  10 passed (38.6s)
+    tests/responsive-secondary-pages.spec.js:24:5 › soldout fits 1280x800 ──────────────────────────
+  12 passed (38.4s)
 FAIL tests/responsive-secondary-pages.spec.js exit=1
 ===== RUN tests/responsive-architecture-guard.spec.js =====
 
@@ -3891,7 +3773,7 @@ Running 7 tests using 1 worker
     tests/responsive-architecture-guard.spec.js:59:1 › soldout product cards cannot define independent fixed geometry 
     tests/responsive-architecture-guard.spec.js:77:1 › shared bottom navigation geometry has a single owner 
     tests/responsive-architecture-guard.spec.js:90:1 › shared shell cannot regress to fixed bottom-nav child geometry 
-  4 passed (3.0s)
+  4 passed (3.1s)
 FAIL tests/responsive-architecture-guard.spec.js exit=1
 ===== RUN tests/stress-responsive-matrix.spec.js =====
 
@@ -3900,10 +3782,7 @@ Running 5 tests using 1 worker
 [1/5] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1920x1080
 [2/5] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1600x900
 [3/5] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1440x900
-[4/5] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1366x768
-[5/5] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1280x800
-  5 passed (2.2m)
-PASS tests/stress-responsive-matrix.spec.js
+TIMEOUT tests/stress-responsive-matrix.spec.js
 ===== RUN tests/dev-preview.spec.js =====
 
 Running 2 tests using 1 worker
@@ -3922,7 +3801,7 @@ Running 12 tests using 1 worker
 
 [1/12] tests/proportional-layout.spec.js:46:3 › order exact visible-row capacity 1920x1080
 TIMEOUT tests/proportional-layout.spec.js
-Browser regression failures: 7
+Browser regression failures: 8
 ```
 
 ### Per-spec summary
@@ -3933,11 +3812,11 @@ FAIL tests/responsive-order.spec.js exit=1
 PASS tests/responsive-checkout.spec.js
 FAIL tests/responsive-secondary-pages.spec.js exit=1
 FAIL tests/responsive-architecture-guard.spec.js exit=1
-PASS tests/stress-responsive-matrix.spec.js
+TIMEOUT tests/stress-responsive-matrix.spec.js
 TIMEOUT tests/dev-preview.spec.js
 TIMEOUT tests/responsive-visual-contract.spec.js
 TIMEOUT tests/proportional-layout.spec.js
-Browser regression failures: 7
+Browser regression failures: 8
 ```
 
 NPM_STATUS=0
