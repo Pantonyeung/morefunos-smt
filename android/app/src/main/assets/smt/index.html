@@ -44,6 +44,7 @@ function onBridgeMessage(event){
     if(data.ok)request.resolve(data.result);else request.reject(new Error(data?.error?.message||'Bridge call failed'));
   }catch(error){el('log').textContent=String(error?.stack||error);}
 }
+window.__moreFunLegacyBridgeReceive=response=>onBridgeMessage({data:response});
 if(window.MoreFunNative)window.MoreFunNative.onmessage=onBridgeMessage;
 function write(id,text,ok=true){const node=el(id);node.textContent=text;node.className=ok?'ok':'bad'}
 async function run(){
