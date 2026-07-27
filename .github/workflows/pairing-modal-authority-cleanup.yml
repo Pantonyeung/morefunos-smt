@@ -71,8 +71,35 @@ jobs:
           done
           cat /tmp/smt-http.log
           exit 1
-      - name: Browser regression
-        run: npm run qa:browser
+      - name: Browser regression by spec
+        run: |
+          set +e
+          failures=0
+          specs=(
+            tests/responsive-profile.spec.js
+            tests/responsive-shell.spec.js
+            tests/responsive-order.spec.js
+            tests/responsive-checkout.spec.js
+            tests/responsive-secondary-pages.spec.js
+            tests/responsive-architecture-guard.spec.js
+            tests/stress-responsive-matrix.spec.js
+            tests/dev-preview.spec.js
+            tests/responsive-visual-contract.spec.js
+            tests/proportional-layout.spec.js
+          )
+          for spec in "${specs[@]}"; do
+            echo "===== RUN $spec ====="
+            npx playwright test "$spec" --reporter=line
+            status=$?
+            if [ $status -ne 0 ]; then
+              echo "FAIL $spec"
+              failures=$((failures+1))
+            else
+              echo "PASS $spec"
+            fi
+          done
+          echo "Browser regression failures: $failures"
+          test $failures -eq 0
       - name: Confirm clean verified head
         run: |
           if ! git diff --quiet; then
