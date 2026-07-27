@@ -34,25 +34,11 @@ jobs:
       - name: Apply guarded V9 Product Card legacy cleanup
         run: node scripts/cleanup-order-page-product-card-legacy.mjs
 
-      - name: Migrate Product Card regression assertions to final authority
+      - name: Verify Product Card regression assertions use final authority
         run: |
           node <<'NODE'
           const fs=require('node:fs');
-          const file='tests/order-edit-flow.test.mjs';
-          let text=fs.readFileSync(file,'utf8');
-          const cartLine="const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');";
-          const productLine="const productCss = await readFile(new URL('../pages/order/product-card.css', import.meta.url), 'utf8');";
-          if(!text.includes(productLine)){
-            if(!text.includes(cartLine))throw new Error('Cart CSS test authority line missing');
-            text=text.replace(cartLine,cartLine+'\n'+productLine);
-          }
-          const replacements=[
-            ["assert.match(css,/\\.product-card\\.large\\s*\\{[^}]*min-height:/);", "assert.match(productCss,/\\.product-card\\.large\\s*\\{[^}]*min-height:/);"],
-            ["assert.match(css,/\\.product-card\\.sold-out/);", "assert.match(productCss,/\\.product-card\\.sold-out/);"],
-            ["assert.match(css,/\\.product-card\\.paused/);", "assert.match(productCss,/\\.product-card\\.paused/);"],
-            ["assert.doesNotMatch(css,/\\.product-card\\.sold-out[^}]*grayscale/);", "assert.doesNotMatch(productCss,/\\.product-card\\.sold-out[^}]*grayscale/);"],
-          ];
-          for(const [from,to] of replacements){if(text.includes(from))text=text.replace(from,to);}
+          const text=fs.readFileSync('tests/order-edit-flow.test.mjs','utf8');
           const required=[
             "const productCss = await readFile(new URL('../pages/order/product-card.css', import.meta.url), 'utf8');",
             "assert.match(productCss,/\\.product-card\\.large\\s*\\{[^}]*min-height:/);",
@@ -61,7 +47,13 @@ jobs:
             "assert.doesNotMatch(productCss,/\\.product-card\\.sold-out[^}]*grayscale/);",
           ];
           for(const needle of required){if(!text.includes(needle))throw new Error('Product Card regression authority missing: '+needle);}
-          fs.writeFileSync(file,text,'utf8');
+          const forbidden=[
+            "assert.match(css,/\\.product-card\\.large",
+            "assert.match(css,/\\.product-card\\.sold-out",
+            "assert.match(css,/\\.product-card\\.paused",
+            "assert.doesNotMatch(css,/\\.product-card\\.sold-out",
+          ];
+          for(const needle of forbidden){if(text.includes(needle))throw new Error('Legacy page.css Product Card assertion remains: '+needle);}
           NODE
 
       - name: Assert V9 legacy selectors are absent
@@ -80,14 +72,10 @@ jobs:
       - name: Full Node regression
         run: node --test tests/*.test.mjs
 
-      - name: Commit only verified V9 cleanup output
+      - name: Confirm clean verified head
         run: |
-          git config user.name 'MoreFun Product Card Authority QA'
-          git config user.email 'actions@users.noreply.github.com'
-          git add pages/order/page.css tests/order-edit-flow.test.mjs
-          if git diff --cached --quiet; then
-            echo 'No V9 Product Card cleanup change required.'
-            exit 0
+          if ! git diff --quiet; then
+            echo 'Verified V9 cleanup head must be clean before merge.'
+            git diff -- pages/order/page.css tests/order-edit-flow.test.mjs
+            exit 1
           fi
-          git commit -m 'refactor(order): physically remove V9 Product Card legacy authority'
-          git push origin HEAD:${{ github.head_ref }}
