@@ -16,11 +16,17 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
-      - name: Assert Native Bridge authority
+      - name: Assert Native Bridge authority and Android 6 floor
         run: |
           test "$(find android/app/src/main/java -name MainActivity.kt | wc -l | tr -d ' ')" = "1"
-          ! grep -R "addJavascriptInterface" android/app/src/main/java
-          grep -q "WebViewCompat.addWebMessageListener" android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          test "$(grep -R -l 'addJavascriptInterface' android/app/src/main/java | wc -l | tr -d ' ')" = "1"
+          grep -q 'addJavascriptInterface' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          test -f android/app/src/main/java/hk/morefun/smt/LegacyBridgeAdapter.kt
+          grep -q '@JavascriptInterface' android/app/src/main/java/hk/morefun/smt/LegacyBridgeAdapter.kt
+          grep -q 'WebViewFeature.WEB_MESSAGE_LISTENER' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          grep -q 'WebViewCompat.addWebMessageListener' android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          grep -q 'minSdk = 23' android/app/build.gradle.kts
+          grep -q 'androidx.webkit:webkit:1.15.0' android/app/build.gradle.kts
           grep -q '"device.info"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
           grep -q '"network.status"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
           grep -q '"print.lan.tcp"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
