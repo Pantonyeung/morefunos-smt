@@ -22,6 +22,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
+          show-progress: false
 
       - uses: actions/setup-node@v4
         with:
@@ -47,7 +48,15 @@ jobs:
         run: node scripts/validate-ai-context.mjs
 
       - name: Full Node regression
-        run: node --test tests/*.test.mjs
+        shell: bash
+        run: |
+          set +e
+          node --test tests/*.test.mjs > /tmp/v1-cart-node.log 2>&1
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            grep -E -B 5 -A 16 'not ok|AssertionError|ERR_ASSERTION|failureType|error:' /tmp/v1-cart-node.log || tail -n 180 /tmp/v1-cart-node.log
+          fi
+          exit "$status"
 
       - name: Commit only verified cleanup output
         run: |
