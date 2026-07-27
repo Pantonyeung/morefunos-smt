@@ -23,7 +23,7 @@
   line-height:1.15;
   font-weight:900;
   text-align:center;
-  overflow:hidden;
+  overflow:visible;
 }
 
 .drink-choice-card>span:not(.drink-choice-img){
@@ -31,6 +31,7 @@
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+  font-weight:950;
 }
 
 .drink-choice-card.is-image{
@@ -94,6 +95,17 @@
   background:var(--orange-soft);
   border-color:#f0a578;
   box-shadow:inset 0 0 0 1px #f0a578,var(--lift);
+}
+
+.drink-choice-card.selected::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-11px;
+  transform:translateX(-50%);
+  border:7px solid transparent;
+  border-bottom-color:var(--orange);
+  pointer-events:none;
 }
 
 .drink-choice-count{
