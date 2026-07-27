@@ -30,6 +30,24 @@ jobs:
         run: node --test tests/pairing-modal-visual-authority.test.mjs
       - name: Apply guarded Pairing Modal legacy cleanup
         run: node scripts/cleanup-order-page-pairing-modal-legacy.mjs
+      - name: Migrate Pairing regression assertions to final authority
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const file='tests/order-edit-flow.test.mjs';
+          let text=fs.readFileSync(file,'utf8');
+          const drinkLine="const drinkCss = await readFile(new URL('../pages/order/drink-card.css', import.meta.url), 'utf8');";
+          const pairingLine="const pairingCss = await readFile(new URL('../pages/order/pairing-modal.css', import.meta.url), 'utf8');";
+          if(!text.includes(pairingLine)){
+            if(!text.includes(drinkLine))throw new Error('Drink CSS test authority line missing');
+            text=text.replace(drinkLine,drinkLine+'\n'+pairingLine);
+          }
+          text=text.replace("assert.match(css,/\\.link-candidates\\s*\\{[^}]*grid-template-columns:\\s*repeat\\(3/);","assert.match(pairingCss,/\\.specified-link-card \\.link-candidates\\s*\\{[^}]*grid-template-columns:repeat\\(3/);");
+          text=text.replace("assert.match(css,/\\.specified-link-card/);","assert.match(pairingCss,/\\.specified-link-card/);");
+          const required=[pairingLine,"assert.match(pairingCss,/\\.specified-link-card \\.link-candidates\\s*\\{[^}]*grid-template-columns:repeat\\(3/);","assert.match(pairingCss,/\\.specified-link-card/);"];
+          for(const needle of required){if(!text.includes(needle))throw new Error('Pairing regression authority missing: '+needle);}
+          fs.writeFileSync(file,text,'utf8');
+          NODE
       - name: Assert Pairing legacy selectors are absent
         run: |
           if grep -En '\.specified-link-card|\.pairing-group-tabs|\.pairing-body|\.combo-editor-card|\.combo-help|\.combo-role|\.combo-candidates|\.combo-actions|\.drink-link-candidates' pages/order/page.css; then
@@ -46,7 +64,7 @@ jobs:
         run: |
           git config user.name 'MoreFun Pairing Authority QA'
           git config user.email 'actions@users.noreply.github.com'
-          git add pages/order/page.css
+          git add pages/order/page.css tests/order-edit-flow.test.mjs
           if git diff --cached --quiet; then
             echo 'No Pairing cleanup change required.'
             exit 0
