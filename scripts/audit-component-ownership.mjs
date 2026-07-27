@@ -201,9 +201,9 @@ const checks=[
 const knownMigrations=[
   {
     id:'V1_CART_INTERNAL_VISUAL_AUTHORITY',
-    files:['pages/order/page.css','pages/order/cart.css'],
+    files:['pages/order/page.css'],
     needles:['.cart-row','.cart-img','.cart-actions','.pending-area','.cart footer'],
-    note:'page.css legacy cart internals are frozen by policy; cart.css is the final authority; legacy rules may only be removed, never extended'
+    note:'cart.css is the final authority; only page.css is scanned for remaining legacy Cart debt'
   },
   {
     id:'V2_DRINK_CARD_LEGACY_PAGE_CSS',
