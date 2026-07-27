@@ -11,10 +11,13 @@
 | `app-shell.css` | Global Status Bar／Global Bottom Navigation／Shell Overlay 的唯一 Visual Authority | responsive tokens |
 | `shared/status-actions.js` | Global Page Actions descriptor registry／Shell action trigger | page descriptors |
 | `shared/page-bridge.js` | Page-ready、navigation、render-time action registration bridge | parent shell |
-| `pages/order/index.html` | 點單DOM入口 | page.js、page.css、cart.css |
+| `pages/order/index.html` | 點單DOM入口 | page.js、page.css、cart.css、drink-card.css、product-card.css、pairing-modal.css |
 | `pages/order/page.js` | Order Page DOM、Surface Render、事件、modal、購物車、飲品、配對、待處理、餐牌啟動 | data、menu-api、domain、runtime、dine-domain |
-| `pages/order/page.css` | Order Page Composition、Product／Drink Card Visual；不得再成為 Cart internal Visual Authority | page.js class names、Adaptive tokens |
+| `pages/order/page.css` | Order Page Composition、一般頁面／非獨立 Component 視覺；Cart／Drink Card／Product Card／Pairing Modal 舊 internal 規則屬 frozen migration debt，只可刪除 | page.js class names、Adaptive tokens |
 | `pages/order/cart.css` | Cart internal／Required／Quick Drawer 容器 Visual Authority | page.js class names、Adaptive cart tokens |
+| `pages/order/drink-card.css` | Drink Choice Card internal Visual Authority | page.js::drinkChoiceCard、context class/token |
+| `pages/order/product-card.css` | Product Card internal Visual Authority | page.js::productCard、adaptive product row/readability tokens |
+| `pages/order/pairing-modal.css` | 指定配對／套餐修改 Task Modal bounded layout Visual Authority | page.js、viewport bounds、pairing data |
 | `pages/order/order-domain.js` | Cart View、Service Mode、Packaging Pricing、組合等 Business Truth | 無DOM |
 | `pages/order/page-data.js` | catalog、drink、pending示範資料 | page.js |
 | `pages/order/menu-api.js` | Firebase RTDB餐牌讀取、正規化、規則合併、快取及離線回退 | `public/catalogV1`、page-data後備 |
@@ -32,8 +35,8 @@
 | `shared/order-identity.js` | 同步歷史及活躍堂食每日三位顯示流水、早上五時營業日、永久訂單識別 | 純資料操作 |
 | `shared/runtime.js` | 狀態及初始值 | local storage |
 | `shared/adaptive-layout.js` | Adaptive 數值／Token 計算；不得成為 Component Visual Authority | viewport、Component measurements |
-| `shared/adaptive-layout.css` | 過渡期 Token／shared geometry；不得新增 Page Component internal selector | adaptive tokens |
-| `shared/responsive-pages.css` | 過渡期 shared profile rules；逐頁遷移至 Page CSS | responsive tokens |
+| `shared/adaptive-layout.css` | Token Provider；不得新增 Page Component internal selector | adaptive tokens |
+| `shared/responsive-pages.css` | cross-page profile boundary；不得重新接管各 Page Component internal visual | responsive tokens |
 | `tests/order-edit-flow.test.mjs` | UI、CSS及domain回歸 | order頁檔案 |
 | `tests/menu-api.test.mjs` | 真實餐牌合約、映射及離線回歸 | menu-api |
 
@@ -55,9 +58,10 @@
 | 功能 | UI／函數 | 驗證 |
 |---|---|---|
 | 購物車 | `cartRows`, `cartLineRow`, `changeCartQuantity`, `openProduct`；內部 Visual=`cart.css` | cart tests |
-| 快捷飲品 | `quickDrinks`, `drinkChoiceCard`, `openDrink`, `drinkModifierModal`, `applyDrink` | drink tests |
+| 快捷飲品 | `quickDrinks`, `drinkChoiceCard`, `openDrink`, `drinkModifierModal`, `applyDrink`；Card Visual=`drink-card.css` | drink tests／authority contract |
+| 產品卡 | `productCard`；Internal Visual=`product-card.css` | product card authority contract／responsive browser matrix |
 | 產品修改 | `productDetailModal`, `detailGroups`, `applyProduct` | edit flow |
-| 指定配對 | `pairingGroupCount`, `specifiedLinkModal`, pairing actions | dynamic A–Z tests |
+| 指定配對 | `pairingGroupCount`, `specifiedLinkModal`, pairing actions；Task Modal Visual=`pairing-modal.css` | dynamic A–Z tests／pairing modal contract |
 | 套餐父項 | `combineRiceballSet`, `comboEditorModal`, `dissolveRiceballSet` | combo domain／UI tests |
 | 統一整理 | `completionModal`, `complete-group`, `linkup-all` | required／link tests |
 | 待處理 | `pendingPanel`, `pendingDetailModal`, `pendingReviewModal` | review tests |
