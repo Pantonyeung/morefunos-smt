@@ -20,21 +20,23 @@
 ## 專案身份與真相順序
 
 - 產品：磨飯 SMT 餐飲 POS
-- 分支：`feat/smt-order-page-v1`
-- 程式標籤：`order-v1-31`
+- 分支：`smt-functional-completeness-v1`
+- 現行工程 baseline：`smt-functional-completeness-v1`
+- 點單程式標籤：`order-v1-31`
 - 資料架構：Firebase RTDB 為唯一即時餐牌/API來源；Google Sheet只作記錄投影；Apps Script已退出SMT運行鏈路。
-- 目標：先完成可運作點單垂直鏈路
-- 自動測試基準：220/220；歷史報表、混合付款與正負差額對數、現金找續、audit 異常及三位流水測試通過
-- 實機：iPad／Sunmi T2S 最終 Lock 未完成
+- 目標：完成可長期維護、可實機驗收的完整 SMT POS；1920×1080 先封板，其他尺寸由同一 Adaptive Application 回歸。
+- 最近已證明自動基準：Authority／Syntax／Node 248/248 曾通過；最新 HEAD 必須重新取得 Browser QA 證據，未重跑不得冒稱全綠。
+- 實機：iPad／Sunmi T2S 最終 Lock 未完成。
+- SMM：SMT 手機衍生介面；共用 Domain、資料模型、Business Rule、訂單／付款／同步核心及 API Contract。SMM 不直接實體打印，打印工作交具打印能力的 SMT／打印端執行並回傳結果。
 
-真相順序：當前最新明確確認 → 本文件現行決策 → Current Lock → 最新程式／測試 → 舊 log／效果圖。衝突舊資料標記 `SUPERSEDED`；安全、離線、資料完整及繁中不可跌穿基線。
+真相順序：Development Standard／Ownership Registry → 當前最新明確確認 → Decision Ledger → Current Lock → 最新程式／測試 → 舊 log／效果圖。衝突舊資料標記 `SUPERSEDED`；安全、離線、資料完整及繁中不可跌穿基線。
 
 ## 現行決策
 
 ### 畫布與卡片
 
 - 頂欄、底部導航、待補及結帳固定；購物車、產品區及卡身各自滾動。底部導航選中時圖標連文字使用完整膠囊；分類、頁籤、渠道、付款、來源、模式及主題等文字式選擇沿用同一膠囊語言。
-- T2S 是邏輯比例基準；iPad 按安全區適配，可手動縮放。
+- 1920×1080 是唯一視覺封板模板；其他尺寸不得另建第二套 UI，亦不得用整頁 Scale 代替 Adaptive。
 - 同時只可開一張主卡；新卡先關舊卡；背景、空白不可操作。
 - 頂部來源向下開、箭嘴向上；底部來源向上開、箭嘴向下；左源向右；右源向左。
 
@@ -89,20 +91,27 @@
 
 ## 程式地圖
 
-- `pages/order/page.js`：畫面、卡片、事件、購物車、飲品、配對、待處理。
-- `pages/order/page.css`：固定畫布、定位及視覺。
-- `pages/order/order-domain.js`：數量、接單、30分鐘完成、WhatsApp link。
+- `pages/order/page.js`：Order Page DOM、Surface Render、事件、modal、購物車、飲品、配對、待處理。
+- `pages/order/page.css`：Order Page Composition／一般頁面視覺；不得再成為 Cart、Drink Card、Product Card、Pairing Modal 內部 Visual Authority。
+- `pages/order/cart.css`：Cart internal／Pending／Required／Quick Drawer 容器 Visual Authority。
+- `pages/order/drink-card.css`：Drink Choice Card internal Visual Authority。
+- `pages/order/product-card.css`：Product Card internal Visual Authority。
+- `pages/order/pairing-modal.css`：指定配對／套餐編輯 bounded task layout Visual Authority。
+- `pages/order/order-domain.js`：Cart View、Service Mode、Packaging Pricing、組合等 Business Truth。
 - `pages/order/page-data.js`：產品、飲品、待處理示範資料。
 - `pages/more/page.js`／`more-domain.js`／`print-domain.js`：更多頁六入口、面額盤點及日結反推、本機營運資料、打印設定／格式／工作及安卓橋接合約。
 - `shared/order-identity.js`：每日三位顯示流水、營業日分界、舊編號兼容及永久訂單識別。
 - `pages/dine/page.js`／`dine-domain.js`：堂食枱位、付款、正式提交才開枱及取消點單生命週期。
 - `shared/runtime.js`／`shared/store.js`：本機狀態。
-- `app-loader.js`／`app-shell.css`：viewport及縮放。
+- `app-loader.js`／`app-shell.css`：Global Shell、route、viewport、transaction layer。
+- `shared/adaptive-layout.js`／`shared/adaptive-layout.css`：Adaptive Token／Available Area；不得擁有 Component internal visual。
 - `tests/order-edit-flow.test.mjs`：主要回歸。
 
 ## 完成度真相
 
 程式及自動測試已有、待實機：購物車右欄、圖片開關、單一卡、快捷／普通點單、飲品抽屜、多配置、A–Z配對、待處理核對、付款證明、WhatsApp QR、30分鐘完成、售罄／設備／線上卡、新單提示。
+
+目前進行中：Component Authority migration。V1 Cart 正式 Authority 已切到 `cart.css`，正進行 `page.css` legacy physical removal；之後依次 V2 Drink Card、V9 Product Card、Pairing Modal。未取得最新 HEAD 全量 QA 前不得寫「全部完成」。
 
 外部未完成：真實訂單 API、付款證明上載、安卓原生打印橋接、實體打印機驗收、iPad Safari、Sunmi T2S、產品最終 Lock。實機否定程式時，立即改為「程式有、實機失敗」。
 
