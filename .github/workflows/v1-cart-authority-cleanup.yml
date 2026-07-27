@@ -1,33 +1,26 @@
 name: V1 Cart Authority Cleanup
 
 on:
-  push:
+  pull_request:
     branches:
       - smt-functional-completeness-v1
-    paths:
-      - scripts/cleanup-order-page-cart-legacy.mjs
-      - tests/cleanup-order-page-cart-legacy.test.mjs
-      - tests/cart-visual-authority.test.mjs
-      - pages/order/cart.css
-      - pages/order/index.html
-      - .github/workflows/v1-cart-authority-cleanup.yml
-  workflow_dispatch:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 concurrency:
-  group: v1-cart-authority-cleanup
+  group: v1-cart-authority-cleanup-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
   cleanup:
-    if: github.actor != 'github-actions[bot]'
+    if: github.head_ref == 'v1-cart-legacy-cleanup'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: smt-functional-completeness-v1
+          ref: v1-cart-legacy-cleanup
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
@@ -47,16 +40,17 @@ jobs:
             exit 1
           fi
           node scripts/audit-component-ownership.mjs
+          node scripts/validate-ai-context.mjs
           node --test tests/*.test.mjs
 
-      - name: Commit only the cleaned page stylesheet
+      - name: Commit only verified cleanup output
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name 'MoreFun Cart Authority QA'
+          git config user.email 'actions@users.noreply.github.com'
           git add pages/order/page.css
           if git diff --cached --quiet; then
             echo 'No page.css cleanup change required.'
             exit 0
           fi
           git commit -m 'refactor(order): physically remove V1 cart legacy authority'
-          git push origin HEAD:smt-functional-completeness-v1
+          git push origin HEAD:v1-cart-legacy-cleanup
