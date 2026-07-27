@@ -16,6 +16,18 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
+      - name: Assert Native Bridge authority
+        run: |
+          test "$(find android/app/src/main/java -name MainActivity.kt | wc -l | tr -d ' ')" = "1"
+          ! grep -R "addJavascriptInterface" android/app/src/main/java
+          grep -q "WebViewCompat.addWebMessageListener" android/app/src/main/java/hk/morefun/smt/MainActivity.kt
+          grep -q '"device.info"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+          grep -q '"network.status"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+          grep -q '"print.lan.tcp"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+          ! grep -q '"print.sunmi.native"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+          ! grep -q '"offline.queue"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+          ! grep -q '"update.channel"' android/app/src/main/java/hk/morefun/smt/BridgeProtocol.kt
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
