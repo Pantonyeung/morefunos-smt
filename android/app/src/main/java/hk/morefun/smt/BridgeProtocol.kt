@@ -25,8 +25,7 @@ class BridgeProtocol(private val context: Context) {
                     .put("bridgeVersion", BuildConfig.BRIDGE_VERSION)
                     .put("capabilities", JSONArray(listOf(
                         "device.info",
-                        "network.status",
-                        "print.contract.v1"
+                        "network.status"
                     )))
                 "device.getInfo" -> deviceInfo()
                 "network.getStatus" -> networkStatus()
