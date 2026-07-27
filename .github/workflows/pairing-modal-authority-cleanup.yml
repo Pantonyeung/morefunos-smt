@@ -11,12 +11,13 @@ permissions:
 
 concurrency:
   group: pairing-modal-authority-cleanup-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   cleanup:
     if: startsWith(github.head_ref, 'pairing-modal-legacy-cleanup')
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -89,9 +90,12 @@ jobs:
           )
           for spec in "${specs[@]}"; do
             echo "===== RUN $spec ====="
-            npx playwright test "$spec" --reporter=line
+            timeout --signal=TERM --kill-after=15s 180s npx playwright test "$spec" --reporter=line
             status=$?
-            if [ $status -ne 0 ]; then
+            if [ $status -eq 124 ] || [ $status -eq 137 ]; then
+              echo "TIMEOUT $spec"
+              failures=$((failures+1))
+            elif [ $status -ne 0 ]; then
               echo "FAIL $spec"
               failures=$((failures+1))
             else
