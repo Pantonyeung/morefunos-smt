@@ -4,7 +4,8 @@ import fs from 'node:fs';
 
 const page=fs.readFileSync(new URL('../pages/soldout/page.js',import.meta.url),'utf8');
 const css=fs.readFileSync(new URL('../pages/soldout/page.css',import.meta.url),'utf8');
-const adaptive=fs.readFileSync(new URL('../shared/adaptive-layout.css',import.meta.url),'utf8');
+const responsive=fs.readFileSync(new URL('../pages/soldout/responsive.css',import.meta.url),'utf8');
+const sharedAdaptive=fs.readFileSync(new URL('../shared/adaptive-layout.css',import.meta.url),'utf8');
 const loader=fs.readFileSync(new URL('../app-loader.js',import.meta.url),'utf8');
 
 test('售罄頁沿用產品分類與三種點單卡模板',()=>{
@@ -77,8 +78,10 @@ test('售罄產品移出原分類並集中到售罄分類，停售仍留原分�
   assert.match(page,/statusOf\(p\.id\)!=='soldout'&&p\.category===category/);
 });
 
-test('小圖與純文字卡共用點單頁自適應卡尺寸模型',()=>{
+test('小圖與純文字卡由售罄頁自己消費自適應 Token',()=>{
   assert.match(css,/\.supply-product\.large,\.supply-product\.small,\.supply-product\.text\{display:block/);
-  assert.match(adaptive,/body\[data-page="soldout"\] \.supply-product\.small \.card-open\{[\s\S]*?grid-template-columns:min\(calc\(var\(--adaptive-product-row-small\) - 18px\),82px\)/);
-  assert.match(adaptive,/body\[data-page="soldout"\] \.supply-product\.text \.card-open\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
+  assert.match(css,/\.supply-product\.small \.card-open\{grid-template-columns:min\(calc\(var\(--adaptive-product-row-small\) - 18px\),82px\) minmax\(0,1fr\) auto/);
+  assert.match(css,/\.supply-product\.text \.card-open\{grid-template-columns:minmax\(0,1fr\) auto/);
+  assert.match(responsive,/:root\[data-responsive-profile="compact"\] \.soldout-grid/);
+  assert.equal(sharedAdaptive.includes('body[data-page="soldout"]'),false,'shared adaptive core must not regain Soldout component ownership');
 });
