@@ -5,6 +5,7 @@ import {acceptPendingOrder,combineRiceballSet,dissolveRiceballSet,completeExpire
 
 const page = await readFile(new URL('../pages/order/page.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../pages/order/page.css', import.meta.url), 'utf8');
+const cartCss = await readFile(new URL('../pages/order/cart.css', import.meta.url), 'utf8');
 
 test('quick mode uses a direct-add product action', () => {
   assert.match(page, /quick-add-product/);
@@ -118,7 +119,7 @@ test('shell uses a fixed T2S canvas fitted inside both viewport dimensions', asy
 test('root height chain and scroll regions keep both bars fixed', async () => {
   const base=await readFile(new URL('../shared/page-base.css',import.meta.url),'utf8');
   assert.match(base,/#app\{width:100%;height:100%;min-width:0;min-height:0;overflow:hidden\}/);
-  assert.match(css,/\.cart-list\{[^}]*min-height:0[^}]*overflow-y:auto/);
+  assert.match(cartCss,/\.cart-list\{[^}]*min-height:0[^}]*overflow-y:auto/);
   assert.match(css,/\.products\{[^}]*min-height:0[^}]*overflow-y:auto/);
 });
 
@@ -148,8 +149,8 @@ test('large product grid reserves complete rows and never overlaps cards', () =>
 
 test('collapsed quick drinks use the approved centred pill above navigation', () => {
   assert.match(page,/快捷飲品<\/span><em>待補/);
-  assert.match(css,/\.quick-drawer-handle\s*\{[^}]*left:\s*50%[^}]*transform:\s*translateX\(-50%\)/);
-  assert.match(css,/\.quick-drawer-panel\s*\{[^}]*position:\s*absolute[^}]*bottom:\s*44px/);
+  assert.match(cartCss,/\.quick-drawer-handle\s*\{[^}]*left:\s*50%[^}]*transform:\s*translateX\(-50%\)/);
+  assert.match(cartCss,/\.quick-drawer-panel\s*\{[^}]*position:\s*absolute[^}]*bottom:\s*44px/);
 });
 
 test('operational surfaces include sold-out preview and new-order toast', () => {
@@ -238,7 +239,7 @@ test('pending verification uses start review then confirm order wording', () => 
 
 test('cart locks price and quantity-edit controls into dedicated regions',()=>{
   assert.match(page,/cart-price/);assert.match(page,/cart-actions/);
-  assert.match(css,/\.cart-price\s*\{/);assert.match(css,/\.cart-actions\s*\{/);
+  assert.match(cartCss,/\.cart-price\s*\{/);assert.match(cartCss,/\.cart-actions\s*\{/);
   assert.match(page,/相同配置合併/);assert.match(page,/逐項顯示/);
 });
 
@@ -254,9 +255,9 @@ test('specified pairing candidates use a three-column text-card grid',()=>{
 });
 
 test('cart keeps price flush right and actions aligned with the image',()=>{
-  assert.match(css,/\.cart-price\s*\{[^}]*justify-self:\s*end/);
-  assert.match(css,/grid-template-areas:\s*"seq image copy price"\s*"seq image copy actions"/);
-  assert.match(css,/\.cart-copy strong\s*\{[^}]*font-size:/);
+  assert.match(cartCss,/\.cart-price\s*\{[^}]*justify-self:\s*end/);
+  assert.match(cartCss,/grid-template-areas:\s*"seq image copy price"\s*"seq image copy actions"/);
+  assert.match(cartCss,/\.cart-copy strong\s*\{[^}]*font-size:/);
 });
 
 test('首次渲染由共用函數提供待處理數量給頂欄及導航',()=>{
