@@ -131,6 +131,10 @@ Repo 可以有 `.spec.js` 但冇 dependency/browser/server/workflow，實際完�
 不可兩條 workflow 同時管理同一 Browser Matrix。
 **規則：正式 browser QA 只歸 `qa-runtime-phase3.yml`。**
 
+### K-15｜舊 PASS Report 不等於最新 HEAD PASS
+正式 branch 可以在最後一份 QA report 之後繼續前進；如果接手者只見到 `RESULT=PASS` 而冇比較 report 內的 `Commit:` 與目前 branch HEAD，會將未驗證的新改動誤當已通過。
+**規則：任何「最新 QA 已通過」聲明前，必須確認 `QA report Commit == 當前驗證目標 commit / branch HEAD`；不一致時只能寫「舊 baseline PASS／新改動待驗」。**
+
 ## 4. 當前 Migration Debt
 
 - V1 Cart legacy rules in `pages/order/page.css`：只可刪，不可再改。
@@ -154,4 +158,5 @@ Repo 可以有 `.spec.js` 但冇 dependency/browser/server/workflow，實際完�
 3. 本文件；
 4. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`；
 5. 正式 branch = `smt-functional-completeness-v1`；
-6. fresh-read 正式 Runtime，不依賴聊天摘要取代現碼。
+6. fresh-read 正式 Runtime，不依賴聊天摘要取代現碼；
+7. QA report 內 `Commit:` 必須與本次驗證目標對齊，否則不得把舊 PASS 當最新 PASS。
