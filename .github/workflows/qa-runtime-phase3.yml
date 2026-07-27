@@ -4,24 +4,26 @@ on:
     branches: [smt-functional-completeness-v1]
     paths:
       - '.github/workflows/qa-runtime-phase3.yml'
+      - 'package.json'
+      - 'playwright.config.cjs'
       - 'scripts/audit-component-ownership.mjs'
       - 'tests/**.test.mjs'
-      - 'pages/order/index.html'
-      - 'pages/order/page.css'
-      - 'pages/order/adaptive.css'
-      - 'pages/order/cart.css'
-      - 'pages/order/drink-card.css'
-      - 'pages/order/product-card.css'
-      - 'pages/order/pairing-modal.css'
-      - 'shared/adaptive-layout.css'
-      - 'shared/adaptive-layout.js'
-      - 'shared/responsive-pages.css'
-      - 'shared/page-base.css'
+      - 'tests/**/*.spec.js'
+      - 'app-loader.js'
+      - 'app-shell.css'
+      - 'pages/order/**'
+      - 'pages/orders/**'
+      - 'pages/dine/**'
+      - 'pages/soldout/**'
+      - 'pages/more/**'
+      - 'shared/**/*.css'
+      - 'shared/**/*.js'
 permissions:
   contents: write
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,9 +31,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install QA dependencies
+        run: npm install --no-package-lock
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start static SMT server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/morefun-smt-http.log 2>&1 &
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/morefun-smt-http.log
+          exit 1
       - name: Enforce component ownership boundaries
         run: node scripts/audit-component-ownership.mjs
-      - name: Run regression suite and syntax checks
+      - name: Run full regression suite
         shell: bash
         run: |
           set +e
@@ -62,20 +77,41 @@ jobs:
             done
             echo '```'
             echo
+            echo '## Playwright responsive browser matrix'
+            echo '```text'
+            npm run qa:browser
+            BROWSER_STATUS=$?
+            echo '```'
+            echo
             echo "AUDIT_STATUS=$AUDIT_STATUS"
             echo "TEST_STATUS=$TEST_STATUS"
             echo "SYNTAX_STATUS=$SYNTAX_STATUS"
-            if [ "$AUDIT_STATUS" -eq 0 ] && [ "$TEST_STATUS" -eq 0 ] && [ "$SYNTAX_STATUS" -eq 0 ]; then
+            echo "BROWSER_STATUS=$BROWSER_STATUS"
+            if [ "$AUDIT_STATUS" -eq 0 ] && [ "$TEST_STATUS" -eq 0 ] && [ "$SYNTAX_STATUS" -eq 0 ] && [ "$BROWSER_STATUS" -eq 0 ]; then
               echo 'RESULT=PASS'
             else
               echo 'RESULT=FAIL'
             fi
           } > docs/qa/SMT_RUNTIME_PHASE3_QA.md 2>&1
           cat docs/qa/SMT_RUNTIME_PHASE3_QA.md
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-responsive-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Commit QA report
+        if: always()
         run: |
           git config user.name morefun-qa-bot
           git config user.email actions@users.noreply.github.com
           git add docs/qa/SMT_RUNTIME_PHASE3_QA.md
-          git commit -m 'test(runtime): record phase 3 regression results' || exit 0
+          git commit -m 'test(runtime): record phase 3 regression results' || true
           git push origin HEAD:smt-functional-completeness-v1
+      - name: Enforce final QA result
+        if: always()
+        run: grep -q '^RESULT=PASS$' docs/qa/SMT_RUNTIME_PHASE3_QA.md
