@@ -19,6 +19,11 @@ on:
       - 'pages/more/**'
       - 'shared/**/*.css'
       - 'shared/**/*.js'
+  pull_request:
+    branches: [smt-functional-completeness-v1]
+    paths:
+      - '.browser-qa-trigger'
+      - '.github/workflows/qa-runtime-phase3.yml'
 permissions:
   contents: write
 jobs:
