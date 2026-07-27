@@ -3,6 +3,7 @@
  * -----------------------------------
  * Owns the bounded task-layout contract for specified pairing and combo editing.
  * Header / tabs / footer are fixed surfaces inside the modal; only the body scrolls.
+ * The outer modal keeps overflow visible so the positioned task-pointer is not clipped.
  * This file does not own pairing business rules or cart data.
  */
 .specified-link-card,
@@ -12,7 +13,7 @@
   max-height:min(88dvh,calc(100dvh - 32px));
   display:flex;
   flex-direction:column;
-  overflow:hidden;
+  overflow:visible;
 }
 
 .specified-link-card>header,
