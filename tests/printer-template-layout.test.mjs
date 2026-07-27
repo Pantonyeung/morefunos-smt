@@ -9,6 +9,14 @@ test('layout plan follows arbitrary printer media width instead of fixed presets
   assert.equal(validatePrintLayoutPlan(plan).ok,true);
 });
 
+test('roll media grows vertically with document content',()=>{
+  const shortPlan=buildPrintLayoutPlan({documentType:'receipt',templateId:'r1',lines:['磨飯']},{media:{kind:'roll',widthMm:58},driver:{dotsPerMm:8}});
+  const longPlan=buildPrintLayoutPlan({documentType:'receipt',templateId:'r1',lines:['磨飯','第一項','第二項','第三項']},{media:{kind:'roll',widthMm:58},driver:{dotsPerMm:8}});
+  assert.equal(shortPlan.media.heightMm,0);
+  assert.ok(longPlan.heightDots>shortPlan.heightDots);
+  assert.equal(validatePrintLayoutPlan(longPlan).ok,true);
+});
+
 test('CJK characters consume wider layout units and wrap predictably',()=>{
   assert.deepEqual(wrapPrintText('AB磨飯CD',6),['AB磨飯','CD']);
 });
