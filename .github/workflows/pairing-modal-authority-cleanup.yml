@@ -57,7 +57,7 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: Install browser QA dependencies
         run: |
-          npm ci
+          npm install --no-audit --no-fund
           npx playwright install --with-deps chromium
       - name: Start SMT static QA server
         run: |
