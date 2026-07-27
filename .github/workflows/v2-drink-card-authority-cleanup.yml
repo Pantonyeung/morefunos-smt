@@ -34,6 +34,31 @@ jobs:
       - name: Apply guarded V2 Drink Card legacy cleanup
         run: node scripts/cleanup-order-page-drink-card-legacy.mjs
 
+      - name: Verify Drink Card regression assertions use final authority
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const text=fs.readFileSync('tests/order-edit-flow.test.mjs','utf8');
+          const required=[
+            "const drinkCss = await readFile(new URL('../pages/order/drink-card.css', import.meta.url), 'utf8');",
+            "assert.match(drinkCss,/\\.drink-card--drawer/);",
+            "assert.match(drinkCss,/\\.drink-choice-card\\.selected::before/);",
+            "assert.match(drinkCss,/\\.drink-card--detail/);",
+            "assert.match(drinkCss,/\\.drink-card--completion/);",
+            "assert.match(drinkCss,/\\.drink-choice-count/);",
+          ];
+          for(const needle of required){if(!text.includes(needle))throw new Error('Drink Card regression authority missing: '+needle);}
+          const forbidden=[
+            "assert.match(css,/\\.drink-choice-card",
+            "assert.match(css,/\\.drink-choice-img",
+            "assert.match(css,/\\.drink-choice-count",
+            "assert.match(css,/\\.drink-card--drawer",
+            "assert.match(css,/\\.drink-card--detail",
+            "assert.match(css,/\\.drink-card--completion",
+          ];
+          for(const needle of forbidden){if(text.includes(needle))throw new Error('Legacy page.css Drink Card assertion remains: '+needle);}
+          NODE
+
       - name: Assert V2 legacy selectors are absent
         run: |
           if grep -En '\.drink-choice-card|\.drink-choice-img|\.drink-choice-count|\.drink-card--drawer|\.drink-card--detail|\.drink-card--completion' pages/order/page.css; then
@@ -50,14 +75,10 @@ jobs:
       - name: Full Node regression
         run: node --test tests/*.test.mjs
 
-      - name: Commit only verified V2 cleanup output
+      - name: Confirm clean verified head
         run: |
-          git config user.name 'MoreFun Drink Card Authority QA'
-          git config user.email 'actions@users.noreply.github.com'
-          git add pages/order/page.css
-          if git diff --cached --quiet; then
-            echo 'No page.css Drink Card cleanup change required.'
-            exit 0
+          if ! git diff --quiet; then
+            echo 'Verified V2 cleanup head must be clean before merge.'
+            git diff -- pages/order/page.css tests/order-edit-flow.test.mjs
+            exit 1
           fi
-          git commit -m 'refactor(order): physically remove V2 Drink Card legacy authority'
-          git push origin HEAD:${{ github.head_ref }}
