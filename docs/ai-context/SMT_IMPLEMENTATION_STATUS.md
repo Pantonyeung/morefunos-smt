@@ -1,27 +1,31 @@
 # SMT 現行實作狀態（壓縮真相）
 
-基準：`order-v1-31`／2026-07-22。
+基準：`smt-functional-completeness-v1`／2026-07-27。
 
-最新營運核心：歷史日期報表、渠道／付款獨立分拆、混合付款與正負差額對數、現金找續兼容、audit 異常、商品分析及本機同步資料三位每日流水已接通；堂食正式落單即鎖號並帶入打印工作。完整自動測試 220／220通過；跨實體終端原子派號、安卓原生橋接、實體出紙與 iPad／Sunmi T2S 視覺待驗收。
+最新工程狀態：Global Shell、Authority Model、Adaptive／Responsive 單一責任已收口；Drink Card／Product Card／Cart Marker／Pairing Task Modal 已切換至正式 Component Authority。最近一份**已證明**自動化 baseline 為 Ownership Audit PASS、Node tests `248/248 PASS`、Syntax PASS；Browser Playwright 五尺寸矩陣已接入永久 QA pipeline，但最新 QA report `Commit:` 尚未追上目前 branch HEAD，因此 Browser Matrix 暫只可標「pipeline 已建立／最新結果待證實」。iPad／Sunmi T2S 實機視覺、真實打印及 API 仍待驗收。
+
+> QA Freshness Hard Rule：任何「最新 QA PASS」聲明前，必須確認 `docs/qa/SMT_RUNTIME_PHASE3_QA.md` 內 `Commit:` 與本次驗證目標 commit／branch HEAD 對齊。舊 report PASS 不等於新 HEAD PASS。
 
 | 能力 | 程式 | 自動測試 | iPad／T2S | 產品 Lock |
 |---|---|---|---|---|
-| 固定畫布及內部滾動 | 已實作 | 有檢查 | 待重驗 | 未 Lock |
-| 單一卡／背景阻擋／來源箭嘴 | 已實作 | 通過 | 待逐卡重驗 | 未 Lock |
-| 購物車分組、圖片、右欄 | 已實作 | 通過 | 待重驗 | 未 Lock |
+| 固定畫布及內部滾動 | 已實作 | Node／契約有檢查；Browser Matrix 已接 pipeline，最新 report 待追 HEAD | 待重驗 | 未 Lock |
+| 單一卡／背景阻擋／來源箭嘴 | 已實作 | Node 通過；Pairing bounded modal contract 已建立 | 待逐卡重驗 | 未 Lock |
+| 購物車分組、圖片、右欄 | 已實作；`cart.css` 為正式 internal Visual Authority | Authority／Cart domain／Adaptive contract 通過；V1 legacy 仍待物理移除 | 待重驗 | 未 Lock |
+| Cart 外／堂＋序號 Marker | Marker = Cart Image × 0.9；Adaptive 不再用 cart height 二次縮細 1920 | Contract 通過 | 待 1920／T2S 視覺確認 | 未 Lock |
 | 普通／快捷點單 | 已實作 | 通過 | 待重驗 | 未 Lock |
-| 快捷飲品抽屜、排序、多配置 | 已實作 | 通過 | 待重驗 | 未 Lock |
+| Product Card 大圖／小圖／文字 | 正式 Visual Authority = `pages/order/product-card.css`；圖片約 70% + contain | Authority contract 通過；V9 legacy 待刪 | 待 1920／1280 回歸 | 未 Lock |
+| 快捷飲品抽屜、排序、多配置 | 已實作；Drink Card 正式 Authority = `pages/order/drink-card.css` | Authority／Required flow 通過；V2 legacy 待刪 | 待重驗 | 未 Lock |
 | Required／Optional／Link Up | 已實作 | 通過 | 待業務驗收 | 未 Lock |
 | A–Z 動態指定配對 | 已實作 | 通過 | 待業務驗收 | 未 Lock |
 | 飯團套餐父項／欠飲品／快捷飲品 | 已實作 | 通過 | 待業務驗收 | 未 Lock |
-| 套餐修改及拆開重計價 | 已實作 | 通過 | 待實機驗收 | 未 Lock |
-| Firebase RTDB 餐牌／售罄 | 已接入（直接 GET `public/catalogV1`） | 5 項通過 | 待 Firebase rules／實機驗收 | 未 Lock |
+| 套餐修改及拆開重計價 | 已實作；Pairing Task Modal bounded layout 已收口 | 通過；legacy page.css 仍待刪／縮減 | 待實機驗收 | 未 Lock |
+| Firebase RTDB 餐牌／售罄 | 已接入（直接 GET `public/catalogV1`） | 相關測試通過 | 待 Firebase rules／實機驗收 | 未 Lock |
 | 餐牌離線快取／內置後備 | 已實作 | 通過 | 待斷網驗收 | 未 Lock |
 | Google Sheet 記錄投影 | 架構已定，未接寫入端 | 無 | 不影響點單 | 未 Lock |
 | Apps Script 運行依賴 | 已移除 | 有禁止回歸檢查 | 不適用 | Lock |
 | 待處理核對／付款／QR | 本機核數、問題及通知隊列鏈路；QR仍為示範 | 通過 | 待實掃及真實通知 API | 未 Lock |
 | 接單後30分鐘完成 | 已實作 domain | 通過 | 待長時間驗收 | 未 Lock |
-| 售罄／停售管理及點單預覽 | 獨立管理頁、橙／紅狀態、分類重排及點單頁同源預覽已實作 | 10項相關測試通過 | 待 iPad／T2S 視覺驗收 | 部分 Lock |
+| 售罄／停售管理及點單預覽 | 獨立管理頁、橙／紅狀態、分類重排及點單頁同源預覽已實作 | 相關測試通過；Responsive Authority 已回 Page | 待 iPad／T2S 視覺驗收 | 部分 Lock |
 | 真實訂單提交及付款 API | 未接入 | 無 | 不適用 | 未 Lock |
 | 打印設定、格式及工作核心 | 五部設備設定、網絡地址／連接埠、紙寬、用途、份數、四款格式、預覽、診斷、工作、重試／改送及安卓橋接合約已實作 | 通過 | 實體出紙待 APK／五部設備 | 邏輯 Lock／硬件未驗 |
 | SMT／SMM 獨立暫存流水 | 已實作 | 通過 | 待實機驗收 | 未 Lock |
@@ -41,10 +45,10 @@
 | 堂食付清、歷史訂單及清枱 | 未付歸零即建立「現場」完成訂單並清空枱；啟動時補救舊付清會話 | 通過 | 待實機驗收 | 未 Lock |
 | 掛單作廢及日結清理 | 取單可確認作廢；早上五時營業日分界自動清理舊草稿 | 通過 | 待跨日實機驗收 | 未 Lock |
 | 獨立售罄頁啟動回退 | 修正後備餐牌參數；網絡／餐牌錯誤仍保留本機管理頁 | 通過 | 待 iPad Safari 重驗 | 未 Lock |
-| 小圖卡及供應狀態一致性 | 修正父子格線擠壓；售罄移入獨立分類、停售留原分類最後；點單角標／列表／卡片共用狀態 | 通過；全套124／124 | 待 iPad Safari／T2S 實機重驗 | 邏輯 Lock／視覺待驗 |
-| 更多頁六入口及安全確認 | 首頁直接顯示今日營業、渠道及付款分析；日結只列五款紙幣／三款硬幣，支援上次留底、開機調整、提取／留底、待核實反推及淨銷售 3% 授權 | 通過；全套189／189 | 待 iPad Safari／T2S 實機驗收 | 資料／流程 Lock；視覺待驗 |
-| 全局觸控與彈窗動效 | 共用按壓、焦點、圓角、遮罩淡入、彈窗上移、右側抽屜及減少動效規則已實作 | 靜態契約及全量回歸通過 | 待實機手感及密度微調 | 規則 Lock／視覺待驗 |
-| 全域狀態欄、底部導航及選擇膠囊 | 點單頁基礎狀態永久顯示；五頁共用同一底欄、線性圖標、尺寸及完整選中膠囊，文字式單選／篩選共用膠囊語言，頁面狀態只可附加 | shell 契約及全量回歸通過 | 待 iPad／T2S 真機驗收 | 結構／規則 Lock；視覺待驗 |
+| 小圖卡及供應狀態一致性 | 修正父子格線擠壓；售罄移入獨立分類、停售留原分類最後；點單角標／列表／卡片共用狀態 | 通過 | 待 iPad Safari／T2S 實機重驗 | 邏輯 Lock／視覺待驗 |
+| 更多頁六入口及安全確認 | 首頁直接顯示今日營業、渠道及付款分析；日結只列五款紙幣／三款硬幣，支援上次留底、開機調整、提取／留底、待核實反推及淨銷售 3% 授權 | 通過 | 待 iPad Safari／T2S 實機驗收 | 資料／流程 Lock；視覺待驗 |
+| 全局觸控與彈窗動效 | 共用按壓、焦點、圓角、遮罩淡入、彈窗上移、右側抽屜及減少動效規則已實作 | 靜態契約通過 | 待實機手感及密度微調 | 規則 Lock／視覺待驗 |
+| 全域狀態欄、底部導航及選擇膠囊 | 點單頁基礎狀態永久顯示；五頁共用同一底欄、線性圖標、尺寸及完整選中膠囊，頁面狀態只可附加 | Shell／Action Descriptor／Overlay contracts 通過 | 待 iPad／T2S 真機驗收 | 結構／規則 Lock；視覺待驗 |
 | 分類版面及固定搜尋 | 後台可選每行五／六／七格、一／兩行及最後一格搜尋；溢出分類保持可操作 | 通過 | 待真機滑動驗收 | 流程 Lock／視覺待驗 |
 | 訂單三十分鐘歷史歸檔 | 運行滿三十分鐘持久轉完成並寫入歷史及 audit | 通過 | 待長時間真機驗收 | 流程 Lock |
 | 四類打印內容 | 小票含收款核對；製作／打包含渠道、備註及統計；飯團逐件標籤含品牌、件數、配置及包裝費 | 通過 | 待安卓橋接及實體出紙 | 資料 Lock／硬件待驗 |
@@ -52,4 +56,13 @@
 | 歷史報表日期範圍 | 今日、昨日、七日、三十日、三個月、六個月及最多六個月自訂範圍；日結仍固定讀取今日 | 通過 | 待大資料量及實機觸控驗收 | 流程 Lock／效能待驗 |
 | 渠道、付款、商品及異常分析 | 五頁共用選定範圍；付款細分八類、堂食混合付款逐筆拆分、正負差額及訂單下鑽；敏感 audit 按事件日列出 | 通過 | 待真實三至六個月資料對數 | 資料規則 Lock／實數待驗 |
 
-舊 Implementation Status 保存演進史；衝突時以本表及舊文件最末版本章節為準。
+## Current Authority Migration Debt
+
+- V1 Cart legacy internal rules in `pages/order/page.css`：新 Authority 已切換，只可物理刪除。
+- V2 Drink Card legacy rules in `pages/order/page.css`：新 Authority 已切換，只可物理刪除。
+- V9 Product Card legacy rules in `pages/order/page.css`：新 Authority 已切換，只可物理刪除。
+- Pairing Modal legacy rules in `pages/order/page.css`：只可刪除／縮減。
+
+禁止以 `!important`、更高 specificity、runtime patch、MutationObserver、第二套 resolution UI 假裝清理完成。
+
+舊 Implementation Status 保存演進史；衝突時以本表、Ownership Registry、最新 QA evidence 及正式 Runtime 現碼為準。
