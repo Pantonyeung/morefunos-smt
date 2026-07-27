@@ -32,10 +32,18 @@ jobs:
         with:
           node-version: '22'
       - name: Install QA dependencies
+        id: npm_setup
+        continue-on-error: true
         run: npm install --no-package-lock
       - name: Install Chromium
+        id: browser_setup
+        if: always() && steps.npm_setup.outcome == 'success'
+        continue-on-error: true
         run: npx playwright install --with-deps chromium
       - name: Start static SMT server
+        id: server_setup
+        if: always()
+        continue-on-error: true
         run: |
           python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/morefun-smt-http.log 2>&1 &
           for i in {1..30}; do
@@ -44,10 +52,13 @@ jobs:
           done
           cat /tmp/morefun-smt-http.log
           exit 1
-      - name: Enforce component ownership boundaries
-        run: node scripts/audit-component-ownership.mjs
-      - name: Run full regression suite
+      - name: Run and record full regression suite
+        if: always()
         shell: bash
+        env:
+          NPM_SETUP_OUTCOME: ${{ steps.npm_setup.outcome }}
+          BROWSER_SETUP_OUTCOME: ${{ steps.browser_setup.outcome }}
+          SERVER_SETUP_OUTCOME: ${{ steps.server_setup.outcome }}
         run: |
           set +e
           mkdir -p docs/qa
@@ -55,6 +66,13 @@ jobs:
             echo '# SMT Runtime Phase 3 QA'
             echo
             echo "Commit: $(git rev-parse HEAD)"
+            echo
+            echo '## QA environment setup'
+            echo '```text'
+            echo "NPM_SETUP_OUTCOME=$NPM_SETUP_OUTCOME"
+            echo "BROWSER_SETUP_OUTCOME=$BROWSER_SETUP_OUTCOME"
+            echo "SERVER_SETUP_OUTCOME=$SERVER_SETUP_OUTCOME"
+            echo '```'
             echo
             echo '## component ownership audit'
             echo '```text'
@@ -77,17 +95,31 @@ jobs:
             done
             echo '```'
             echo
+            NPM_STATUS=1
+            BROWSER_INSTALL_STATUS=1
+            SERVER_STATUS=1
+            [ "$NPM_SETUP_OUTCOME" = 'success' ] && NPM_STATUS=0
+            [ "$BROWSER_SETUP_OUTCOME" = 'success' ] && BROWSER_INSTALL_STATUS=0
+            [ "$SERVER_SETUP_OUTCOME" = 'success' ] && SERVER_STATUS=0
             echo '## Playwright responsive browser matrix'
             echo '```text'
-            npm run qa:browser
-            BROWSER_STATUS=$?
+            BROWSER_STATUS=1
+            if [ "$NPM_STATUS" -eq 0 ] && [ "$BROWSER_INSTALL_STATUS" -eq 0 ] && [ "$SERVER_STATUS" -eq 0 ]; then
+              npm run qa:browser
+              BROWSER_STATUS=$?
+            else
+              echo 'Browser matrix skipped because QA environment setup did not complete.'
+            fi
             echo '```'
             echo
+            echo "NPM_STATUS=$NPM_STATUS"
+            echo "BROWSER_INSTALL_STATUS=$BROWSER_INSTALL_STATUS"
+            echo "SERVER_STATUS=$SERVER_STATUS"
             echo "AUDIT_STATUS=$AUDIT_STATUS"
             echo "TEST_STATUS=$TEST_STATUS"
             echo "SYNTAX_STATUS=$SYNTAX_STATUS"
             echo "BROWSER_STATUS=$BROWSER_STATUS"
-            if [ "$AUDIT_STATUS" -eq 0 ] && [ "$TEST_STATUS" -eq 0 ] && [ "$SYNTAX_STATUS" -eq 0 ] && [ "$BROWSER_STATUS" -eq 0 ]; then
+            if [ "$NPM_STATUS" -eq 0 ] && [ "$BROWSER_INSTALL_STATUS" -eq 0 ] && [ "$SERVER_STATUS" -eq 0 ] && [ "$AUDIT_STATUS" -eq 0 ] && [ "$TEST_STATUS" -eq 0 ] && [ "$SYNTAX_STATUS" -eq 0 ] && [ "$BROWSER_STATUS" -eq 0 ]; then
               echo 'RESULT=PASS'
             else
               echo 'RESULT=FAIL'
