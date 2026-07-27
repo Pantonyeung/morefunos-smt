@@ -47,13 +47,13 @@
 |---|---|---|---|---|---|---|
 | Order Page Workspace | `pages/order/page.css` | `pages/order/page.js` | `pages/order/page.css` | Page Store | responsive/adaptive tokens | Loader 注入 UI |
 | Category / Search | `page.css` | `page.js` | `page.css` | `category-layout.js` / transient state | adaptive category tokens | Adaptive 重畫 DOM |
-| Product Card | `page.css` | `page.js` | `page.css`（後續可獨立 `product-card.css`） | Catalog | adaptive row tokens | Adaptive 直接改 card internal selector |
+| Product Card | `page.css` | `page.js` | `page.css` + page-owned `adaptive.css` | Catalog | adaptive row tokens | Shared Adaptive 直接改 card internal selector |
 | Cart Surface 外部位置 | `page.css` | `page.js` | N/A | Order Store | `--cart-width` | `cart.css` 重排整個 page composition |
 | Cart Component 內部 | N/A | `page.js::cartLineRow/cartSurface` | `pages/order/cart.css` | `order-domain.js` | `--adaptive-cart-*` | `page.css`／Adaptive 重複定義 Cart internal property |
 | 外／堂＋序號 Marker | N/A | `cartLineRow` | `cart.css` | `order-domain.js` service mode | `--adaptive-cart-marker` | Shared CSS 再定義 marker geometry |
 | Cart View 原單／整理 | N/A | `page.js` | `cart.css` | `order-domain.js` | N/A | UI 自己排序第二套資料 |
 | Packaging Pricing | N/A | N/A | N/A | `order-domain.js` | N/A | UI／Checkout／Print 自行重算 |
-| Drink Choice Card | Container 由使用場景決定 | `page.js::drinkChoiceCard` | `page.css`（後續可抽 `components/drink-card.css`） | Order state | context class/token | `cart.css`／Adaptive 重定義 card internal visual |
+| Drink Choice Card | Container 由使用場景決定 | `page.js::drinkChoiceCard` | `page.css` | Order state | context class/token | `cart.css`／Adaptive 重定義 card internal visual |
 | Quick Drink Drawer | `cart.css` | `page.js` | `cart.css` | Order transient state | adaptive available area | 重寫 Drink Card 本體 |
 | Required Workflow | Modal shell | `page.js` | `cart.css` | `pendingSummary` / Domain | modal bounds tokens | Adaptive 直接改 required internal selector |
 | Specified Pairing | Modal shell | `page.js` | Modal/component CSS | `order-domain.js` | pool/link data | Quick Drink 建第二 pairing domain |
@@ -64,11 +64,11 @@
 
 | Area | Composition / Visual Authority | Domain / State Authority |
 |---|---|---|
-| Orders UI | `pages/orders/page.js` + `pages/orders/page.css` | `pages/orders/orders-domain.js` |
+| Orders UI | `pages/orders/page.js` + `pages/orders/page.css` + `pages/orders/responsive.css` | `pages/orders/orders-domain.js` |
 | Checkout UI | `pages/checkout/page.js` + page CSS | `pages/checkout/checkout-domain.js` |
-| Dine UI | `pages/dine/page.js` + page CSS | `pages/dine/dine-domain.js` |
-| Soldout UI | `pages/soldout/page.js` + page CSS | Supply state / catalog |
-| More UI | `pages/more/page.js` + `pages/more/page.css` | `pages/more/more-domain.js` |
+| Dine UI | `pages/dine/page.js` + page CSS + `pages/dine/responsive.css` | `pages/dine/dine-domain.js` |
+| Soldout UI | `pages/soldout/page.js` + page CSS + `pages/soldout/responsive.css` | Supply state / catalog |
+| More UI | `pages/more/page.js` + `pages/more/page.css` + `pages/more/responsive.css` | `pages/more/more-domain.js` |
 | Printing | Print UI surface | `pages/more/print-domain.js` |
 | Order Identity | N/A | `shared/order-identity.js` |
 | Cross-terminal Operations | N/A | `shared/operations.js` |
@@ -116,19 +116,22 @@ Shell 只接 render-time action descriptors；禁止 MutationObserver／child DO
 
 因此正式 Runtime 不再同時存在第二套 Global Status Bar／Bottom Navigation。
 
-### V6 — Adaptive CSS 仍直接進入部分 Page Component
-- Cart direct selectors 已移除。
-- Order Product／Orders 等仍有 direct selectors。
+### V6 — Adaptive direct component selectors
 
-狀態：**MIGRATION REQUIRED / HIGH PRIORITY**
+狀態：**ARCHITECTURE CONSOLIDATED / WAITING 1920 REGRESSION**
 
-處理方式：Adaptive 只計算 CSS Variable；Component Visual Authority 消費 Token。
+- `shared/adaptive-layout.css` 已收口成純 Token Provider。
+- Order Product 自適應視覺由 `pages/order/adaptive.css` 消費 Token。
+- Orders／Soldout component adaptive decisions 已回歸各自 Page Authority。
+- Shared Adaptive 禁止再直接 selector 進 Page Component。
 
-### V7 — Responsive Pages CSS 仍直接控制 Orders／Dine／Soldout／More
+### V7 — Responsive Page direct selectors
 
-狀態：**MIGRATION REQUIRED**
+狀態：**ARCHITECTURE CONSOLIDATED / WAITING 1920 REGRESSION**
 
-處理方式：Responsive Core 只提供 profile/token；各 Page CSS 自己消費。
+- `shared/responsive-pages.css` 只保留 cross-page profile boundary。
+- Orders／Dine／Soldout／More responsive component decisions 已移到各自 page-owned `responsive.css`。
+- Shared Responsive 禁止再直接 selector 進 Page Component。
 
 ### V8 — Shared Page Base Global Chrome Visual
 
@@ -139,11 +142,11 @@ Shell 只接 render-time action descriptors；禁止 MutationObserver／child DO
 ## 7. Authority Cleanup 順序
 
 1. V1 Cart internal visual：逐組搬遷，不重畫 1920。
-2. V6 Adaptive direct selectors：逐 Page 轉 Token。
-3. V7 Responsive Page direct selectors：逐 Page 轉 Token。
+2. 完成 V1 後做 1920 Cart／Drink Card／Pairing Modal 實機回歸。
+3. V6／V7 只做回歸，不再重新設計。
 4. 視實際重用程度，再決定 Product Card／Drink Card 是否拆成獨立 component stylesheet；**不為拆檔而拆檔。**
 
-V2／V3／V4／V5／V8 已完成正式責任收口；後續禁止重新引入第二 Authority。
+V2／V3／V4／V5／V6／V7／V8 已完成架構責任收口；V6／V7 尚未取得實機回歸通過，不得寫成最終驗收完成。
 
 ## 8. 修改前 Authority Gate
 
