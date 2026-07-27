@@ -13,6 +13,13 @@ test('cart.css owns pending action layout before page.css legacy removal',()=>{
   assert.match(cartCss,/\.pending-receipt\{[^}]*grid-template-columns:auto auto 1fr/);
 });
 
+test('cart.css owns cart shell internals before page.css legacy removal',()=>{
+  assert.match(cartCss,/\.cart>header\{/);
+  assert.match(cartCss,/\.cart-list\{[^}]*overflow-y:auto/);
+  assert.match(cartCss,/\.cart-category>header\{[^}]*position:sticky/);
+  assert.match(cartCss,/\.seq\{/);
+});
+
 test('cart.css owns quick drawer container geometry but not drink-card internals',()=>{
   assert.match(cartCss,/\.quick-drawer\{[^}]*position:absolute/);
   assert.match(cartCss,/\.quick-drawer-handle\{/);
@@ -24,5 +31,5 @@ test('cart.css owns quick drawer container geometry but not drink-card internals
 });
 
 test('order page uses the current versioned cart authority asset',()=>{
-  assert.match(orderHtml,/cart\.css\?v=order-cart-core-v15/);
+  assert.match(orderHtml,/cart\.css\?v=order-cart-core-v16/);
 });
