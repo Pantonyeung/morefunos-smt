@@ -16,13 +16,15 @@ import androidx.webkit.WebViewFeature
 class MainActivity : Activity() {
     private lateinit var webView: WebView
     private lateinit var bridge: BridgeProtocol
+    private lateinit var bundleStore: WebBundleStore
 
     private val localOrigin = "https://appassets.androidplatform.net"
-    private val startUrl = "$localOrigin/assets/smt/index.html"
+    private val startUrl = "$localOrigin/runtime/index.html"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        bridge = BridgeProtocol(this)
+        bundleStore = WebBundleStore(this)
+        bridge = BridgeProtocol(this, bundleStore)
         enterImmersiveMode()
         webView = createWebView()
         setContentView(webView)
@@ -52,8 +54,13 @@ class MainActivity : Activity() {
     }
 
     private fun createWebView(): WebView {
+        val packagedFallback = WebViewAssetLoader.AssetsPathHandler(this)
+        val runtimeHandler = WebViewAssetLoader.PathHandler { path ->
+            bundleStore.open(path) ?: packagedFallback.handle("smt/$path")
+        }
         val assetLoader = WebViewAssetLoader.Builder()
-            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .addPathHandler("/runtime/", runtimeHandler)
+            .addPathHandler("/assets/", packagedFallback)
             .build()
 
         val view = WebView(this)
@@ -104,7 +111,7 @@ class MainActivity : Activity() {
         }
 
         // Disaster-backup path for Android 6 / old System WebView only.
-        // Navigation is still restricted to packaged appassets content.
+        // Navigation is still restricted to packaged/verified appassets content.
         view.addJavascriptInterface(LegacyBridgeAdapter(this, view, bridge), "MoreFunNative")
     }
 
