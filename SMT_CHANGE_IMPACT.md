@@ -169,6 +169,21 @@
 
 禁止因單次 404 自行改寫 canonical path 或建立第二套 Jade 鏡像。
 
+### J. APK Foundation／模組化交付｜D-052 LOCKED
+
+正式策略：
+- `docs/SMT_APK_FOUNDATION_DEVELOPMENT_PLAN_V1.0.md` 為 APK Foundation 開發計劃。
+- 先補齊 Android Shell／WebView／Native Bridge／打印／網絡／Offline／File／Kiosk／Diagnostics／Controlled Update／Rollback，再封裝上機測試。
+- 第一版 APK 唔需要等所有 UI 最終封板，但 Native／Bridge／Recovery／Update 基礎必須先可驗證。
+- 純 Web／UI／業務模組只要沿用現有 Bridge Contract，可於 APK Foundation 穩定後透過受控 Release Channel 逐步更新。
+- 新 Android permission、新硬件 driver／SDK、WebView Runtime 改動或破壞性 Bridge Contract 仍必須重新發佈 APK。
+- 禁止把「後續可更新」誤解成任意遠端插件／任意程式注入；更新必須版本化、可驗證來源、可回滾、可離線 fallback。
+
+目前工作線：
+- A：五尺寸 Browser Regression 繼續追到 PASS；不得因 APK-first 而取消 QA。
+- B：Printer Module 繼續獨立完成並經 Contract Gate 驗證。
+- C：APK Foundation 升為最高工程優先；先做可上機嘅 Native Shell／Bridge 骨架。
+
 ## 4. 成功做法｜接手優先複用
 
 1. Authority first：先確定唯一責任來源，再改功能。
@@ -178,6 +193,7 @@
 5. Strangler migration：大型 legacy 不一次爆改；新 Authority 自足、舊責任凍結、逐組物理移除。
 6. Evidence levels 分開：程式存在 ≠ Unit Test PASS ≠ Browser QA PASS ≠ 實機驗收 ≠ 最終 Lock。
 7. Governance file disappearance 必須做 branch ref＋commit lineage 雙重核對，唔可以靠單次 404 作結論。
+8. APK-first 模組化：先穩定 Native Shell／Bridge／Recovery／Update Contract，再把一般 Web／UI／業務改動留在可獨立測試及受控更新的 Module。
 
 ## 5. 已證明會浪費時間／禁止重試嘅坑
 
@@ -190,6 +206,7 @@
 7. 只睇 commit message／文件敘述，唔 fresh-read 正式分支現碼。
 8. 舊 Contract Test 與新 Authority 衝突時，為令 test 綠而倒退 Runtime。
 9. 單次 GitHub 404 就判斷治理文件不存在，並立即改寫 Authority path。
+10. 為追求「永遠唔重封 APK」而把任意 Native 能力或未驗證遠端程式塞入動態插件機制。
 
 ## 6. 下一個接手 AI 開工最短路徑
 
@@ -198,6 +215,7 @@
 3. 讀 `docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`。
 4. 讀最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`。
 5. 讀 Ownership Registry 對應元件。
-6. Fresh-read 真正要改嘅 Runtime／test 檔案。
-7. 先修已知 QA Fail／Authority Migration，再新增功能。
-8. 完成後同步 GitHub＋Jade Note。
+6. APK／Native 工作再讀 `docs/SMT_APK_FOUNDATION_DEVELOPMENT_PLAN_V1.0.md`。
+7. Fresh-read 真正要改嘅 Runtime／test 檔案。
+8. A 線 Browser QA 繼續；B 線 Printer Module 繼續；C 線優先補齊 APK Foundation blocker。
+9. 完成後同步 GitHub＋Jade Note。
