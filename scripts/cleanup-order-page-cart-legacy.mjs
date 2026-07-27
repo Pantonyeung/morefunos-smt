@@ -150,13 +150,17 @@ export function cleanupCartLegacy(css){
   return {css:output,removedSelectors,rewrittenRules,removedRules};
 }
 
-function assertSafeResult(result){
+function assertOwnershipBoundary(css){
+  const forbidden=['.cart-row {','.cart-row{','.cart-img {','.cart-img{','.cart-actions {','.cart-actions{','.pending-area{','.pending-area {','.cart footer {','.cart footer{'];
+  for(const needle of forbidden){if(css.includes(needle))throw new Error(`Cart legacy selector remains: ${needle}`);}
+  const mustRemain=['.drink-choice-card','.product-card','.specified-link-card','.catalog'];
+  for(const needle of mustRemain){if(!css.includes(needle))throw new Error(`Non-cart authority was removed unexpectedly: ${needle}`);}
+}
+
+function assertSafeMigration(result){
   if(result.removedSelectors<25)throw new Error(`Expected at least 25 cart-owned selectors, removed ${result.removedSelectors}`);
   if(result.removedSelectors>90)throw new Error(`Refusing unexpectedly broad cleanup: ${result.removedSelectors} selectors`);
-  const forbidden=['.cart-row {','.cart-row{','.cart-img {','.cart-img{','.cart-actions {','.cart-actions{','.pending-area{','.pending-area {','.cart footer {','.cart footer{'];
-  for(const needle of forbidden){if(result.css.includes(needle))throw new Error(`Cart legacy selector remains: ${needle}`);}
-  const mustRemain=['.drink-choice-card','.product-card','.specified-link-card','.catalog'];
-  for(const needle of mustRemain){if(!result.css.includes(needle))throw new Error(`Non-cart authority was removed unexpectedly: ${needle}`);}
+  assertOwnershipBoundary(result.css);
 }
 
 function main(){
@@ -166,15 +170,20 @@ function main(){
   const file=path.join(root,DEFAULT_FILE);
   const source=fs.readFileSync(file,'utf8');
   const result=cleanupCartLegacy(source);
-  assertSafeResult(result);
+
+  if(source===result.css){
+    assertOwnershipBoundary(source);
+    console.log('V1_CART_ALREADY_CLEARED');
+    return;
+  }
+
+  assertSafeMigration(result);
   console.log(`V1_CART_CLEANUP selectors=${result.removedSelectors} rules=${result.removedRules} rewritten=${result.rewrittenRules}`);
   if(check){
-    if(source===result.css){console.log('V1_CART_ALREADY_CLEARED');return;}
     process.exitCode=2;
     console.log('V1_CART_CLEANUP_REQUIRED');
     return;
   }
-  if(source===result.css){console.log('V1_CART_ALREADY_CLEARED');return;}
   fs.writeFileSync(file,result.css,'utf8');
   console.log(`WROTE ${DEFAULT_FILE}`);
 }
