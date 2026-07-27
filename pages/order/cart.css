@@ -52,23 +52,35 @@ body[data-page="order"] .cart-row .cart-img>.image-fallback{display:none}
 .cart-summary-strip b{color:var(--text)}
 
 /* Pending + footer are owned here as part of the cart component. */
-.pending-area{border-top:1px solid var(--line);background:#fffaf6;flex:none;padding:10px 12px}
-.pending-receipt{width:100%;min-height:58px;border:1px solid #edd9ca;border-radius:12px;background:#fff;display:grid;grid-template-columns:auto 1fr 1fr auto;align-items:center;gap:12px;padding:10px 14px;text-align:left;box-shadow:var(--lift)}
+.pending-area{display:grid;grid-template-columns:minmax(250px,1fr) auto auto;gap:8px;border-top:1px solid var(--line);background:#fffaf6;flex:none;padding:10px 12px}
+.pending-area>button{min-height:44px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:7px 10px;font-weight:850}
+.pending-area>button:disabled{opacity:.42}
+.pending-receipt{width:100%;min-height:58px;border:1px solid #edd9ca;border-radius:12px;background:#fff;display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:8px;padding:10px 14px;text-align:left;box-shadow:var(--lift);white-space:nowrap}
 .pending-receipt strong{color:var(--orange);font-size:17px}
 .pending-receipt span{color:var(--muted);font-weight:800}
-.pending-receipt b{color:var(--orange)}
+.pending-receipt b{color:var(--orange);justify-self:end}
 .pending-area.complete .pending-receipt span{color:var(--green)}
 .cart footer{display:grid;grid-template-columns:92px 92px 1fr;gap:10px;padding:13px;border-top:1px solid var(--line)}
 .cart footer button{min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;font-weight:900}
 .cart footer .primary{background:var(--orange);color:#fff;border-color:var(--orange)}
 .cart footer .primary:disabled{background:#d8d3cf;border-color:#d8d3cf;color:#8d8580;box-shadow:none;cursor:not-allowed}
 
+/* Quick-drawer container placement/geometry belongs to Cart; Drink Card internals remain in drink-card.css. */
+.quick-drawer{flex:none;border-top:0;background:#fff;position:absolute;left:0;right:0;bottom:0;height:0;z-index:12;overflow:visible}
+.quick-drawer-handle{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:auto;min-width:224px;height:40px;border:1px solid var(--line);border-bottom:0;border-radius:12px 12px 0 0;box-shadow:0 -4px 12px rgba(69,48,32,.10);display:flex;justify-content:center;align-items:center;gap:12px;padding:0 16px;background:#fff;color:var(--orange);font-weight:950}
+.quick-drawer-handle em{font-style:normal;color:var(--text);font-weight:850}
+.quick-drawer-panel{position:absolute;left:14px;right:14px;bottom:44px;height:248px;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 -12px 34px rgba(50,35,24,.18);padding:0;overflow:hidden}
 .quick-drink-context{position:absolute;left:180px;right:54px;top:0;height:44px;display:flex;align-items:center;gap:12px;padding:0;margin:0;border:0;background:transparent;font-size:12px;overflow:hidden;white-space:nowrap;pointer-events:none}
 .quick-drink-context strong{color:#6f5b4f;overflow:hidden;text-overflow:ellipsis}
 .quick-drink-context em{font-style:normal;color:#b84216;font-weight:950;overflow:hidden;text-overflow:ellipsis}
 .cart-pricing-strip{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:10px;padding:6px 10px;border-top:1px solid #eee5de;background:#fffdfb;color:#79665a;font-size:12px;font-weight:850}.cart-pricing-strip span{white-space:nowrap}.cart-pricing-strip b{color:#4f4037}.cart-pricing-strip .packaging{color:#b84216}.cart-pricing-strip>strong{justify-self:end;color:#2f2722;font-size:14px}
-.quick-drawer-panel>header{display:grid;grid-template-columns:auto 1fr 36px;align-items:center;gap:10px}.quick-drawer-tools{justify-self:end;display:flex;align-items:center;gap:10px}.quick-drawer-tools>button{min-height:32px;padding:0 10px;border:1px solid #e3d6cd;border-radius:9px;background:#fff;color:#6f5b4f;font-size:11px;font-weight:900}.quick-drawer-tools>button:active{background:#fff1e8;color:#b84216}
-.quick-scroll-hint{justify-self:end;color:#8b7a6e;font-size:11px;font-weight:800;white-space:nowrap}.quick-drawer-panel>div:last-child{scroll-snap-type:x proximity}
+.quick-drawer-panel>header{position:relative;z-index:2;height:44px;flex:none;display:grid;grid-template-columns:auto 1fr 36px;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--line)}
+.quick-drawer-tools{justify-self:end;display:flex;align-items:center;gap:10px}
+.quick-drawer-tools>button{min-height:32px;padding:0 10px;border:1px solid #e3d6cd;border-radius:9px;background:#fff;color:#6f5b4f;font-size:11px;font-weight:900}
+.quick-drawer-tools>button:active{background:#fff1e8;color:#b84216}
+.quick-scroll-hint{justify-self:end;color:#8b7a6e;font-size:11px;font-weight:800;white-space:nowrap}
+.quick-drawer-panel>div:last-child{display:flex;gap:10px;min-height:0;overflow-x:auto;overflow-y:hidden;padding:8px 12px 12px;scroll-snap-type:x proximity}
+
 .modifier-card:not([data-pointer-side]){left:50%;top:50%;transform:translate(-50%,-50%)}
 .modifier-card section .option-chips:empty::after{content:'暫時未有可用選項';display:block;width:100%;padding:14px;border:1px dashed #d9cec4;border-radius:10px;background:#fbf8f5;color:var(--muted);text-align:center;font-weight:850}
 .completion-card.required-workflow{width:min(1540px,94vw);height:min(900px,88vh);max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
@@ -86,9 +98,6 @@ body[data-page="order"] .cart-row .cart-img>.image-fallback{display:none}
 .required-drink-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;overflow-y:auto;overflow-x:hidden;align-content:start;padding-right:2px}
 .required-fill{min-height:46px;border:1px dashed #d7c3b5;border-radius:10px;background:#fff;color:#6f5b4f;font-weight:900}
 .required-workflow-actions{flex:none;display:grid;grid-template-columns:120px 1fr;gap:10px;padding:12px 18px;border-top:1px solid var(--line);background:#fff}.required-workflow-actions .primary{background:var(--orange);border-color:var(--orange);color:#fff}.required-workflow-actions .primary:disabled{opacity:.42;filter:saturate(.25);cursor:not-allowed}
-.quick-drawer-panel{height:248px}
-.quick-drawer-panel>header{position:relative;z-index:2}
-.quick-drawer-panel>div:last-child{display:flex;gap:10px;min-height:0;overflow-x:auto;overflow-y:hidden;padding:8px 12px 12px}
 .modal-card[data-pointer-side]::before{z-index:3;filter:drop-shadow(0 1px 1px rgba(70,50,38,.28));pointer-events:none}
 .modal-card[data-pointer-side="top"]::before{top:-18px;bottom:auto;left:var(--pointer-x);right:auto;transform:translateX(-50%);border:9px solid transparent;border-bottom-color:#fff}
 .modal-card[data-pointer-side="bottom"]::before{bottom:-18px;top:auto;left:var(--pointer-x);right:auto;transform:translateX(-50%);border:9px solid transparent;border-top-color:#fff}
