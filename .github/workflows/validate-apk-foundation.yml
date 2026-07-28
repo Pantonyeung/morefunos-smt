@@ -1,23 +1,27 @@
 name: Validate APK Foundation
 
 on:
-  pull_request:
+  push:
     branches:
-      - smt-functional-completeness-v1
+      - apk-foundation-v1
     paths:
       - 'android/**'
       - '.github/workflows/validate-apk-foundation.yml'
+  pull_request:
+    paths:
+      - 'android/**'
+      - '.github/workflows/validate-apk-foundation.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: validate-apk-foundation-${{ github.event.pull_request.number }}
+  group: validate-apk-foundation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   compile:
-    if: github.event.pull_request.head.ref == 'apk-foundation-v1'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
