@@ -33,6 +33,18 @@ class BootstrapActivity : Activity() {
                 }
             )
 
+            val updateStatus = updateResult.optString("status")
+            if (updateStatus == "installed_pending_health") {
+                RuntimeHealthReceiver.arm(this)
+            } else {
+                val pending = WebBundleStore(this).status()
+                    .optString("pendingHealthVersion")
+                    .trim()
+                if (pending.isBlank() || pending == "null") {
+                    RuntimeHealthReceiver.cancel(this)
+                }
+            }
+
             getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                 .edit()
                 .putString(KEY_LAST_BOOT_UPDATE_RESULT, updateResult.toString())
