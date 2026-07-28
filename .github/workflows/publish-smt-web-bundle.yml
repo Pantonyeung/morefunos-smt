@@ -58,30 +58,28 @@ jobs:
           find . -type f -print0 | LC_ALL=C sort -z | xargs -0 touch -t 202001010000
           zip -X -q -r ../smt-web.zip .
 
-      - name: Create signed release envelope
+      - name: Create release manifest
         env:
           VERSION: ${{ inputs.version }}
           BRIDGE_MIN: ${{ inputs.bridge_min }}
           BRIDGE_MAX: ${{ inputs.bridge_max }}
-          SIGNING_KEY_B64: ${{ secrets.MOREFUN_RELEASE_PRIVATE_KEY_B64 }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          SHA=$(sha256sum out/smt-web.zip | awk '{print $1}')
-          BUNDLE_URL="https://raw.githubusercontent.com/${REPO}/runtime-stable/releases/${VERSION}/smt-web.zip"
+          export SHA="$(sha256sum out/smt-web.zip | awk '{print $1}')"
+          export BUNDLE_URL="https://raw.githubusercontent.com/${REPO}/runtime-stable/releases/${VERSION}/smt-web.zip"
           python3 - <<'PY'
           import json, os, time
           manifest = {
             'version': os.environ['VERSION'],
-            'sha256': os.environ['SHA'] if 'SHA' in os.environ else '',
+            'sha256': os.environ['SHA'],
             'bridgeMin': os.environ['BRIDGE_MIN'],
             'bridgeMax': os.environ['BRIDGE_MAX'],
-            'bundleUrl': os.environ['BUNDLE_URL'] if 'BUNDLE_URL' in os.environ else '',
+            'bundleUrl': os.environ['BUNDLE_URL'],
             'issuedAt': int(time.time() * 1000),
           }
           open('out/manifest.json','w',encoding='utf-8').write(json.dumps(manifest,separators=(',',':'),ensure_ascii=False))
           PY
-        shell: bash
 
       - name: Sign manifest and build envelope
         env:
