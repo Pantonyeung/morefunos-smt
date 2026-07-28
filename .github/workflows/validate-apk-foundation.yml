@@ -3,11 +3,15 @@ name: Validate APK Foundation
 on:
   push:
     branches:
-      - smt-functional-completeness-v1
+      - c-line-apk-clean-v1
     paths:
+      - 'android/**'
       - '.github/workflows/validate-apk-foundation.yml'
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'android/**'
+      - '.github/workflows/validate-apk-foundation.yml'
   workflow_dispatch:
 
 permissions:
@@ -19,18 +23,10 @@ concurrency:
 
 jobs:
   compile:
-    if: >-
-      github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.head.repo.full_name == github.repository &&
-       github.event.pull_request.head.ref == 'apk-foundation-v1')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout APK foundation branch
-        uses: actions/checkout@v4
-        with:
-          ref: apk-foundation-v1
+      - uses: actions/checkout@v4
 
       - name: Run static foundation preflight
         run: bash android/verify-foundation.sh
@@ -54,10 +50,12 @@ jobs:
       - name: Compile debug APK
         run: gradle -p android :app:assembleDebug --stacktrace --no-daemon
 
-      - name: Verify APK and checksum
+      - name: Verify and checksum APK
         run: |
-          test -s android/app/build/outputs/apk/debug/app-debug.apk
-          sha256sum android/app/build/outputs/apk/debug/app-debug.apk > android/app/build/outputs/apk/debug/app-debug.apk.sha256
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          sha256sum "$APK" | tee "$APK.sha256"
 
       - uses: actions/upload-artifact@v4
         with:
