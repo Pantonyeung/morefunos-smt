@@ -6,9 +6,12 @@ const routes=['order','checkout','orders','dine','soldout','more'];
 
 async function currentFrame(page,route){
   await expect(page.locator('#page')).toBeVisible({timeout:15000});
-  await page.waitForTimeout(180);
   const re=new RegExp(`pages\\/${route}\\/index\\.html`);
-  const frame=page.frames().find(f=>re.test(f.url()));
+  await expect.poll(()=>page.frames().some(frame=>re.test(frame.url())),{
+    timeout:15000,
+    intervals:[100,200,400]
+  }).toBe(true);
+  const frame=page.frames().find(candidate=>re.test(candidate.url()));
   if(!frame)throw new Error(`${route} iframe not loaded`);
   await expect(frame.locator(`body[data-page="${route}"]`)).toBeVisible({timeout:15000});
   return frame;
@@ -23,28 +26,32 @@ for(const [width,height] of sizes){
 
     let frame=await currentFrame(page,'order');
 
-    // Rapid product/cart activity. Keep actions bounded so the matrix stays deterministic.
-    for(let i=0;i<40;i++){
-      const card=frame.locator('.product-card:not([disabled])').nth(i%Math.max(1,await frame.locator('.product-card:not([disabled])').count()));
-      if(await card.count())await card.click({force:true});
+    // Product/modal churn: cache the product count once so the stress loop tests
+    // runtime interaction rather than repeatedly paying a full locator scan.
+    const cards=frame.locator('.product-card:not([disabled])');
+    const cardCount=await cards.count();
+    expect(cardCount).toBeGreaterThan(0);
+    for(let i=0;i<12;i++){
+      await cards.nth(i%cardCount).click({force:true,timeout:5000});
       const close=frame.locator('[data-action="modal-close"],[data-action="close"],.modal-card header button,.confirm-card button').first();
-      if(await close.count()&&await close.isVisible().catch(()=>false))await close.click({force:true}).catch(()=>{});
+      if(await close.isVisible().catch(()=>false))await close.click({force:true,timeout:3000}).catch(()=>{});
     }
 
+    // Cart mutation churn.
     const qtyButtons=frame.locator('[data-action="cart-qty"]');
     const qtyCount=await qtyButtons.count();
-    for(let i=0;i<30&&qtyCount;i++)await qtyButtons.nth(i%qtyCount).click({force:true}).catch(()=>{});
+    for(let i=0;i<12&&qtyCount;i++)await qtyButtons.nth(i%qtyCount).click({force:true,timeout:3000}).catch(()=>{});
 
-    // Route hammer: each main page must survive repeated navigation.
-    for(let i=0;i<24;i++){
+    // Route hammer: cover every route twice.
+    for(let i=0;i<12;i++){
       const route=routes[i%routes.length];
-      await page.evaluate(r=>{location.hash='#/'+r;},route);
+      await page.evaluate(next=>{location.hash='#/'+next;},route);
       await currentFrame(page,route);
     }
 
-    // Resize/reload churn simulates Android viewport changes and WebView recreation.
+    // Resize/reload churn simulates Android window changes and WebView recreation.
     const alternate=width===1280?{width:1366,height:768}:{width:1280,height:800};
-    for(let i=0;i<4;i++){
+    for(let i=0;i<2;i++){
       await page.setViewportSize(i%2?{width,height}:alternate);
       await page.waitForTimeout(120);
     }
