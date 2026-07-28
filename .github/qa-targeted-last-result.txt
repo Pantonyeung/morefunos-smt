@@ -1,0 +1,106 @@
+status=success
+target=FULL_BROWSER_MATRIX
+run_id=30355982684
+sha=7786bd5000c876d54d56396e03f23149b42a5ddf
+updated_at=2026-07-28T11:55:54.694Z
+--- error_tail ---
+[46/78] tests/responsive-secondary-pages.spec.js:27:5 › dine fits 1366x768
+[47/78] tests/responsive-secondary-pages.spec.js:27:5 › dine fits 1280x800
+[48/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1920x1080
+[49/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1600x900
+[50/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1440x900
+[51/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1366x768
+[52/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1280x800
+[53/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1920x1080
+[54/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1600x900
+[55/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1440x900
+[56/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1366x768
+[57/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1280x800
+[58/78] tests/responsive-shell.spec.js:15:3 › shell fits 1920x1080 without horizontal overflow
+[59/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1920x1080
+[60/78] tests/responsive-shell.spec.js:15:3 › shell fits 1600x900 without horizontal overflow
+[61/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1600x900
+[62/78] tests/responsive-shell.spec.js:15:3 › shell fits 1440x900 without horizontal overflow
+[63/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1440x900
+[64/78] tests/responsive-shell.spec.js:15:3 › shell fits 1366x768 without horizontal overflow
+[65/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1366x768
+[66/78] tests/responsive-shell.spec.js:15:3 › shell fits 1280x800 without horizontal overflow
+[67/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1280x800
+[68/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1920x1080
+[69/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1600x900
+[70/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1440x900
+[71/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1366x768
+[72/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1280x800
+[73/78] tests/responsive-visual-contract.spec.js:66:1 › product card hero follows responsive profile geometry
+[74/78] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1920x1080
+[75/78] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1600x900
+[76/78] (retries) tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1600x900 (retry #1)
+  1) tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1600x900 ───────────────
+
+    Test timeout of 180000ms exceeded.
+
+    Error: locator.count: Target page, context or browser has been closed
+
+      26 |     // Rapid product/cart activity. Keep actions bounded so the matrix stays deterministic.
+      27 |     for(let i=0;i<40;i++){
+    > 28 |       const card=frame.locator('.product-card:not([disabled])').nth(i%Math.max(1,await frame.locator('.product-card:not([disabled])').count()));
+         |                                                                                                                                       ^
+      29 |       if(await card.count())await card.click({force:true});
+      30 |       const close=frame.locator('[data-action="modal-close"],[data-action="close"],.modal-card header button,.confirm-card button').first();
+      31 |       if(await close.count()&&await close.isVisible().catch(()=>false))await close.click({force:true}).catch(()=>{});
+        at /home/runner/work/morefunos-smt/morefunos-smt/tests/stress-responsive-matrix.spec.js:28:135
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/stress-responsive-matrix-responsive-stress-matrix-1600x900/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/stress-responsive-matrix-responsive-stress-matrix-1600x900/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/stress-responsive-matrix-responsive-stress-matrix-1600x900/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/stress-responsive-matrix-responsive-stress-matrix-1600x900/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[77/78] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1440x900
+[78/78] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1366x768
+[79/78] (retries) tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1366x768 (retry #1)
+  2) tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1366x768 ───────────────
+
+    Test timeout of 180000ms exceeded.
+
+    Error: locator.count: Target page, context or browser has been closed
+
+      26 |     // Rapid product/cart activity. Keep actions bounded so the matrix stays deterministic.
+      27 |     for(let i=0;i<40;i++){
+    > 28 |       const card=frame.locator('.product-card:not([disabled])').nth(i%Math.max(1,await frame.locator('.product-card:not([disabled])').count()));
+         |                                                                                                                                       ^
+      29 |       if(await card.count())await card.click({force:true});
+      30 |       const close=frame.locator('[data-action="modal-close"],[data-action="close"],.modal-card header button,.confirm-card button').first();
+      31 |       if(await close.count()&&await close.isVisible().catch(()=>false))await close.click({force:true}).catch(()=>{});
+        at /home/runner/work/morefunos-smt/morefunos-smt/tests/stress-responsive-matrix.spec.js:28:135
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/stress-responsive-matrix-responsive-stress-matrix-1366x768/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/stress-responsive-matrix-responsive-stress-matrix-1366x768/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/stress-responsive-matrix-responsive-stress-matrix-1366x768/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/stress-responsive-matrix-responsive-stress-matrix-1366x768/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[80/78] tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1280x800
+  2 flaky
+    tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1600x900 ────────────────
+    tests/stress-responsive-matrix.spec.js:18:3 › responsive stress matrix 1366x768 ────────────────
+  76 passed (10.7m)
+
