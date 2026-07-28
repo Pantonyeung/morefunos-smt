@@ -5,15 +5,18 @@ on:
     branches:
       - smt-functional-completeness-v1
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches:
+      - printer-transport-settings-v1
 
 jobs:
   printer-contract:
-    if: startsWith(github.head_ref, 'printer-transport-settings')
+    if: github.event_name == 'push' || startsWith(github.head_ref, 'printer-transport-settings')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event_name == 'push' && github.ref_name || github.head_ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
