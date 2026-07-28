@@ -54,7 +54,7 @@ jobs:
           WEB_SIGNING_KEY_B64: ${{ secrets.MOREFUN_RELEASE_PRIVATE_KEY_B64 }}
         run: |
           set -euo pipefail
-          echo "$WEB_SIGNING_KEY_B64" | base64 -d > /tmp/morefun-web-release-private.pem
+          printf '%s' "$WEB_SIGNING_KEY_B64" | base64 -d > /tmp/morefun-web-release-private.pem
           openssl pkey -in /tmp/morefun-web-release-private.pem -pubout -outform DER | base64 -w0 > /tmp/morefun-web-release-public.b64
           rm -f /tmp/morefun-web-release-private.pem
 
@@ -68,27 +68,42 @@ jobs:
             -PmorefunReleaseManifestUrl="https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/runtime-stable/releases/stable-envelope.json"
           rm -f /tmp/morefun-web-release-public.b64
 
-      - name: Sign APK with persistent More Fun app key
+      - name: Decode Android keystore
         env:
           KEYSTORE_B64: ${{ secrets.MOREFUN_ANDROID_KEYSTORE_B64 }}
-          KEY_ALIAS: ${{ secrets.MOREFUN_ANDROID_KEY_ALIAS }}
-          STORE_PASS: ${{ secrets.MOREFUN_ANDROID_STORE_PASSWORD }}
-          KEY_PASS: ${{ secrets.MOREFUN_ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           printf '%s' "$KEYSTORE_B64" | base64 -d > /tmp/morefun-release.jks
           echo "decoded_keystore_bytes=$(wc -c < /tmp/morefun-release.jks)"
           test -s /tmp/morefun-release.jks
+
+      - name: Verify keystore alias and store password
+        env:
+          KEY_ALIAS: ${{ secrets.MOREFUN_ANDROID_KEY_ALIAS }}
+          STORE_PASS: ${{ secrets.MOREFUN_ANDROID_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
           keytool -list -keystore /tmp/morefun-release.jks -storepass "$STORE_PASS" -alias "$KEY_ALIAS" >/dev/null
 
+      - name: Verify unsigned release APK path
+        run: |
+          set -euo pipefail
           UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
           if [ ! -f "$UNSIGNED" ]; then
             echo 'Expected unsigned APK not found. Available release files:'
             find android/app/build/outputs/apk/release -maxdepth 1 -type f -printf '%f\n' || true
             exit 1
           fi
-          SIGNED="android/app/build/outputs/apk/release/morefun-smt-production.apk"
 
+      - name: Sign and verify production APK
+        env:
+          KEY_ALIAS: ${{ secrets.MOREFUN_ANDROID_KEY_ALIAS }}
+          STORE_PASS: ${{ secrets.MOREFUN_ANDROID_STORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.MOREFUN_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SIGNED="android/app/build/outputs/apk/release/morefun-smt-production.apk"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
             --ks /tmp/morefun-release.jks \
             --ks-key-alias "$KEY_ALIAS" \
