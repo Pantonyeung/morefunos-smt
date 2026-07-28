@@ -74,6 +74,20 @@
   gap:8px;
 }
 
+:root[data-responsive-profile="compact"] .product-card.large:not(.no-product-image){
+  grid-template-rows:minmax(0,72%) minmax(0,28%);
+}
+
+:root[data-responsive-profile="compact"] .product-card.large .product-info{
+  min-height:0;
+  height:100%;
+  padding:clamp(3px,calc(var(--adaptive-product-row-large) * .02),5px) 12px;
+}
+
+:root[data-responsive-profile="compact"] .product-card.large .product-copy{
+  gap:1px;
+}
+
 .product-copy{
   display:grid;
   gap:3px;
