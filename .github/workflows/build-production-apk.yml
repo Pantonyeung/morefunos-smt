@@ -121,8 +121,8 @@ jobs:
           cd "$OUT"
           sha256sum morefun-smt-production.apk | tee morefun-smt-production.apk.sha256
           test -s morefun-smt-production.apk
-          APK_SHA="$(awk '{print $1}' morefun-smt-production.apk.sha256)"
-          APK_BYTES="$(wc -c < morefun-smt-production.apk)"
+          export APK_SHA="$(awk '{print $1}' morefun-smt-production.apk.sha256)"
+          export APK_BYTES="$(wc -c < morefun-smt-production.apk)"
           python3 - <<'PY'
           import json, os
           manifest = {
@@ -138,9 +138,7 @@ jobs:
           with open("morefun-smt-production.release.json", "w", encoding="utf-8") as f:
             json.dump(manifest, f, ensure_ascii=False, separators=(",", ":"))
           PY
-        env:
-          APK_SHA: ${{ env.APK_SHA }}
-          APK_BYTES: ${{ env.APK_BYTES }}
+          python3 -m json.tool morefun-smt-production.release.json >/dev/null
 
       - uses: actions/upload-artifact@v4
         with:
