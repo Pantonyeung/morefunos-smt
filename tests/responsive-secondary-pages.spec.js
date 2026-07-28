@@ -10,12 +10,15 @@ const routes=[
 
 async function routeFrame(page,route){
   await expect(page.locator('#page')).toBeVisible({timeout:15000});
-  await page.waitForTimeout(300);
   const re=new RegExp(`pages/${route}/index\\.html`);
-  const frame=page.frame({url:re})||page.frames().find(f=>re.test(f.url()));
-  if(!frame)throw new Error(`${route} iframe not loaded`);
-  await expect(frame.locator(`body[data-page="${route}"]`)).toBeVisible();
-  await expect(frame.locator('#app')).toBeVisible();
+  await expect.poll(()=>page.frames().some(frame=>re.test(frame.url())),{
+    timeout:15000,
+    intervals:[100,200,300,500]
+  }).toBeTruthy();
+  const frame=page.frames().find(f=>re.test(f.url()));
+  if(!frame)throw new Error(`${route} iframe not loaded after route wait`);
+  await expect(frame.locator(`body[data-page="${route}"]`)).toBeVisible({timeout:15000});
+  await expect(frame.locator('#app')).toBeVisible({timeout:15000});
   return frame;
 }
 
