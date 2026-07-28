@@ -3,9 +3,8 @@ name: Validate APK Foundation
 on:
   push:
     branches:
-      - apk-foundation-v1
+      - main
     paths:
-      - 'android/**'
       - '.github/workflows/validate-apk-foundation.yml'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
@@ -18,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: validate-apk-foundation-${{ github.ref }}
+  group: validate-apk-foundation
   cancel-in-progress: true
 
 jobs:
@@ -27,6 +26,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: apk-foundation-v1
 
       - name: Run static foundation preflight
         run: bash android/verify-foundation.sh
