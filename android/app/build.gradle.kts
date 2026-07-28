@@ -5,7 +5,7 @@ plugins {
 val releasePublicKeyB64 = providers.gradleProperty("morefunReleasePublicKeyB64").orElse("").get()
 val releaseHosts = providers.gradleProperty("morefunReleaseHosts").orElse("raw.githubusercontent.com").get()
 val releaseManifestUrl = providers.gradleProperty("morefunReleaseManifestUrl")
-    .orElse("https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/main/releases/stable-envelope.json")
+    .orElse("https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/runtime-stable/releases/stable-envelope.json")
     .get()
 fun buildConfigString(value: String): String = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
