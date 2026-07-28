@@ -16,6 +16,7 @@ required=(
   "$SRC/NativePrintService.kt"
   "$SRC/BootReceiver.kt"
   "$SRC/BootstrapActivity.kt"
+  "$SRC/RuntimeHealthReceiver.kt"
 )
 for file in "${required[@]}"; do
   test -s "$file" || { echo "Missing D-line production file: $file" >&2; exit 1; }
@@ -37,9 +38,13 @@ grep -Fq 'Intent.ACTION_BOOT_COMPLETED' "$SRC/BootReceiver.kt"
 grep -Fq 'Intent.ACTION_MY_PACKAGE_REPLACED' "$SRC/BootReceiver.kt"
 grep -Fq 'update_failed_using_local_runtime' "$SRC/BootstrapActivity.kt"
 grep -Fq 'KEY_LAST_BOOT_UPDATE_RESULT' "$SRC/BootstrapActivity.kt"
+grep -Fq 'RuntimeHealthReceiver.arm' "$SRC/BootstrapActivity.kt"
+grep -Fq 'store.rollback()' "$SRC/RuntimeHealthReceiver.kt"
+grep -Fq 'setAndAllowWhileIdle' "$SRC/RuntimeHealthReceiver.kt"
 grep -Fq 'android.permission.INTERNET' "$MANIFEST"
 grep -Fq 'android.permission.RECEIVE_BOOT_COMPLETED' "$MANIFEST"
 grep -Fq 'android:name=".BootReceiver"' "$MANIFEST"
+grep -Fq 'android:name=".RuntimeHealthReceiver"' "$MANIFEST"
 
 if grep -R --line-number -E 'UnavailableSunmiPrinterPort\)' "$SRC/NativePrintService.kt"; then
   echo 'Production NativePrintService still defaults to unavailable SUNMI port' >&2
@@ -48,6 +53,11 @@ fi
 
 if grep -R --line-number -E 'http://' "$SRC/ReleaseUpdateManager.kt" "$SRC/ReleaseManifestVerifier.kt"; then
   echo 'Insecure HTTP release source found' >&2
+  exit 1
+fi
+
+if grep -Fq 'setExactAndAllowWhileIdle' "$SRC/RuntimeHealthReceiver.kt"; then
+  echo 'Runtime health gate must not depend on exact-alarm permission' >&2
   exit 1
 fi
 
