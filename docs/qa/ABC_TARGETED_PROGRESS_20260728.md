@@ -8,19 +8,21 @@
 - Run `30329898771`：12 FAIL。
 - 根因 1：11 個測試仍點 child `[data-action="open-settings"]`；Current Authority 已將「顯示設定」搬到 Parent Shell。
 - 根因 2：Cart footer 舊門檻要求 primary / utility `>3.4`；Current `cart.css` Authority 為 `92px 92px 1fr`，1280×800 實測 3.2109375，舊門檻並非 Current Contract。
-- 修正 commit：`f3db0d31529ef92c5d7e144bde496928d0bf2686`。只改該 spec：用 Parent Shell accessible button，門檻改驗 Current Authority `>3.0 && <4.6`。
+- 第一刀 commit：`f3db0d31529ef92c5d7e144bde496928d0bf2686`。
+- 第二層根因：QA 專用 `#dev-preview-entry` z-index 覆蓋 Parent Shell settings button，pointer click 被攔截；該 spec 驗 layout 而非 hit-area。
+- 第二刀 commit：`ba6bfeef06e8e82b75c270c345451625b8ea1bde`，只將 shell action 改為 DOM click；Runtime／Adaptive Core／1920 Lock 未改。
 - 狀態：等待同一 spec isolated rerun；未 PASS 不切下一項。
 
 ## B｜Printer／Incoming Queue
 - Printer branch：`printer-transport-settings-v1`；workflow commit `f4e65d177cf45c1342fd95b6694318e937b4d5c3`。
-- Printer Gate 已移除 unrelated full-node debug，只跑 Printer module tests，並回寫 `.github/printer-contract-last-result.txt`。
+- Printer Module Contract run `30330815664`：SUCCESS。
 - Incoming branch：`incoming-queue-domain-v1`；workflow commit `9c4f8616f6dd2e32adec74668d1f34f5a6cc18cc`。
-- Incoming Gate 只跑 `tests/incoming-queue-domain.test.mjs`，並回寫 `.github/incoming-queue-contract-last-result.txt`。
-- 狀態：等待兩個 isolated markers。
+- Incoming Queue Contract run `30330838438`：SUCCESS。
+- Evidence level：兩者為 isolated CONTRACT_PASS；A 未全 PASS 前仍禁止合併 baseline。
 
 ## C｜Production APK Keystore Decode
-- 最新 Production run `30327777075` 仍只在 Decode Android keystore FAIL。
-- 已停止重跑完整 APK Build 作 decode debug。
-- 新增 decode-only workflow：`.github/workflows/diagnose-keystore-secret.yml`，commit `3c34c31f40206be79a98c53281270a8dccb84b0c`。
-- 只輸出安全 metadata：raw/normalized length、mod4、invalid-character count、prefix detected、decode status、decoded byte count；不輸出 Secret 內容。
-- 結果 marker：`.github/keystore-decode-diagnosis.txt`。
+- 最新完整 Production run `30327777075` 仍只在 Decode Android keystore FAIL；已停止用完整 APK Build debug decode。
+- Decode-only workflow 第一版 shell quoting error；修正 commit `8d2e7c69d78685c2c78067414d93744c5bf7c7ec`。
+- 真實 diagnosis run `30331143581`：`raw_len=4131`、`normalized_len=4131`、`length_mod4=3`、`invalid_count=0`、`prefix_detected=0`、`decode_ok=0`。
+- 根因：Secret 全為合法 Base64 字元，但尾部缺 1 個標準 padding `=`。
+- Padding isolated test commit：`4f2bafe59460e47a36eda1ede24b814d2ef85657`。只驗 decode；PASS 後先修改 Production workflow。
