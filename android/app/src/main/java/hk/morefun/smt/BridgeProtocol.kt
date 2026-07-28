@@ -18,6 +18,7 @@ class BridgeProtocol(
 ) {
     private val prefs = context.getSharedPreferences("morefun_smt_foundation", Context.MODE_PRIVATE)
     private val printerSettings = PrinterDeviceSettings(context)
+    private val updateManager = ReleaseUpdateManager(context, bundleStore)
     private val ioExecutor = Executors.newSingleThreadExecutor()
 
     fun handle(rawMessage: String, respond: (String) -> Unit) {
@@ -74,12 +75,19 @@ class BridgeProtocol(
                 }
                 "bundle.getStatus" -> respond(success(id, bundleStore.status()))
                 "bundle.getVault" -> respond(success(id, JSONObject().put("versions", bundleStore.vault())))
+                "bundle.update.getStatus" -> respond(success(id, JSONObject()
+                    .put("ota", updateManager.status())
+                    .put("runtimeHealth", RuntimeHealthReceiver.status(context))
+                    .put("bundle", bundleStore.status())))
                 "bundle.install" -> installBundle(id, params, respond)
                 "bundle.markHealthy" -> executeSync(id, respond, "BUNDLE_HEALTH_CONFIRM_FAILED") {
                     val version = params.optString("version", bundleStore.currentVersion() ?: "")
-                    bundleStore.markHealthy(version)
+                    val result = bundleStore.markHealthy(version)
+                    RuntimeHealthReceiver.cancel(context)
+                    result.put("healthTimeoutCancelled", true)
                 }
                 "bundle.rollback" -> executeAsync(id, respond, "BUNDLE_ROLLBACK_FAILED") {
+                    RuntimeHealthReceiver.cancel(context)
                     JSONObject()
                         .put("status", "rolled_back")
                         .put("version", bundleStore.rollback())
@@ -136,6 +144,8 @@ class BridgeProtocol(
         add("bundle.verified.install")
         add("bundle.version-vault")
         add("bundle.health-confirm")
+        add("bundle.health-timeout")
+        add("bundle.update-status")
         add("bundle.rollback")
         add("offline.queue")
         add("offline.recovery")
@@ -157,11 +167,13 @@ class BridgeProtocol(
                 bridgeMax = params.optString("bridgeMax"),
                 base64Zip = params.optString("base64Zip")
             )
+            RuntimeHealthReceiver.arm(context)
             JSONObject()
                 .put("status", "installed_pending_health")
                 .put("version", result.version)
                 .put("sha256", result.sha256)
                 .put("previousVersion", result.previousVersion ?: JSONObject.NULL)
+                .put("healthTimeoutArmed", true)
                 .put("requiresReload", true)
         }
     }
@@ -254,6 +266,8 @@ class BridgeProtocol(
         .put("bridgeVersion", BuildConfig.BRIDGE_VERSION)
         .put("bundledWebVersion", BuildConfig.WEB_BUNDLE_VERSION)
         .put("runtimeBundle", bundleStore.status())
+        .put("runtimeHealth", RuntimeHealthReceiver.status(context))
+        .put("otaUpdate", updateManager.status())
         .put("offlineQueue", offlineQueue.status())
         .put("device", deviceInfo())
         .put("network", networkStatus())
