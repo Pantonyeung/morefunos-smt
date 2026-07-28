@@ -1,0 +1,85 @@
+name: Rebuild Clean C-Line APK
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/rebuild-c-line-apk-clean.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+          path: clean
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          ref: apk-foundation-v1
+          path: source
+      - name: Extract APK authority only
+        run: |
+          set -euo pipefail
+          rm -rf clean/android
+          cp -a source/android clean/android
+          cp source/.github/workflows/build-production-apk.yml clean/.github/workflows/build-production-apk.yml
+          cp source/.github/workflows/publish-smt-web-bundle.yml clean/.github/workflows/publish-smt-web-bundle.yml
+          cp source/.github/workflows/validate-apk-foundation.yml clean/.github/workflows/validate-apk-foundation.yml
+          mkdir -p clean/docs
+          cp source/docs/SMT_APK_DEVICE_COMPATIBILITY_MATRIX_V1.0.md clean/docs/
+          cp source/docs/SMT_APK_STABLE_HOST_AND_RUNTIME_OVERLAY_LOCK_V1.0.md clean/docs/
+          rm -f clean/android/.apk-ci-trigger
+          rm -f clean/.github/workflows/rebuild-c-line-apk-clean.yml
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('clean/.github/workflows/validate-apk-foundation.yml')
+          s=p.read_text().replace('apk-foundation-v1','c-line-apk-clean-v1')
+          p.write_text(s)
+          PY
+      - name: Static preflight
+        working-directory: clean
+        run: bash android/verify-foundation.sh
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+      - name: Compile and verify debug APK
+        working-directory: clean
+        run: |
+          set -euo pipefail
+          gradle -p android :app:assembleDebug --stacktrace --no-daemon
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          sha256sum "$APK" | tee "$APK.sha256"
+      - name: Push one clean APK commit
+        working-directory: clean
+        run: |
+          set -euo pipefail
+          git config user.name 'morefun-c-line-bot'
+          git config user.email 'morefun-c-line-bot@users.noreply.github.com'
+          git checkout -B c-line-apk-clean-v1 origin/smt-functional-completeness-v1
+          git add android .github/workflows/build-production-apk.yml .github/workflows/publish-smt-web-bundle.yml .github/workflows/validate-apk-foundation.yml docs/SMT_APK_DEVICE_COMPATIBILITY_MATRIX_V1.0.md docs/SMT_APK_STABLE_HOST_AND_RUNTIME_OVERLAY_LOCK_V1.0.md
+          git commit -m 'feat(apk): clean Android 6-11 SMT foundation'
+          git push --force origin HEAD:c-line-apk-clean-v1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: morefun-smt-clean-c-line-debug-apk
+          path: |
+            clean/android/app/build/outputs/apk/debug/app-debug.apk
+            clean/android/app/build/outputs/apk/debug/app-debug.apk.sha256
+          if-no-files-found: error
+          retention-days: 14
