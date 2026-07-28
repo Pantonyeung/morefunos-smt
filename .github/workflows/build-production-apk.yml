@@ -74,6 +74,11 @@ jobs:
         run: |
           set -euo pipefail
           CLEAN_KEYSTORE_B64="$(printf '%s' "$KEYSTORE_B64" | tr -d '[:space:]')"
+          CLEAN_KEYSTORE_B64="${CLEAN_KEYSTORE_B64#MOREFUN_ANDROID_KEYSTORE_B64=}"
+          CLEAN_KEYSTORE_B64="${CLEAN_KEYSTORE_B64#\"}"
+          CLEAN_KEYSTORE_B64="${CLEAN_KEYSTORE_B64%\"}"
+          CLEAN_KEYSTORE_B64="${CLEAN_KEYSTORE_B64#\'}"
+          CLEAN_KEYSTORE_B64="${CLEAN_KEYSTORE_B64%\'}"
           test -n "$CLEAN_KEYSTORE_B64"
           printf '%s' "$CLEAN_KEYSTORE_B64" | base64 -d > /tmp/morefun-release.jks
           echo "decoded_keystore_bytes=$(wc -c < /tmp/morefun-release.jks)"
