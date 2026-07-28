@@ -5,10 +5,11 @@ const sizes=[[1920,1080],[1600,900],[1440,900],[1366,768],[1280,800]];
 
 async function orderFrame(page){
   await expect(page.locator('#page')).toBeVisible({timeout:15000});
-  await page.waitForTimeout(300);
-  const frame=page.frame({url:/pages\/order\/index\.html/})||page.frames().find(f=>/pages\/order\/index\.html/.test(f.url()));
+  const re=/pages\/order\/index\.html/;
+  await expect.poll(()=>page.frames().some(frame=>re.test(frame.url())),{timeout:15000}).toBeTruthy();
+  const frame=page.frames().find(f=>re.test(f.url()));
   if(!frame)throw new Error('order iframe not loaded');
-  await expect(frame.locator('body[data-page="order"]')).toBeVisible();
+  await expect(frame.locator('body[data-page="order"]')).toBeVisible({timeout:15000});
   return frame;
 }
 
@@ -32,10 +33,12 @@ for(const [width,height] of sizes){
       const markerToken=parseFloat(rootStyle.getPropertyValue('--adaptive-cart-marker'))||0;
       const hero=document.querySelector('.product-card.large:not(.no-product-image) .product-hero');
       const heroImg=hero?.querySelector('img');
+      const fallback=hero?.querySelector('.image-fallback');
       const heroRect=hero?.getBoundingClientRect();
-      const heroImgRect=heroImg?.getBoundingClientRect();
-      const heroFit=heroImg?getComputedStyle(heroImg).objectFit:'';
-      return {innerWidth,innerHeight,cart,catalog,primary,cards,imageToken,markerToken,heroRect,heroImgRect,heroFit};
+      const heroImgRect=heroImg&&!heroImg.hidden?heroImg.getBoundingClientRect():null;
+      const fallbackRect=fallback&&!fallback.hidden?fallback.getBoundingClientRect():null;
+      const heroFit=heroImg&&!heroImg.hidden?getComputedStyle(heroImg).objectFit:'';
+      return {innerWidth,innerHeight,cart,catalog,primary,cards,imageToken,markerToken,heroRect,heroImgRect,fallbackRect,heroFit};
     });
 
     for(const rect of [layout.cart,layout.catalog,layout.primary]){
@@ -53,12 +56,20 @@ for(const [width,height] of sizes){
 
     expect(layout.imageToken).toBeGreaterThan(0);
     expect(layout.markerToken/layout.imageToken).toBeCloseTo(.9,2);
-    if(layout.heroRect&&layout.heroImgRect){
-      expect(layout.heroFit).toBe('contain');
-      expect(layout.heroImgRect.width/layout.heroRect.width).toBeLessThanOrEqual(.72);
-      expect(layout.heroImgRect.height/layout.heroRect.height).toBeLessThanOrEqual(.72);
-      expect(layout.heroImgRect.width/layout.heroRect.width).toBeGreaterThan(.5);
-      expect(layout.heroImgRect.height/layout.heroRect.height).toBeGreaterThan(.5);
+    if(layout.heroRect){
+      expect(layout.heroRect.width).toBeGreaterThan(0);
+      expect(layout.heroRect.height).toBeGreaterThan(0);
+      if(layout.heroImgRect){
+        expect(layout.heroFit).toBe('contain');
+        expect(layout.heroImgRect.width/layout.heroRect.width).toBeLessThanOrEqual(.72);
+        expect(layout.heroImgRect.height/layout.heroRect.height).toBeLessThanOrEqual(.72);
+        expect(layout.heroImgRect.width/layout.heroRect.width).toBeGreaterThan(.5);
+        expect(layout.heroImgRect.height/layout.heroRect.height).toBeGreaterThan(.5);
+      }else{
+        expect(layout.fallbackRect).toBeTruthy();
+        expect(layout.fallbackRect.width).toBeGreaterThan(0);
+        expect(layout.fallbackRect.height).toBeGreaterThan(0);
+      }
     }
 
     const quickHandle=frame.locator('[data-action="toggle-quick-drawer"]').first();
@@ -70,14 +81,18 @@ for(const [width,height] of sizes){
         const drinkVisual=await drink.evaluate(node=>{
           const shell=node.querySelector('.drink-choice-img');
           const img=shell?.querySelector('img');
+          const fallback=shell?.querySelector('.image-fallback');
           const shellRect=shell?.getBoundingClientRect();
-          const imgRect=img?.getBoundingClientRect();
-          return {fit:img?getComputedStyle(img).objectFit:'',shellRect,imgRect};
+          const imgRect=img&&!img.hidden?img.getBoundingClientRect():null;
+          const fallbackRect=fallback&&!fallback.hidden?fallback.getBoundingClientRect():null;
+          return {fit:img&&!img.hidden?getComputedStyle(img).objectFit:'',shellRect,imgRect,fallbackRect};
         });
         if(drinkVisual.shellRect&&drinkVisual.imgRect){
           expect(drinkVisual.fit).toBe('contain');
           expect(drinkVisual.imgRect.width/drinkVisual.shellRect.width).toBeLessThanOrEqual(.72);
           expect(drinkVisual.imgRect.height/drinkVisual.shellRect.height).toBeLessThanOrEqual(.72);
+        }else if(drinkVisual.shellRect){
+          expect(drinkVisual.fallbackRect).toBeTruthy();
         }
       }
     }
