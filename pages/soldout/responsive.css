@@ -6,7 +6,9 @@
 :root[data-readability-mode="small"] .product-description{display:none}
 :root[data-readability-mode="large"] .product-description{-webkit-line-clamp:1}
 
+:root[data-responsive-profile="compact"] body[data-page="soldout"] .workspace{padding:var(--page-gap)}
 :root[data-responsive-profile="compact"] .soldout-grid{grid-template-columns:minmax(0,1fr) minmax(0,var(--side-width,32%));gap:10px}
+:root[data-responsive-profile="compact"] .products{padding:0 9px 8px;gap:8px}
 :root[data-responsive-profile="compact"] .search-box{width:220px;height:40px}
 :root[data-responsive-profile="compact"] .status-filter button{min-width:68px;padding-inline:8px}
 :root[data-responsive-profile="compact"] .catalog-caption{padding:0 10px 7px}
