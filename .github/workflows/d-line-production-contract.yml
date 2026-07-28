@@ -1,0 +1,68 @@
+name: D-line Production Contract
+
+on:
+  push:
+    branches: [d-line-production-integration-v1]
+    paths:
+      - 'android/**'
+      - '.github/workflows/d-line-production-contract.yml'
+  pull_request:
+    branches: [smt-functional-completeness-v1]
+    paths:
+      - 'android/**'
+      - '.github/workflows/d-line-production-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d-line-production-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: D-line static production contract
+        run: bash android/verify-production-integration.sh
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+
+      - name: Compile D-line debug APK
+        run: gradle -p android :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Verify APK artifact and manifest
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$APK" | tee "$APK.badging.txt"
+          sha256sum "$APK" | tee "$APK.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d-line-debug-apk-${{ github.run_number }}
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256
+            android/app/build/outputs/apk/debug/app-debug.apk.badging.txt
+          if-no-files-found: error
+          retention-days: 7
