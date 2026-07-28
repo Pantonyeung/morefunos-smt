@@ -2,6 +2,11 @@ name: Build Production APK
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - smt-functional-completeness-v1
+    paths:
+      - .github/workflows/build-production-apk.yml
 
 permissions:
   contents: read
