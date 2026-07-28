@@ -14,6 +14,7 @@ required=(
   "$SRC/WebBundleStore.kt"
   "$SRC/BridgeProtocol.kt"
   "$SRC/NativePrintService.kt"
+  "$SRC/BootReceiver.kt"
 )
 for file in "${required[@]}"; do
   test -s "$file" || { echo "Missing D-line production file: $file" >&2; exit 1; }
@@ -31,7 +32,11 @@ grep -Fq 'UNHEALTHY_RESTART' "$SRC/WebBundleStore.kt"
 grep -Fq 'bundle.markHealthy' "$SRC/BridgeProtocol.kt"
 grep -Fq 'bundle.rollback' "$SRC/BridgeProtocol.kt"
 grep -Fq 'sunmiServiceAvailable' "$SRC/NativePrintService.kt"
+grep -Fq 'Intent.ACTION_BOOT_COMPLETED' "$SRC/BootReceiver.kt"
+grep -Fq 'Intent.ACTION_MY_PACKAGE_REPLACED' "$SRC/BootReceiver.kt"
 grep -Fq 'android.permission.INTERNET' "$MANIFEST"
+grep -Fq 'android.permission.RECEIVE_BOOT_COMPLETED' "$MANIFEST"
+grep -Fq 'android:name=".BootReceiver"' "$MANIFEST"
 
 if grep -R --line-number -E 'UnavailableSunmiPrinterPort\)' "$SRC/NativePrintService.kt"; then
   echo 'Production NativePrintService still defaults to unavailable SUNMI port' >&2
