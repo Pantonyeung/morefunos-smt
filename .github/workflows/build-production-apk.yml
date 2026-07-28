@@ -1,0 +1,100 @@
+name: Build Production APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Validate signing secrets
+        env:
+          WEB_SIGNING_KEY_B64: ${{ secrets.MOREFUN_RELEASE_PRIVATE_KEY_B64 }}
+          KEYSTORE_B64: ${{ secrets.MOREFUN_ANDROID_KEYSTORE_B64 }}
+          KEY_ALIAS: ${{ secrets.MOREFUN_ANDROID_KEY_ALIAS }}
+          STORE_PASS: ${{ secrets.MOREFUN_ANDROID_STORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.MOREFUN_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for value in "$WEB_SIGNING_KEY_B64" "$KEYSTORE_B64" "$KEY_ALIAS" "$STORE_PASS" "$KEY_PASS"; do
+            test -n "$value" || { echo 'Missing production signing secret'; exit 1; }
+          done
+
+      - uses: actions/checkout@v4
+        with:
+          ref: apk-foundation-v1
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+
+      - name: Derive embedded Web Release public key
+        env:
+          WEB_SIGNING_KEY_B64: ${{ secrets.MOREFUN_RELEASE_PRIVATE_KEY_B64 }}
+        run: |
+          set -euo pipefail
+          echo "$WEB_SIGNING_KEY_B64" | base64 -d > /tmp/morefun-web-release-private.pem
+          openssl pkey -in /tmp/morefun-web-release-private.pem -pubout -outform DER | base64 -w0 > /tmp/morefun-web-release-public.b64
+          rm -f /tmp/morefun-web-release-private.pem
+
+      - name: Build release APK with pinned updater key
+        run: |
+          set -euo pipefail
+          PUBLIC_KEY_B64="$(cat /tmp/morefun-web-release-public.b64)"
+          gradle -p android :app:assembleRelease --stacktrace \
+            -PmorefunReleasePublicKeyB64="$PUBLIC_KEY_B64" \
+            -PmorefunReleaseHosts="raw.githubusercontent.com" \
+            -PmorefunReleaseManifestUrl="https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/runtime-stable/releases/stable-envelope.json"
+          rm -f /tmp/morefun-web-release-public.b64
+
+      - name: Sign APK with persistent More Fun app key
+        env:
+          KEYSTORE_B64: ${{ secrets.MOREFUN_ANDROID_KEYSTORE_B64 }}
+          KEY_ALIAS: ${{ secrets.MOREFUN_ANDROID_KEY_ALIAS }}
+          STORE_PASS: ${{ secrets.MOREFUN_ANDROID_STORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.MOREFUN_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          echo "$KEYSTORE_B64" | base64 -d > /tmp/morefun-release.jks
+          UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SIGNED="android/app/build/outputs/apk/release/morefun-smt-production.apk"
+          test -f "$UNSIGNED"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
+            --ks /tmp/morefun-release.jks \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass "pass:$STORE_PASS" \
+            --key-pass "pass:$KEY_PASS" \
+            --out "$SIGNED" \
+            "$UNSIGNED"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$SIGNED"
+          rm -f /tmp/morefun-release.jks
+
+      - name: Produce immutable checksums
+        run: |
+          cd android/app/build/outputs/apk/release
+          sha256sum morefun-smt-production.apk > morefun-smt-production.apk.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: morefun-smt-production-apk
+          path: |
+            android/app/build/outputs/apk/release/morefun-smt-production.apk
+            android/app/build/outputs/apk/release/morefun-smt-production.apk.sha256
+          if-no-files-found: error
+          retention-days: 30
