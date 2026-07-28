@@ -2,6 +2,11 @@ name: Build Production APK
 
 on:
   workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Android host source ref to build
+        required: true
+        default: d-line-production-integration-v1
 
 permissions:
   contents: read
@@ -26,7 +31,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          ref: c-line-apk-clean-v1
+          ref: ${{ inputs.source_ref }}
 
       - uses: actions/setup-java@v4
         with:
@@ -44,37 +49,53 @@ jobs:
         with:
           gradle-version: '9.5.0'
 
+      - name: Run D-line static production preflight
+        run: bash android/verify-foundation.sh
+
       - name: Derive embedded Web Release public key
         env:
           WEB_SIGNING_KEY_B64: ${{ secrets.MOREFUN_RELEASE_PRIVATE_KEY_B64 }}
         run: |
           set -euo pipefail
-          echo "$WEB_SIGNING_KEY_B64" | base64 -d > /tmp/morefun-web-release-private.pem
+          CLEAN_WEB_KEY="$(printf '%s' "$WEB_SIGNING_KEY_B64" | tr -d '[:space:]')"
+          printf '%s' "$CLEAN_WEB_KEY" | base64 -d > /tmp/morefun-web-release-private.pem
+          chmod 600 /tmp/morefun-web-release-private.pem
           openssl pkey -in /tmp/morefun-web-release-private.pem -pubout -outform DER | base64 -w0 > /tmp/morefun-web-release-public.b64
+          test -s /tmp/morefun-web-release-public.b64
           rm -f /tmp/morefun-web-release-private.pem
 
       - name: Build release APK with pinned updater key
         run: |
           set -euo pipefail
           PUBLIC_KEY_B64="$(cat /tmp/morefun-web-release-public.b64)"
-          gradle -p android :app:assembleRelease --stacktrace \
+          gradle -p android :app:assembleRelease --stacktrace --no-daemon \
             -PmorefunReleasePublicKeyB64="$PUBLIC_KEY_B64" \
             -PmorefunReleaseHosts="raw.githubusercontent.com" \
             -PmorefunReleaseManifestUrl="https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/runtime-stable/releases/stable-envelope.json"
           rm -f /tmp/morefun-web-release-public.b64
 
-      - name: Sign APK with persistent More Fun app key
+      - name: Decode and verify persistent Android keystore
         env:
           KEYSTORE_B64: ${{ secrets.MOREFUN_ANDROID_KEYSTORE_B64 }}
+          KEY_ALIAS: ${{ secrets.MOREFUN_ANDROID_KEY_ALIAS }}
+          STORE_PASS: ${{ secrets.MOREFUN_ANDROID_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          CLEAN_KEYSTORE="$(printf '%s' "$KEYSTORE_B64" | tr -d '[:space:]')"
+          printf '%s' "$CLEAN_KEYSTORE" | base64 -d > /tmp/morefun-release.jks
+          test -s /tmp/morefun-release.jks
+          keytool -list -keystore /tmp/morefun-release.jks -storepass "$STORE_PASS" -alias "$KEY_ALIAS" >/dev/null
+
+      - name: Sign and verify production APK
+        env:
           KEY_ALIAS: ${{ secrets.MOREFUN_ANDROID_KEY_ALIAS }}
           STORE_PASS: ${{ secrets.MOREFUN_ANDROID_STORE_PASSWORD }}
           KEY_PASS: ${{ secrets.MOREFUN_ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
-          echo "$KEYSTORE_B64" | base64 -d > /tmp/morefun-release.jks
           UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
           SIGNED="android/app/build/outputs/apk/release/morefun-smt-production.apk"
-          test -f "$UNSIGNED"
+          test -s "$UNSIGNED"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
             --ks /tmp/morefun-release.jks \
             --ks-key-alias "$KEY_ALIAS" \
@@ -83,18 +104,22 @@ jobs:
             --out "$SIGNED" \
             "$UNSIGNED"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$SIGNED"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$SIGNED" | tee android/app/build/outputs/apk/release/morefun-smt-production.badging.txt
           rm -f /tmp/morefun-release.jks
 
       - name: Produce immutable checksums
         run: |
+          set -euo pipefail
           cd android/app/build/outputs/apk/release
-          sha256sum morefun-smt-production.apk > morefun-smt-production.apk.sha256
+          sha256sum morefun-smt-production.apk | tee morefun-smt-production.apk.sha256
+          test -s morefun-smt-production.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: morefun-smt-production-apk
+          name: morefun-smt-production-apk-${{ github.run_number }}
           path: |
             android/app/build/outputs/apk/release/morefun-smt-production.apk
             android/app/build/outputs/apk/release/morefun-smt-production.apk.sha256
+            android/app/build/outputs/apk/release/morefun-smt-production.badging.txt
           if-no-files-found: error
           retention-days: 30
