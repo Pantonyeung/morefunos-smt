@@ -3,7 +3,7 @@ name: Validate APK Foundation
 on:
   push:
     branches:
-      - apk-foundation-v1
+      - c-line-apk-clean-v1
     paths:
       - 'android/**'
       - '.github/workflows/validate-apk-foundation.yml'
