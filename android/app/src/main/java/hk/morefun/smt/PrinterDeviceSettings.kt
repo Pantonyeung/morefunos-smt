@@ -8,7 +8,7 @@ import org.json.JSONObject
  *
  * These settings belong to the physical terminal, not to the replaceable SMT Web Runtime.
  * Business pages may read/write them through the versioned Native Bridge, but runtime bundle
- * replacement, rollback, cache clearing, or reinstalling a Web bundle must not erase them.
+ * replacement, rollback, or cache clearing must not erase them.
  */
 class PrinterDeviceSettings(context: Context) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -52,9 +52,14 @@ class PrinterDeviceSettings(context: Context) {
         )
     }
 
-    fun transform(bytes: ByteArray, direction: PaperDirection): ByteArray = when (direction) {
-        PaperDirection.FORWARD -> bytes
-        PaperDirection.REVERSE -> bytes.reversedArray()
+    /**
+     * ESC/POS upside-down mode (ESC { n) is used instead of reversing raw bytes.
+     * Reversing bytes would corrupt commands, raster images, multibyte text, and cut/feed data.
+     * The mode is explicitly restored after each document so one job cannot leak into the next.
+     */
+    fun wrapEscPos(bytes: ByteArray, direction: PaperDirection): ByteArray {
+        val prefix = if (direction == PaperDirection.REVERSE) ESC_POS_REVERSE_ON else ESC_POS_REVERSE_OFF
+        return prefix + bytes + ESC_POS_REVERSE_OFF
     }
 
     private fun normalizePrinterId(value: String): String {
@@ -69,5 +74,7 @@ class PrinterDeviceSettings(context: Context) {
     companion object {
         private const val PREFS_NAME = "morefun_smt_device_printer_settings"
         const val DEFAULT_PRINTER_ID = "default"
+        private val ESC_POS_REVERSE_OFF = byteArrayOf(0x1B, 0x7B, 0x00)
+        private val ESC_POS_REVERSE_ON = byteArrayOf(0x1B, 0x7B, 0x01)
     }
 }
