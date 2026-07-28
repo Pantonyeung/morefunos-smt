@@ -56,41 +56,45 @@ test('new responsive layers do not use important overrides',()=>{
   expect(read('shared/responsive-pages.css')).not.toContain('!important');
 });
 
-test('soldout product cards cannot define independent fixed geometry',()=>{
-  const source=read('pages/soldout/page.css');
-  for(const token of [
+test('order and soldout product cards consume the same adaptive row tokens',()=>{
+  const soldout=read('pages/soldout/page.css');
+  const order=read('pages/order/product-card.css');
+  const shared=read('shared/adaptive-layout.css');
+  const tokens=['--adaptive-product-row-large','--adaptive-product-row-small','--adaptive-product-row-text'];
+
+  for(const token of tokens){
+    expect(shared,`${token} must be owned by shared adaptive layout`).toContain(token);
+    expect(order,`${token} must drive order product cards`).toContain(`var(${token})`);
+    expect(soldout,`${token} must drive soldout product cards`).toContain(`var(${token})`);
+  }
+
+  for(const hardcoded of [
     'grid-template-rows:150px auto',
     'grid-template-columns:72px 1fr auto',
-    '.supply-product.large{height:',
-    '.supply-product.small{height:',
-    '.supply-product.text{height:'
-  ])expect(source,token).not.toContain(token);
-  const shared=read('shared/adaptive-layout.css');
-  expect(shared).toContain('body[data-page="order"] .product-card.large');
-  expect(shared).toContain('body[data-page="soldout"] .supply-product.large');
-  expect(shared).toContain('body[data-page="order"] .product-card.small');
-  expect(shared).toContain('body[data-page="soldout"] .supply-product.small');
-  expect(shared).toContain('body[data-page="order"] .product-card.text');
-  expect(shared).toContain('body[data-page="soldout"] .supply-product.text');
+    '.supply-product.large{height:150px',
+    '.supply-product.small{height:72px'
+  ])expect(soldout,hardcoded).not.toContain(hardcoded);
+
+  expect(soldout).not.toMatch(/\.supply-product\.text\{height:\s*\d+(?:\.\d+)?px/);
 });
 
-test('shared bottom navigation geometry has a single owner',()=>{
-  const allowed=path.normalize(path.join(root,'shared/page-base.css'));
+test('global bottom navigation geometry has a single owner',()=>{
   const offenders=[];
   for(const file of walk(root).filter(file=>file.endsWith('.css'))){
-    if(path.normalize(file)===allowed)continue;
     const source=fs.readFileSync(file,'utf8');
-    if(/\.bottom-nav\s*\{|\.bottom-nav\s+button\s*\{|\.shell-nav-button\s*\{|\.shell-nav-icon\s*\{/.test(source)){
+    if(path.relative(root,file)==='app-shell.css')continue;
+    if(/\.global-bottom-nav\s*\{|\.global-bottom-nav\s+button\s*\{/.test(source)){
       offenders.push(path.relative(root,file));
     }
   }
-  expect(offenders,'Bottom-nav geometry must live only in shared/page-base.css').toEqual([]);
+  expect(offenders,'Global bottom-nav geometry must live only in app-shell.css').toEqual([]);
 });
 
-test('shared shell cannot regress to fixed bottom-nav child geometry',()=>{
-  const source=read('shared/page-base.css');
-  expect(source).toContain('--bottom-nav-icon-size');
+test('global shell bottom navigation remains adaptive and safe-area aware',()=>{
+  const source=read('app-shell.css');
+  expect(source).toContain('.global-bottom-nav{');
   expect(source).toContain('env(safe-area-inset-bottom)');
-  expect(source).toContain('height:auto');
-  expect(source).not.toContain('.shell-nav-button{display:grid;grid-template-rows:25px auto');
+  expect(source).toContain('var(--bottom-nav-height)');
+  expect(source).toContain('min-height:44px');
+  expect(source).not.toContain('grid-template-rows:25px auto');
 });
