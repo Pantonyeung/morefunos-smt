@@ -1,5 +1,6 @@
 name: Rebuild Clean C-Line APK
 
+# trigger: 2026-07-28T22:30+08:00
 on:
   push:
     branches: [main]
