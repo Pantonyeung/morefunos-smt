@@ -1,17 +1,90 @@
 status=success
-target=tests/stress-responsive-matrix.spec.js
-run_id=30357393344
-sha=e098a043ed8787f2186edd85b521a0929c0a7f15
-updated_at=2026-07-28T12:06:24.583Z
+target=FULL_BROWSER_MATRIX
+run_id=30357765403
+sha=ba6265d93fb69672e6fea69987eb55ded297672c
+updated_at=2026-07-28T12:13:25.890Z
 --- error_tail ---
-TARGET=tests/stress-responsive-matrix.spec.js
+TARGET=FULL_BROWSER_MATRIX
 
-Running 5 tests using 1 worker
+Running 78 tests using 1 worker
 
-[1/5] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1920x1080
-[2/5] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1600x900
-[3/5] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1440x900
-[4/5] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1366x768
-[5/5] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1280x800
-  5 passed (41.7s)
+[1/78] tests/dev-preview.spec.js:30:1 › development preview exposes all target sizes and gives SMT the requested viewport
+[2/78] tests/dev-preview.spec.js:53:1 › normal SMT entry shows launcher but embedded preview hides it
+[3/78] tests/proportional-layout.spec.js:66:3 › order exact visible-row capacity 1920x1080
+[4/78] tests/proportional-layout.spec.js:66:3 › order exact visible-row capacity 1600x900
+[5/78] tests/proportional-layout.spec.js:66:3 › order exact visible-row capacity 1440x900
+[6/78] tests/proportional-layout.spec.js:66:3 › order exact visible-row capacity 1366x768
+[7/78] tests/proportional-layout.spec.js:66:3 › order exact visible-row capacity 1280x800
+[8/78] tests/proportional-layout.spec.js:81:1 › large card reserves roughly three quarters for image
+[9/78] tests/proportional-layout.spec.js:94:3 › soldout reuses order large-card width and height 1920x1080
+[10/78] tests/proportional-layout.spec.js:94:3 › soldout reuses order large-card width and height 1600x900
+[11/78] tests/proportional-layout.spec.js:94:3 › soldout reuses order large-card width and height 1440x900
+[12/78] tests/proportional-layout.spec.js:94:3 › soldout reuses order large-card width and height 1366x768
+[13/78] tests/proportional-layout.spec.js:94:3 › soldout reuses order large-card width and height 1280x800
+[14/78] tests/proportional-layout.spec.js:115:1 › order cart lower controls keep current authority proportions
+[15/78] tests/responsive-architecture-guard.spec.js:33:1 › adaptive branch has no legacy size patch files
+[16/78] tests/responsive-architecture-guard.spec.js:37:1 › loader does not inject page CSS patches
+[17/78] tests/responsive-architecture-guard.spec.js:44:1 › all SMT child pages use device-width viewport
+[18/78] tests/responsive-architecture-guard.spec.js:54:1 › new responsive layers do not use important overrides
+[19/78] tests/responsive-architecture-guard.spec.js:59:1 › order and soldout product cards consume the same adaptive row tokens
+[20/78] tests/responsive-architecture-guard.spec.js:81:1 › global bottom navigation geometry has a single owner
+[21/78] tests/responsive-architecture-guard.spec.js:93:1 › global shell bottom navigation remains adaptive and safe-area aware
+[22/78] tests/responsive-checkout.spec.js:16:3 › checkout controls fit 1920x1080
+[23/78] tests/responsive-checkout.spec.js:16:3 › checkout controls fit 1600x900
+[24/78] tests/responsive-checkout.spec.js:16:3 › checkout controls fit 1440x900
+[25/78] tests/responsive-checkout.spec.js:16:3 › checkout controls fit 1366x768
+[26/78] tests/responsive-checkout.spec.js:16:3 › checkout controls fit 1280x800
+[27/78] tests/responsive-order.spec.js:17:3 › order page fits and keeps component contracts at 1920x1080
+[28/78] tests/responsive-order.spec.js:17:3 › order page fits and keeps component contracts at 1600x900
+[29/78] tests/responsive-order.spec.js:17:3 › order page fits and keeps component contracts at 1440x900
+[30/78] tests/responsive-order.spec.js:17:3 › order page fits and keeps component contracts at 1366x768
+[31/78] tests/responsive-order.spec.js:17:3 › order page fits and keeps component contracts at 1280x800
+[32/78] tests/responsive-profile.spec.js:22:3 › adaptive profile 1920x1080 -> large / extra-large-expanded
+[33/78] tests/responsive-profile.spec.js:22:3 › adaptive profile 1600x900 -> standard / extra-large-expanded
+[34/78] tests/responsive-profile.spec.js:22:3 › adaptive profile 1440x900 -> standard / large-expanded
+[35/78] tests/responsive-profile.spec.js:22:3 › adaptive profile 1366x768 -> standard / large-medium
+[36/78] tests/responsive-profile.spec.js:22:3 › adaptive profile 1280x800 -> compact / large-medium
+[37/78] tests/responsive-profile.spec.js:40:1 › 1920 baseline boots after adaptive window contract integration
+[38/78] tests/responsive-secondary-pages.spec.js:27:5 › orders fits 1920x1080
+[39/78] tests/responsive-secondary-pages.spec.js:27:5 › orders fits 1600x900
+[40/78] tests/responsive-secondary-pages.spec.js:27:5 › orders fits 1440x900
+[41/78] tests/responsive-secondary-pages.spec.js:27:5 › orders fits 1366x768
+[42/78] tests/responsive-secondary-pages.spec.js:27:5 › orders fits 1280x800
+[43/78] tests/responsive-secondary-pages.spec.js:27:5 › dine fits 1920x1080
+[44/78] tests/responsive-secondary-pages.spec.js:27:5 › dine fits 1600x900
+[45/78] tests/responsive-secondary-pages.spec.js:27:5 › dine fits 1440x900
+[46/78] tests/responsive-secondary-pages.spec.js:27:5 › dine fits 1366x768
+[47/78] tests/responsive-secondary-pages.spec.js:27:5 › dine fits 1280x800
+[48/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1920x1080
+[49/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1600x900
+[50/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1440x900
+[51/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1366x768
+[52/78] tests/responsive-secondary-pages.spec.js:27:5 › soldout fits 1280x800
+[53/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1920x1080
+[54/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1600x900
+[55/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1440x900
+[56/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1366x768
+[57/78] tests/responsive-secondary-pages.spec.js:27:5 › more fits 1280x800
+[58/78] tests/responsive-shell.spec.js:15:3 › shell fits 1920x1080 without horizontal overflow
+[59/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1920x1080
+[60/78] tests/responsive-shell.spec.js:15:3 › shell fits 1600x900 without horizontal overflow
+[61/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1600x900
+[62/78] tests/responsive-shell.spec.js:15:3 › shell fits 1440x900 without horizontal overflow
+[63/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1440x900
+[64/78] tests/responsive-shell.spec.js:15:3 › shell fits 1366x768 without horizontal overflow
+[65/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1366x768
+[66/78] tests/responsive-shell.spec.js:15:3 › shell fits 1280x800 without horizontal overflow
+[67/78] tests/responsive-shell.spec.js:33:3 › bottom navigation content is not vertically clipped at 1280x800
+[68/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1920x1080
+[69/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1600x900
+[70/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1440x900
+[71/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1366x768
+[72/78] tests/responsive-visual-contract.spec.js:40:3 › visual contract 1280x800
+[73/78] tests/responsive-visual-contract.spec.js:66:1 › product card hero follows responsive profile geometry
+[74/78] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1920x1080
+[75/78] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1600x900
+[76/78] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1440x900
+[77/78] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1366x768
+[78/78] tests/stress-responsive-matrix.spec.js:21:3 › responsive stress matrix 1280x800
+  78 passed (2.6m)
 
