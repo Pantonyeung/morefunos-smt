@@ -22,7 +22,16 @@ function registerPageActions(rightActions=''){
     const action=button.dataset.action||button.dataset.route||'action';
     const sourceId=`${page}-${action}-${index}`;
     button.dataset.shellSourceId=sourceId;
-    return {id:sourceId,sourceId,className:button.className||'',html:button.innerHTML,disabled:Boolean(button.disabled),ariaLabel:button.getAttribute('aria-label')||button.textContent?.trim()||''};
+    return {
+      id:sourceId,
+      sourceId,
+      action,
+      dataset:Object.fromEntries(Object.entries(button.dataset)),
+      className:button.className||'',
+      html:button.innerHTML,
+      disabled:Boolean(button.disabled),
+      ariaLabel:button.getAttribute('aria-label')||button.textContent?.trim()||''
+    };
   });
   queueMicrotask(()=>window.MoreFunPageBridge?.setStatusActions?.(actions));
   return template.innerHTML;
