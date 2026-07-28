@@ -56,15 +56,17 @@ class RuntimeHealthReceiver : BroadcastReceiver() {
         private const val DEFAULT_TIMEOUT_MS = 45_000L
 
         fun arm(context: Context, timeoutMs: Long = DEFAULT_TIMEOUT_MS) {
+            val safeTimeout = timeoutMs.coerceIn(15_000L, 180_000L)
             val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val pending = pendingIntent(context)
-            val triggerAt = SystemClock.elapsedRealtime() + timeoutMs.coerceIn(15_000L, 180_000L)
-            alarm.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAt, pending)
+            val triggerAt = SystemClock.elapsedRealtime() + safeTimeout
+            // Inexact idle-safe alarm avoids SCHEDULE_EXACT_ALARM dependency on Android 12+.
+            alarm.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAt, pending)
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 .edit()
                 .putString(KEY_LAST_RESULT, "armed")
                 .putLong("armed_at", System.currentTimeMillis())
-                .putLong("deadline_at", System.currentTimeMillis() + timeoutMs)
+                .putLong("deadline_at", System.currentTimeMillis() + safeTimeout)
                 .remove(KEY_LAST_ERROR)
                 .apply()
         }
