@@ -15,6 +15,7 @@ required=(
   "$SRC/BridgeProtocol.kt"
   "$SRC/NativePrintService.kt"
   "$SRC/BootReceiver.kt"
+  "$SRC/BootstrapActivity.kt"
 )
 for file in "${required[@]}"; do
   test -s "$file" || { echo "Missing D-line production file: $file" >&2; exit 1; }
@@ -34,6 +35,8 @@ grep -Fq 'bundle.rollback' "$SRC/BridgeProtocol.kt"
 grep -Fq 'sunmiServiceAvailable' "$SRC/NativePrintService.kt"
 grep -Fq 'Intent.ACTION_BOOT_COMPLETED' "$SRC/BootReceiver.kt"
 grep -Fq 'Intent.ACTION_MY_PACKAGE_REPLACED' "$SRC/BootReceiver.kt"
+grep -Fq 'update_failed_using_local_runtime' "$SRC/BootstrapActivity.kt"
+grep -Fq 'KEY_LAST_BOOT_UPDATE_RESULT' "$SRC/BootstrapActivity.kt"
 grep -Fq 'android.permission.INTERNET' "$MANIFEST"
 grep -Fq 'android.permission.RECEIVE_BOOT_COMPLETED' "$MANIFEST"
 grep -Fq 'android:name=".BootReceiver"' "$MANIFEST"
