@@ -1,0 +1,131 @@
+name: Publish SMT Web Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: SMT source ref to package
+        required: true
+        default: smt-functional-completeness-v1
+      version:
+        description: Release version (letters/numbers/._- only)
+        required: true
+      bridge_min:
+        description: Minimum compatible Native Bridge
+        required: true
+        default: 1.2.0
+      bridge_max:
+        description: Maximum compatible Native Bridge
+        required: true
+        default: 1.2.0
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Validate signing secret
+        env:
+          SIGNING_KEY_B64: ${{ secrets.MOREFUN_RELEASE_PRIVATE_KEY_B64 }}
+        run: |
+          test -n "$SIGNING_KEY_B64" || { echo 'Missing MOREFUN_RELEASE_PRIVATE_KEY_B64'; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          path: source
+
+      - name: Build deterministic Web Runtime bundle
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[A-Za-z0-9._-]{1,80}$ ]] || { echo 'Invalid version'; exit 1; }
+          mkdir -p out/runtime
+          cd source
+          git ls-files -z | while IFS= read -r -d '' file; do
+            case "$file" in
+              .github/*|android/*|docs/*|tests/*|node_modules/*|*.md|package.json|package-lock.json|.browser-qa-trigger) continue ;;
+            esac
+            mkdir -p "../out/runtime/$(dirname "$file")"
+            cp "$file" "../out/runtime/$file"
+          done
+          cd ../out/runtime
+          test -f index.html || { echo 'Runtime bundle missing index.html'; exit 1; }
+          find . -type f -print0 | LC_ALL=C sort -z | xargs -0 touch -t 202001010000
+          zip -X -q -r ../smt-web.zip .
+
+      - name: Create release manifest
+        env:
+          VERSION: ${{ inputs.version }}
+          BRIDGE_MIN: ${{ inputs.bridge_min }}
+          BRIDGE_MAX: ${{ inputs.bridge_max }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          export SHA="$(sha256sum out/smt-web.zip | awk '{print $1}')"
+          export BUNDLE_URL="https://raw.githubusercontent.com/${REPO}/runtime-stable/releases/${VERSION}/smt-web.zip"
+          python3 - <<'PY'
+          import json, os, time
+          manifest = {
+            'version': os.environ['VERSION'],
+            'sha256': os.environ['SHA'],
+            'bridgeMin': os.environ['BRIDGE_MIN'],
+            'bridgeMax': os.environ['BRIDGE_MAX'],
+            'bundleUrl': os.environ['BUNDLE_URL'],
+            'issuedAt': int(time.time() * 1000),
+          }
+          open('out/manifest.json','w',encoding='utf-8').write(json.dumps(manifest,separators=(',',':'),ensure_ascii=False))
+          PY
+
+      - name: Sign manifest and build envelope
+        env:
+          SIGNING_KEY_B64: ${{ secrets.MOREFUN_RELEASE_PRIVATE_KEY_B64 }}
+        run: |
+          set -euo pipefail
+          echo "$SIGNING_KEY_B64" | base64 -d > /tmp/morefun-release-private.pem
+          chmod 600 /tmp/morefun-release-private.pem
+          openssl dgst -sha256 -sign /tmp/morefun-release-private.pem -out out/manifest.sig out/manifest.json
+          base64 -w0 out/manifest.sig > out/signature.b64
+          python3 - <<'PY'
+          import json
+          manifest=open('out/manifest.json',encoding='utf-8').read()
+          signature=open('out/signature.b64',encoding='ascii').read().strip()
+          open('out/stable-envelope.json','w',encoding='utf-8').write(json.dumps({'manifest':manifest,'signature':signature},separators=(',',':')))
+          PY
+          rm -f /tmp/morefun-release-private.pem out/manifest.sig out/signature.b64
+
+      - uses: actions/checkout@v4
+        with:
+          ref: runtime-stable
+          path: release-repo
+
+      - name: Publish immutable version + stable pointer
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p "release-repo/releases/$VERSION"
+          test ! -e "release-repo/releases/$VERSION/smt-web.zip" || { echo 'Version already published; immutable releases cannot be overwritten'; exit 1; }
+          cp out/smt-web.zip "release-repo/releases/$VERSION/smt-web.zip"
+          cp out/manifest.json "release-repo/releases/$VERSION/manifest.json"
+          cp out/stable-envelope.json release-repo/releases/stable-envelope.json
+          cd release-repo
+          git config user.name 'morefun-release-bot'
+          git config user.email 'morefun-release-bot@users.noreply.github.com'
+          git add releases
+          git commit -m "release(web): $VERSION"
+          git push origin HEAD:runtime-stable
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: smt-web-release-${{ inputs.version }}
+          path: |
+            out/smt-web.zip
+            out/manifest.json
+            out/stable-envelope.json
+          if-no-files-found: error
+          retention-days: 30
