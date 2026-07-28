@@ -6,42 +6,13 @@ on:
   push:
     branches: [smt-functional-completeness-v1]
     paths:
+      - '.browser-qa-final-trigger'
       - '.github/workflows/qa-runtime-phase3.yml'
-      - 'package.json'
-      - 'playwright.config.cjs'
-      - 'scripts/audit-component-ownership.mjs'
-      - 'tests/**.test.mjs'
-      - 'tests/**/*.spec.js'
-      - 'SMT_CONTEXT_MIN.md'
-      - 'app-loader.js'
-      - 'app-shell.css'
-      - 'pages/order/**'
-      - 'pages/orders/**'
-      - 'pages/dine/**'
-      - 'pages/soldout/**'
-      - 'pages/more/**'
-      - 'shared/**/*.css'
-      - 'shared/**/*.js'
   pull_request:
     branches: [smt-functional-completeness-v1]
     paths:
-      - '.browser-qa-trigger'
-      - '.github/workflows/qa-runtime-phase3.yml'
-      - 'package.json'
-      - 'playwright.config.cjs'
-      - 'scripts/audit-component-ownership.mjs'
-      - 'tests/**.test.mjs'
-      - 'tests/**/*.spec.js'
-      - 'SMT_CONTEXT_MIN.md'
-      - 'app-loader.js'
-      - 'app-shell.css'
-      - 'pages/order/**'
-      - 'pages/orders/**'
-      - 'pages/dine/**'
-      - 'pages/soldout/**'
-      - 'pages/more/**'
-      - 'shared/**/*.css'
-      - 'shared/**/*.js'
+      - '.browser-qa-final-trigger'
+
 permissions:
   contents: write
 jobs:
