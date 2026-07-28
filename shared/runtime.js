@@ -1,4 +1,4 @@
-export {applyResponsiveProfile,getResponsiveProfile,RESPONSIVE_PROFILES} from './responsive.js';
+export {applyResponsiveProfile,getResponsiveProfile,getWindowSizeClass,RESPONSIVE_PROFILES,WINDOW_WIDTH_CLASSES,WINDOW_HEIGHT_CLASSES} from './responsive.js';
 
 export function safeClone(value){
   if(typeof structuredClone==='function'){
