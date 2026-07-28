@@ -49,8 +49,8 @@ jobs:
         with:
           gradle-version: '9.5.0'
 
-      - name: Run D-line static production preflight
-        run: bash android/verify-foundation.sh
+      - name: Run D-line production preflight
+        run: bash android/verify-production-integration.sh
 
       - name: Derive embedded Web Release public key
         env:
@@ -93,8 +93,9 @@ jobs:
           KEY_PASS: ${{ secrets.MOREFUN_ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
-          UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
-          SIGNED="android/app/build/outputs/apk/release/morefun-smt-production.apk"
+          OUT="android/app/build/outputs/apk/release"
+          UNSIGNED="$OUT/app-release-unsigned.apk"
+          SIGNED="$OUT/morefun-smt-production.apk"
           test -s "$UNSIGNED"
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
             --ks /tmp/morefun-release.jks \
@@ -103,16 +104,43 @@ jobs:
             --key-pass "pass:$KEY_PASS" \
             --out "$SIGNED" \
             "$UNSIGNED"
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$SIGNED"
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$SIGNED" | tee android/app/build/outputs/apk/release/morefun-smt-production.badging.txt
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$SIGNED" | tee "$OUT/morefun-smt-production.signature.txt"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$SIGNED" | tee "$OUT/morefun-smt-production.badging.txt"
+          grep -Fq "package: name='hk.morefun.smt'" "$OUT/morefun-smt-production.badging.txt"
+          grep -Fq "sdkVersion:'23'" "$OUT/morefun-smt-production.badging.txt"
           rm -f /tmp/morefun-release.jks
 
-      - name: Produce immutable checksums
+      - name: Produce immutable release manifest
+        env:
+          SOURCE_REF: ${{ inputs.source_ref }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
-          cd android/app/build/outputs/apk/release
+          OUT="android/app/build/outputs/apk/release"
+          cd "$OUT"
           sha256sum morefun-smt-production.apk | tee morefun-smt-production.apk.sha256
           test -s morefun-smt-production.apk
+          APK_SHA="$(awk '{print $1}' morefun-smt-production.apk.sha256)"
+          APK_BYTES="$(wc -c < morefun-smt-production.apk)"
+          python3 - <<'PY'
+          import json, os
+          manifest = {
+            "artifact": "morefun-smt-production.apk",
+            "sha256": os.environ["APK_SHA"],
+            "bytes": int(os.environ["APK_BYTES"]),
+            "applicationId": "hk.morefun.smt",
+            "minSdk": 23,
+            "sourceRef": os.environ["SOURCE_REF"],
+            "sourceSha": os.environ["SOURCE_SHA"],
+            "workflowRunId": os.environ["RUN_ID"]
+          }
+          with open("morefun-smt-production.release.json", "w", encoding="utf-8") as f:
+            json.dump(manifest, f, ensure_ascii=False, separators=(",", ":"))
+          PY
+        env:
+          APK_SHA: ${{ env.APK_SHA }}
+          APK_BYTES: ${{ env.APK_BYTES }}
 
       - uses: actions/upload-artifact@v4
         with:
@@ -121,5 +149,7 @@ jobs:
             android/app/build/outputs/apk/release/morefun-smt-production.apk
             android/app/build/outputs/apk/release/morefun-smt-production.apk.sha256
             android/app/build/outputs/apk/release/morefun-smt-production.badging.txt
+            android/app/build/outputs/apk/release/morefun-smt-production.signature.txt
+            android/app/build/outputs/apk/release/morefun-smt-production.release.json
           if-no-files-found: error
           retention-days: 30
