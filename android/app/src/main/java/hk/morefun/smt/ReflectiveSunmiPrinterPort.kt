@@ -22,7 +22,7 @@ class ReflectiveSunmiPrinterPort(context: Context) : SunmiPrinterPort {
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             service = runCatching {
-                val stub = Class.forName("woyou.aidlservice.jiuiv5.IWoyouService$Stub")
+                val stub = Class.forName("woyou.aidlservice.jiuiv5.IWoyouService\$Stub")
                 val asInterface = stub.getMethod("asInterface", IBinder::class.java)
                 asInterface.invoke(null, binder)
             }.getOrNull()
