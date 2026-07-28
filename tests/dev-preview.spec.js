@@ -8,22 +8,45 @@ const presets={
   '1280x800':[1280,800]
 };
 
+async function waitForPreviewViewport(page,width,height){
+  const preview=page.locator('#preview');
+  await expect(preview).toHaveCSS('width',`${width}px`);
+  await expect(preview).toHaveCSS('height',`${height}px`);
+
+  await expect.poll(async()=>{
+    const inner=page.frames().find(frame=>frame.url().includes('embedded-preview=1'));
+    if(!inner)return null;
+    try{
+      return await inner.evaluate(()=>({width:innerWidth,height:innerHeight,ready:document.readyState}));
+    }catch{
+      return null;
+    }
+  },{
+    timeout:15000,
+    intervals:[100,200,400]
+  }).toEqual({width,height,ready:'complete'});
+}
+
 test('development preview exposes all target sizes and gives SMT the requested viewport',async({page})=>{
   await page.setViewportSize({width:844,height:390});
   await page.goto('http://127.0.0.1:4173/dev-preview.html?size=1920x1080',{waitUntil:'domcontentloaded'});
   await expect(page.getByText('尺寸驗收',{exact:true}).first()).toBeVisible();
 
-  for(const [name,[width,height]] of Object.entries(presets)){
-    await page.locator(`[data-size="${name}"]`).click();
-    const preview=page.locator('#preview');
-    await expect(preview).toHaveCSS('width',`${width}px`);
-    await expect(preview).toHaveCSS('height',`${height}px`);
-    const inner=page.frames().find(frame=>frame.url().includes('embedded-preview=1'));
-    expect(inner).toBeTruthy();
-    await inner.waitForLoadState('domcontentloaded');
-    const measured=await inner.evaluate(()=>({width:innerWidth,height:innerHeight}));
-    expect(measured.width).toBe(width);
-    expect(measured.height).toBe(height);
+  const entries=Object.entries(presets);
+  for(let index=0;index<entries.length;index+=1){
+    const [name,[width,height]]=entries[index];
+    const chooser=page.locator('#chooser');
+    const sizeButton=page.locator(`[data-size="${name}"]`);
+    await expect(chooser).toBeVisible();
+    await expect(sizeButton).toBeVisible();
+    await sizeButton.click();
+    await waitForPreviewViewport(page,width,height);
+    if(index<entries.length-1){
+      const backSelect=page.locator('#backSelect');
+      await expect(backSelect).toBeVisible();
+      await backSelect.click();
+      await expect(chooser).toBeVisible();
+    }
   }
 });
 
