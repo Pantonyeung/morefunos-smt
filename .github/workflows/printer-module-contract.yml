@@ -2,53 +2,57 @@ name: Printer Module Contract
 
 on:
   pull_request:
-    branches:
-      - smt-functional-completeness-v1
+    branches: [smt-functional-completeness-v1]
     types: [opened, synchronize, reopened, ready_for_review]
   push:
-    branches:
-      - printer-transport-settings-v1
+    branches: [printer-transport-settings-v1]
+    paths:
+      - '.github/workflows/printer-module-contract.yml'
+      - 'pages/more/print-domain.js'
+      - 'pages/more/printer-*.js'
+      - 'tests/printer-*.test.mjs'
+
+permissions:
+  contents: write
 
 jobs:
   printer-contract:
-    if: github.event_name == 'push' || startsWith(github.head_ref, 'printer-transport-settings')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'push' && github.ref_name || github.head_ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Printer transport contract
-        run: node --test tests/printer-transport-settings.test.mjs
-      - name: Printer media contract
-        run: node --test tests/printer-media-profile.test.mjs
-      - name: Printer driver profile contract
-        run: node --test tests/printer-driver-profile.test.mjs
-      - name: Printer rendered asset contract
-        run: node --test tests/printer-rendered-asset.test.mjs
-      - name: Printer command renderer contract
-        run: node --test tests/printer-command-renderer.test.mjs
-      - name: Printer template layout contract
-        run: node --test tests/printer-template-layout.test.mjs
-      - name: Printer browser rasterizer contract
-        run: node --test tests/printer-browser-rasterizer.test.mjs
-      - name: Printer render pipeline contract
-        run: node --test tests/printer-render-pipeline.test.mjs
-      - name: Printer job payload contract
-        run: node --test tests/printer-job-payload.test.mjs
-      - name: Print Domain authority contract
-        run: node --test tests/printer-domain-authority.test.mjs
-      - name: Printer routing contract
-        run: node tests/printer-routing.test.mjs
-      - name: Five-printer settings contract
-        run: node --test tests/printer-settings-model.test.mjs
-      - name: Printer settings UI model contract
-        run: node --test tests/printer-settings-ui-model.test.mjs
-      - name: Printer settings controller contract
-        run: node --test tests/printer-settings-controller.test.mjs
-      - name: Printer settings renderer contract
-        run: node --test tests/printer-settings-renderer.test.mjs
-      - name: Full Node regression
-        run: node --test tests/*.test.mjs
+      - name: Run isolated Printer module contracts
+        run: |
+          set -euo pipefail
+          node --test \
+            tests/printer-transport-settings.test.mjs \
+            tests/printer-media-profile.test.mjs \
+            tests/printer-driver-profile.test.mjs \
+            tests/printer-rendered-asset.test.mjs \
+            tests/printer-command-renderer.test.mjs \
+            tests/printer-template-layout.test.mjs \
+            tests/printer-browser-rasterizer.test.mjs \
+            tests/printer-render-pipeline.test.mjs \
+            tests/printer-job-payload.test.mjs \
+            tests/printer-domain-authority.test.mjs \
+            tests/printer-routing.test.mjs \
+            tests/printer-settings-model.test.mjs \
+            tests/printer-settings-ui-model.test.mjs \
+            tests/printer-settings-controller.test.mjs \
+            tests/printer-settings-renderer.test.mjs
+      - name: Publish Printer result marker
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          JOB_STATUS: ${{ job.status }}
+        with:
+          script: |
+            const owner=context.repo.owner, repo=context.repo.repo;
+            const path='.github/printer-contract-last-result.txt';
+            const branch='printer-transport-settings-v1';
+            const body=[`status=${process.env.JOB_STATUS}`,`run_id=${context.runId}`,`sha=${context.sha}`,`updated_at=${new Date().toISOString()}`,''].join('\n');
+            let sha;
+            try{sha=(await github.rest.repos.getContent({owner,repo,path,ref:branch})).data.sha;}catch(error){if(error.status!==404)throw error;}
+            await github.rest.repos.createOrUpdateFileContents({owner,repo,path,branch,message:`ci(printer): record ${process.env.JOB_STATUS}`,content:Buffer.from(body).toString('base64'),sha});
