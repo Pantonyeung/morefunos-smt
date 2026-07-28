@@ -13,6 +13,10 @@ class BootReceiver : BroadcastReceiver() {
         val action = intent?.action ?: return
         if (action !in SUPPORTED_ACTIONS) return
 
+        if (action == Intent.ACTION_MY_PACKAGE_REPLACED) {
+            ApkInstallCoordinator(context).record("package_replaced", "Android 已完成 APK 更新")
+        }
+
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         if (!prefs.getBoolean(KEY_AUTO_START, true)) return
 
