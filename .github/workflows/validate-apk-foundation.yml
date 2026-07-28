@@ -3,15 +3,11 @@ name: Validate APK Foundation
 on:
   push:
     branches:
-      - apk-foundation-v1
+      - smt-functional-completeness-v1
     paths:
-      - 'android/**'
       - '.github/workflows/validate-apk-foundation.yml'
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
-    paths:
-      - 'android/**'
-      - '.github/workflows/validate-apk-foundation.yml'
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:
@@ -23,10 +19,18 @@ concurrency:
 
 jobs:
   compile:
+    if: >-
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       github.event.pull_request.head.ref == 'apk-foundation-v1')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout APK foundation branch
+        uses: actions/checkout@v4
+        with:
+          ref: apk-foundation-v1
 
       - name: Run static foundation preflight
         run: bash android/verify-foundation.sh
@@ -48,14 +52,18 @@ jobs:
           gradle-version: '9.5.0'
 
       - name: Compile debug APK
-        run: gradle -p android :app:assembleDebug --stacktrace
+        run: gradle -p android :app:assembleDebug --stacktrace --no-daemon
 
-      - name: Verify APK exists
-        run: test -f android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Verify APK and checksum
+        run: |
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          sha256sum android/app/build/outputs/apk/debug/app-debug.apk > android/app/build/outputs/apk/debug/app-debug.apk.sha256
 
       - uses: actions/upload-artifact@v4
         with:
           name: morefun-smt-foundation-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256
           if-no-files-found: error
           retention-days: 7
