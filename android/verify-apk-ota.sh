@@ -32,7 +32,12 @@ grep -Fq '"APK_OTA_PUBLIC_KEY_B64"' "$GRADLE"
 grep -Fq '"APK_OTA_HOSTS"' "$GRADLE"
 grep -Fq '"APK_OTA_MANIFEST_URL"' "$GRADLE"
 
-# E2 app-private download staging and real binary integrity.
+# E2 stable envelope retrieval, app-private download staging and real binary integrity.
+test -s "$SRC/ApkEnvelopeClient.kt"
+grep -Fq 'BuildConfig.APK_OTA_MANIFEST_URL' "$SRC/ApkEnvelopeClient.kt"
+grep -Fq 'BuildConfig.APK_OTA_HOSTS' "$SRC/ApkEnvelopeClient.kt"
+grep -Fq 'instanceFollowRedirects = false' "$SRC/ApkEnvelopeClient.kt"
+grep -Fq 'APK OTA envelope 超過大小限制' "$SRC/ApkEnvelopeClient.kt"
 test -s "$SRC/ApkDownloadStager.kt"
 grep -Fq 'context.noBackupFilesDir' "$SRC/ApkDownloadStager.kt"
 grep -Fq 'instanceFollowRedirects = false' "$SRC/ApkDownloadStager.kt"
@@ -67,6 +72,9 @@ test -s "$SRC/ApkOtaManager.kt"
 grep -Fq 'isDeviceOwnerApp' "$SRC/ApkInstallCapability.kt"
 grep -Fq 'canRequestPackageInstalls' "$SRC/ApkInstallCapability.kt"
 grep -Fq 'silentInstallEligible' "$SRC/ApkInstallCapability.kt"
+grep -Fq 'fun check()' "$SRC/ApkOtaManager.kt"
+grep -Fq 'fun installLatest()' "$SRC/ApkOtaManager.kt"
+grep -Fq 'envelopeClient.fetch()' "$SRC/ApkOtaManager.kt"
 grep -Fq 'verifier.verify' "$SRC/ApkOtaManager.kt"
 grep -Fq 'policy.evaluate' "$SRC/ApkOtaManager.kt"
 grep -Fq 'stager.stage(release, maxBytes = release.bytes)' "$SRC/ApkOtaManager.kt"
@@ -84,10 +92,15 @@ test -s "$BRIDGE"
 grep -Fq 'private val apkOtaManager = ApkOtaManager(context)' "$BRIDGE"
 grep -Fq '"apk.ota.getStatus"' "$BRIDGE"
 grep -Fq '"apk.ota.getCapability"' "$BRIDGE"
+grep -Fq '"apk.ota.check"' "$BRIDGE"
+grep -Fq '"apk.ota.installLatest"' "$BRIDGE"
 grep -Fq '"apk.ota.install"' "$BRIDGE"
+grep -Fq 'APK_OTA_CHECK_FAILED' "$BRIDGE"
 grep -Fq 'APK_OTA_INSTALL_FAILED' "$BRIDGE"
 grep -Fq 'apk.ota.status' "$BRIDGE"
 grep -Fq 'apk.ota.capability' "$BRIDGE"
+grep -Fq 'apk.ota.check' "$BRIDGE"
+grep -Fq 'apk.ota.install-latest' "$BRIDGE"
 grep -Fq 'apk.ota.signed-install' "$BRIDGE"
 grep -Fq 'apk.ota.package-installer' "$BRIDGE"
 grep -Fq 'apk.ota.recovery' "$BRIDGE"
@@ -103,4 +116,4 @@ if git rev-parse --verify d-line-production-integration-v1 >/dev/null 2>&1; then
   }
 fi
 
-echo 'E-line APK OTA isolated trust, bridge, installer and recovery contract PASS'
+echo 'E-line APK OTA stable-channel check, isolated trust, bridge, installer and recovery contract PASS'
