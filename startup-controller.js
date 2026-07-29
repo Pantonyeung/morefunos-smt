@@ -9,6 +9,7 @@ import {getFallbackState,subscribeFallback,reevaluateFallback} from './shared/fa
 import {configureSyncAdapters,startSyncCoordinator,stopSyncCoordinator,getSyncState,syncNow} from './shared/sync-coordinator.js';
 import {createRuntimeApiAdapter,getRuntimeApiConfig} from './shared/runtime-api-adapter.js';
 import {readRuntimeSnapshot,applyRuntimeSnapshot,clearRuntimeSnapshot} from './shared/runtime-snapshot-store.js';
+import {runRuntimeSelfTest} from './shared/runtime-self-test.js';
 
 const SETTINGS_KEY='morefun:smt:v16c:settings';
 const gate=document.getElementById('startup-gate');
@@ -142,7 +143,8 @@ window.MoreFunStaff={
   reevaluateFallback,
   getRuntimeApiConfig:()=>getRuntimeApiConfig(readSettings()),
   getRuntimeSnapshot:readRuntimeSnapshot,
-  clearRuntimeSnapshot
+  clearRuntimeSnapshot,
+  runRuntimeSelfTest
 };
 
 const restoredSession=readSession();
