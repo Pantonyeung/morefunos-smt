@@ -58,20 +58,49 @@
 3. 本機 Runtime 8／8 PASS 只證明 Queue／Snapshot 基礎正常，不代表 Admin、Firebase、Worker、Google Sheet 或正式 API 已接通。
 4. 未確認真實資料源之前，禁止自行假設「雲端」係 Firebase、Cloudflare Worker、Apps Script 或其他服務。
 
-## 6. 下一階段 Gate
+## 6. Admin／Firebase 真實狀態（2026-07-29）
 
-在接入 Pull／Push／Heartbeat／API Adapter 之前，必須由項目 Authority 明確確認：
+已確認：
 
-- Admin Repo／branch
-- Admin 儲存資料後實際寫入邊個服務
-- Firebase project／database path（如有）
-- Cloudflare Worker／API endpoint（如有）
-- Google Sheet／Apps Script 是否參與正式同步
-- 現行資料模型／revision／idempotency contract
+- Admin Repo：Pantonyeung/morefunos-admin
+- 主要開發分支：feat/admin-p0-full-connect-v1
+- Firebase Realtime Database：https://morefunposos-default-rtdb.asia-southeast1.firebasedatabase.app/
+- 設計規格中的目標路徑：
+  - /admin/draft
+  - /admin/published
+  - /runtime
+  - /admin/releases
+  - /admin/audit
+
+但以 Admin 分支目前實際程式碼與 Current Handoff 為準，真實狀態係：
+
+- Firebase Staging 正式接線仍未開始。
+- Customer／SMT／SMM 正式 adapter 尚未完成。
+- Production Auth／Permission 尚未完成。
+- src/integrations/connectors.js 目前只係一般 HTTP endpoint abstraction，並非 Firebase Realtime Database SDK adapter。
+- 未見 src/integrations/firebase-staging.js、src/data/remote-store.js、src/config/firebase-config.js 的正式實作。
+
+因此：
+
+- 不得宣稱 Admin 已經把正式資料寫入 Firebase。
+- 不得直接令 SMT 讀取未驗證的 Firebase schema。
+- 下一步應先完成或確認 Admin ⇄ Firebase Staging 真正接線，再建立 SMT read-only Runtime Adapter。
+
+## 7. 下一階段 Gate
+
+在接入 Pull／Push／Heartbeat／API Adapter 之前，必須確認：
+
+- Firebase Auth 方法及可用帳號／匿名策略
+- Realtime Database Security Rules
+- /runtime 實際資料形狀
+- runtimeVersion／updatedAt／source contract
+- /admin/published 的 schemaVersion／dataRevision
+- Admin 是否已完成首次 seed／publish
+- SMT 只讀範圍及是否允許 Runtime write-back
 
 未確認以上資料，不得建立假同步接口。
 
-## 7. 永久規則
+## 8. 永久規則
 
 - SMT 自適應系統係 UI／Adaptive 唯一 Authority。
 - Runtime 只可以模組化接入，不得覆蓋 UI Authority。
