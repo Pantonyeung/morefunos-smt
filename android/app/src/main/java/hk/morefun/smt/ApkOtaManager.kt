@@ -17,7 +17,13 @@ class ApkOtaManager(private val context: Context) {
     fun check(): JSONObject {
         val installedVersionCode = installedVersionCode()
         val envelopeText = envelopeClient.fetch()
-        val release = verifier.verify(envelopeText, installedVersionCode)
+        val release = verifier.verify(envelopeText, installedVersionCode, requireUpgrade = false)
+        if (release.versionCode == installedVersionCode) {
+            return JSONObject()
+                .put("status", "up_to_date")
+                .put("release", releaseJson(release))
+                .put("capability", capability.status())
+        }
         val manifest = release.toPolicyManifest()
         val eligibility = policy.evaluate(manifest, installedVersionCode)
         return JSONObject()
