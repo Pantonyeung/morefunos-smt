@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 SRC="$ROOT/app/src/main/java/hk/morefun/smt"
+MANIFEST="$ROOT/app/src/main/AndroidManifest.xml"
 
 bash "$ROOT/verify-production-integration.sh"
 
@@ -34,6 +35,23 @@ grep -Fq 'versionCode == release.versionCode' "$SRC/ApkBinaryVerifier.kt"
 grep -Fq 'installedCertificateSha256' "$SRC/ApkBinaryVerifier.kt"
 grep -Fq 'signing certificate continuity' "$SRC/ApkBinaryVerifier.kt"
 
+# E3 Android Package Installer and user-confirmation result path.
+test -s "$SRC/ApkInstallCoordinator.kt"
+test -s "$SRC/ApkInstallResultReceiver.kt"
+grep -Fq 'PackageInstaller.SessionParams' "$SRC/ApkInstallCoordinator.kt"
+grep -Fq 'session.openWrite' "$SRC/ApkInstallCoordinator.kt"
+grep -Fq 'session.commit' "$SRC/ApkInstallCoordinator.kt"
+grep -Fq 'FLAG_MUTABLE' "$SRC/ApkInstallCoordinator.kt"
+grep -Fq 'STATUS_PENDING_USER_ACTION' "$SRC/ApkInstallResultReceiver.kt"
+grep -Fq 'Intent.EXTRA_INTENT' "$SRC/ApkInstallResultReceiver.kt"
+grep -Fq 'REQUEST_INSTALL_PACKAGES' "$MANIFEST"
+grep -Fq '.ApkInstallResultReceiver' "$MANIFEST"
+
+# E5 package-replaced recovery and persistent diagnostics.
+grep -Fq 'ACTION_MY_PACKAGE_REPLACED' "$SRC/BootReceiver.kt"
+grep -Fq 'package_replaced' "$SRC/BootReceiver.kt"
+grep -Fq 'morefun_apk_install' "$SRC/ApkInstallCoordinator.kt"
+
 # E-line must remain descended from the frozen D-line branch and must not rewrite it.
 if git rev-parse --verify d-line-production-integration-v1 >/dev/null 2>&1; then
   BASE_SHA="$(git rev-parse d-line-production-integration-v1)"
@@ -44,4 +62,4 @@ if git rev-parse --verify d-line-production-integration-v1 >/dev/null 2>&1; then
   }
 fi
 
-echo 'E-line APK OTA isolation and binary verification contract PASS'
+echo 'E-line APK OTA installer and recovery contract PASS'
