@@ -1,0 +1,106 @@
+package hk.morefun.smt
+
+import android.content.Context
+import android.os.Build
+import org.json.JSONObject
+
+/** E-line only: end-to-end native APK OTA orchestration. */
+class ApkOtaManager(private val context: Context) {
+    private val verifier = ApkUpdateManifestVerifier()
+    private val policy = ApkUpdatePolicy(context)
+    private val envelopeClient = ApkEnvelopeClient()
+    private val stager = ApkDownloadStager(context)
+    private val binaryVerifier = ApkBinaryVerifier(context)
+    private val installer = ApkInstallCoordinator(context)
+    private val capability = ApkInstallCapability(context)
+
+    fun check(): JSONObject {
+        val installedVersionCode = installedVersionCode()
+        val envelopeText = envelopeClient.fetch()
+        val release = verifier.verify(envelopeText, installedVersionCode, requireUpgrade = false)
+        if (release.versionCode == installedVersionCode) {
+            return JSONObject()
+                .put("status", "up_to_date")
+                .put("release", releaseJson(release))
+                .put("capability", capability.status())
+        }
+        val manifest = release.toPolicyManifest()
+        val eligibility = policy.evaluate(manifest, installedVersionCode)
+        return JSONObject()
+            .put("status", "update_available")
+            .put("release", releaseJson(release))
+            .put("eligibility", eligibility)
+            .put("capability", capability.status())
+    }
+
+    fun installLatest(): JSONObject = install(envelopeClient.fetch())
+
+    fun install(envelopeText: String): JSONObject {
+        val installedVersionCode = installedVersionCode()
+        val release = verifier.verify(envelopeText, installedVersionCode)
+        val manifest = release.toPolicyManifest()
+        val eligibility = policy.evaluate(manifest, installedVersionCode)
+
+        val staged = stager.stage(release, maxBytes = release.bytes)
+        require(staged.byteLength == release.bytes) { "APK OTA 實際大小與簽署 manifest 不一致" }
+        val binary = binaryVerifier.verify(staged, release)
+        policy.rememberAccepted(manifest)
+        val install = installer.requestInstall(binary.file, release)
+
+        return JSONObject()
+            .put("status", "install_requested")
+            .put("eligibility", eligibility)
+            .put("release", releaseJson(release))
+            .put("staged", JSONObject()
+                .put("path", staged.file.absolutePath)
+                .put("sha256", staged.sha256)
+                .put("byteLength", staged.byteLength))
+            .put("binary", JSONObject()
+                .put("packageName", binary.packageName)
+                .put("versionCode", binary.versionCode)
+                .put("certificateSha256", binary.certificateSha256))
+            .put("install", install)
+            .put("capability", capability.status())
+    }
+
+    fun status(): JSONObject = JSONObject()
+        .put("installedVersionCode", installedVersionCode())
+        .put("installedVersionName", BuildConfig.VERSION_NAME)
+        .put("manifestUrl", BuildConfig.APK_OTA_MANIFEST_URL)
+        .put("allowedHosts", BuildConfig.APK_OTA_HOSTS)
+        .put("trustRootConfigured", BuildConfig.APK_OTA_PUBLIC_KEY_B64.isNotBlank())
+        .put("policy", policy.status())
+        .put("install", installer.status())
+        .put("capability", capability.status())
+
+    private fun installedVersionCode(): Long {
+        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else {
+            @Suppress("DEPRECATION")
+            info.versionCode.toLong()
+        }
+    }
+
+    private fun releaseJson(release: ApkUpdateManifestVerifier.VerifiedApkRelease): JSONObject = JSONObject()
+        .put("versionCode", release.versionCode)
+        .put("versionName", release.versionName)
+        .put("applicationId", release.applicationId)
+        .put("sha256", release.sha256)
+        .put("bytes", release.bytes)
+        .put("minSdk", release.minSdk)
+        .put("issuedAt", release.issuedAt)
+        .put("mandatory", release.mandatory)
+
+    private fun ApkUpdateManifestVerifier.VerifiedApkRelease.toPolicyManifest(): ApkUpdateManifest =
+        ApkUpdateManifest(
+            versionCode = versionCode,
+            versionName = versionName,
+            packageName = applicationId,
+            apkUrl = apkUrl,
+            sha256 = sha256,
+            bytes = bytes,
+            issuedAt = issuedAt,
+            minSdk = minSdk,
+            mandatory = mandatory
+        )
+}
