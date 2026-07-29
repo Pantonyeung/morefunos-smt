@@ -48,8 +48,8 @@ function configureRuntimeSync(session){
   }
 
   configureSyncAdapters({
-    fetcher:async({revision}={})=>{
-      const result=await runtimeApi.pull({revision});
+    fetcher:async({sinceVersion}={})=>{
+      const result=await runtimeApi.pull({revision:sinceVersion});
       return {revision:result.revision,snapshot:result.snapshot};
     },
     apply:async(result)=>applyRuntimeSnapshot(result.snapshot??result,{revision:result.revision||null}),
