@@ -55,7 +55,8 @@
 | D-048 | LOCKED | 前台顯示流水為所有渠道共用的每日三位 `P001` 至 `P999`，以早上五時作營業日分界；後台永久訂單識別另存日期、時間、建立終端及堂食枱號，每日流水不得作唯一鍵 | 2026-07-22 產品確認／order identity tests |
 | D-049 | LOCKED | SMT 報表支援今日、昨日、七日、三十日、三個月、六個月及最多六個月自訂日期；營業、渠道、付款、商品、異常共用選定範圍，但日結固定讀取當日 | 2026-07-22 舊 POS 取捨確認／more operations tests |
 | D-050 | LOCKED | 訂單渠道與付款方式獨立保存及分析；SMT 付款對數至少拆分現金、支付寶、微信支付、轉數快、PayMe、拍住賞、平台代收及其他，混合付款逐筆分拆並顯示構成訂單 | 2026-07-22 舊 POS 取捨確認／more report tests |
-| D-051 | LOCKED | SMM 為 SMT 的手機衍生介面，兩端共用同一 Domain、資料模型、Business Rule、訂單／付款／同步核心及 API Contract；只允許 UI／Device Profile／硬件能力差異。SMM 不建立第二套核心、不直接承擔實體打印；打印請求沿同一打印工作合約交由具打印能力的 SMT／打印端執行並回傳結果 | 2026-07-27 產品負責人確認／Shared Core 架構 |
+| D-051 | SUPERSEDED | SMM 為 SMT 的手機衍生介面，兩端共用同一 Domain、資料模型、Business Rule、訂單／付款／同步核心及 API Contract；只允許 UI／Device Profile／硬件能力差異。SMM 不建立第二套核心、不直接承擔實體打印；打印請求沿同一打印工作合約交由具打印能力的 SMT／打印端執行並回傳結果 | D-053 取代 |
 | D-052 | LOCKED | SMT 採 APK-first 模組化交付：先完成穩定 Android Shell／WebView、版本化 Web↔Native Bridge、打印／網絡／離線／檔案／Kiosk／診斷／受控更新與回滾等 APK Foundation，再封裝上機實測；其後純 Web／UI／業務模組可經受控 Release Channel 逐步更新，毋須因一般 UI 改動重封 APK。新增 Android 權限、新 Native 硬件能力或破壞性 Bridge Contract 時仍必須發佈新版 APK；禁止把此策略做成任意動態插件系統 | 2026-07-27 產品負責人確認／`docs/SMT_APK_FOUNDATION_DEVELOPMENT_PLAN_V1.0.md` |
+| D-053 | LOCKED | SMM 正式合併落 SMT，不再作獨立 Application、獨立 Domain 或獨立 Runtime Authority。正式產品只保留一個 SMT Application，提供 `register` 收銀機 UI Profile 與 `mobile` 手機 UI Profile；兩者共用同一 Shared Core、資料模型、Business Rule、Cart、Pricing、Checkout、Order、Payment、Permission、Sync、Recovery、API Contract、Audit 與 Print Job Contract。手機端可建立及控制打印工作，但不得直接連接實體打印機；打印工作由具硬件能力的 SMT Android Host 在後台靜默執行，並回傳 queued／printing／success／failed／retrying 等真實結果。`morefunos-smm` 只作遷移來源及歷史封存，不再接受獨立核心功能開發 | 2026-07-29 產品負責人最高決定／`docs/decisions/D-053_SMM_MERGED_INTO_SMT_SHARED_CORE.md` |
 
 新增決策不得改寫舊行；新增一行並把被取代項標 `SUPERSEDED`。
