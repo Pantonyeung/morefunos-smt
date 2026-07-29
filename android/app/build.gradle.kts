@@ -24,8 +24,8 @@ android {
         applicationId = "hk.morefun.smt"
         minSdk = 23
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3.0-foundation"
+        versionCode = 4
+        versionName = "0.4.0-e-line"
     }
 
     buildFeatures {
