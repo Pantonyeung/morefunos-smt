@@ -1,0 +1,95 @@
+name: Runtime Offline Browser Gate
+
+on:
+  pull_request:
+    branches:
+      - smt-functional-completeness-v1
+    paths:
+      - 'shared/**'
+      - 'pages/more/**'
+      - 'shell-startup.js'
+      - 'service-worker.js'
+      - 'playwright.config.cjs'
+      - 'tests/offline-survival.spec.js'
+      - '.github/workflows/runtime-offline-browser-gate.yml'
+  push:
+    branches:
+      - smt-adaptive-runtime-integration-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  targeted-offline-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package.json
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/morefun-smt-http.log 2>&1 &
+          echo $! > /tmp/morefun-smt-http.pid
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/morefun-smt-http.log
+          exit 1
+      - name: Run offline survival gate
+        run: npx playwright test tests/offline-survival.spec.js --config=playwright.config.cjs
+      - name: Upload targeted report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-offline-targeted-report
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+
+  full-browser-matrix:
+    needs: targeted-offline-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package.json
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/morefun-smt-http.log 2>&1 &
+          echo $! > /tmp/morefun-smt-http.pid
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/morefun-smt-http.log
+          exit 1
+      - name: Run full browser matrix
+        run: npx playwright test --config=playwright.config.cjs
+      - name: Upload full report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-offline-full-browser-report
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
