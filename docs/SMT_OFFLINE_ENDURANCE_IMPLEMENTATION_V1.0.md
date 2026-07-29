@@ -1,6 +1,6 @@
 # SMT 長時間離線營運｜實作記錄 V1.0
 
-更新：2026-07-29 17:58 HKT
+更新：2026-07-29 19:31 HKT
 
 ## 目標
 
@@ -49,6 +49,10 @@
   - Runtime／Offline 非阻塞啟動
   - 關鍵寫入進入 Journal
   - Browser 真離線 reload 後 Shell 可開啟
+- `.github/workflows/runtime-offline-browser-gate.yml`
+  - Targeted Offline Gate
+  - Targeted PASS 後自動執行 Full Browser Matrix
+  - CI 內 flaky 必須視為 failure
 
 ## 安全邊界
 
@@ -64,9 +68,10 @@
 
 - Draft PR：#30
 - Targeted Browser Gate：`tests/offline-survival.spec.js`
+- Run #16 Targeted Offline Gate：SUCCESS
+- Run #16 Full Browser Matrix：IN PROGRESS（2026-07-29 19:31 HKT）
 - PR 可合併狀態目前為 mergeable，但仍保持 Draft。
-- 現有 Actions 大部分工作流因路徑條件跳過；未取得 targeted Browser Gate PASS 證據。
-- Targeted Gate 通過後必須再跑受影響 Shell／More tests及完整 Browser Matrix。
+- 只有 Full Matrix 全 PASS、0 failure、0 flaky，先可標記除 Firebase／實機外軟件收口完成。
 
 ## 外部 Adapter Contract
 
@@ -95,3 +100,40 @@ uploadJournalBatch({ schemaVersion, entries })
 - 恢復網絡後順序補傳及衝突處理
 
 未完成以上實機驗收前，不標記 production release-ready。
+
+## 2026-07-29 Browser Gate 推進紀錄
+
+### 改動
+
+1. 新增真正會執行的 `Runtime Offline Browser Gate`，避免既有 workflows 因 path condition 全部 skipped。
+2. 將 `tests/offline-survival.spec.js` 正式加入 `playwright.config.cjs`。
+3. 離線 reload 前新增 Service Worker controller 接管確認。
+4. `tests/stress-responsive-matrix.spec.js` 改為每輪重新取得當前可見產品卡，避免 stale／hidden locator。
+5. Playwright config 新增 `failOnFlakyTests: Boolean(process.env.CI)`，禁止 retry 後假綠燈。
+
+### 踩過的坑／問題／根因
+
+- 首輪離線 reload 報 `ERR_INTERNET_DISCONNECTED`：Service Worker 已 ready，但當前頁未必已被 controller 接管。
+- 一輪 Full Matrix 顯示 job success，但實際為 `79 passed / 2 flaky`；按永久規則不可接受。
+- Offline flaky 一次為 Chromium context 啟動瞬間被關閉；測試加入 `finally` 保證離線狀態復原。
+- Stress Matrix 1600×900 首次失敗為固定 `nth()` 指向 modal churn 後不可見產品卡。
+- 曾加入 CLI `--fail-on-flaky`，但 repo 鎖定的 Playwright 1.61.1 不支援，出現 `unknown option`；改由 config 處理。
+- 本地容器無法拉取 GitHub 時，不得以本地未執行結果冒充 Browser PASS；GitHub Actions 是唯一正式 Browser 證據。
+
+### 成功方法
+
+`exact fail → isolate exact spec → 讀取 job log → 修單一根因 → targeted rerun → affected regression → final full matrix`
+
+### 三方記錄規則
+
+每次可驗證執行後必須同步：
+
+1. GitHub：本文件（正式工程 Authority）
+2. Google Drive：`More Fun SMT｜Runtime＋長時間離線生存｜PR #30 三方接手記錄 V1.0`
+3. Jade Note：同名 pinned 接手記錄
+
+另於 PR #30 留工作流水 comment。任何一方過期時，先補記錄再繼續修改。
+
+### 下一步唯一優先
+
+讀取 Run #16 Full Browser Matrix；任何 fail／flaky 立即 isolate exact test、修正、同步三方記錄並重跑。
