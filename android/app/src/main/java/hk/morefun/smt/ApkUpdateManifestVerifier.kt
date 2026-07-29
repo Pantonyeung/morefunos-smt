@@ -22,7 +22,11 @@ class ApkUpdateManifestVerifier {
         val mandatory: Boolean
     )
 
-    fun verify(envelopeText: String, installedVersionCode: Long): VerifiedApkRelease {
+    fun verify(
+        envelopeText: String,
+        installedVersionCode: Long,
+        requireUpgrade: Boolean = true
+    ): VerifiedApkRelease {
         val envelope = JSONObject(envelopeText)
         val manifestText = envelope.optString("manifest")
         val signatureBase64 = envelope.optString("signature")
@@ -53,7 +57,11 @@ class ApkUpdateManifestVerifier {
             mandatory = json.optBoolean("mandatory", false)
         )
 
-        require(release.versionCode > installedVersionCode) { "APK OTA 版本必須高於已安裝版本" }
+        if (requireUpgrade) {
+            require(release.versionCode > installedVersionCode) { "APK OTA 版本必須高於已安裝版本" }
+        } else {
+            require(release.versionCode >= installedVersionCode) { "APK OTA stable manifest 低於已安裝版本" }
+        }
         require(release.versionName.matches(Regex("[A-Za-z0-9._-]{1,80}"))) { "APK OTA versionName 無效" }
         require(release.applicationId == BuildConfig.APPLICATION_ID) { "APK OTA applicationId 不一致" }
         require(release.sha256.matches(Regex("[a-f0-9]{64}"))) { "APK OTA SHA-256 無效" }
