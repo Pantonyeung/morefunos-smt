@@ -7,12 +7,15 @@ import {runPull,getPullState,subscribePull} from './shared/pull-controller.js';
 import {enqueuePush,flushPushQueue,getPushQueueState,subscribePushQueue} from './shared/push-queue.js';
 import {getFallbackState,subscribeFallback,reevaluateFallback} from './shared/fallback-coordinator.js';
 import {configureSyncAdapters,startSyncCoordinator,stopSyncCoordinator,getSyncState,syncNow} from './shared/sync-coordinator.js';
+import {createRuntimeApiAdapter,getRuntimeApiConfig} from './shared/runtime-api-adapter.js';
+import {readRuntimeSnapshot,applyRuntimeSnapshot,clearRuntimeSnapshot} from './shared/runtime-snapshot-store.js';
 
 const SETTINGS_KEY='morefun:smt:v16c:settings';
 const gate=document.getElementById('startup-gate');
 const form=gate?.querySelector('form');
 const errorBox=document.getElementById('startup-error');
 const submitButton=form?.querySelector('button[type="submit"]');
+let runtimeApi=null;
 
 function readSettings(){
   try{return JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')||{};}catch{return {};}
@@ -30,6 +33,32 @@ function setBusy(busy){
   submitButton.textContent=busy?'登入中…':'登入';
 }
 
+function configureRuntimeSync(session){
+  const settings=readSettings();
+  runtimeApi=createRuntimeApiAdapter({
+    settings,
+    session,
+    applySnapshot:(snapshot)=>applyRuntimeSnapshot(snapshot,{revision:snapshot?.revision||snapshot?.version||null})
+  });
+
+  if(!runtimeApi.isConfigured()){
+    configureSyncAdapters({fetcher:null,apply:null,sender:null});
+    document.documentElement.dataset.syncConfigured='0';
+    return false;
+  }
+
+  configureSyncAdapters({
+    fetcher:async({revision}={})=>{
+      const result=await runtimeApi.pull({revision});
+      return {revision:result.revision,snapshot:result.snapshot};
+    },
+    apply:async(result)=>applyRuntimeSnapshot(result.snapshot??result,{revision:result.revision||null}),
+    sender:(item)=>runtimeApi.push(item)
+  });
+  document.documentElement.dataset.syncConfigured='1';
+  return true;
+}
+
 async function startRuntime(session){
   document.documentElement.dataset.staffReady='1';
   document.documentElement.dataset.staffUser=session?.username||'';
@@ -41,7 +70,8 @@ async function startRuntime(session){
   });
 
   markRuntimeReady();
-  startHeartbeat();
+  const syncConfigured=configureRuntimeSync(session);
+  startHeartbeat(syncConfigured?{probe:()=>runtimeApi.healthProbe()}:undefined);
   startSyncCoordinator();
 
   window.dispatchEvent(new CustomEvent('morefun:staff-ready',{
@@ -49,7 +79,9 @@ async function startRuntime(session){
       staff:session,
       bootstrap:getBootstrapState(),
       health:getHealthState(),
-      sync:getSyncState()
+      sync:getSyncState(),
+      syncConfigured,
+      cachedSnapshot:readRuntimeSnapshot()
     }
   }));
 }
@@ -107,7 +139,10 @@ window.MoreFunStaff={
   subscribePushQueue,
   getFallbackState,
   subscribeFallback,
-  reevaluateFallback
+  reevaluateFallback,
+  getRuntimeApiConfig:()=>getRuntimeApiConfig(readSettings()),
+  getRuntimeSnapshot:readRuntimeSnapshot,
+  clearRuntimeSnapshot
 };
 
 const restoredSession=readSession();
