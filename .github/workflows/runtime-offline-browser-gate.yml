@@ -1,25 +1,14 @@
 name: Runtime Offline Browser Gate
 
 on:
-  pull_request:
-    branches:
-      - smt-functional-completeness-v1
-    paths:
-      - 'shared/**'
-      - 'pages/more/**'
-      - 'shell-startup.js'
-      - 'service-worker.js'
-      - 'playwright.config.cjs'
-      - 'tests/offline-survival.spec.js'
-      - 'tests/stress-responsive-matrix.spec.js'
-      - '.github/workflows/runtime-offline-browser-gate.yml'
-  push:
-    branches:
-      - smt-adaptive-runtime-integration-v1
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: runtime-offline-browser-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   targeted-offline-gate:
