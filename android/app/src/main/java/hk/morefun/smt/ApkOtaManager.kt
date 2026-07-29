@@ -19,7 +19,8 @@ class ApkOtaManager(private val context: Context) {
         val manifest = release.toPolicyManifest()
         val eligibility = policy.evaluate(manifest, installedVersionCode)
 
-        val staged = stager.stage(release)
+        val staged = stager.stage(release, maxBytes = release.bytes)
+        require(staged.byteLength == release.bytes) { "APK OTA 實際大小與簽署 manifest 不一致" }
         val binary = binaryVerifier.verify(staged, release)
         policy.rememberAccepted(manifest)
         val install = installer.requestInstall(binary.file, release)
@@ -61,9 +62,9 @@ class ApkOtaManager(private val context: Context) {
             packageName = applicationId,
             apkUrl = apkUrl,
             sha256 = sha256,
-            bytes = 1L,
+            bytes = bytes,
             issuedAt = issuedAt,
             minSdk = minSdk,
-            mandatory = false
+            mandatory = mandatory
         )
 }
