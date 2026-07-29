@@ -1,6 +1,6 @@
 # SMT 長時間離線營運｜實作記錄 V1.0
 
-更新：2026-07-29 19:31 HKT
+更新：2026-07-29 19:34 HKT
 
 ## 目標
 
@@ -68,10 +68,13 @@
 
 - Draft PR：#30
 - Targeted Browser Gate：`tests/offline-survival.spec.js`
-- Run #16 Targeted Offline Gate：SUCCESS
-- Run #16 Full Browser Matrix：IN PROGRESS（2026-07-29 19:31 HKT）
-- PR 可合併狀態目前為 mergeable，但仍保持 Draft。
-- 只有 Full Matrix 全 PASS、0 failure、0 flaky，先可標記除 Firebase／實機外軟件收口完成。
+- Run #16 Targeted Offline Gate：SUCCESS，3／3 PASS
+- Run #16 Full Browser Matrix：SUCCESS，81／81 PASS
+- Failure：0
+- Flaky：0
+- 五個正式 viewport stress tests 全部 PASS：1920×1080、1600×900、1440×900、1366×768、1280×800
+- PR 可合併狀態為 mergeable。
+- **除 Firebase Adapter 及 Android／打印實機驗收外，本輪軟件實作與 Browser Gate 已完成。**
 
 ## 外部 Adapter Contract
 
@@ -124,6 +127,8 @@ uploadJournalBatch({ schemaVersion, entries })
 
 `exact fail → isolate exact spec → 讀取 job log → 修單一根因 → targeted rerun → affected regression → final full matrix`
 
+最終證據：Run #16 Targeted 3／3 PASS；Full Browser Matrix 81／81 PASS；0 failure；0 flaky。
+
 ### 三方記錄規則
 
 每次可驗證執行後必須同步：
@@ -136,4 +141,4 @@ uploadJournalBatch({ schemaVersion, entries })
 
 ### 下一步唯一優先
 
-讀取 Run #16 Full Browser Matrix；任何 fail／flaky 立即 isolate exact test、修正、同步三方記錄並重跑。
+完成 PR #30 狀態收口及合併前審核；Firebase Adapter 與 Android／打印實機驗收保持獨立後續 Gate，不可混寫為已完成。
