@@ -37,24 +37,31 @@ class ApkInstallCoordinator(private val context: Context) {
             .putString(KEY_TARGET_NAME, release.versionName)
             .putString(KEY_REQUESTED_MODE, requestedMode)
             .putString(KEY_STATUS, "writing")
+            .putString(KEY_MESSAGE, "")
             .putLong(KEY_UPDATED_AT, System.currentTimeMillis())
             .apply()
 
-        installer.openSession(sessionId).use { session ->
-            apk.inputStream().use { input ->
-                session.openWrite("morefun-smt-update.apk", 0L, apk.length()).use { output ->
-                    input.copyTo(output)
-                    session.fsync(output)
+        try {
+            installer.openSession(sessionId).use { session ->
+                apk.inputStream().use { input ->
+                    session.openWrite("morefun-smt-update.apk", 0L, apk.length()).use { output ->
+                        input.copyTo(output)
+                        session.fsync(output)
+                    }
                 }
+                record("committing")
+                val resultIntent = Intent(context, ApkInstallResultReceiver::class.java)
+                    .setAction(ACTION_INSTALL_RESULT)
+                    .putExtra(PackageInstaller.EXTRA_SESSION_ID, sessionId)
+                val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
+                val pending = PendingIntent.getBroadcast(context, sessionId, resultIntent, flags)
+                session.commit(pending.intentSender)
             }
-            prefs.edit().putString(KEY_STATUS, "committing").apply()
-            val resultIntent = Intent(context, ApkInstallResultReceiver::class.java)
-                .setAction(ACTION_INSTALL_RESULT)
-                .putExtra(PackageInstaller.EXTRA_SESSION_ID, sessionId)
-            val flags = PendingIntent.FLAG_UPDATE_CURRENT or
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
-            val pending = PendingIntent.getBroadcast(context, sessionId, resultIntent, flags)
-            session.commit(pending.intentSender)
+        } catch (error: Throwable) {
+            runCatching { installer.abandonSession(sessionId) }
+            record("failed", error.message ?: error.javaClass.simpleName)
+            throw error
         }
 
         return status().put("requested", true)
