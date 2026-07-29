@@ -1,12 +1,12 @@
 import {authenticateStaff,normalizeAccounts} from './shared/staff-auth.js';
 import {createSession,readSession,writeSession,clearSession} from './shared/session-store.js';
+import {startBootstrap,getBootstrapState} from './shared/bootstrap-orchestrator.js';
 
 const SETTINGS_KEY='morefun:smt:v16c:settings';
 const gate=document.getElementById('startup-gate');
 const form=gate?.querySelector('form');
 const errorBox=document.getElementById('startup-error');
 const submitButton=form?.querySelector('button[type="submit"]');
-let runtimeStarted=false;
 
 function readSettings(){
   try{return JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')||{};}catch{return {};}
@@ -25,13 +25,16 @@ function setBusy(busy){
 }
 
 async function startRuntime(session){
-  if(runtimeStarted)return;
-  runtimeStarted=true;
   document.documentElement.dataset.staffReady='1';
   document.documentElement.dataset.staffUser=session?.username||'';
   if(gate)gate.hidden=true;
-  await import('./app-loader.js?v=smt-adaptive-transition-v1');
-  window.dispatchEvent(new CustomEvent('morefun:staff-ready',{detail:{staff:session}}));
+
+  await startBootstrap({
+    session,
+    loadRuntime:()=>import('./app-loader.js?v=smt-adaptive-transition-v1')
+  });
+
+  window.dispatchEvent(new CustomEvent('morefun:staff-ready',{detail:{staff:session,bootstrap:getBootstrapState()}}));
 }
 
 async function submitLogin(event){
@@ -53,6 +56,7 @@ async function submitLogin(event){
   }catch(error){
     console.error('STAFF_LOGIN_FAILED',error);
     setError('登入暫時未能完成，請再試一次');
+    if(gate)gate.hidden=false;
   }finally{
     setBusy(false);
   }
@@ -64,10 +68,14 @@ function lock(){
 }
 
 form?.addEventListener('submit',submitLogin);
-window.MoreFunStaff={lock,getSession:readSession};
+window.MoreFunStaff={lock,getSession:readSession,getBootstrapState};
 
 const restoredSession=readSession();
-if(restoredSession)startRuntime(restoredSession);
+if(restoredSession)startRuntime(restoredSession).catch(error=>{
+  console.error('SESSION_RESTORE_BOOTSTRAP_FAILED',error);
+  if(gate)gate.hidden=false;
+  setError('系統啟動失敗，請重新登入');
+});
 else{
   gate.hidden=false;
   requestAnimationFrame(()=>form?.elements.password?.focus());
