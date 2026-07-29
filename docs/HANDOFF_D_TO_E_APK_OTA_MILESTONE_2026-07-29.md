@@ -8,133 +8,159 @@
 - D 線鎖定基準提交：`0771e8d82b39485e30f8d8c21a1771311b70e452`
 - D 線 PR：#26
 - E 線：`e-line-apk-ota-v1`
+- E 線 PR：#27
 - E 線建立方式：直接由 D 線鎖定提交抽出。
 - 硬規則：APK OTA 的任何新增、修改、測試、workflow、installer、manifest 或診斷，全部只可在 E 線進行；不得回寫、污染或重構 D 線。
 
-## 2. D 線目前已完成里程碑
+## 2. D 線凍結狀態
 
-D 線定位：Android Native Host／Printer／Runtime OTA／Recovery／Production Integration。
+D 線已完成 Android Native Host、Printer、A 線 Runtime OTA、Recovery 及 Production Integration。D 線保留作不可變基準，不再重複提供臨時下載包，也不再新增功能。
 
-已完成：
+已鎖定能力：
 
 1. APK Foundation 與 Native Bridge。
 2. LAN TCP、Label TCP、Sunmi runtime service binding。
 3. Printer registry、routing、fallback、job status、diagnostics。
 4. Offline queue 與 recovery。
-5. A 線 Signed Web Runtime OTA：
-   - HTTPS allowlist
-   - SHA-256
-   - RSA signature verify
-   - bridge min/max compatibility
-   - replay protection
-   - version vault
-   - pending health
-   - timeout rollback
-   - factory fallback
+5. A 線 Signed Web Runtime OTA：HTTPS allowlist、SHA-256、RSA signature、bridge compatibility、replay protection、version vault、pending health、timeout rollback、factory fallback。
 6. Boot Receiver、package replaced recovery、bootstrap safe fallback。
-7. D-line Production Contract。
-8. D-line Release Candidate Gate。
+7. D-line Production Contract 與 D-line Release Candidate Gate。
 
-## 3. 已驗證 CI 證據
-
-鎖定提交：`0771e8d82b39485e30f8d8c21a1771311b70e452`
+D 線鎖定 CI 證據：
 
 - Validate APK Foundation：SUCCESS
 - D-line Production Contract：SUCCESS
 - D-line Release Candidate Gate：SUCCESS
-- RC workflow run：`30406220777`
-- RC artifact：`d-line-rc-2`
-- Artifact ID：`8706660814`
-- Artifact digest：`sha256:d58b8b6db0af992f0a88b8759528fcba0f20e12a5827a12367b5864a492a1b91`
+- 鎖定提交：`0771e8d82b39485e30f8d8c21a1771311b70e452`
 
-RC artifact 包含：
+## 3. E 線定位
 
-- `app-debug.apk`
-- `app-debug.apk.sha256`
-- `app-release-unsigned.apk`
-- `app-release-unsigned.apk.sha256`
-- `app-release-unsigned.badging.txt`
+E 線完整繼承 D 線並增加 Native APK OTA。E 線通過 Replacement Gate 後，將成為唯一需要交付及安裝的 SMT APK；屆時不再需要另外提供 D 線 APK。
 
-注意：RC artifact 的 Release APK 是 unsigned。正式店舖安裝版需由 `Build Production APK` workflow 使用 More Fun 固定 Android keystore 簽署。
+更新通道：
 
-## 4. 問題一：D 線現在能否產出 APK 封裝文件
+- A 線 Runtime OTA：HTML／CSS／JavaScript／POS 業務邏輯，不重裝 APK。
+- E 線 APK OTA：Native Bridge、Printer Driver、Manifest、Boot／Kiosk、Android Host 及 APK binary。
 
-答案：可以。
+## 4. E 線目前已完成
 
-現時已可產出：
+### E0｜隔離與基準
 
-- Debug APK
-- Unsigned Release APK
-- SHA-256 checksum
-- APK badging
-- RC ZIP artifact
+- E 線直接繼承凍結 D 線。
+- Contract 驗證 D 線 head 及 merge-base。
+- D 線不接受 APK OTA 回寫。
 
-正式 signed production APK 的 workflow 亦已存在，輸出設計包括：
+### E1｜Signed APK Manifest
 
-- `morefun-smt-production.apk`
-- `morefun-smt-production.apk.sha256`
-- `morefun-smt-production.badging.txt`
-- `morefun-smt-production.signature.txt`
-- `morefun-smt-production.release.json`
+- 獨立 `APK_OTA_PUBLIC_KEY_B64`。
+- 獨立 `APK_OTA_HOSTS`。
+- 獨立 `APK_OTA_MANIFEST_URL`。
+- `SHA256withRSA` manifest 驗簽。
+- Runtime OTA trust root 與 APK OTA trust root 不可混用。
 
-正式 signed production APK 是否能即時生成，取決於 GitHub Secrets 是否已設定：
+### E2｜下載及 Binary 驗證
+
+- App-private staging。
+- HTTPS only／host allowlist。
+- 禁止 redirect。
+- Timeout、最大檔案大小及 signed bytes 核對。
+- SHA-256 實體檔案驗證。
+- package=`hk.morefun.smt`。
+- versionCode 核對。
+- Android signing certificate SHA-256 及 continuity。
+- Anti-downgrade／anti-replay。
+
+### E3–E6｜Installer、Recovery、Capability
+
+- Android Package Installer session。
+- 使用者確認安裝流程。
+- Install result receiver 及持久診斷。
+- `MY_PACKAGE_REPLACED` 後 Bootstrap recovery。
+- Device Owner／Profile Owner／普通確認／permission-required 能力偵測。
+- 無 Device Owner／system privilege 時不宣稱靜默安裝。
+
+### Bridge
+
+- `apk.ota.getStatus`
+- `apk.ota.getCapability`
+- `apk.ota.install`
+- `diagnostics.get` 包含 `apkOta`
+
+## 5. E5｜正式 Signed APK OTA Release Pipeline
+
+Workflow：`.github/workflows/e-line-production-apk-ota-release.yml`
+
+輸出：
+
+- `morefun-smt-e-line-production.apk`
+- `morefun-smt-e-line-production.apk.sha256`
+- `morefun-smt-e-line-production.badging.txt`
+- `morefun-smt-e-line-production.signature.txt`
+- `apk-ota-manifest.json`
+- `apk-ota-manifest.sig`
+- `apk-ota-manifest.sig.b64`
+- `stable-apk-envelope.json`
+
+流程：
+
+1. 執行 D 線與 E 線 contracts。
+2. 從 Runtime private key 與 APK OTA private key分別導出 public key。
+3. 將兩組獨立 trust root 寫入 BuildConfig。
+4. 使用固定 Android keystore 簽署 APK。
+5. 生成 package、version、minSdk、bytes、APK SHA、certificate SHA metadata。
+6. 使用 APK OTA RSA private key簽署 compact manifest 原始 bytes。
+7. 使用 public key再次驗證 signature。
+8. 上載 90 日 immutable artifact。
+9. 可選擇建立 GitHub Release 並發佈 `apk-ota-stable` raw channel。
+
+需要 GitHub Secrets：
 
 - `MOREFUN_RELEASE_PRIVATE_KEY_B64`
+- `MOREFUN_APK_OTA_PRIVATE_KEY_B64`
 - `MOREFUN_ANDROID_KEYSTORE_B64`
 - `MOREFUN_ANDROID_KEY_ALIAS`
 - `MOREFUN_ANDROID_STORE_PASSWORD`
 - `MOREFUN_ANDROID_KEY_PASSWORD`
 
-D 線本身不再新增 APK OTA 功能。
+正式 signed workflow 未被手動觸發並成功前，不得聲稱正式 Production APK 已產出。
 
-## 5. E 線任務定義
+## 6. E7｜替代 D 線 Gate
 
-E 線唯一目標：在不污染 D 線的前提下，建立 Native APK OTA 更新通道。
+Contract：`android/verify-e-line-replacement.sh`
 
-### Runtime OTA 與 APK OTA 必須分離
+Workflow：`.github/workflows/e-line-replacement-gate.yml`
 
-- A 線 Runtime OTA：更新 HTML／CSS／JavaScript／POS 業務流程，不重裝 APK；沿用 D 線既有能力。
-- E 線 APK OTA：更新 Native Bridge、Printer Driver、Android Manifest、Boot／Kiosk、APK binary。
+強制條件：
 
-### E 線必做範圍
+- D 線 head 必須仍是 `0771e8d82b39485e30f8d8c21a1771311b70e452`。
+- E 線 merge-base 必須是同一提交。
+- D 線 Production Contract 必須通過。
+- E 線 APK OTA Contract 必須通過。
+- applicationId=`hk.morefun.smt`。
+- minSdk=23。
+- E 線 versionCode=4，versionName=`0.4.0-e-line`，可作為 D 線 versionCode 3 的升級。
+- Debug 與 unsigned Release APK 必須可編譯。
+- Signed Release workflow 必須包含 APK、SHA、certificate、manifest、signature、envelope 及 stable channel。
 
-1. APK release manifest schema。
-2. APK versionCode／versionName 比較。
-3. HTTPS allowlist APK download。
-4. 最大檔案大小與 timeout。
-5. SHA-256 驗證。
-6. APK package name 驗證：`hk.morefun.smt`。
-7. APK signing certificate continuity 驗證。
-8. 防 downgrade／防 replay。
-9. Package Installer 接線。
-10. Device Owner／普通裝置雙策略。
-11. 無 Device Owner 時：下載後要求一次 Android 安裝確認。
-12. 有 Device Owner／廠商授權時：研究並實作可行的 managed update。
-13. 安裝結果、失敗原因、最後版本、下載進度、重試與診斷。
-14. `MY_PACKAGE_REPLACED` 後健康檢查與 recovery。
-15. E-line static contract、compile gate、RC gate。
+Replacement Gate 成功後，只代表軟件與 CI 已可取代 D 線；仍需實機驗收。
 
-## 6. E 線禁止事項
+## 7. 禁止事項
 
 - 禁止修改 D 線分支。
-- 禁止將 APK OTA 與 Web Runtime OTA 混成同一 manifest。
+- 禁止將 APK OTA 與 Runtime OTA 使用同一 BuildConfig trust root。
 - 禁止跳過 APK signing certificate continuity。
-- 禁止使用 HTTP。
-- 禁止允許任意 URL、任意 package 或任意簽章 APK。
+- 禁止 HTTP、任意 URL、任意 package 或任意簽章 APK。
 - 禁止在沒有 Device Owner／系統權限時聲稱可靜默安裝。
 - 禁止為了 OTA 重寫已完成的 Printer、Bridge、Runtime OTA 或 Recovery 架構。
 
-## 7. E 線首批 Gate
+## 8. 最終驗收剩餘項目
 
-- E0：D-line baseline identity contract。
-- E1：APK update manifest verifier。
-- E2：download／hash／package／certificate verifier。
-- E3：Package Installer human-confirm flow。
-- E4：install result diagnostics。
-- E5：package replaced recovery。
-- E6：Device Owner capability detection。
-- E7：E-line RC build and artifact。
+軟件及 CI 完成後，只留下真實硬件驗證：
 
-## 8. 驗收原則
-
-軟件部分先全部完成；最後只留下真實 Sunmi T2S／Android 11／硬件環境驗證。
+1. Sunmi T2S Android 11 安裝及升級。
+2. Android 使用者確認安裝流程。
+3. Device Owner／廠商權限能力實測。
+4. 內置 Sunmi 打印。
+5. LAN 單據打印機與標籤機。
+6. 斷網、斷電、Boot、Package Replaced、Kiosk 及 Recovery。
+7. A 線 Runtime OTA 與 E 線 APK OTA 並行、不互相污染。
