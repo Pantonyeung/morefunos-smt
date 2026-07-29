@@ -53,6 +53,7 @@ function submitLogin(event){event.preventDefault();const form=event.currentTarge
 function confirmOpening(event){event.preventDefault();const {operations,state}=openingState(),adjustment=Number(adjustmentInput?.value||0);if(!Number.isFinite(adjustment)){setError('請輸入有效開工現金調整');return;}const openingCash=Math.max(0,Number(state.previousRetained||0)+adjustment),businessDate=businessWindow().id,rows=(operations.openingCashAdjustments||[]).filter(row=>row.businessDate!==businessDate);rows.push({businessDate,previousRetained:Number(state.previousRetained||0),adjustment,openingCash,confirmedAt:Date.now(),operator:operator||validSession()?.username||'morefun'});writeJSON(OPERATIONS_STORAGE_KEY,{...operations,workspaceResetBusinessDate:businessDate,workspaceResetAt:operations.workspaceResetAt||Date.now(),openingCashAdjustments:rows});unlock();}
 
 window.addEventListener('message',event=>{
+  if(event.origin!==location.origin)return;
   const message=event.data||{};
   if(message.type!=='morefun:critical-storage-written'||!message.storageKey)return;
   void appendOfflineJournalEntry({storageKey:message.storageKey,value:message.value,source:'smt-web',businessDate:businessWindow().id,terminalId:localStorage.getItem(TERMINAL_ID_STORAGE_KEY)||'SMT-01'}).catch(error=>window.dispatchEvent(new CustomEvent('morefun:offline-journal-failed',{detail:{error:String(error?.message||error),storageKey:message.storageKey}})));
