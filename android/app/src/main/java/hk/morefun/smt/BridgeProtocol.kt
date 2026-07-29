@@ -19,6 +19,7 @@ class BridgeProtocol(
     private val prefs = context.getSharedPreferences("morefun_smt_foundation", Context.MODE_PRIVATE)
     private val printerSettings = PrinterDeviceSettings(context)
     private val updateManager = ReleaseUpdateManager(context, bundleStore)
+    private val apkOtaManager = ApkOtaManager(context)
     private val ioExecutor = Executors.newSingleThreadExecutor()
 
     fun handle(rawMessage: String, respond: (String) -> Unit) {
@@ -93,6 +94,13 @@ class BridgeProtocol(
                         .put("version", bundleStore.rollback())
                         .put("requiresReload", true)
                 }
+                "apk.ota.getStatus", "apk.update.getStatus" -> respond(success(id, apkOtaManager.status()))
+                "apk.ota.getCapability", "apk.update.getCapability" -> respond(success(id, ApkInstallCapability(context).status()))
+                "apk.ota.install", "apk.update.install" -> executeAsync(id, respond, "APK_OTA_INSTALL_FAILED") {
+                    val envelope = params.optString("envelope")
+                    require(envelope.isNotBlank()) { "APK OTA envelope 不可為空" }
+                    apkOtaManager.install(envelope)
+                }
                 "offline.enqueue" -> executeSync(id, respond, "OFFLINE_ENQUEUE_FAILED") {
                     offlineQueue.enqueue(
                         params.optString("id"),
@@ -147,6 +155,11 @@ class BridgeProtocol(
         add("bundle.health-timeout")
         add("bundle.update-status")
         add("bundle.rollback")
+        add("apk.ota.status")
+        add("apk.ota.capability")
+        add("apk.ota.signed-install")
+        add("apk.ota.package-installer")
+        add("apk.ota.recovery")
         add("offline.queue")
         add("offline.recovery")
         add("diagnostics")
@@ -268,6 +281,7 @@ class BridgeProtocol(
         .put("runtimeBundle", bundleStore.status())
         .put("runtimeHealth", RuntimeHealthReceiver.status(context))
         .put("otaUpdate", updateManager.status())
+        .put("apkOta", apkOtaManager.status())
         .put("offlineQueue", offlineQueue.status())
         .put("device", deviceInfo())
         .put("network", networkStatus())
