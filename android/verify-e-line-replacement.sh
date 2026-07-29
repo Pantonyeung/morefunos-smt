@@ -44,25 +44,25 @@ grep -Fq 'USER_ACTION_NOT_REQUIRED' "$INSTALLER"
 grep -Fq 'device_owner_managed' "$INSTALLER"
 grep -Fq 'abandonSession' "$INSTALLER"
 
-# Shared release generator must produce and verify the signed envelope.
+# Shared release generator owns manifest, certificate, checksum and signed envelope output.
 test -s "$RELEASE_GENERATOR"
 grep -Fq 'apk-ota-manifest.json' "$RELEASE_GENERATOR"
+grep -Fq 'certificateSha256' "$RELEASE_GENERATOR"
+grep -Fq 'morefun-smt-e-line-production.apk.sha256' "$RELEASE_GENERATOR"
 grep -Fq 'openssl dgst -sha256' "$RELEASE_GENERATOR"
 grep -Fq 'stable-apk-envelope.json' "$RELEASE_GENERATOR"
 grep -Fq 'apk-ota-release-metadata.env' "$RELEASE_GENERATOR"
 grep -Fq 'APK_URL must use HTTPS' "$RELEASE_GENERATOR"
 
-# Signed production release pipeline must produce all OTA deliverables.
+# Signed production workflow must call the verified shared generator and protect signing secrets.
 test -s "$RELEASE_WORKFLOW"
 grep -Fq 'MOREFUN_APK_OTA_PRIVATE_KEY_B64' "$RELEASE_WORKFLOW"
 grep -Fq 'MOREFUN_ANDROID_KEYSTORE_B64' "$RELEASE_WORKFLOW"
 grep -Fq 'apksigner' "$RELEASE_WORKFLOW"
-grep -Fq 'apk-ota-manifest.json' "$RELEASE_WORKFLOW"
-grep -Fq 'stable-apk-envelope.json' "$RELEASE_WORKFLOW"
-grep -Fq 'certificateSha256' "$RELEASE_WORKFLOW"
-grep -Fq 'morefun-smt-e-line-production.apk.sha256' "$RELEASE_WORKFLOW"
+grep -Fq 'generate-apk-ota-release.sh' "$RELEASE_WORKFLOW"
 grep -Fq 'apk-ota-stable' "$RELEASE_WORKFLOW"
 grep -Fq 'retention-days: 90' "$RELEASE_WORKFLOW"
+grep -Fq 'ref: e-line-apk-ota-v1' "$RELEASE_WORKFLOW"
 
 # Ephemeral dry run must exercise compile, APK signing, manifest signing and envelope validation.
 test -s "$DRY_RUN_WORKFLOW"
