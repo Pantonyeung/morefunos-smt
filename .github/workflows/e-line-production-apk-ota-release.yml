@@ -1,0 +1,265 @@
+name: E-line Production APK OTA Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: E-line source ref to build
+        required: true
+        default: e-line-apk-ota-v1
+      publish_release:
+        description: Publish GitHub Release and apk-ota-stable channel
+        required: true
+        type: boolean
+        default: false
+      mandatory:
+        description: Mark this APK update as mandatory
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-sign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      version_code: ${{ steps.release_meta.outputs.version_code }}
+      version_name: ${{ steps.release_meta.outputs.version_name }}
+      artifact_name: ${{ steps.release_meta.outputs.artifact_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+
+      - name: Fetch frozen D-line baseline
+        run: git fetch origin d-line-production-integration-v1:d-line-production-integration-v1
+
+      - name: Run D-line and E-line contracts
+        run: |
+          bash android/verify-production-integration.sh
+          bash android/verify-apk-ota.sh
+
+      - name: Derive independent Runtime and APK OTA public keys
+        env:
+          RUNTIME_PRIVATE_KEY_B64: ${{ secrets.MOREFUN_RELEASE_PRIVATE_KEY_B64 }}
+          APK_OTA_PRIVATE_KEY_B64: ${{ secrets.MOREFUN_APK_OTA_PRIVATE_KEY_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$RUNTIME_PRIVATE_KEY_B64"
+          test -n "$APK_OTA_PRIVATE_KEY_B64"
+          printf '%s' "$RUNTIME_PRIVATE_KEY_B64" | tr -d '[:space:]' | base64 -d > /tmp/morefun-runtime-private.pem
+          printf '%s' "$APK_OTA_PRIVATE_KEY_B64" | tr -d '[:space:]' | base64 -d > /tmp/morefun-apk-ota-private.pem
+          chmod 600 /tmp/morefun-runtime-private.pem /tmp/morefun-apk-ota-private.pem
+          openssl pkey -in /tmp/morefun-runtime-private.pem -pubout -out /tmp/morefun-runtime-public.pem
+          openssl pkey -in /tmp/morefun-apk-ota-private.pem -pubout -out /tmp/morefun-apk-ota-public.pem
+          openssl pkey -pubin -in /tmp/morefun-runtime-public.pem -outform DER | base64 -w0 > /tmp/morefun-runtime-public.b64
+          openssl pkey -pubin -in /tmp/morefun-apk-ota-public.pem -outform DER | base64 -w0 > /tmp/morefun-apk-ota-public.b64
+          test -s /tmp/morefun-runtime-public.b64
+          test -s /tmp/morefun-apk-ota-public.b64
+
+      - name: Build E-line release APK with isolated trust roots
+        run: |
+          set -euo pipefail
+          RUNTIME_PUBLIC_KEY_B64="$(cat /tmp/morefun-runtime-public.b64)"
+          APK_OTA_PUBLIC_KEY_B64="$(cat /tmp/morefun-apk-ota-public.b64)"
+          gradle -p android :app:assembleRelease --stacktrace --no-daemon \
+            -PmorefunReleasePublicKeyB64="$RUNTIME_PUBLIC_KEY_B64" \
+            -PmorefunReleaseHosts="raw.githubusercontent.com" \
+            -PmorefunReleaseManifestUrl="https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/runtime-stable/releases/stable-envelope.json" \
+            -PmorefunApkOtaPublicKeyB64="$APK_OTA_PUBLIC_KEY_B64" \
+            -PmorefunApkOtaHosts="raw.githubusercontent.com" \
+            -PmorefunApkOtaManifestUrl="https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/apk-ota-stable/releases/stable-apk-envelope.json"
+
+      - name: Decode and verify persistent Android keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.MOREFUN_ANDROID_KEYSTORE_B64 }}
+          KEY_ALIAS: ${{ secrets.MOREFUN_ANDROID_KEY_ALIAS }}
+          STORE_PASS: ${{ secrets.MOREFUN_ANDROID_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64"
+          test -n "$KEY_ALIAS"
+          test -n "$STORE_PASS"
+          printf '%s' "$KEYSTORE_B64" | tr -d '[:space:]' | base64 -d > /tmp/morefun-release.jks
+          chmod 600 /tmp/morefun-release.jks
+          test -s /tmp/morefun-release.jks
+          keytool -list -keystore /tmp/morefun-release.jks -storepass "$STORE_PASS" -alias "$KEY_ALIAS" >/dev/null
+
+      - name: Sign and verify E-line production APK
+        env:
+          KEY_ALIAS: ${{ secrets.MOREFUN_ANDROID_KEY_ALIAS }}
+          STORE_PASS: ${{ secrets.MOREFUN_ANDROID_STORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.MOREFUN_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          OUT="android/app/build/outputs/apk/release/e-line-dist"
+          mkdir -p "$OUT"
+          UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SIGNED="$OUT/morefun-smt-e-line-production.apk"
+          test -s "$UNSIGNED"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
+            --ks /tmp/morefun-release.jks \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass "pass:$STORE_PASS" \
+            --key-pass "pass:$KEY_PASS" \
+            --out "$SIGNED" \
+            "$UNSIGNED"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$SIGNED" | tee "$OUT/morefun-smt-e-line-production.signature.txt"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$SIGNED" | tee "$OUT/morefun-smt-e-line-production.badging.txt"
+          grep -Fq "package: name='hk.morefun.smt'" "$OUT/morefun-smt-e-line-production.badging.txt"
+          grep -Fq "sdkVersion:'23'" "$OUT/morefun-smt-e-line-production.badging.txt"
+
+      - name: Generate and sign APK OTA manifest envelope
+        id: release_meta
+        env:
+          MANDATORY: ${{ inputs.mandatory }}
+        run: |
+          set -euo pipefail
+          OUT="android/app/build/outputs/apk/release/e-line-dist"
+          APK="$OUT/morefun-smt-e-line-production.apk"
+          BADGING="$OUT/morefun-smt-e-line-production.badging.txt"
+          SIGNATURE_REPORT="$OUT/morefun-smt-e-line-production.signature.txt"
+          PACKAGE_ID="$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" "$BADGING")"
+          VERSION_CODE="$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" "$BADGING")"
+          VERSION_NAME="$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" "$BADGING")"
+          MIN_SDK="$(sed -n "s/^sdkVersion:'\([^']*\)'.*/\1/p" "$BADGING")"
+          CERT_SHA="$(awk -F': ' '/Signer #1 certificate SHA-256 digest/{print tolower($2); exit}' "$SIGNATURE_REPORT" | tr -d ':[:space:]')"
+          APK_SHA="$(sha256sum "$APK" | awk '{print $1}')"
+          APK_BYTES="$(wc -c < "$APK" | tr -d '[:space:]')"
+          ISSUED_AT="$(date +%s)"
+          APK_URL="https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/apk-ota-stable/releases/v${VERSION_CODE}/morefun-smt-e-line-production.apk"
+          SOURCE_SHA="$(git rev-parse HEAD)"
+          test "$PACKAGE_ID" = "hk.morefun.smt"
+          test -n "$VERSION_CODE"
+          test -n "$VERSION_NAME"
+          test "$MIN_SDK" = "23"
+          test "${#CERT_SHA}" -eq 64
+          export PACKAGE_ID VERSION_CODE VERSION_NAME MIN_SDK CERT_SHA APK_SHA APK_BYTES ISSUED_AT APK_URL SOURCE_SHA MANDATORY
+          python3 - <<'PY'
+          import json, os
+          manifest = {
+              "applicationId": os.environ["PACKAGE_ID"],
+              "versionCode": int(os.environ["VERSION_CODE"]),
+              "versionName": os.environ["VERSION_NAME"],
+              "apkUrl": os.environ["APK_URL"],
+              "sha256": os.environ["APK_SHA"],
+              "certificateSha256": os.environ["CERT_SHA"],
+              "bytes": int(os.environ["APK_BYTES"]),
+              "minSdk": int(os.environ["MIN_SDK"]),
+              "issuedAt": int(os.environ["ISSUED_AT"]),
+              "mandatory": os.environ["MANDATORY"].lower() == "true",
+              "sourceSha": os.environ["SOURCE_SHA"]
+          }
+          with open("android/app/build/outputs/apk/release/e-line-dist/apk-ota-manifest.json", "w", encoding="utf-8") as f:
+              f.write(json.dumps(manifest, ensure_ascii=False, separators=(",", ":")))
+          PY
+          openssl dgst -sha256 -sign /tmp/morefun-apk-ota-private.pem -out "$OUT/apk-ota-manifest.sig" "$OUT/apk-ota-manifest.json"
+          openssl dgst -sha256 -verify /tmp/morefun-apk-ota-public.pem -signature "$OUT/apk-ota-manifest.sig" "$OUT/apk-ota-manifest.json"
+          base64 -w0 "$OUT/apk-ota-manifest.sig" > "$OUT/apk-ota-manifest.sig.b64"
+          export MANIFEST_PATH="$OUT/apk-ota-manifest.json"
+          export SIGNATURE_PATH="$OUT/apk-ota-manifest.sig.b64"
+          python3 - <<'PY'
+          import json, os
+          manifest_text = open(os.environ["MANIFEST_PATH"], encoding="utf-8").read()
+          signature = open(os.environ["SIGNATURE_PATH"], encoding="utf-8").read().strip()
+          envelope = {"manifest": manifest_text, "signature": signature}
+          with open("android/app/build/outputs/apk/release/e-line-dist/stable-apk-envelope.json", "w", encoding="utf-8") as f:
+              f.write(json.dumps(envelope, ensure_ascii=False, separators=(",", ":")))
+          PY
+          sha256sum "$APK" | tee "$OUT/morefun-smt-e-line-production.apk.sha256"
+          python3 -m json.tool "$OUT/apk-ota-manifest.json" >/dev/null
+          python3 -m json.tool "$OUT/stable-apk-envelope.json" >/dev/null
+          ARTIFACT_NAME="e-line-production-apk-ota-${GITHUB_RUN_NUMBER}"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Remove private signing material
+        if: always()
+        run: |
+          rm -f /tmp/morefun-runtime-private.pem /tmp/morefun-apk-ota-private.pem /tmp/morefun-release.jks
+          rm -f /tmp/morefun-runtime-public.pem /tmp/morefun-apk-ota-public.pem
+          rm -f /tmp/morefun-runtime-public.b64 /tmp/morefun-apk-ota-public.b64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.release_meta.outputs.artifact_name }}
+          path: android/app/build/outputs/apk/release/e-line-dist/*
+          if-no-files-found: error
+          retention-days: 90
+
+  publish-stable:
+    if: ${{ inputs.publish_release }}
+    needs: build-and-sign
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-and-sign.outputs.artifact_name }}
+          path: /tmp/e-line-dist
+
+      - name: Publish immutable GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION_CODE: ${{ needs.build-and-sign.outputs.version_code }}
+          VERSION_NAME: ${{ needs.build-and-sign.outputs.version_name }}
+        run: |
+          set -euo pipefail
+          TAG="smt-e-${VERSION_CODE}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" /tmp/e-line-dist/* --clobber
+          else
+            gh release create "$TAG" /tmp/e-line-dist/* \
+              --title "More Fun SMT E-line ${VERSION_NAME}" \
+              --notes "Signed E-line production APK and APK OTA envelope for versionCode ${VERSION_CODE}."
+          fi
+
+      - name: Publish apk-ota-stable raw channel
+        env:
+          VERSION_CODE: ${{ needs.build-and-sign.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch origin apk-ota-stable:refs/remotes/origin/apk-ota-stable 2>/dev/null; then
+            git switch --force-create apk-ota-stable origin/apk-ota-stable
+          else
+            git switch --orphan apk-ota-stable
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          mkdir -p "releases/v${VERSION_CODE}"
+          cp /tmp/e-line-dist/morefun-smt-e-line-production.apk "releases/v${VERSION_CODE}/morefun-smt-e-line-production.apk"
+          cp /tmp/e-line-dist/apk-ota-manifest.json "releases/v${VERSION_CODE}/apk-ota-manifest.json"
+          cp /tmp/e-line-dist/stable-apk-envelope.json releases/stable-apk-envelope.json
+          cp /tmp/e-line-dist/morefun-smt-e-line-production.apk.sha256 "releases/v${VERSION_CODE}/morefun-smt-e-line-production.apk.sha256"
+          git add releases
+          git commit -m "release(apk-ota): publish SMT E-line versionCode ${VERSION_CODE}" || true
+          git push origin HEAD:apk-ota-stable
