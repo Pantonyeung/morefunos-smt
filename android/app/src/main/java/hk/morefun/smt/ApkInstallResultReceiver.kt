@@ -16,10 +16,20 @@ class ApkInstallResultReceiver : BroadcastReceiver() {
         when (status) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                 coordinator.record("awaiting_user_confirmation", message)
+                @Suppress("DEPRECATION")
                 val confirmation = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
-                confirmation?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                if (confirmation != null) context.startActivity(confirmation)
-                else coordinator.record("failed", "缺少 Android 安裝確認 Intent")
+                if (confirmation == null) {
+                    coordinator.record("failed", "缺少 Android 安裝確認 Intent")
+                } else {
+                    confirmation.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    runCatching { context.startActivity(confirmation) }
+                        .onFailure {
+                            coordinator.record(
+                                "failed",
+                                "無法啟動 Android 安裝確認：${it.message ?: it.javaClass.simpleName}"
+                            )
+                        }
+                }
             }
             PackageInstaller.STATUS_SUCCESS -> coordinator.record("installed", message)
             PackageInstaller.STATUS_FAILURE_ABORTED -> coordinator.record("cancelled", message)
