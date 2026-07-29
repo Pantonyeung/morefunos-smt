@@ -8,10 +8,26 @@ import org.json.JSONObject
 class ApkOtaManager(private val context: Context) {
     private val verifier = ApkUpdateManifestVerifier()
     private val policy = ApkUpdatePolicy(context)
+    private val envelopeClient = ApkEnvelopeClient()
     private val stager = ApkDownloadStager(context)
     private val binaryVerifier = ApkBinaryVerifier(context)
     private val installer = ApkInstallCoordinator(context)
     private val capability = ApkInstallCapability(context)
+
+    fun check(): JSONObject {
+        val installedVersionCode = installedVersionCode()
+        val envelopeText = envelopeClient.fetch()
+        val release = verifier.verify(envelopeText, installedVersionCode)
+        val manifest = release.toPolicyManifest()
+        val eligibility = policy.evaluate(manifest, installedVersionCode)
+        return JSONObject()
+            .put("status", "update_available")
+            .put("release", releaseJson(release))
+            .put("eligibility", eligibility)
+            .put("capability", capability.status())
+    }
+
+    fun installLatest(): JSONObject = install(envelopeClient.fetch())
 
     fun install(envelopeText: String): JSONObject {
         val installedVersionCode = installedVersionCode()
@@ -28,6 +44,7 @@ class ApkOtaManager(private val context: Context) {
         return JSONObject()
             .put("status", "install_requested")
             .put("eligibility", eligibility)
+            .put("release", releaseJson(release))
             .put("staged", JSONObject()
                 .put("path", staged.file.absolutePath)
                 .put("sha256", staged.sha256)
@@ -43,6 +60,9 @@ class ApkOtaManager(private val context: Context) {
     fun status(): JSONObject = JSONObject()
         .put("installedVersionCode", installedVersionCode())
         .put("installedVersionName", BuildConfig.VERSION_NAME)
+        .put("manifestUrl", BuildConfig.APK_OTA_MANIFEST_URL)
+        .put("allowedHosts", BuildConfig.APK_OTA_HOSTS)
+        .put("trustRootConfigured", BuildConfig.APK_OTA_PUBLIC_KEY_B64.isNotBlank())
         .put("policy", policy.status())
         .put("install", installer.status())
         .put("capability", capability.status())
@@ -54,6 +74,16 @@ class ApkOtaManager(private val context: Context) {
             info.versionCode.toLong()
         }
     }
+
+    private fun releaseJson(release: ApkUpdateManifestVerifier.VerifiedApkRelease): JSONObject = JSONObject()
+        .put("versionCode", release.versionCode)
+        .put("versionName", release.versionName)
+        .put("applicationId", release.applicationId)
+        .put("sha256", release.sha256)
+        .put("bytes", release.bytes)
+        .put("minSdk", release.minSdk)
+        .put("issuedAt", release.issuedAt)
+        .put("mandatory", release.mandatory)
 
     private fun ApkUpdateManifestVerifier.VerifiedApkRelease.toPolicyManifest(): ApkUpdateManifest =
         ApkUpdateManifest(
