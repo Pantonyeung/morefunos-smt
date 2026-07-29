@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 GRADLE="$ROOT/app/build.gradle.kts"
 RELEASE_WORKFLOW="$REPO_ROOT/.github/workflows/e-line-production-apk-ota-release.yml"
+INSTALLER="$ROOT/app/src/main/java/hk/morefun/smt/ApkInstallCoordinator.kt"
 FROZEN_D_SHA="0771e8d82b39485e30f8d8c21a1771311b70e452"
 
 bash "$ROOT/verify-production-integration.sh"
@@ -24,7 +25,7 @@ test "$MERGE_BASE" = "$FROZEN_D_SHA" || {
 }
 
 # E-line must be installable as an upgrade over D-line versionCode 3.
-grep -Eq 'versionCode[[:space:]]*=[[:space:]]*[4-9][0-9]*' "$GRADLE"
+grep -Eq 'versionCode[[:space:]]*=[[:space:]]*([4-9]|[1-9][0-9]+)' "$GRADLE"
 grep -Fq 'versionName = "0.4.0-e-line"' "$GRADLE"
 grep -Fq 'applicationId = "hk.morefun.smt"' "$GRADLE"
 grep -Fq 'minSdk = 23' "$GRADLE"
@@ -34,6 +35,11 @@ grep -Fq 'morefunReleasePublicKeyB64' "$GRADLE"
 grep -Fq 'morefunApkOtaPublicKeyB64' "$GRADLE"
 grep -Fq 'RELEASE_PUBLIC_KEY_B64' "$GRADLE"
 grep -Fq 'APK_OTA_PUBLIC_KEY_B64' "$GRADLE"
+
+# Device-owner capability must have a real Package Installer managed path.
+grep -Fq 'isDeviceOwnerApp' "$INSTALLER"
+grep -Fq 'USER_ACTION_NOT_REQUIRED' "$INSTALLER"
+grep -Fq 'device_owner_managed' "$INSTALLER"
 
 # Signed production release pipeline must produce all OTA deliverables.
 test -s "$RELEASE_WORKFLOW"
@@ -56,6 +62,7 @@ versionCode=4
 versionName=0.4.0-e-line
 runtimeOta=preserved
 apkOta=isolated
+deviceOwnerManagedInstall=present
 signedReleasePipeline=present
 hardwareAcceptance=pending
 REPORT
