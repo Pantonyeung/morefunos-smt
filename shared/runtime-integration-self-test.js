@@ -2,7 +2,7 @@ import {createLocalRuntimeAdapter} from './runtime-local-adapter.js';
 import {createRuntimeController} from './runtime-controller.js';
 import {readRuntimeSnapshot,clearRuntimeSnapshot} from './runtime-snapshot-store.js';
 import {clearPushQueue,getPushQueueState} from './push-queue.js';
-import {queueRuntimePatch,shutdownRuntime} from './runtime-bootstrap.js';
+import {bootstrapRuntime,queueRuntimePatch,shutdownRuntime} from './runtime-bootstrap.js';
 
 const LOCAL_KEY='morefun:smt:runtime-local-adapter:v1';
 const SNAPSHOT_KEY='morefun:smt:runtime-snapshot:v1';
@@ -22,6 +22,7 @@ export async function runRuntimeIntegrationSelfTest(){
     localStorage.removeItem(LOCAL_KEY);
     clearRuntimeSnapshot();
     clearPushQueue();
+    shutdownRuntime();
 
     const adapter=createLocalRuntimeAdapter();
     controller=createRuntimeController(adapter,{heartbeatMs:0});
@@ -39,24 +40,25 @@ export async function runRuntimeIntegrationSelfTest(){
     const conflict=await adapter.push({waitMinutes:20},{expectedVersion:0,source:'selftest'});
     results.push(row('version_conflict_rejected',conflict?.conflict===true,{error:conflict?.error}));
 
-    shutdownRuntime();
+    const invalid=await adapter.push({storeStatus:'invalid-status'},{expectedVersion:1,source:'selftest'});
+    results.push(row('invalid_payload_rejected',invalid?.ok===false&&invalid?.error==='runtime_payload_invalid',{error:invalid?.error,errors:invalid?.errors}));
+
+    controller.stop();
+    controller=null;
     await queueRuntimePatch({storeStatus:'paused'},{source:'selftest',idempotencyKey:'runtime-selftest-queued'});
     results.push(row('offline_queue_retained',getPushQueueState().count===1,{count:getPushQueueState().count}));
 
-    const reconnect=createRuntimeController(adapter,{heartbeatMs:0});
-    await reconnect.start();
-    controller=reconnect;
-    const queued=getPushQueueState();
-    results.push(row('queue_payload_shape',queued.items[0]?.type==='runtime.patch',{type:queued.items[0]?.type}));
+    await bootstrapRuntime({adapter,heartbeatMs:0});
+    results.push(row('bootstrap_queue_flush',getPushQueueState().count===0,{count:getPushQueueState().count}));
+    const afterFlush=readRuntimeSnapshot()?.snapshot;
+    results.push(row('queued_patch_applied',afterFlush?.storeStatus==='paused'&&afterFlush?.runtimeVersion===2,{status:afterFlush?.storeStatus,version:afterFlush?.runtimeVersion}));
 
     const subscribed=[];
     const unsubscribe=adapter.subscribe(value=>subscribed.push(value.runtimeVersion));
-    await controller.push({storeStatus:'closed'},{source:'selftest'});
+    const active=(await bootstrapRuntime({adapter,heartbeatMs:0}));
+    await active.push({storeStatus:'closed'},{source:'selftest'});
     unsubscribe();
-    results.push(row('subscription_notified',subscribed.at(-1)===2,{versions:subscribed}));
-
-    const invalid=await adapter.push({storeStatus:'invalid-status'},{expectedVersion:2,source:'selftest'});
-    results.push(row('adapter_returns_payload',invalid?.ok===true&&invalid?.data?.storeStatus==='invalid-status',{status:invalid?.data?.storeStatus}));
+    results.push(row('subscription_notified',subscribed.at(-1)===3,{versions:subscribed}));
   }catch(error){
     results.push(row('integration_execution',false,String(error?.message||error)));
   }finally{
