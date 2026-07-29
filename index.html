@@ -6,6 +6,7 @@
   <title>磨飯 SMT T2S 1280×800</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="app-shell.css?v=smt-adaptive-transition-v1">
+  <link rel="stylesheet" href="startup-gate.css?v=staff-session-v1">
 </head>
 <body>
   <main id="viewport">
@@ -19,6 +20,19 @@
       <span>iPhone 可直屏或橫屏查看；使用 Safari 雙指放大、縮小及移動畫面檢查細節。</span>
     </aside>
   </main>
-  <script type="module" src="app-loader.js?v=smt-adaptive-transition-v1"></script>
+
+  <section id="startup-gate" hidden aria-live="polite">
+    <div class="startup-card">
+      <div class="startup-brand"><span>磨</span><div><strong>磨飯 SMT</strong><small>快速登入</small></div></div>
+      <form>
+        <label>帳號<input name="username" autocomplete="username" inputmode="text" value="morefun"></label>
+        <label>密碼<input name="password" type="password" autocomplete="current-password"></label>
+        <p id="startup-error" class="startup-error" hidden></p>
+        <button type="submit" class="startup-primary">登入</button>
+      </form>
+    </div>
+  </section>
+
+  <script type="module" src="startup-controller.js?v=staff-session-v1"></script>
 </body>
 </html>
