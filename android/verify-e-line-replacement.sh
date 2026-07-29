@@ -5,6 +5,8 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 GRADLE="$ROOT/app/build.gradle.kts"
 RELEASE_WORKFLOW="$REPO_ROOT/.github/workflows/e-line-production-apk-ota-release.yml"
+DRY_RUN_WORKFLOW="$REPO_ROOT/.github/workflows/e-line-release-pipeline-dry-run.yml"
+RELEASE_GENERATOR="$ROOT/generate-apk-ota-release.sh"
 INSTALLER="$ROOT/app/src/main/java/hk/morefun/smt/ApkInstallCoordinator.kt"
 FROZEN_D_SHA="0771e8d82b39485e30f8d8c21a1771311b70e452"
 
@@ -40,6 +42,15 @@ grep -Fq 'APK_OTA_PUBLIC_KEY_B64' "$GRADLE"
 grep -Fq 'isDeviceOwnerApp' "$INSTALLER"
 grep -Fq 'USER_ACTION_NOT_REQUIRED' "$INSTALLER"
 grep -Fq 'device_owner_managed' "$INSTALLER"
+grep -Fq 'abandonSession' "$INSTALLER"
+
+# Shared release generator must produce and verify the signed envelope.
+test -s "$RELEASE_GENERATOR"
+grep -Fq 'apk-ota-manifest.json' "$RELEASE_GENERATOR"
+grep -Fq 'openssl dgst -sha256' "$RELEASE_GENERATOR"
+grep -Fq 'stable-apk-envelope.json' "$RELEASE_GENERATOR"
+grep -Fq 'apk-ota-release-metadata.env' "$RELEASE_GENERATOR"
+grep -Fq 'APK_URL must use HTTPS' "$RELEASE_GENERATOR"
 
 # Signed production release pipeline must produce all OTA deliverables.
 test -s "$RELEASE_WORKFLOW"
@@ -53,6 +64,14 @@ grep -Fq 'morefun-smt-e-line-production.apk.sha256' "$RELEASE_WORKFLOW"
 grep -Fq 'apk-ota-stable' "$RELEASE_WORKFLOW"
 grep -Fq 'retention-days: 90' "$RELEASE_WORKFLOW"
 
+# Ephemeral dry run must exercise compile, APK signing, manifest signing and envelope validation.
+test -s "$DRY_RUN_WORKFLOW"
+grep -Fq 'Generate ephemeral CI signing material' "$DRY_RUN_WORKFLOW"
+grep -Fq 'morefun-ci.jks' "$DRY_RUN_WORKFLOW"
+grep -Fq 'generate-apk-ota-release.sh' "$DRY_RUN_WORKFLOW"
+grep -Fq 'Validate dry-run release contract' "$DRY_RUN_WORKFLOW"
+grep -Fq 'e-line-release-pipeline-dry-run' "$DRY_RUN_WORKFLOW"
+
 cat <<REPORT
 E-line D-line replacement contract PASS
 frozenDLine=$FROZEN_D_SHA
@@ -64,5 +83,6 @@ runtimeOta=preserved
 apkOta=isolated
 deviceOwnerManagedInstall=present
 signedReleasePipeline=present
+releasePipelineDryRun=present
 hardwareAcceptance=pending
 REPORT
