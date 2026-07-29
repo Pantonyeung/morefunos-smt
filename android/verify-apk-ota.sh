@@ -14,6 +14,7 @@ grep -Fq 'SHA256withRSA' "$SRC/ApkUpdateManifestVerifier.kt"
 grep -Fq 'versionCode > installedVersionCode' "$SRC/ApkUpdateManifestVerifier.kt"
 grep -Fq 'applicationId == BuildConfig.APPLICATION_ID' "$SRC/ApkUpdateManifestVerifier.kt"
 grep -Fq 'certificateSha256' "$SRC/ApkUpdateManifestVerifier.kt"
+grep -Fq 'bytes in 1..MAX_APK_BYTES' "$SRC/ApkUpdateManifestVerifier.kt"
 grep -Fq 'APK OTA 只接受 HTTPS' "$SRC/ApkUpdateManifestVerifier.kt"
 grep -Fq 'uri.userInfo.isNullOrBlank()' "$SRC/ApkUpdateManifestVerifier.kt"
 grep -Fq 'uri.fragment.isNullOrBlank()' "$SRC/ApkUpdateManifestVerifier.kt"
@@ -47,6 +48,19 @@ grep -Fq 'Intent.EXTRA_INTENT' "$SRC/ApkInstallResultReceiver.kt"
 grep -Fq 'REQUEST_INSTALL_PACKAGES' "$MANIFEST"
 grep -Fq '.ApkInstallResultReceiver' "$MANIFEST"
 
+# E4/E6 persistent diagnostics, update orchestration and install capability.
+test -s "$SRC/ApkInstallCapability.kt"
+test -s "$SRC/ApkOtaManager.kt"
+grep -Fq 'isDeviceOwnerApp' "$SRC/ApkInstallCapability.kt"
+grep -Fq 'canRequestPackageInstalls' "$SRC/ApkInstallCapability.kt"
+grep -Fq 'silentInstallEligible' "$SRC/ApkInstallCapability.kt"
+grep -Fq 'verifier.verify' "$SRC/ApkOtaManager.kt"
+grep -Fq 'policy.evaluate' "$SRC/ApkOtaManager.kt"
+grep -Fq 'stager.stage(release, maxBytes = release.bytes)' "$SRC/ApkOtaManager.kt"
+grep -Fq 'staged.byteLength == release.bytes' "$SRC/ApkOtaManager.kt"
+grep -Fq 'binaryVerifier.verify' "$SRC/ApkOtaManager.kt"
+grep -Fq 'installer.requestInstall' "$SRC/ApkOtaManager.kt"
+
 # E5 package-replaced recovery and persistent diagnostics.
 grep -Fq 'ACTION_MY_PACKAGE_REPLACED' "$SRC/BootReceiver.kt"
 grep -Fq 'package_replaced' "$SRC/BootReceiver.kt"
@@ -62,4 +76,4 @@ if git rev-parse --verify d-line-production-integration-v1 >/dev/null 2>&1; then
   }
 fi
 
-echo 'E-line APK OTA installer and recovery contract PASS'
+echo 'E-line APK OTA orchestration, installer and recovery contract PASS'
