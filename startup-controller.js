@@ -3,6 +3,10 @@ import {createSession,readSession,writeSession,clearSession} from './shared/sess
 import {startBootstrap,getBootstrapState} from './shared/bootstrap-orchestrator.js';
 import {getHealthState,markRuntimeReady,subscribeHealth} from './shared/health-state.js';
 import {startHeartbeat,stopHeartbeat,runHeartbeatOnce,getHeartbeatState} from './shared/heartbeat-controller.js';
+import {runPull,getPullState,subscribePull} from './shared/pull-controller.js';
+import {enqueuePush,flushPushQueue,getPushQueueState,subscribePushQueue} from './shared/push-queue.js';
+import {getFallbackState,subscribeFallback,reevaluateFallback} from './shared/fallback-coordinator.js';
+import {configureSyncAdapters,startSyncCoordinator,stopSyncCoordinator,getSyncState,syncNow} from './shared/sync-coordinator.js';
 
 const SETTINGS_KEY='morefun:smt:v16c:settings';
 const gate=document.getElementById('startup-gate');
@@ -38,12 +42,14 @@ async function startRuntime(session){
 
   markRuntimeReady();
   startHeartbeat();
+  startSyncCoordinator();
 
   window.dispatchEvent(new CustomEvent('morefun:staff-ready',{
     detail:{
       staff:session,
       bootstrap:getBootstrapState(),
-      health:getHealthState()
+      health:getHealthState(),
+      sync:getSyncState()
     }
   }));
 }
@@ -74,6 +80,7 @@ async function submitLogin(event){
 }
 
 function lock(){
+  stopSyncCoordinator();
   stopHeartbeat();
   clearSession();
   location.reload();
@@ -87,12 +94,27 @@ window.MoreFunStaff={
   getHealthState,
   getHeartbeatState,
   runHeartbeatOnce,
-  subscribeHealth
+  subscribeHealth,
+  configureSyncAdapters,
+  syncNow,
+  getSyncState,
+  runPull,
+  getPullState,
+  subscribePull,
+  enqueuePush,
+  flushPushQueue,
+  getPushQueueState,
+  subscribePushQueue,
+  getFallbackState,
+  subscribeFallback,
+  reevaluateFallback
 };
 
 const restoredSession=readSession();
 if(restoredSession)startRuntime(restoredSession).catch(error=>{
   console.error('SESSION_RESTORE_BOOTSTRAP_FAILED',error);
+  stopSyncCoordinator();
+  stopHeartbeat();
   if(gate)gate.hidden=false;
   setError('系統啟動失敗，請重新登入');
 });
