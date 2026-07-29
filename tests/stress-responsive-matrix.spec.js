@@ -40,9 +40,9 @@ for(const [width,height] of sizes){
     // modal state and responsive layout can legitimately change card visibility.
     for(let i=0;i<12;i++){
       await clickVisibleProduct(frame,i);
-      const close=frame.locator('[data-action="modal-close"],[data-action="close"],.modal-card header button,.confirm-card button').filter({visible:true}).first();
+      const close=frame.locator('[data-action="modal-close"]:visible,[data-action="close"]:visible,.modal-card header button:visible,.confirm-card button:visible').first();
       if(await close.isVisible().catch(()=>false))await close.click({timeout:3000}).catch(()=>{});
-      await expect(frame.locator('.modal-card,.confirm-card').filter({visible:true})).toHaveCount(0,{timeout:5000}).catch(()=>{});
+      await expect(frame.locator('.modal-card:visible,.confirm-card:visible')).toHaveCount(0,{timeout:5000}).catch(()=>{});
     }
 
     // Cart mutation churn.
