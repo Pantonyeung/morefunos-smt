@@ -1,0 +1,53 @@
+name: Package SMT Adaptive System Backup
+
+on:
+  pull_request:
+    branches:
+      - smt-functional-completeness-v1
+    paths:
+      - '.github/workflows/package-smt-adaptive-system-backup.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout final integration branch
+        uses: actions/checkout@v4
+        with:
+          ref: smt-functional-completeness-v1
+          fetch-depth: 1
+
+      - name: Build backup package
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_ROOT="MoreFun_SMT_Adaptive_System_V1.0"
+          mkdir -p "$PACKAGE_ROOT/source"
+          rsync -a --exclude='.git' --exclude="$PACKAGE_ROOT" ./ "$PACKAGE_ROOT/source/"
+          FINAL_SHA="$(git rev-parse HEAD)"
+          cat > "$PACKAGE_ROOT/BACKUP_MANIFEST.txt" <<EOF
+          More Fun SMT｜SMT 自適應系統備份
+          Repository: Pantonyeung/morefunos-smt
+          Final branch: smt-functional-completeness-v1
+          System version: SMT 自適應系統 V1.0
+          Record version: V1.1
+          Immutable adaptive completion baseline: bbecd4ce66802a9a78262abe9573615fa57bb360
+          Packaged branch head: ${FINAL_SHA}
+          Packaged at UTC: $(date -u '+%Y-%m-%dT%H:%M:%SZ')
+          Completion evidence: Full Browser Matrix 78/78 PASS; 0 fail; 0 flaky; Stress Matrix 5/5 PASS
+          Authority file: docs/SMT_ADAPTIVE_SYSTEM_RECORD_V1.0.md
+          EOF
+          find "$PACKAGE_ROOT" -type f -print0 | sort -z | xargs -0 sha256sum > "$PACKAGE_ROOT/SHA256SUMS.txt"
+
+      - name: Upload complete branch backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoreFun_SMT_Adaptive_System_V1.0_smt-functional-completeness-v1
+          path: MoreFun_SMT_Adaptive_System_V1.0
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 9
