@@ -1,0 +1,86 @@
+name: E-line D-line Replacement Gate
+
+on:
+  push:
+    branches: [e-line-apk-ota-v1]
+    paths:
+      - 'android/**'
+      - '.github/workflows/e-line-replacement-gate.yml'
+      - '.github/workflows/e-line-production-apk-ota-release.yml'
+      - 'docs/HANDOFF_D_TO_E_APK_OTA_MILESTONE_2026-07-29.md'
+  pull_request:
+    branches: [d-line-production-integration-v1]
+    paths:
+      - 'android/**'
+      - '.github/workflows/e-line-replacement-gate.yml'
+      - '.github/workflows/e-line-production-apk-ota-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e-line-replacement-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  replacement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch frozen D-line baseline
+        run: git fetch origin d-line-production-integration-v1:d-line-production-integration-v1
+
+      - name: Run E-line replacement contract
+        run: bash android/verify-e-line-replacement.sh | tee e-line-replacement-report.txt
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+
+      - name: Compile E-line replacement APKs
+        run: gradle -p android :app:assembleDebug :app:assembleRelease --stacktrace --no-daemon
+
+      - name: Verify replacement artifacts
+        run: |
+          set -euo pipefail
+          DEBUG_APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          RELEASE_APK="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          OUT="android/app/build/outputs/apk/replacement"
+          mkdir -p "$OUT"
+          test -s "$DEBUG_APK"
+          test -s "$RELEASE_APK"
+          sha256sum "$DEBUG_APK" | tee "$OUT/app-debug.apk.sha256"
+          sha256sum "$RELEASE_APK" | tee "$OUT/app-release-unsigned.apk.sha256"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$RELEASE_APK" | tee "$OUT/app-release-unsigned.badging.txt"
+          grep -Fq "package: name='hk.morefun.smt'" "$OUT/app-release-unsigned.badging.txt"
+          grep -Fq "versionCode='4'" "$OUT/app-release-unsigned.badging.txt"
+          grep -Fq "versionName='0.4.0-e-line'" "$OUT/app-release-unsigned.badging.txt"
+          grep -Fq "sdkVersion:'23'" "$OUT/app-release-unsigned.badging.txt"
+          cp e-line-replacement-report.txt "$OUT/e-line-replacement-report.txt"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e-line-replacement-${{ github.run_number }}
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
+            android/app/build/outputs/apk/replacement/*
+          if-no-files-found: error
+          retention-days: 30
