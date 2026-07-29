@@ -33,13 +33,31 @@
 如任何需求必須觸碰以上項目，立即 STOP，將需求改成 Web Runtime 方案；不可在本線開 APK 工作。
 
 ## 3. V42EG 定位
-`分支 · V42EG 設計與開發.txt` 不再是開發基準，不再按其流程續做。
+`分支 · V42EG 設計與開發.txt` 不再是開發基準，不再按其舊流程續做。
 
-只保留為候備資料，唯一可參考內容：
-- 曾記錄 Install／Health 已完成
-- 曾記錄 Staff Login 測試帳號及舊進度
+V42EG 改列為候備模組庫，可以直接抽取合適內容，以縮短開發時間，但必須同時符合：
+- 屬 Web Runtime／Domain／API Contract／測試資料；
+- 不觸碰 APK／Native／Bridge／Android 權限；
+- 不建立第二套 Staff、Session、Sync、Health 或 Fallback 真相；
+- 可獨立抽取，不需要連帶搬入舊補丁、舊 UI Authority 或舊流程；
+- 經最新 Contract／Browser／Offline 測試重新驗證；
+- 新程式及新證據優先，V42EG 記錄不可直接當完成證據。
 
-除非新實作缺少資料或需要核對歷史結果，否則不得主動引用 V42EG，不得以其狀態取代最新程式、測試及實機證據。
+優先可抽取：
+- 已有 Install／Health API Contract；
+- Staff Login 請求／回應格式；
+- Session／Bootstrap 資料結構；
+- Push／Pull／Heartbeat／Fallback 已有純 Web 邏輯；
+- 已有測試帳號、測試案例及錯誤處理模式。
+
+禁止抽取：
+- 舊 APK／Native 實作；
+- 舊 UI 補丁、Override、第二 Authority；
+- 依賴已淘汰流程的狀態管理；
+- 未重新驗證便直接標記完成的結果。
+
+抽取方式固定：
+`先核對責任與依賴 → 只搬最小有效模組 → 接入最新 Domain → 跑 Contract → 跑 Browser／Offline Regression → 才保留`
 
 ## 4. 簡化登入原則
 - 只支援兩個固定員工帳戶。
@@ -99,14 +117,15 @@
 - Push 使用 Idempotency Key
 
 ## 9. 開發次序
-1. Staff Auth Domain／Login Contract
-2. Session Store／Restore
-3. Bootstrap Orchestrator
-4. Health State
-5. Heartbeat
-6. Pull
-7. Push Queue／Retry／Idempotency
-8. Fallback／Recovery
-9. Browser Contract／Reload／Offline Regression
+1. 盤點並抽取 V42EG 可重用模組
+2. Staff Auth Domain／Login Contract
+3. Session Store／Restore
+4. Bootstrap Orchestrator
+5. Health State
+6. Heartbeat
+7. Pull
+8. Push Queue／Retry／Idempotency
+9. Fallback／Recovery
+10. Browser Contract／Reload／Offline Regression
 
 本線所有提交必須維持 APK 零改動。
