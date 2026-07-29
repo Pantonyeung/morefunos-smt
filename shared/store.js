@@ -30,7 +30,7 @@ export function writeJSON(key,value){
   localStorage.setItem(key,JSON.stringify(value));
   if(JOURNALED_KEYS.has(key)){
     const message={type:'morefun:critical-storage-written',storageKey:key,value,createdAt:Date.now()};
-    try{window.top?.postMessage(message,'*');}catch(_error){try{window.postMessage(message,'*');}catch(_ignored){}}
+    try{window.top?.postMessage(message,location.origin);}catch(_error){try{window.postMessage(message,location.origin);}catch(_ignored){}}
   }
 }
 
