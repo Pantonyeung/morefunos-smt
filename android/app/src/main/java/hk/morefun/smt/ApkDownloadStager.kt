@@ -42,7 +42,7 @@ class ApkDownloadStager(private val context: Context) {
         try {
             val code = connection.responseCode
             require(code == HttpURLConnection.HTTP_OK) { "APK OTA 下載 HTTP $code" }
-            val declared = connection.contentLengthLong
+            val declared = connection.getHeaderField("Content-Length")?.trim()?.toLongOrNull() ?: -1L
             require(declared <= 0L || declared <= maxBytes) { "APK OTA 檔案超過大小限制" }
 
             val digest = MessageDigest.getInstance("SHA-256")
