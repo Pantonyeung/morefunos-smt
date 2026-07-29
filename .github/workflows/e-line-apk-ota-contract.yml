@@ -1,16 +1,6 @@
 name: E-line APK OTA Contract
 
 on:
-  push:
-    branches: [e-line-apk-ota-v1]
-    paths:
-      - 'android/**'
-      - '.github/workflows/e-line-apk-ota-contract.yml'
-  pull_request:
-    branches: [d-line-production-integration-v1]
-    paths:
-      - 'android/**'
-      - '.github/workflows/e-line-apk-ota-contract.yml'
   workflow_dispatch:
 
 permissions:

@@ -1,18 +1,6 @@
 name: E-line APK OTA Release Pipeline Dry Run
 
 on:
-  push:
-    branches: [e-line-apk-ota-v1]
-    paths:
-      - 'android/**'
-      - '.github/workflows/e-line-release-pipeline-dry-run.yml'
-      - '.github/workflows/e-line-production-apk-ota-release.yml'
-  pull_request:
-    branches: [d-line-production-integration-v1]
-    paths:
-      - 'android/**'
-      - '.github/workflows/e-line-release-pipeline-dry-run.yml'
-      - '.github/workflows/e-line-production-apk-ota-release.yml'
   workflow_dispatch:
 
 permissions:
