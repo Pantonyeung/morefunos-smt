@@ -16,8 +16,10 @@ class ApkUpdateManifestVerifier {
         val sha256: String,
         val apkUrl: String,
         val certificateSha256: String,
+        val bytes: Long,
         val minSdk: Int,
-        val issuedAt: Long
+        val issuedAt: Long,
+        val mandatory: Boolean
     )
 
     fun verify(envelopeText: String, installedVersionCode: Long): VerifiedApkRelease {
@@ -45,8 +47,10 @@ class ApkUpdateManifestVerifier {
             sha256 = json.optString("sha256").trim().lowercase(),
             apkUrl = json.optString("apkUrl").trim(),
             certificateSha256 = json.optString("certificateSha256").trim().lowercase(),
+            bytes = json.optLong("bytes", 0L),
             minSdk = json.optInt("minSdk", 0),
-            issuedAt = json.optLong("issuedAt", 0L)
+            issuedAt = json.optLong("issuedAt", 0L),
+            mandatory = json.optBoolean("mandatory", false)
         )
 
         require(release.versionCode > installedVersionCode) { "APK OTA 版本必須高於已安裝版本" }
@@ -54,6 +58,7 @@ class ApkUpdateManifestVerifier {
         require(release.applicationId == BuildConfig.APPLICATION_ID) { "APK OTA applicationId 不一致" }
         require(release.sha256.matches(Regex("[a-f0-9]{64}"))) { "APK OTA SHA-256 無效" }
         require(release.certificateSha256.matches(Regex("[a-f0-9]{64}"))) { "APK OTA certificate SHA-256 無效" }
+        require(release.bytes in 1..MAX_APK_BYTES) { "APK OTA bytes 無效" }
         require(release.minSdk in 23..android.os.Build.VERSION.SDK_INT) { "APK OTA minSdk 不相容" }
         require(release.issuedAt > 0L) { "APK OTA issuedAt 無效" }
         requireAllowedSource(release.apkUrl)
@@ -68,5 +73,9 @@ class ApkUpdateManifestVerifier {
         val host = uri.host?.lowercase().orEmpty()
         val allowed = BuildConfig.RELEASE_HOSTS.split(',').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
         require(host.isNotBlank() && host in allowed) { "APK OTA host 未授權：$host" }
+    }
+
+    companion object {
+        private const val MAX_APK_BYTES = 256L * 1024L * 1024L
     }
 }
