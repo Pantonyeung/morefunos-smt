@@ -11,6 +11,7 @@ on:
       - 'service-worker.js'
       - 'playwright.config.cjs'
       - 'tests/offline-survival.spec.js'
+      - 'tests/stress-responsive-matrix.spec.js'
       - '.github/workflows/runtime-offline-browser-gate.yml'
   push:
     branches:
@@ -44,7 +45,7 @@ jobs:
           cat /tmp/morefun-smt-http.log
           exit 1
       - name: Run offline survival gate
-        run: npx playwright test tests/offline-survival.spec.js --config=playwright.config.cjs
+        run: npx playwright test tests/offline-survival.spec.js --config=playwright.config.cjs --fail-on-flaky
       - name: Upload targeted report
         if: always()
         uses: actions/upload-artifact@v4
@@ -79,7 +80,7 @@ jobs:
           cat /tmp/morefun-smt-http.log
           exit 1
       - name: Run full browser matrix
-        run: npx playwright test --config=playwright.config.cjs
+        run: npx playwright test --config=playwright.config.cjs --fail-on-flaky
       - name: Upload full report
         if: always()
         uses: actions/upload-artifact@v4
