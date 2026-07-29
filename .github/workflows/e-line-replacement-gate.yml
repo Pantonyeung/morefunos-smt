@@ -1,19 +1,6 @@
 name: E-line D-line Replacement Gate
 
 on:
-  push:
-    branches: [e-line-apk-ota-v1]
-    paths:
-      - 'android/**'
-      - '.github/workflows/e-line-replacement-gate.yml'
-      - '.github/workflows/e-line-production-apk-ota-release.yml'
-      - 'docs/HANDOFF_D_TO_E_APK_OTA_MILESTONE_2026-07-29.md'
-  pull_request:
-    branches: [d-line-production-integration-v1]
-    paths:
-      - 'android/**'
-      - '.github/workflows/e-line-replacement-gate.yml'
-      - '.github/workflows/e-line-production-apk-ota-release.yml'
   workflow_dispatch:
 
 permissions:
