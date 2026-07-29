@@ -1,7 +1,7 @@
 import {OPERATIONS_STORAGE_KEY,SETTINGS_STORAGE_KEY,ORDER_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,TERMINAL_ID_STORAGE_KEY,readJSON,writeJSON} from './shared/store.js';
 import {businessWindow,buildOpeningCashState} from './pages/more/more-domain.js';
 import {startRuntimeNonBlocking} from './shared/runtime-lifecycle.js';
-import {ensureOfflineSurvival,registerOfflineServiceWorker,refreshOfflineAssets} from './shared/offline-survival.js';
+import {ensureOfflineSurvival,registerOfflineServiceWorker,refreshOfflineAssets,flushOfflineJournal} from './shared/offline-survival.js';
 import {appendOfflineJournalEntry,getOfflineJournalStatus,recoverDurableStorageFromJournal} from './shared/offline-journal.js';
 import {requestPersistentStorage,subscribeStorageHealth} from './shared/storage-health.js';
 
@@ -34,17 +34,18 @@ function showCash(username){operator=username||validSession()?.username||'morefu
 async function startStorageProtection(){
   const persistence=await requestPersistentStorage();
   if(!stopStorageHealth)stopStorageHealth=subscribeStorageHealth(health=>window.dispatchEvent(new CustomEvent('morefun:storage-health',{detail:health})));
-  const journal=await getOfflineJournalStatus().catch(()=>({ready:false,count:0}));
+  const journal=await getOfflineJournalStatus().catch(()=>({ready:false,count:0,unsynced:0}));
   window.dispatchEvent(new CustomEvent('morefun:storage-protection-ready',{detail:{persistence,journal}}));
 }
 
 async function startSurvivalLayer({force=false}={}){
   if(survivalStarted&&!force)return;
   survivalStarted=true;
-  const runtimeResult=await startRuntimeNonBlocking(),controller=runtimeResult?.controller||null;
-  const [serviceWorker,offline]=await Promise.all([registerOfflineServiceWorker(),ensureOfflineSurvival({adapter:controller?.adapter||null,force}),startStorageProtection()]);
+  const runtimeResult=await startRuntimeNonBlocking(),controller=runtimeResult?.controller||null,adapter=controller?.adapter||null;
+  const [serviceWorker,offline]=await Promise.all([registerOfflineServiceWorker(),ensureOfflineSurvival({adapter,force}),startStorageProtection()]);
+  const sync=await flushOfflineJournal({adapter}).catch(error=>({status:'failed',lastError:String(error?.message||error)}));
   if(force)await refreshOfflineAssets();
-  window.dispatchEvent(new CustomEvent('morefun:offline-survival-ready',{detail:{runtimeOk:Boolean(runtimeResult?.ok),serviceWorkerOk:Boolean(serviceWorker?.ok),offlineOk:Boolean(offline?.ok),mode:offline?.mode||'unknown',force}}));
+  window.dispatchEvent(new CustomEvent('morefun:offline-survival-ready',{detail:{runtimeOk:Boolean(runtimeResult?.ok),serviceWorkerOk:Boolean(serviceWorker?.ok),offlineOk:Boolean(offline?.ok),mode:offline?.mode||'unknown',sync,force}}));
 }
 
 function unlock(){document.documentElement.dataset.shellUnlocked='1';if(gate)gate.hidden=true;window.dispatchEvent(new CustomEvent('morefun:shell-unlocked'));void startSurvivalLayer();}
