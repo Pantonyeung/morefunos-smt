@@ -1,6 +1,7 @@
 package hk.morefun.smt
 
 import android.app.PendingIntent
+import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
@@ -15,11 +16,18 @@ class ApkInstallCoordinator(private val context: Context) {
     fun requestInstall(apk: File, release: ApkUpdateManifestVerifier.VerifiedApkRelease): JSONObject {
         require(apk.isFile && apk.length() > 0L) { "APK 安裝檔不存在" }
 
+        val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val deviceOwner = runCatching { dpm.isDeviceOwnerApp(context.packageName) }.getOrDefault(false)
+        val requestedMode = if (deviceOwner) "device_owner_managed" else "user_confirmation"
+
         val installer = context.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(BuildConfig.APPLICATION_ID)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 setInstallReason(android.content.pm.PackageManager.INSTALL_REASON_USER)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && deviceOwner) {
+                setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
             }
         }
         val sessionId = installer.createSession(params)
@@ -27,6 +35,7 @@ class ApkInstallCoordinator(private val context: Context) {
             .putInt(KEY_SESSION_ID, sessionId)
             .putLong(KEY_TARGET_VERSION, release.versionCode)
             .putString(KEY_TARGET_NAME, release.versionName)
+            .putString(KEY_REQUESTED_MODE, requestedMode)
             .putString(KEY_STATUS, "writing")
             .putLong(KEY_UPDATED_AT, System.currentTimeMillis())
             .apply()
@@ -55,6 +64,7 @@ class ApkInstallCoordinator(private val context: Context) {
         .put("sessionId", prefs.getInt(KEY_SESSION_ID, -1))
         .put("targetVersionCode", prefs.getLong(KEY_TARGET_VERSION, 0L))
         .put("targetVersionName", prefs.getString(KEY_TARGET_NAME, ""))
+        .put("requestedMode", prefs.getString(KEY_REQUESTED_MODE, "unknown"))
         .put("status", prefs.getString(KEY_STATUS, "idle"))
         .put("message", prefs.getString(KEY_MESSAGE, ""))
         .put("updatedAt", prefs.getLong(KEY_UPDATED_AT, 0L))
@@ -73,6 +83,7 @@ class ApkInstallCoordinator(private val context: Context) {
         private const val KEY_SESSION_ID = "session_id"
         private const val KEY_TARGET_VERSION = "target_version"
         private const val KEY_TARGET_NAME = "target_name"
+        private const val KEY_REQUESTED_MODE = "requested_mode"
         private const val KEY_STATUS = "status"
         private const val KEY_MESSAGE = "message"
         private const val KEY_UPDATED_AT = "updated_at"
