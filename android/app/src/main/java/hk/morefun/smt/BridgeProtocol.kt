@@ -96,6 +96,12 @@ class BridgeProtocol(
                 }
                 "apk.ota.getStatus", "apk.update.getStatus" -> respond(success(id, apkOtaManager.status()))
                 "apk.ota.getCapability", "apk.update.getCapability" -> respond(success(id, ApkInstallCapability(context).status()))
+                "apk.ota.check", "apk.update.check" -> executeAsync(id, respond, "APK_OTA_CHECK_FAILED") {
+                    apkOtaManager.check()
+                }
+                "apk.ota.installLatest", "apk.update.installLatest" -> executeAsync(id, respond, "APK_OTA_INSTALL_FAILED") {
+                    apkOtaManager.installLatest()
+                }
                 "apk.ota.install", "apk.update.install" -> executeAsync(id, respond, "APK_OTA_INSTALL_FAILED") {
                     val envelope = params.optString("envelope")
                     require(envelope.isNotBlank()) { "APK OTA envelope 不可為空" }
@@ -157,6 +163,8 @@ class BridgeProtocol(
         add("bundle.rollback")
         add("apk.ota.status")
         add("apk.ota.capability")
+        add("apk.ota.check")
+        add("apk.ota.install-latest")
         add("apk.ota.signed-install")
         add("apk.ota.package-installer")
         add("apk.ota.recovery")
