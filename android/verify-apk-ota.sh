@@ -4,21 +4,33 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 SRC="$ROOT/app/src/main/java/hk/morefun/smt"
 MANIFEST="$ROOT/app/src/main/AndroidManifest.xml"
+GRADLE="$ROOT/app/build.gradle.kts"
 BRIDGE="$SRC/BridgeProtocol.kt"
+VERIFIER="$SRC/ApkUpdateManifestVerifier.kt"
 
 bash "$ROOT/verify-production-integration.sh"
 
-# E0/E1 manifest authenticity and source policy.
-test -s "$SRC/ApkUpdateManifestVerifier.kt"
-grep -Fq 'class ApkUpdateManifestVerifier' "$SRC/ApkUpdateManifestVerifier.kt"
-grep -Fq 'SHA256withRSA' "$SRC/ApkUpdateManifestVerifier.kt"
-grep -Fq 'versionCode > installedVersionCode' "$SRC/ApkUpdateManifestVerifier.kt"
-grep -Fq 'applicationId == BuildConfig.APPLICATION_ID' "$SRC/ApkUpdateManifestVerifier.kt"
-grep -Fq 'certificateSha256' "$SRC/ApkUpdateManifestVerifier.kt"
-grep -Fq 'bytes in 1..MAX_APK_BYTES' "$SRC/ApkUpdateManifestVerifier.kt"
-grep -Fq 'APK OTA 只接受 HTTPS' "$SRC/ApkUpdateManifestVerifier.kt"
-grep -Fq 'uri.userInfo.isNullOrBlank()' "$SRC/ApkUpdateManifestVerifier.kt"
-grep -Fq 'uri.fragment.isNullOrBlank()' "$SRC/ApkUpdateManifestVerifier.kt"
+# E0/E1 manifest authenticity and isolated APK OTA trust configuration.
+test -s "$VERIFIER"
+grep -Fq 'class ApkUpdateManifestVerifier' "$VERIFIER"
+grep -Fq 'SHA256withRSA' "$VERIFIER"
+grep -Fq 'versionCode > installedVersionCode' "$VERIFIER"
+grep -Fq 'applicationId == BuildConfig.APPLICATION_ID' "$VERIFIER"
+grep -Fq 'certificateSha256' "$VERIFIER"
+grep -Fq 'bytes in 1..MAX_APK_BYTES' "$VERIFIER"
+grep -Fq 'APK OTA 只接受 HTTPS' "$VERIFIER"
+grep -Fq 'uri.userInfo.isNullOrBlank()' "$VERIFIER"
+grep -Fq 'uri.fragment.isNullOrBlank()' "$VERIFIER"
+grep -Fq 'BuildConfig.APK_OTA_PUBLIC_KEY_B64' "$VERIFIER"
+grep -Fq 'BuildConfig.APK_OTA_HOSTS' "$VERIFIER"
+! grep -Fq 'BuildConfig.RELEASE_PUBLIC_KEY_B64' "$VERIFIER"
+! grep -Fq 'BuildConfig.RELEASE_HOSTS' "$VERIFIER"
+grep -Fq 'morefunApkOtaPublicKeyB64' "$GRADLE"
+grep -Fq 'morefunApkOtaHosts' "$GRADLE"
+grep -Fq 'morefunApkOtaManifestUrl' "$GRADLE"
+grep -Fq '"APK_OTA_PUBLIC_KEY_B64"' "$GRADLE"
+grep -Fq '"APK_OTA_HOSTS"' "$GRADLE"
+grep -Fq '"APK_OTA_MANIFEST_URL"' "$GRADLE"
 
 # E2 app-private download staging and real binary integrity.
 test -s "$SRC/ApkDownloadStager.kt"
@@ -74,7 +86,11 @@ grep -Fq '"apk.ota.getStatus"' "$BRIDGE"
 grep -Fq '"apk.ota.getCapability"' "$BRIDGE"
 grep -Fq '"apk.ota.install"' "$BRIDGE"
 grep -Fq 'APK_OTA_INSTALL_FAILED' "$BRIDGE"
+grep -Fq 'apk.ota.status' "$BRIDGE"
+grep -Fq 'apk.ota.capability' "$BRIDGE"
 grep -Fq 'apk.ota.signed-install' "$BRIDGE"
+grep -Fq 'apk.ota.package-installer' "$BRIDGE"
+grep -Fq 'apk.ota.recovery' "$BRIDGE"
 grep -Fq '.put("apkOta", apkOtaManager.status())' "$BRIDGE"
 
 # E-line must remain descended from the frozen D-line branch and must not rewrite it.
@@ -87,4 +103,4 @@ if git rev-parse --verify d-line-production-integration-v1 >/dev/null 2>&1; then
   }
 fi
 
-echo 'E-line APK OTA bridge, orchestration, installer and recovery contract PASS'
+echo 'E-line APK OTA isolated trust, bridge, installer and recovery contract PASS'
