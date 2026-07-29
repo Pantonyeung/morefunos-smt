@@ -2,10 +2,11 @@ import {OPERATIONS_STORAGE_KEY,SETTINGS_STORAGE_KEY,ORDER_STORAGE_KEY,DRAFT_STOR
 import {businessWindow,buildOpeningCashState} from './pages/more/more-domain.js';
 import {startRuntimeNonBlocking} from './shared/runtime-lifecycle.js';
 import {ensureOfflineSurvival,registerOfflineServiceWorker,refreshOfflineAssets} from './shared/offline-survival.js';
-import {appendOfflineJournalEntry,getOfflineJournalStatus} from './shared/offline-journal.js';
+import {appendOfflineJournalEntry,getOfflineJournalStatus,recoverDurableStorageFromJournal} from './shared/offline-journal.js';
 import {requestPersistentStorage,subscribeStorageHealth} from './shared/storage-health.js';
 
 const SESSION_KEY='morefun:smt:daily-session';
+const RECOVERY_RELOAD_KEY='morefun:smt:journal-recovery-reloaded';
 const gate=document.getElementById('startup-gate');
 const loginStep=gate?.querySelector('[data-startup-step="login"]');
 const cashStep=gate?.querySelector('[data-startup-step="cash"]');
@@ -63,6 +64,17 @@ adjustmentInput?.addEventListener('input',updateCashPreview);
 window.addEventListener('online',()=>{if(document.documentElement.dataset.shellUnlocked==='1')void startSurvivalLayer({force:true});});
 window.addEventListener('pagehide',()=>{stopStorageHealth?.();stopStorageHealth=null;},{once:true});
 
-ensureDailyWorkspaceClean();
-if(isQaBypass())unlock();else if(validSession())continueAfterLogin(validSession().username);else showStep('login');
+async function initializeStartup(){
+  const recovery=await recoverDurableStorageFromJournal().catch(error=>({ok:false,count:0,error:String(error?.message||error)}));
+  if(recovery.count>0&&sessionStorage.getItem(RECOVERY_RELOAD_KEY)!=='1'){
+    sessionStorage.setItem(RECOVERY_RELOAD_KEY,'1');
+    location.reload();
+    return;
+  }
+  sessionStorage.removeItem(RECOVERY_RELOAD_KEY);
+  ensureDailyWorkspaceClean();
+  if(isQaBypass())unlock();else if(validSession())continueAfterLogin(validSession().username);else showStep('login');
+}
+
+void initializeStartup();
 window.MoreFunStartup={unlock,showCash,startSurvivalLayer};
