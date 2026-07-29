@@ -1,5 +1,7 @@
 import {OPERATIONS_STORAGE_KEY,SETTINGS_STORAGE_KEY,ORDER_STORAGE_KEY,DRAFT_STORAGE_KEY,DRAFT_COUNTER_STORAGE_KEY,readJSON,writeJSON} from './shared/store.js';
 import {businessWindow,buildOpeningCashState} from './pages/more/more-domain.js';
+import {startRuntimeNonBlocking} from './shared/runtime-lifecycle.js';
+import {ensureOfflineSurvival,registerOfflineServiceWorker} from './shared/offline-survival.js';
 
 const SESSION_KEY='morefun:smt:daily-session';
 const gate=document.getElementById('startup-gate');
@@ -11,6 +13,7 @@ const cashTotal=document.getElementById('opening-total');
 const adjustmentInput=gate?.querySelector('[name="opening-adjustment"]');
 const operatorLabel=document.getElementById('opening-operator');
 let operator='';
+let survivalStarted=false;
 
 function isQaBypass(){
   const params=new URLSearchParams(location.search);
@@ -89,10 +92,23 @@ function showCash(username){
   requestAnimationFrame(()=>adjustmentInput?.focus());
 }
 
+async function startSurvivalLayer(){
+  if(survivalStarted)return;
+  survivalStarted=true;
+  const runtimeResult=await startRuntimeNonBlocking();
+  const controller=runtimeResult?.controller||null;
+  const [serviceWorker,offline]=await Promise.all([
+    registerOfflineServiceWorker(),
+    ensureOfflineSurvival({adapter:controller?.adapter||null})
+  ]);
+  window.dispatchEvent(new CustomEvent('morefun:offline-survival-ready',{detail:{runtimeOk:Boolean(runtimeResult?.ok),serviceWorkerOk:Boolean(serviceWorker?.ok),offlineOk:Boolean(offline?.ok),mode:offline?.mode||'unknown'}}));
+}
+
 function unlock(){
   document.documentElement.dataset.shellUnlocked='1';
   if(gate)gate.hidden=true;
   window.dispatchEvent(new CustomEvent('morefun:shell-unlocked'));
+  void startSurvivalLayer();
 }
 
 function continueAfterLogin(username){
@@ -129,10 +145,11 @@ function confirmOpening(event){
 gate?.querySelector('[data-form="login"]')?.addEventListener('submit',submitLogin);
 gate?.querySelector('[data-form="cash"]')?.addEventListener('submit',confirmOpening);
 adjustmentInput?.addEventListener('input',updateCashPreview);
+window.addEventListener('online',()=>{if(document.documentElement.dataset.shellUnlocked==='1')void startSurvivalLayer();});
 
 ensureDailyWorkspaceClean();
 if(isQaBypass())unlock();
 else if(validSession())continueAfterLogin(validSession().username);
 else showStep('login');
 
-window.MoreFunStartup={unlock,showCash};
+window.MoreFunStartup={unlock,showCash,startSurvivalLayer};
