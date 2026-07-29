@@ -3,6 +3,13 @@ const DB_VERSION=1;
 const STORE='entries';
 const META='meta';
 const MAX_ENTRIES=3000;
+const DURABLE_RECOVERY_KEYS=new Set([
+  'morefun:smt:v16c:settings',
+  'morefun:smt:v16:orders',
+  'morefun:smt:v1:operations',
+  'morefun:smt:v1:printers',
+  'morefun:smt:v1:supply-overrides'
+]);
 
 function openDb(){
   return new Promise((resolve,reject)=>{
@@ -53,6 +60,17 @@ export async function readLatestJournalValues(){
   const latest=new Map();
   for(const entry of rows){const previous=latest.get(entry.storageKey);if(!previous||Number(entry.createdAt)>=Number(previous.createdAt))latest.set(entry.storageKey,entry);}
   return Object.fromEntries([...latest.entries()].map(([key,entry])=>[key,entry.value]));
+}
+
+export async function recoverDurableStorageFromJournal(){
+  const latest=await readLatestJournalValues();
+  const restored=[];
+  for(const key of DURABLE_RECOVERY_KEYS){
+    if(localStorage.getItem(key)!==null||!Object.hasOwn(latest,key)||latest[key]===null)continue;
+    try{localStorage.setItem(key,JSON.stringify(latest[key]));restored.push(key);}catch(error){return {ok:false,restored,error:String(error?.message||error)};}
+  }
+  if(restored.length)window.dispatchEvent(new CustomEvent('morefun:offline-journal-recovered',{detail:{restored}}));
+  return {ok:true,restored,count:restored.length};
 }
 
 export async function compactOfflineJournal({maxEntries=MAX_ENTRIES}={}){
