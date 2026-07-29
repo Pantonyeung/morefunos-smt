@@ -39,8 +39,26 @@
 - shared/runtime-snapshot-store.js
 - shared/push-queue.js
 - shared/runtime-self-test.js
+- shared/runtime-contract.js
+- shared/runtime-local-adapter.js
+- shared/runtime-controller.js
+- shared/runtime-bootstrap.js
+- shared/runtime-integration-self-test.js
 
-目前未修改：
+已完成能力：
+
+- Adapter-neutral Runtime Contract
+- Local Runtime Adapter
+- Pull／Push／Subscribe
+- Runtime Snapshot
+- Heartbeat／Health State
+- Version Conflict Guard
+- Offline Push Queue
+- Bootstrap 後自動 flush queue
+- 非法 Runtime payload 拒絕寫入
+- Bootstrap／Conflict／Queue／Subscription 整合自測
+
+目前仍未修改：
 
 - index.html
 - app-loader.js
@@ -49,7 +67,7 @@
 - 五尺寸 Adaptive metrics
 - 產品卡／售罄卡／iframe Authority
 
-即係現階段只加入 Runtime 核心檔案，尚未接管正式啟動流程，避免 UI／登入／開工現金倒退。
+即係現階段已建立完整獨立 Runtime 基礎，但尚未掛入正式 SMT 啟動流程，避免 UI／登入／開工現金倒退。
 
 ## 5. 已踩過嘅坑
 
@@ -57,6 +75,7 @@
 2. Runtime 分支曾修改 app-loader、app-shell、order／checkout／more 等 UI 檔案，直接硬 merge 會導致已完成 Adaptive UI 倒退。
 3. 本機 Runtime 8／8 PASS 只證明 Queue／Snapshot 基礎正常，不代表 Admin、Firebase、Worker、Google Sheet 或正式 API 已接通。
 4. 未確認真實資料源之前，禁止自行假設「雲端」係 Firebase、Cloudflare Worker、Apps Script 或其他服務。
+5. Local Adapter 初版曾接受非法 storeStatus；已改成所有寫入必須先通過 validateRuntimePayload。
 
 ## 6. Admin／Firebase 真實狀態（2026-07-29）
 
@@ -80,15 +99,24 @@
 - src/integrations/connectors.js 目前只係一般 HTTP endpoint abstraction，並非 Firebase Realtime Database SDK adapter。
 - 未見 src/integrations/firebase-staging.js、src/data/remote-store.js、src/config/firebase-config.js 的正式實作。
 
-因此：
+## 7. 正式決策：SMT 獨立完成，最後接通 Admin
 
-- 不得宣稱 Admin 已經把正式資料寫入 Firebase。
-- 不得直接令 SMT 讀取未驗證的 Firebase schema。
-- 下一步應先完成或確認 Admin ⇄ Firebase Staging 真正接線，再建立 SMT read-only Runtime Adapter。
+Owner 已確認：
 
-## 7. 下一階段 Gate
+- SMT 不等待 Admin Firebase 接線。
+- SMT 先以 Local Adapter 完成全部 Runtime、離線、衝突、Queue、Bootstrap、測試與 UI 接入。
+- Admin 端另外完成 Firebase Staging／Auth／Rules／Published／Runtime。
+- 最後只新增正式 Firebase Runtime Adapter，替換 Local Adapter；不得重寫 SMT Runtime Controller 或 UI。
 
-在接入 Pull／Push／Heartbeat／API Adapter 之前，必須確認：
+因此現階段：
+
+- 可以繼續完成 SMT 全部本機功能。
+- 不可以宣稱已與 Admin／Firebase 同步。
+- Firebase Adapter 必須遵守現有 Runtime Contract。
+
+## 8. 最後接通 Admin 前 Gate
+
+必須確認：
 
 - Firebase Auth 方法及可用帳號／匿名策略
 - Realtime Database Security Rules
@@ -100,7 +128,15 @@
 
 未確認以上資料，不得建立假同步接口。
 
-## 8. 永久規則
+## 9. 下一步
+
+1. 將整合自測掛入「更多 → 系統與更新」現有 Runtime 診斷入口。
+2. 以非阻塞方式掛入 shell startup：登入／開工完成後才啟動 Runtime。
+3. Runtime 啟動失敗只降級為 Local Cache／離線狀態，不得阻塞 SMT 開單。
+4. 跑受影響 Browser Matrix，確認五尺寸與 shell 無倒退。
+5. 完成 Runtime UI 狀態映射後，再準備 Firebase Adapter contract test。
+
+## 10. 永久規則
 
 - SMT 自適應系統係 UI／Adaptive 唯一 Authority。
 - Runtime 只可以模組化接入，不得覆蓋 UI Authority。
