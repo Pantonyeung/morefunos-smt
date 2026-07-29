@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>SMT Runtime 自測</title>
+  <style>
+    :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17202a;background:#f4f6f8}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;padding:20px}
+    main{max-width:680px;margin:0 auto}
+    h1{font-size:26px;margin:8px 0}
+    .sub{color:#5f6b76;line-height:1.6;margin:0 0 18px}
+    .card{background:#fff;border:1px solid #dfe4e8;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(23,32,42,.06)}
+    button{width:100%;min-height:52px;border:0;border-radius:14px;background:#17202a;color:#fff;font-size:18px;font-weight:700;padding:12px}
+    button:disabled{opacity:.55}
+    .summary{margin-top:18px;padding:16px;border-radius:14px;background:#eef2f5;font-size:18px;font-weight:700}
+    .summary.pass{background:#e9f8ef;color:#176b3a}
+    .summary.fail{background:#fff0f0;color:#a32626}
+    ul{list-style:none;padding:0;margin:14px 0 0}
+    li{padding:12px 0;border-top:1px solid #edf0f2;display:flex;gap:10px;align-items:flex-start}
+    .mark{font-weight:800;min-width:22px}
+    code{font-size:13px;word-break:break-word;color:#52606d}
+    .note{font-size:14px;color:#6b7680;line-height:1.55;margin-top:16px}
+  </style>
+</head>
+<body>
+<main>
+  <h1>SMT Runtime 自測</h1>
+  <p class="sub">按一次即可測試 Queue、防重、失敗保留、重試記錄及 Snapshot。測試前會備份資料，完成後自動還原。</p>
+  <section class="card">
+    <button id="run" type="button">開始自測</button>
+    <div id="summary" class="summary" hidden></div>
+    <ul id="results"></ul>
+    <p class="note">請保留測試結果畫面並截圖。此頁不會建立真實訂單，也不會修改正式產品資料。</p>
+  </section>
+</main>
+<script type="module">
+  import {runRuntimeSelfTest} from './shared/runtime-self-test.js';
+  const button=document.getElementById('run');
+  const summary=document.getElementById('summary');
+  const results=document.getElementById('results');
+  const labels={
+    queue_enqueue:'Queue 加入',
+    queue_idempotency:'相同防重鍵不重複',
+    queue_success_removal:'成功後移除 Queue',
+    queue_failure_retained:'失敗後保留 Queue',
+    queue_attempt_incremented:'重試次數增加',
+    queue_error_recorded:'錯誤原因記錄',
+    snapshot_write_read:'Snapshot 寫入及讀取',
+    snapshot_atomic_shape:'Snapshot 結構完整',
+    selftest_execution:'自測執行'
+  };
+  button.addEventListener('click',async()=>{
+    button.disabled=true;
+    button.textContent='測試中…';
+    summary.hidden=true;
+    results.innerHTML='';
+    try{
+      const report=await runRuntimeSelfTest();
+      summary.hidden=false;
+      summary.className=`summary ${report.ok?'pass':'fail'}`;
+      summary.textContent=report.ok
+        ? `全部通過：${report.passed}/${report.total}`
+        : `有失敗項目：通過 ${report.passed}/${report.total}，失敗 ${report.failed}`;
+      for(const item of report.results){
+        const li=document.createElement('li');
+        const detail=item.detail==null?'':`<br><code>${JSON.stringify(item.detail)}</code>`;
+        li.innerHTML=`<span class="mark">${item.ok?'✓':'✕'}</span><span>${labels[item.name]||item.name}${detail}</span>`;
+        results.appendChild(li);
+      }
+    }catch(error){
+      summary.hidden=false;
+      summary.className='summary fail';
+      summary.textContent=`自測頁執行失敗：${String(error?.message||error)}`;
+    }finally{
+      button.disabled=false;
+      button.textContent='重新自測';
+    }
+  });
+</script>
+</body>
+</html>
