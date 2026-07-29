@@ -7,6 +7,13 @@ val releaseHosts = providers.gradleProperty("morefunReleaseHosts").orElse("raw.g
 val releaseManifestUrl = providers.gradleProperty("morefunReleaseManifestUrl")
     .orElse("https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/runtime-stable/releases/stable-envelope.json")
     .get()
+
+val apkOtaPublicKeyB64 = providers.gradleProperty("morefunApkOtaPublicKeyB64").orElse("").get()
+val apkOtaHosts = providers.gradleProperty("morefunApkOtaHosts").orElse("raw.githubusercontent.com").get()
+val apkOtaManifestUrl = providers.gradleProperty("morefunApkOtaManifestUrl")
+    .orElse("https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/apk-ota-stable/releases/stable-apk-envelope.json")
+    .get()
+
 fun buildConfigString(value: String): String = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
 android {
@@ -32,6 +39,9 @@ android {
             buildConfigField("String", "RELEASE_PUBLIC_KEY_B64", buildConfigString(releasePublicKeyB64))
             buildConfigField("String", "RELEASE_HOSTS", buildConfigString(releaseHosts))
             buildConfigField("String", "RELEASE_MANIFEST_URL", buildConfigString(releaseManifestUrl))
+            buildConfigField("String", "APK_OTA_PUBLIC_KEY_B64", buildConfigString(apkOtaPublicKeyB64))
+            buildConfigField("String", "APK_OTA_HOSTS", buildConfigString(apkOtaHosts))
+            buildConfigField("String", "APK_OTA_MANIFEST_URL", buildConfigString(apkOtaManifestUrl))
         }
         release {
             isMinifyEnabled = false
@@ -40,6 +50,9 @@ android {
             buildConfigField("String", "RELEASE_PUBLIC_KEY_B64", buildConfigString(releasePublicKeyB64))
             buildConfigField("String", "RELEASE_HOSTS", buildConfigString(releaseHosts))
             buildConfigField("String", "RELEASE_MANIFEST_URL", buildConfigString(releaseManifestUrl))
+            buildConfigField("String", "APK_OTA_PUBLIC_KEY_B64", buildConfigString(apkOtaPublicKeyB64))
+            buildConfigField("String", "APK_OTA_HOSTS", buildConfigString(apkOtaHosts))
+            buildConfigField("String", "APK_OTA_MANIFEST_URL", buildConfigString(apkOtaManifestUrl))
         }
     }
 }
