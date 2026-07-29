@@ -1,6 +1,8 @@
 import {authenticateStaff,normalizeAccounts} from './shared/staff-auth.js';
 import {createSession,readSession,writeSession,clearSession} from './shared/session-store.js';
 import {startBootstrap,getBootstrapState} from './shared/bootstrap-orchestrator.js';
+import {getHealthState,markRuntimeReady,subscribeHealth} from './shared/health-state.js';
+import {startHeartbeat,stopHeartbeat,runHeartbeatOnce,getHeartbeatState} from './shared/heartbeat-controller.js';
 
 const SETTINGS_KEY='morefun:smt:v16c:settings';
 const gate=document.getElementById('startup-gate');
@@ -34,7 +36,16 @@ async function startRuntime(session){
     loadRuntime:()=>import('./app-loader.js?v=smt-adaptive-transition-v1')
   });
 
-  window.dispatchEvent(new CustomEvent('morefun:staff-ready',{detail:{staff:session,bootstrap:getBootstrapState()}}));
+  markRuntimeReady();
+  startHeartbeat();
+
+  window.dispatchEvent(new CustomEvent('morefun:staff-ready',{
+    detail:{
+      staff:session,
+      bootstrap:getBootstrapState(),
+      health:getHealthState()
+    }
+  }));
 }
 
 async function submitLogin(event){
@@ -63,12 +74,21 @@ async function submitLogin(event){
 }
 
 function lock(){
+  stopHeartbeat();
   clearSession();
   location.reload();
 }
 
 form?.addEventListener('submit',submitLogin);
-window.MoreFunStaff={lock,getSession:readSession,getBootstrapState};
+window.MoreFunStaff={
+  lock,
+  getSession:readSession,
+  getBootstrapState,
+  getHealthState,
+  getHeartbeatState,
+  runHeartbeatOnce,
+  subscribeHealth
+};
 
 const restoredSession=readSession();
 if(restoredSession)startRuntime(restoredSession).catch(error=>{
