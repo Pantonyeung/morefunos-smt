@@ -26,7 +26,7 @@ class ApkEnvelopeClient {
         try {
             val code = connection.responseCode
             require(code == HttpURLConnection.HTTP_OK) { "APK OTA envelope HTTP $code" }
-            val declared = connection.contentLengthLong
+            val declared = connection.getHeaderField("Content-Length")?.trim()?.toLongOrNull() ?: -1L
             require(declared <= 0L || declared <= maxBytes.toLong()) { "APK OTA envelope 超過大小限制" }
 
             val output = java.io.ByteArrayOutputStream()
