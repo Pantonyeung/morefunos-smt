@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 SRC="$ROOT/app/src/main/java/hk/morefun/smt"
 MANIFEST="$ROOT/app/src/main/AndroidManifest.xml"
+BRIDGE="$SRC/BridgeProtocol.kt"
 
 bash "$ROOT/verify-production-integration.sh"
 
@@ -66,6 +67,16 @@ grep -Fq 'ACTION_MY_PACKAGE_REPLACED' "$SRC/BootReceiver.kt"
 grep -Fq 'package_replaced' "$SRC/BootReceiver.kt"
 grep -Fq 'morefun_apk_install' "$SRC/ApkInstallCoordinator.kt"
 
+# E7 Runtime Bridge exposure for POS settings and diagnostics.
+test -s "$BRIDGE"
+grep -Fq 'private val apkOtaManager = ApkOtaManager(context)' "$BRIDGE"
+grep -Fq '"apk.ota.getStatus"' "$BRIDGE"
+grep -Fq '"apk.ota.getCapability"' "$BRIDGE"
+grep -Fq '"apk.ota.install"' "$BRIDGE"
+grep -Fq 'APK_OTA_INSTALL_FAILED' "$BRIDGE"
+grep -Fq 'apk.ota.signed-install' "$BRIDGE"
+grep -Fq '.put("apkOta", apkOtaManager.status())' "$BRIDGE"
+
 # E-line must remain descended from the frozen D-line branch and must not rewrite it.
 if git rev-parse --verify d-line-production-integration-v1 >/dev/null 2>&1; then
   BASE_SHA="$(git rev-parse d-line-production-integration-v1)"
@@ -76,4 +87,4 @@ if git rev-parse --verify d-line-production-integration-v1 >/dev/null 2>&1; then
   }
 fi
 
-echo 'E-line APK OTA orchestration, installer and recovery contract PASS'
+echo 'E-line APK OTA bridge, orchestration, installer and recovery contract PASS'
