@@ -1,6 +1,6 @@
-import {appendOfflineJournalEntry,getOfflineJournalStatus,readLatestJournalValues,compactOfflineJournal} from './offline-journal.js';
+import {appendOfflineJournalEntry,getOfflineJournalStatus,readLatestJournalValues,readUnsyncedJournalEntries,markJournalEntriesSynced,compactOfflineJournal,recoverDurableStorageFromJournal} from './offline-journal.js';
 import {getStorageHealth} from './storage-health.js';
-import {getOfflineSurvivalStatus} from './offline-survival.js';
+import {getOfflineSurvivalStatus,flushOfflineJournal} from './offline-survival.js';
 
 function row(name,ok,detail=null){return Object.freeze({name,ok:Boolean(ok),detail});}
 
@@ -15,18 +15,31 @@ async function serviceWorkerCacheStatus(){
   return {ok:matches.every(item=>item.found),cacheName:offlineNames.at(-1),matches};
 }
 
-export async function runOfflineEnduranceSelfTest({iterations=24}={}){
+export async function runOfflineEnduranceSelfTest({iterations=120}={}){
   const results=[];
   const startedAt=new Date().toISOString();
   const testKey='morefun:smt:selftest:offline-journal';
   try{
-    for(let index=0;index<iterations;index++)await appendOfflineJournalEntry({storageKey:testKey,value:{index,payload:'x'.repeat(128)},source:'offline-endurance-self-test'});
+    for(let index=0;index<iterations;index++)await appendOfflineJournalEntry({storageKey:testKey,value:{index,payload:'x'.repeat(256)},source:'offline-endurance-self-test'});
     const status=await getOfflineJournalStatus();
     results.push(row('journal_sustained_writes',status.count>=iterations,{count:status.count,iterations}));
+    results.push(row('journal_unsynced_tracking',status.unsynced>=iterations,{unsynced:status.unsynced}));
+
     const latest=await readLatestJournalValues();
     results.push(row('journal_latest_value_recovery',latest[testKey]?.index===iterations-1,{latestIndex:latest[testKey]?.index}));
+
+    const pending=await readUnsyncedJournalEntries({limit:25});
+    results.push(row('journal_batch_read',pending.length===25,{count:pending.length}));
+    const acknowledged=await markJournalEntriesSynced(pending.map(entry=>entry.id));
+    results.push(row('journal_acknowledgement',acknowledged===pending.length,{acknowledged}));
+
     const compacted=await compactOfflineJournal({maxEntries:3000});
     results.push(row('journal_compaction_safe',compacted.remaining>=1,compacted));
+    const recovery=await recoverDurableStorageFromJournal();
+    results.push(row('journal_guarded_recovery',recovery.ok===true,recovery));
+
+    const waiting=await flushOfflineJournal({adapter:null});
+    results.push(row('journal_waits_for_adapter',waiting.status==='waiting_adapter'||waiting.status==='offline',waiting));
 
     const storage=await getStorageHealth();
     results.push(row('storage_capacity_available',storage.supported&&storage.level!=='critical',storage));
@@ -49,7 +62,7 @@ export async function runOfflineEnduranceSelfTest({iterations=24}={}){
     startedAt,
     finishedAt:new Date().toISOString(),
     results,
-    note:'此測試驗證瀏覽器層持久化、Journal、離線資料包及冷啟動快取；實體斷電與長時間營業仍需 Android 收銀機驗收。'
+    note:'此測試驗證瀏覽器層持久化、Journal、批次補傳邊界、離線資料包及冷啟動快取；實體斷電與長時間營業仍需 Android 收銀機驗收。'
   });
   window.dispatchEvent(new CustomEvent('morefun:offline-endurance-self-test',{detail:report}));
   return report;
