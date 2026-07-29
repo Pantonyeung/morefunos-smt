@@ -1,0 +1,155 @@
+name: E-line APK OTA Release Pipeline Dry Run
+
+on:
+  push:
+    branches: [e-line-apk-ota-v1]
+    paths:
+      - 'android/**'
+      - '.github/workflows/e-line-release-pipeline-dry-run.yml'
+      - '.github/workflows/e-line-production-apk-ota-release.yml'
+  pull_request:
+    branches: [d-line-production-integration-v1]
+    paths:
+      - 'android/**'
+      - '.github/workflows/e-line-release-pipeline-dry-run.yml'
+      - '.github/workflows/e-line-production-apk-ota-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e-line-release-dry-run-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-dry-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+
+      - name: Fetch frozen D-line baseline
+        run: git fetch origin d-line-production-integration-v1:d-line-production-integration-v1
+
+      - name: Run E-line replacement contract
+        run: bash android/verify-e-line-replacement.sh
+
+      - name: Generate ephemeral CI signing material
+        run: |
+          set -euo pipefail
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /tmp/runtime-private.pem
+          openssl pkey -in /tmp/runtime-private.pem -pubout -out /tmp/runtime-public.pem
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /tmp/apk-ota-private.pem
+          openssl pkey -in /tmp/apk-ota-private.pem -pubout -out /tmp/apk-ota-public.pem
+          openssl pkey -pubin -in /tmp/runtime-public.pem -outform DER | base64 -w0 > /tmp/runtime-public.b64
+          openssl pkey -pubin -in /tmp/apk-ota-public.pem -outform DER | base64 -w0 > /tmp/apk-ota-public.b64
+          keytool -genkeypair \
+            -alias morefun-ci \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 2 \
+            -dname "CN=More Fun CI,OU=SMT,O=More Fun,L=Hong Kong,C=HK" \
+            -keystore /tmp/morefun-ci.jks \
+            -storepass changeit \
+            -keypass changeit \
+            -noprompt
+
+      - name: Compile E-line release with isolated ephemeral trust roots
+        run: |
+          set -euo pipefail
+          gradle -p android :app:assembleRelease --stacktrace --no-daemon \
+            -PmorefunReleasePublicKeyB64="$(cat /tmp/runtime-public.b64)" \
+            -PmorefunReleaseHosts="raw.githubusercontent.com" \
+            -PmorefunReleaseManifestUrl="https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/runtime-stable/releases/stable-envelope.json" \
+            -PmorefunApkOtaPublicKeyB64="$(cat /tmp/apk-ota-public.b64)" \
+            -PmorefunApkOtaHosts="raw.githubusercontent.com" \
+            -PmorefunApkOtaManifestUrl="https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/apk-ota-stable/releases/stable-apk-envelope.json"
+
+      - name: Sign dry-run APK and inspect identity
+        run: |
+          set -euo pipefail
+          OUT="android/app/build/outputs/apk/release/e-line-dry-run"
+          mkdir -p "$OUT"
+          UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SIGNED="$OUT/morefun-smt-e-line-production.apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign \
+            --ks /tmp/morefun-ci.jks \
+            --ks-key-alias morefun-ci \
+            --ks-pass pass:changeit \
+            --key-pass pass:changeit \
+            --out "$SIGNED" \
+            "$UNSIGNED"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$SIGNED" | tee "$OUT/morefun-smt-e-line-production.signature.txt"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$SIGNED" | tee "$OUT/morefun-smt-e-line-production.badging.txt"
+
+      - name: Generate and verify signed APK OTA envelope
+        env:
+          APK_PATH: android/app/build/outputs/apk/release/e-line-dry-run/morefun-smt-e-line-production.apk
+          BADGING_PATH: android/app/build/outputs/apk/release/e-line-dry-run/morefun-smt-e-line-production.badging.txt
+          SIGNATURE_REPORT_PATH: android/app/build/outputs/apk/release/e-line-dry-run/morefun-smt-e-line-production.signature.txt
+          APK_OTA_PRIVATE_KEY_PEM: /tmp/apk-ota-private.pem
+          APK_OTA_PUBLIC_KEY_PEM: /tmp/apk-ota-public.pem
+          OUTPUT_DIR: android/app/build/outputs/apk/release/e-line-dry-run
+          APK_URL: https://raw.githubusercontent.com/Pantonyeung/morefunos-smt/apk-ota-stable/releases/v4/morefun-smt-e-line-production.apk
+          SOURCE_SHA: ${{ github.sha }}
+          MANDATORY: 'false'
+          ISSUED_AT: '2000000000'
+        run: bash android/generate-apk-ota-release.sh
+
+      - name: Validate dry-run release contract
+        run: |
+          set -euo pipefail
+          OUT="android/app/build/outputs/apk/release/e-line-dry-run"
+          python3 - <<'PY'
+          import json
+          out = "android/app/build/outputs/apk/release/e-line-dry-run"
+          manifest_text = open(f"{out}/apk-ota-manifest.json", encoding="utf-8").read()
+          manifest = json.loads(manifest_text)
+          envelope = json.load(open(f"{out}/stable-apk-envelope.json", encoding="utf-8"))
+          assert manifest["applicationId"] == "hk.morefun.smt"
+          assert manifest["versionCode"] == 4
+          assert manifest["versionName"] == "0.4.0-e-line"
+          assert manifest["minSdk"] == 23
+          assert len(manifest["sha256"]) == 64
+          assert len(manifest["certificateSha256"]) == 64
+          assert manifest["bytes"] > 0
+          assert manifest["issuedAt"] == 2000000000
+          assert manifest["mandatory"] is False
+          assert envelope["manifest"] == manifest_text
+          assert envelope["signature"]
+          PY
+          test -s "$OUT/morefun-smt-e-line-production.apk"
+          test -s "$OUT/morefun-smt-e-line-production.apk.sha256"
+          test -s "$OUT/apk-ota-manifest.sig"
+          test -s "$OUT/apk-ota-manifest.sig.b64"
+          test -s "$OUT/apk-ota-release-metadata.env"
+
+      - name: Remove ephemeral private material
+        if: always()
+        run: rm -f /tmp/runtime-private.pem /tmp/runtime-public.pem /tmp/apk-ota-private.pem /tmp/apk-ota-public.pem /tmp/runtime-public.b64 /tmp/apk-ota-public.b64 /tmp/morefun-ci.jks
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e-line-release-pipeline-dry-run-${{ github.run_number }}
+          path: android/app/build/outputs/apk/release/e-line-dry-run/*
+          if-no-files-found: error
+          retention-days: 14
