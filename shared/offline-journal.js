@@ -3,13 +3,6 @@ const DB_VERSION=1;
 const STORE='entries';
 const META='meta';
 const MAX_ENTRIES=3000;
-const DURABLE_RECOVERY_KEYS=new Set([
-  'morefun:smt:v16c:settings',
-  'morefun:smt:v16:orders',
-  'morefun:smt:v1:operations',
-  'morefun:smt:v1:printers',
-  'morefun:smt:v1:supply-overrides'
-]);
 
 function openDb(){
   return new Promise((resolve,reject)=>{
@@ -35,7 +28,7 @@ export async function appendOfflineJournalEntry({storageKey,value,source='web',b
   if(!storageKey)throw new Error('offline_journal_storage_key_required');
   const db=await openDb();
   const tx=db.transaction([STORE,META],'readwrite');
-  const entry={storageKey:String(storageKey),value,source:String(source),businessDate:businessDate||null,terminalId:terminalId||null,createdAt:Date.now()};
+  const entry={storageKey:String(storageKey),value,source:String(source),businessDate:businessDate||null,terminalId:terminalId||null,createdAt:Date.now(),synced:false};
   const idPromise=requestResult(tx.objectStore(STORE).add(entry));
   tx.objectStore(META).put({key:'lastWriteAt',value:entry.createdAt});
   const [id]=await Promise.all([idPromise,txDone(tx)]);
@@ -48,9 +41,11 @@ export async function getOfflineJournalStatus(){
   const db=await openDb();
   const tx=db.transaction([STORE,META],'readonly');
   const countPromise=requestResult(tx.objectStore(STORE).count());
+  const allPromise=requestResult(tx.objectStore(STORE).getAll());
   const lastPromise=requestResult(tx.objectStore(META).get('lastWriteAt'));
-  const [count,last]=await Promise.all([countPromise,lastPromise,txDone(tx)]);
-  return Object.freeze({count:Number(count||0),lastWriteAt:last?.value||null,ready:true});
+  const [count,rows,last]=await Promise.all([countPromise,allPromise,lastPromise,txDone(tx)]);
+  const unsynced=(rows||[]).filter(row=>row.synced!==true).length;
+  return Object.freeze({count:Number(count||0),unsynced,lastWriteAt:last?.value||null,ready:true});
 }
 
 export async function readLatestJournalValues(){
@@ -62,15 +57,24 @@ export async function readLatestJournalValues(){
   return Object.fromEntries([...latest.entries()].map(([key,entry])=>[key,entry.value]));
 }
 
-export async function recoverDurableStorageFromJournal(){
-  const latest=await readLatestJournalValues();
-  const restored=[];
-  for(const key of DURABLE_RECOVERY_KEYS){
-    if(localStorage.getItem(key)!==null||!Object.hasOwn(latest,key)||latest[key]===null)continue;
-    try{localStorage.setItem(key,JSON.stringify(latest[key]));restored.push(key);}catch(error){return {ok:false,restored,error:String(error?.message||error)};}
-  }
-  if(restored.length)window.dispatchEvent(new CustomEvent('morefun:offline-journal-recovered',{detail:{restored}}));
-  return {ok:true,restored,count:restored.length};
+export async function readUnsyncedJournalEntries({limit=200}={}){
+  const db=await openDb();
+  const tx=db.transaction(STORE,'readonly');
+  const rows=await Promise.all([requestResult(tx.objectStore(STORE).getAll()),txDone(tx)]).then(([value])=>value||[]);
+  return rows.filter(row=>row.synced!==true).sort((a,b)=>Number(a.id)-Number(b.id)).slice(0,Math.max(1,Number(limit)||200));
+}
+
+export async function markJournalEntriesSynced(ids=[]){
+  const clean=[...new Set(ids.map(Number).filter(Number.isFinite))];
+  if(!clean.length)return 0;
+  const db=await openDb();
+  const tx=db.transaction(STORE,'readwrite');
+  const store=tx.objectStore(STORE);
+  let updated=0;
+  await Promise.all(clean.map(async id=>{const row=await requestResult(store.get(id));if(!row)return;store.put({...row,synced:true,syncedAt:Date.now()});updated++;}));
+  await txDone(tx);
+  window.dispatchEvent(new CustomEvent('morefun:offline-journal-synced',{detail:{count:updated}}));
+  return updated;
 }
 
 export async function compactOfflineJournal({maxEntries=MAX_ENTRIES}={}){
@@ -81,7 +85,7 @@ export async function compactOfflineJournal({maxEntries=MAX_ENTRIES}={}){
   const latestByKey=new Map();
   rows.forEach(row=>latestByKey.set(row.storageKey,row.id));
   const protectedIds=new Set(latestByKey.values());
-  const removable=rows.filter(row=>!protectedIds.has(row.id)).slice(0,rows.length-maxEntries);
+  const removable=rows.filter(row=>!protectedIds.has(row.id)&&row.synced===true).slice(0,rows.length-maxEntries);
   if(!removable.length)return {removed:0,remaining:rows.length};
   const writeTx=db.transaction(STORE,'readwrite');
   removable.forEach(row=>writeTx.objectStore(STORE).delete(row.id));
