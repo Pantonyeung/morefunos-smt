@@ -1,17 +1,18 @@
 import {readRuntimeSnapshot} from './runtime-snapshot-store.js';
 import {saveOfflinePackage,readLastKnownGoodPackage,getOfflinePackageStatus,pruneOfflinePackages} from './offline-package-store.js';
+import {ORDER_STORAGE_KEY,SETTINGS_STORAGE_KEY,ORDER_HISTORY_STORAGE_KEY,DRAFT_STORAGE_KEY,DINE_STORAGE_KEY,SUPPLY_STORAGE_KEY,OPERATIONS_STORAGE_KEY,PRINTER_STORAGE_KEY} from './store.js';
 
-const REQUIRED_SECTIONS=Object.freeze(['catalog','categories','optionGroups','combos','pricing','runtime','printing','settings']);
+const REQUIRED_SECTIONS=Object.freeze(['catalog','categories','optionGroups','combos','pricing','runtime','printing','settings','operations']);
 
 function cloneJson(value){return JSON.parse(JSON.stringify(value??null));}
 function localJson(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback));}catch{return fallback;}}
 
 export function buildLocalOfflinePackage(){
   const runtime=readRuntimeSnapshot()?.snapshot||{};
-  const settings=localJson('morefun:smt:settings',{});
-  const order=localJson('morefun:smt:order',{});
-  const printers=localJson('morefun:smt:printers',{});
-  const data={
+  const settings=localJson(SETTINGS_STORAGE_KEY,{});
+  const order=localJson(ORDER_STORAGE_KEY,{});
+  const printers=localJson(PRINTER_STORAGE_KEY,{});
+  return {
     catalog:cloneJson(order.catalog||settings.catalog||{}),
     categories:cloneJson(order.categories||settings.categories||[]),
     optionGroups:cloneJson(order.optionGroups||settings.optionGroups||[]),
@@ -20,9 +21,13 @@ export function buildLocalOfflinePackage(){
     runtime:cloneJson(runtime),
     printing:cloneJson(printers),
     settings:cloneJson(settings),
+    operations:cloneJson(localJson(OPERATIONS_STORAGE_KEY,{})),
+    orders:cloneJson(localJson(ORDER_HISTORY_STORAGE_KEY,[])),
+    drafts:cloneJson(localJson(DRAFT_STORAGE_KEY,[])),
+    dine:cloneJson(localJson(DINE_STORAGE_KEY,null)),
+    supply:cloneJson(localJson(SUPPLY_STORAGE_KEY,{})),
     terminal:{capturedAt:new Date().toISOString(),userAgent:navigator.userAgent}
   };
-  return data;
 }
 
 export function validateOfflineData(data){
@@ -65,6 +70,12 @@ export async function registerOfflineServiceWorker(){
   if(!('serviceWorker' in navigator))return {ok:false,error:'service_worker_unsupported'};
   try{const registration=await navigator.serviceWorker.register('./service-worker.js',{scope:'./'});return {ok:true,registration};}
   catch(error){return {ok:false,error:String(error?.message||error)};}
+}
+
+export async function refreshOfflineAssets(){
+  const registration='serviceWorker' in navigator?await navigator.serviceWorker.getRegistration('./').catch(()=>null):null;
+  registration?.active?.postMessage({type:'morefun:offline-cache-refresh'});
+  return Boolean(registration);
 }
 
 export async function getOfflineSurvivalStatus(){
