@@ -26,11 +26,11 @@ class ApkUpdateManifestVerifier {
         val envelope = JSONObject(envelopeText)
         val manifestText = envelope.optString("manifest")
         val signatureBase64 = envelope.optString("signature")
-        require(BuildConfig.RELEASE_PUBLIC_KEY_B64.isNotBlank()) { "APK OTA public key 未配置" }
+        require(BuildConfig.APK_OTA_PUBLIC_KEY_B64.isNotBlank()) { "APK OTA public key 未配置" }
         require(manifestText.isNotBlank()) { "APK OTA manifest 為空" }
         require(signatureBase64.isNotBlank()) { "APK OTA signature 為空" }
 
-        val keyBytes = Base64.decode(BuildConfig.RELEASE_PUBLIC_KEY_B64, Base64.DEFAULT)
+        val keyBytes = Base64.decode(BuildConfig.APK_OTA_PUBLIC_KEY_B64, Base64.DEFAULT)
         val publicKey = KeyFactory.getInstance("RSA").generatePublic(X509EncodedKeySpec(keyBytes))
         val verifier = Signature.getInstance("SHA256withRSA")
         verifier.initVerify(publicKey)
@@ -71,7 +71,11 @@ class ApkUpdateManifestVerifier {
         require(uri.userInfo.isNullOrBlank()) { "APK OTA URL 不接受 user-info" }
         require(uri.fragment.isNullOrBlank()) { "APK OTA URL 不接受 fragment" }
         val host = uri.host?.lowercase().orEmpty()
-        val allowed = BuildConfig.RELEASE_HOSTS.split(',').map { it.trim().lowercase() }.filter { it.isNotBlank() }.toSet()
+        val allowed = BuildConfig.APK_OTA_HOSTS
+            .split(',')
+            .map { it.trim().lowercase() }
+            .filter { it.isNotBlank() }
+            .toSet()
         require(host.isNotBlank() && host in allowed) { "APK OTA host 未授權：$host" }
     }
 
