@@ -86,18 +86,19 @@ PR #34 在硬件驗收前維持 Draft，不宣稱 Production Ready。
 3. Push-event run connector不可觀察；一次性 PR trigger取得 evidence後立即移除。
 4. Compile step failure未必係 Kotlin；必須先讀第一個 fatal log。
 
-## WORK03 Staff Sync 狀態
-- Install：完成。
-- Health：完成。
-- API：`1.2.9`。
-- Sync：`0.2`。
-- Schema：`READY`。
-- Password mode：`SHA256_FAST`。
-- Auto Lock：關閉。
-- Staff Login：`TEST_WORK03_UNIFIED_LOGIN` 進行中。
-- 測試帳號：`morefun`／裝置 `dev-smt-main`／模式 `smt`。
-- 下一步：Session／Bootstrap。
-- 尚未開始：Push／Pull／Heartbeat／Fallback。
+## 舊 WORK03 Staff Sync｜SUPERSEDED／禁止續推
+
+以下舊次序只保留歷史識別，**不得再執行**：
+
+`TEST_WORK03_UNIFIED_LOGIN → Session／Bootstrap → Push／Pull → Heartbeat → Fallback`
+
+最新 Authority 已改為：
+- Firebase Auth。
+- Firebase Realtime Database。
+- Cloudflare Worker。
+- Google Sheet V2 ledger。
+
+Apps Script Staff Auth／Google Sheet Sync runtime 不再係現役主架構。任何下一步必須先讀最新 MoreFunOS Current Development Registry 及對應 Admin／Backend active branch，禁止由舊 WORK03 接手狀態推斷現役工作。
 
 ## 備份／Rollback
 - `backup/apk-foundation-pre-android6-20260727`
@@ -106,6 +107,6 @@ PR #34 在硬件驗收前維持 Draft，不宣稱 Production Ready。
 - Main Candidate Gate evidence保留至 `2026-08-13`。
 
 ## 下一步唯一原則
-硬件未恢復前，不反覆跑已 PASS 的 Main Candidate full Gate。選擇下一個 software-only單一 Domain，隔離開發、targeted verification，完成後先進 integration branch。
+硬件未恢復前，不反覆跑已 PASS 的 Main Candidate full Gate。選擇下一個 software-only單一 Domain時，必須以最新 Current Development Registry／active branch為準，禁止沿舊 WORK03流程。
 
 任何 checkpoint 都假設下一句可能由另一個 AI 接手。最少保留：目標、Repo／Branch／PR、latest head、完成／未完成、CI／QA 層級、已知根因、禁止倒退事項、backup／rollback、下一步唯一優先、待實機 Gate。
