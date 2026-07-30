@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# One-shot trigger marker: 2026-07-30 main candidate validation.
+# One-shot trigger marker: 2026-07-30 PR-observable main candidate validation.
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 GRADLE="$ROOT/app/build.gradle.kts"
