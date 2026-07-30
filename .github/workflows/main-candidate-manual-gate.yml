@@ -2,6 +2,11 @@ name: SMT Main Candidate Manual Gate
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - smt-main-candidate-v1
+    paths:
+      - 'android/**'
 
 permissions:
   contents: read
