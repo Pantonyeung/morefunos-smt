@@ -2,11 +2,6 @@ name: SMT Main Candidate Manual Gate
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - smt-functional-completeness-v1
-    paths:
-      - 'android/**'
 
 permissions:
   contents: read
@@ -29,6 +24,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -51,7 +47,9 @@ jobs:
 
       - name: Compile Android candidate
         run: |
-          gradle -p android --no-daemon --stacktrace :app:compileDebugKotlin :app:testDebugUnitTest
+          gradle -p android --no-daemon --stacktrace \
+            :app:compileDebugKotlin \
+            :app:testDebugUnitTest
 
       - name: Upload gate evidence
         if: always()
