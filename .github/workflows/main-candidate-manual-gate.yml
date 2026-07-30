@@ -2,9 +2,9 @@ name: SMT Main Candidate Manual Gate
 
 on:
   workflow_dispatch:
-  push:
+  pull_request:
     branches:
-      - smt-main-candidate-v1
+      - smt-functional-completeness-v1
     paths:
       - 'android/**'
 
