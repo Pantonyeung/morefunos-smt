@@ -29,7 +29,19 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
 
       - name: Run static integration gate
         shell: bash
@@ -38,10 +50,8 @@ jobs:
           bash android/verify-main-candidate.sh | tee main-candidate-gate.log
 
       - name: Compile Android candidate
-        working-directory: android
         run: |
-          chmod +x gradlew
-          ./gradlew --no-daemon --stacktrace :app:compileDebugKotlin :app:testDebugUnitTest
+          gradle -p android --no-daemon --stacktrace :app:compileDebugKotlin :app:testDebugUnitTest
 
       - name: Upload gate evidence
         if: always()
