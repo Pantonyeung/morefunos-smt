@@ -1,58 +1,45 @@
 # More Fun SMT｜Register／Mobile Shared Core
 
-> **Authority boundary：本 repo 只係 SMT Application＋Android Host implementation surface。**
-> 任何 AI／Codex／Work 開始前，必須先讀中央 MoreFunOS Master Authority、Must Read、Current Registry、Document Classification、Legacy Inventory，再讀本 repo `MOREFUNOS_AUTHORITY_BOUNDARY.md`、`AGENTS.md`、`SMT_CONTEXT_MIN.md`。
+SMT 係 MoreFunOS 店內 Application＋Android Host implementation surface。
 
-## 正式產品定位
+## 系統定位
 
-More FunOS 只保留一個 SMT Application：
+MoreFunOS 只保留一個 SMT Shared Core：
 
 - `register`：收銀機／大屏 Profile；
 - `mobile`：手機／平板 Profile。
 
-兩個 Profile 共用同一 Domain、Data Model、Business Rule、Cart、Pricing、Checkout、Order、Payment、Sync、Recovery、Audit 及 Print Job Contract。
+兩個 Profile 共用同一 Domain、Data Model、Business Rule、Cart、Pricing、Checkout、Order、Payment、Supply Runtime、Sync、Recovery、Audit 及 Print Job Contract。
 
-舊 `morefunos-smm` 已 `SUPERSEDED AS INDEPENDENT CORE`，只作 migration／mobile UI reference。
+舊 `morefunos-smm` 只係 migration／歷史 UI 參考，不得重新成為第二套 Core。
 
-## 舊文件降權
+## 必讀入口
 
-以下只屬 `REFERENCE ONLY`：
+任何分析、設計或修改前依次閱讀：
 
-- WORK01／02／03；
-- V42／SA2／EG；
-- Rebuild39／舊 1920→1280 文件；
-- 舊 A／B／C／D／E 線接手；
-- Apps Script／Google Sheet Staff Sync／RegisterHub；
-- 舊 SMM core；
-- 舊 branch／PR／CI／artifact／handoff。
+1. `AGENTS.md`
+2. `CURRENT_DOMAIN_AUTHORITY.md`
+3. `ENGINEERING_LOG.md`
+4. 與任務直接相關的 Active PR、可執行測試及原始 Evidence
+5. `Pantonyeung/morefunos` Knowledge Base V2
 
-即使標題包含 `LOCK／FINAL／MASTER／CURRENT／READY`，都不得直接施工。舊文件只可抽取產品需求、UI 素材、migration source、contract、踩坑及成功方法；需要重新採用，必須經 re-adoption proposal。
+文件名稱包含 `LOCK`、`FINAL`、`MASTER`、`CURRENT` 或 `READY`，不代表它仍然係現行 Authority。
 
-## 現役邊界
+## 穩定責任邊界
 
-- Firebase RTDB＝Operational Authority；
-- Cloudflare Worker／Order API＝validation、repricing、idempotency、protected write；
-- Google Sheet V2＝ledger／reporting mirror；
-- SMT／mobile 不直接寫受保護 RTDB；
-- Android Host 負責設備、打印、OTA、硬件級結果；
-- Queue success 不等於實體打印 success。
+- Firebase RTDB：Operational Authority；
+- Cloudflare Worker／Order API：validation、repricing、idempotency、protected write；
+- Google Sheet V2：ledger／reporting mirror；
+- SMT／Mobile 不直接寫受保護 RTDB；
+- Android Host 負責設備、打印、OTA 與硬件級結果；
+- Queue success 不等於實體打印 success；
+- Browser PASS 不等於 Device／Hardware／Store PASS。
 
-## 現役狀態入口
+## 文件治理
 
-- 中央 Current：`Pantonyeung/morefunos/MOREFUNOS_CURRENT_DEVELOPMENT_REGISTRY.md`
-- Repo Boundary：`MOREFUNOS_AUTHORITY_BOUNDARY.md`
-- Repo Agent：`AGENTS.md`
-- 最小上下文：`SMT_CONTEXT_MIN.md`
-- Change Impact：`SMT_CHANGE_IMPACT.md`
-- QA／Pitfalls：`docs/qa/`
-
-文件內 branch／PR／head／artifact 只係 checkpoint；必須 fresh-read GitHub，唔可以當永久最新。
-
-## Evidence
-
-`CODE_EXISTS → CONTRACT_PASS → BROWSER_PASS → DEVICE_PASS → STORE_PASS → PRODUCT_LOCKED`
-
-Browser／software PASS 不等於 Device／Hardware／Store／Production PASS。
+- `CURRENT_DOMAIN_AUTHORITY.md`：唯一 CURRENT SMT Authority；
+- `ENGINEERING_LOG.md`：唯一 append-only 工程歷史；
+- 其他 Start Here、Context、Decision、Status、QA、Handoff、Lock、Plan 文件只屬索引、規格、Evidence 或 Archive，除非 Authority 明確重新採納。
 
 ## 本機預覽
 
