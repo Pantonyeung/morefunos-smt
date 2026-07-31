@@ -13,6 +13,7 @@ const supplyRows=value=>Array.isArray(value)
     ?Object.entries(value).map(([key,row])=>row&&typeof row==='object'?{...row,productId:row.productId||row.product_id||row.id||key}:{productId:key,status:row})
     :[];
 const productIdOf=row=>String(row?.productId||row?.product_id||row?.id||'').trim();
+const canonicalProductIdOf=row=>String(row?.canonicalProductId||row?.canonical_product_id||row?.aliasOf||row?.alias_of||productIdOf(row)).trim();
 const timestamp=value=>{const number=Number(value);if(Number.isFinite(number)&&number>0)return number;const parsed=Date.parse(String(value||''));return Number.isFinite(parsed)?parsed:0};
 
 export function normalizeSupplyStatus(value){
@@ -24,17 +25,26 @@ export function normalizeSupplyStatus(value){
 
 export function normalizeSupplyOverrides(value){
   const output={};
+  const canonicalSource=new Set();
   for(const row of supplyRows(value)){
-    const productId=productIdOf(row);
+    const reportedProductId=productIdOf(row);
+    const productId=canonicalProductIdOf(row)||reportedProductId;
     const status=normalizeSupplyStatus(row?.status||row?.availability_status);
     if(!productId||status==='available')continue;
+    const updatedAt=timestamp(row?.updatedAt??row?.updated_at);
+    const isCanonicalRow=reportedProductId===productId;
+    const existing=output[productId];
+    const shouldReplace=!existing||updatedAt>existing.updatedAt||(updatedAt===existing.updatedAt&&isCanonicalRow&&!canonicalSource.has(productId));
+    if(!shouldReplace)continue;
     output[productId]={
       status,
-      updatedAt:timestamp(row?.updatedAt??row?.updated_at),
+      updatedAt,
       expiresAt:timestamp(row?.expiresAt??row?.expires_at),
       source:String(row?.source||''),
-      deviceId:String(row?.deviceId||row?.device_id||'')
+      deviceId:String(row?.deviceId||row?.device_id||''),
+      canonicalProductId:productId
     };
+    if(isCanonicalRow)canonicalSource.add(productId);
   }
   return output;
 }
@@ -91,7 +101,7 @@ function overlayPending(remote,pending,local){
   const next={...normalizeSupplyOverrides(remote)};
   for(const item of pending){
     if(item.status==='available')delete next[item.productId];
-    else next[item.productId]={...(local?.[item.productId]||{}),status:item.status,updatedAt:local?.[item.productId]?.updatedAt||Date.now(),source:local?.[item.productId]?.source||'local-pending',deviceId:local?.[item.productId]?.deviceId||''};
+    else next[item.productId]={...(local?.[item.productId]||{}),status:item.status,updatedAt:local?.[item.productId]?.updatedAt||Date.now(),source:local?.[item.productId]?.source||'local-pending',deviceId:local?.[item.productId]?.deviceId||'',canonicalProductId:item.productId};
   }
   return next;
 }
