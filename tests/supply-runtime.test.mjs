@@ -98,3 +98,24 @@ test('network failure keeps the valid session and queues the local change for re
   assert.equal(runtime.getPending().length,1);
   assert.equal(runtime.getOverrides().F4.status,'soldout');
 });
+
+test('login rejects when the new token is invalidated while flushing an existing queue',async()=>{
+  const storage=createMemoryStorage({
+    [SUPPLY_STORAGE_KEY]:JSON.stringify({F4:{status:'soldout',updatedAt:Date.now()}}),
+    [SUPPLY_PENDING_STORAGE_KEY]:JSON.stringify([{productId:'F4',status:'soldout'}])
+  });
+  let call=0;
+  const runtime=createSupplyRuntime({
+    source:'smt',deviceId:'SMT-01',storage,
+    fetchImpl:async()=>{
+      call+=1;
+      if(call===1)return jsonResponse({ok:true,token:'new-token',staff:{staffNumber:'MOREFUN'},expiresInSeconds:3600});
+      return jsonResponse({ok:false,error:'staff-session-revoked'},401);
+    }
+  });
+  await assert.rejects(runtime.login({staffNumber:'morefun',password:'morefun'}),error=>error.status===401);
+  assert.equal(runtime.getSession(),null);
+  assert.equal(runtime.getState().status,'session-required');
+  assert.equal(runtime.getPending().length,1);
+  assert.equal(runtime.getOverrides().F4.status,'soldout');
+});
