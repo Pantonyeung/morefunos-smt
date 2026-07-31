@@ -1,17 +1,27 @@
 # SMT Shared Supply Runtime｜接手與進度｜2026-07-31
 
-> 狀態：CURRENT CHECKPOINT / SOURCE IMPLEMENTED / CONTRACTS COMMITTED / DEPLOYMENT AND DEVICE ACCEPTANCE PENDING  
+> 狀態：CURRENT CHECKPOINT / SOURCE IMPLEMENTED / TARGETED CONTRACT PASS / DEPLOYMENT AND DEVICE ACCEPTANCE PENDING  
 > Current Authority：`smt-main-candidate-v1`／PR #34  
-> 適用：SMT Register Profile、SMM Mobile Profile、Admin Worker、Customer Public Runtime
+> 適用：SMT Register Profile、SMM Mobile Profile、Admin Worker、Customer Public Runtime  
+> 正確回滾點：`backup/supply-runtime-pre-unified-20260731-v2` → `bd8de413ed17cbc1196abed512ef009a7c5fb1fa`
 
-## 1. 需求
+## 1. 需求與目前結論
 
-- SMT、SMM 都可以設定「今日售罄／暫停供應／恢復供應」。
-- SMM 不建立第二套 Core；只係 SMT Shared Application 嘅 Mobile Profile。
-- 斷線期間售罄操作先保存本機並排隊，重連及重新登入後同步。
-- Customer 讀取同一份 operational availability；無法連線時繼續使用最近一份完整有效本機菜單。
+### SMT／SMM 售罄
+- SMT、SMM 都可以操作「今日售罄／暫停供應／恢復供應」。
+- SMM 不是第二套 App；是同一 SMT Shared Application 的 Mobile Profile。
+- 本機先寫、斷線排隊、重連及重新登入後同步的 Source Implementation 已完成。
+- Targeted Contract 已執行通過。
+- Admin Worker、SMT Pages Functions、兩部裝置及 Customer 實際閉環仍待 staging／device acceptance。
 
-## 2. Authority／責任
+### Customer 離線菜單
+- Customer 保存最近一份完整有效 Runtime，並保留上一份有效版本。
+- 新 Runtime 無效時不會覆蓋最後有效菜單。
+- 最新快照損壞時回退上一份有效快照。
+- Source Implementation 及本機 Targeted Contract 已通過。
+- 真實 iPhone／Safari／PWA 斷線重開驗收仍待完成。
+
+## 2. 唯一 Authority／責任
 
 | 決策 | 唯一 Authority |
 |---|---|
@@ -19,11 +29,12 @@
 | 本機供應狀態 | `SUPPLY_STORAGE_KEY` |
 | 跨端同步／Queue／Staff Session | `shared/supply-runtime.js` |
 | Shell 登入與離線降級 | `shell-startup.js` |
-| 重連登入入口 | `shared/supply-session-control.js` |
+| 重連登入事件橋 | `shared/supply-session-control.js` |
 | Page storage refresh | `shared/supply-page-bridge.js` |
 | Server operational truth | Firebase `morefun/runtime/operations/v1/availability` |
 | Staff API | Admin Worker `/v1/staff/availability` |
 | Customer projection | Admin Worker Public Runtime overlay |
+| Customer 離線快照 | `customerOfflineRuntimeStore.js` |
 
 禁止：MutationObserver、DOM 掃描、`Storage.prototype` patch、獨立 SMM Domain、Admin publish 覆蓋 operational availability。
 
@@ -39,104 +50,130 @@ SMT Register / SMM Mobile
 → Admin Worker Staff API
 → Firebase operational availability
 → Customer Public Runtime overlay
+→ Customer latest-valid / previous-valid offline cache
 ```
 
-## 4. Current Source Implementation
+## 4. 今次正式修改
 
-### Shared Core
+### SMT Candidate
 - `shared/supply-runtime.js`
-  - Staff Session；
-  - local-first state；
-  - pending queue；
-  - flush／refresh／15 秒 polling；
-  - `available|soldout|paused`；
-  - pending local state overlay，防止 remote refresh 清除未同步改動。
+  - persisted Staff Session 必須同目前 `source + deviceId` 一致；SMT token 不可被 SMM 重用。
+  - 401／403 會清除失效 token，但保留本機供應狀態與 pending queue。
+  - 網絡／5xx 保持 `offline-local`，不刪 Staff Session 或 Queue。
+  - 登入後即時 flush 舊 Queue 如遇 auth revoke，登入流程會明確失敗，不能假裝成功。
+- `shell-startup.js`
+  - 改為 remote-first Staff Login。
+  - 401／403 明確拒絕；只有網絡類失敗且本機已有相同帳密才可 offline fallback。
+  - 已解鎖 Shell 可重新登入，不會重跑開工現金流程。
+  - 顯示 connected／syncing／offline-local／session-required／pending count。
+- `shared/supply-session-control.js`
+  - 只做 status control 事件橋；登入 Gate 由 `shell-startup.js::showLogin` 單一控制。
+- 新增：
+  - `tests/supply-runtime.test.mjs`
+  - `tests/supply-profile-contract.test.mjs`
 
-### Same-origin proxy
-- `functions/_shared/operations-proxy.js`
-- `functions/v1/staff/login.js`
-- `functions/v1/staff/availability.js`
+### Admin Worker
+- 新增 `worker/test/staff-availability-smm.test.mjs`。
+- 明確驗證 `source=smm` 可寫同一 Firebase operational availability，並留下 SMM device audit。
+- `package.json` 已把 SMM contract 納入 `test:staff-availability`、`test:contracts`、`test:firebase`。
 
-### Shell integration
-- `shell-startup.js`：本機帳密通過但網絡失敗時仍可開工；401／403 不可被 offline fallback 掩蓋。
-- `shared/supply-session-control.js`：網絡恢復後明確重新登入；不保存密碼。
-- Shell 顯示：供應同步／同步中／離線待同步／本機模式。
+### Customer
+- 今次沒有重造第二套 cache。
+- 已核對既有：
+  - `customerOfflineRuntimeStore.js`
+  - `morefunPublicRuntime.js`
+  - `customerRuntimeAdapter.js`
+  - `tests/customer-offline-runtime-store.test.mjs`
+  - `tests/customer-public-runtime-client.test.mjs`
+  - `tests/customer-availability-status-normalization.test.mjs`
+- `soldout` 與 `paused` 都會令 Customer `is_available=false`，但保留各自狀態語意。
 
-### Register＋Mobile Profile
-- Register：原有 `pages/soldout`。
-- Mobile：`?profile=mobile#/soldout`，同一 Page／Domain，只改 Shell／Page composition。
-- `mobile-profile-bootstrap.js`、`mobile-profile.css`、`pages/soldout/responsive.css`。
+## 5. 已執行 Targeted Evidence
 
-### Page update
-- `shared/supply-page-bridge.js`。
-- Order／Soldout iframe 收到 `SUPPLY_STORAGE_KEY` 變更後更新。
+> 以下為同 committed source 對齊的 isolated local verification；不是 Full Repository／Browser／Device Gate。
 
-## 5. Targeted Contracts
+| Gate | 結果 |
+|---|---|
+| `shared/supply-runtime.js` syntax | PASS |
+| `shell-startup.js` syntax | PASS |
+| `shared/supply-session-control.js` syntax | PASS |
+| SMT／SMM Supply Runtime contract | 6／6 PASS |
+| Shared Profile／same-origin wiring contract | 5／5 PASS |
+| Admin SMM availability mutation contract | PASS |
+| Customer latest／previous valid offline cache contract | 4／4 PASS |
 
-- `tests/shared-supply-runtime.test.mjs`
-  - array／keyed object normalization；
-  - soldout／paused／available diff；
-  - Staff Session flush；
-  - remote refresh；
-  - offline queue retention。
-- `tests/shared-supply-runtime-integration.test.mjs`
-  - Shell explicit storage capture；
-  - no MutationObserver／Storage patch；
-  - Register／Mobile 同一 Soldout route；
-  - same-origin Pages Functions；
-  - Order／Soldout shared state refresh。
-
-> 測試已提交，但本 checkpoint 未取得同最新 head 對齊嘅實際執行輸出。不得寫 Automated PASS。
+未執行：Full SMT Node regression、Browser Matrix、Android compile、Cloudflare staging、兩裝置 propagation、iPhone PWA offline cold start。
 
 ## 6. 踩坑與成功方案
 
 ### K1｜舊分支有功能，不代表 Current Authority 完成
-第一版落喺已被取代嘅 `feat/smt-order-page-v1`。
+第一版售罄同步曾落在已被取代的舊分支。
 
-**成功方案：**先讀中央 Registry、AGENTS、PR head；乾淨遷入 `smt-main-candidate-v1`。
+**成功方案：**先讀 Current Registry、AGENTS、PR head，再寫入 `smt-main-candidate-v1`。
 
 ### K2｜Keyed localStorage 丟失產品 ID
-`{F4:{status:'soldout'}}` 用 `Object.values()` 後會失去 `F4`。
+`{F4:{status:'soldout'}}` 若直接 `Object.values()`，會失去 `F4`。
 
-**成功方案：**正規化 object 時使用 entries，將 key 注入 `productId`。
+**成功方案：**用 entries 正規化，將 key 注入 canonical `productId`。
 
-### K3｜首次離線登入無 Staff token
-安全上不可保存密碼，所以恢復網絡後不能自動換 token。
+### K3｜SMT／SMM 共用瀏覽器 storage 會錯用 token
+同一 Staff Session key 可能令 Mobile Profile 沿用 Register token，audit source／device 失真。
 
-**成功方案：**保留本機 Queue，Shell status 提供重新登入入口；登入成功後 flush。
+**成功方案：**session 必須同目前 `source + deviceId` 完全一致；不一致立即清除 token，但不刪供應資料／Queue。
 
-### K4｜CORS／Preview origin
-Browser 直接跨網域呼叫 Admin Worker 會令 Preview origin 成為故障點。
+### K4｜先查本機帳密會阻塞 Admin 新帳號
+舊流程先要求 local account match，Admin 新增但未落本機的 Staff 無法登入。
 
-**成功方案：**SMT Pages Function 同源 proxy；身份驗證仍由 Worker 執行。
+**成功方案：**remote-first；只有 network failure 才檢查 local offline fallback。
 
-### K5｜第二套 SMM Core
-另建 Mobile Soldout Domain 會造成狀態與 Business Rule 雙真相。
+### K5｜401／403 不等於離線
+若把 auth failure 當網絡失敗，會錯誤放行失效／停用帳號。
 
-**成功方案：**Mobile Profile 使用同一 `pages/soldout`、同一 Supply Runtime，只做 profile composition。
+**成功方案：**401／403 明確拒絕並要求重新登入；network／5xx 才進 offline-local。
 
-### K6｜Source ≠ Acceptance
-程式存在、測試檔存在、Cloudflare build success 都唔等於跨裝置閉環成功。
+### K6｜登入成功後 flush 仍可能撤銷 token
+Login 200 後，舊 Queue PATCH 可能立即收到 401；原流程可能仍然回報登入成功。
 
-**成功方案：**固定分開 Source／Executed Tests／Deployment／Browser／Device／Production Gate。
+**成功方案：**login-to-flush auth race 有獨立 contract；flush 失效後 login 必須 throw，Queue 保留。
+
+### K7｜安全上不能保存密碼，自動換 token 不成立
+首次離線登入只能本機開工，網絡恢復後不能靜默取得 Staff JWT。
+
+**成功方案：**Shell status 提供重新登入入口；登入後自動 flush。
+
+### K8｜Admin publish 不可覆蓋現場售罄
+餐牌版本同 operational availability 是兩種 authority。
+
+**成功方案：**Admin publish 更新 catalog；售罄只寫 operational path；Customer Runtime read-time overlay。
+
+### K9｜Preview CORS 造成跨網域脆弱點
+Browser 直接打 Admin Worker 會受 Preview origin／CORS 影響。
+
+**成功方案：**SMT／Customer 均使用 same-origin Pages Function proxy。
+
+### K10｜回滾分支曾指向較早 commit
+第一次修正 backup ref 時使用了過早 head。
+
+**成功方案：**新建不可混淆的 `backup/supply-runtime-pre-unified-20260731-v2`，精確指向改碼前 `bd8de413…`；舊 backup 名稱不得作正式回滾依據。
+
+### K11｜Source／Contract／Deployment／Device 不可混寫
+程式存在或 isolated test pass 不等於跨裝置成功。
+
+**成功方案：**所有接手紀錄固定分六層：Source、Targeted Test、Full Test、Deployment、Device、Production。
 
 ## 7. 未完成 Gate
 
-1. 執行 targeted tests，保存 commit-aligned output。
-2. Admin Worker latest deployment。
-3. SMT Pages Functions latest deployment。
-4. SMT 設售罄 → SMM 收到 → Customer 不可下單。
-5. SMM 恢復 → SMT／Customer 同步。
-6. 斷網操作保留本機，重連＋重新登入後 flush。
-7. iPhone／Android Mobile Profile 觸控與排版驗收。
-8. 香港時間 05:00 跨日實測。
+1. Full SMT Node regression。
+2. Admin Worker latest staging deployment。
+3. SMT Pages Functions latest staging deployment。
+4. Customer latest staging deployment。
+5. SMT 設售罄 → SMM 15 秒內收到 → Customer 不可下單。
+6. SMM 恢復 → SMT／Customer 同步。
+7. 斷網改狀態 → Queue 保留 → 重連未登入不丟失 → 重新登入後 flush。
+8. 香港時間 05:00 跨日 staging 實測。
+9. iPhone／Android Mobile Profile 操作與排版。
+10. Customer Safari／PWA 離線 cold start 顯示 latest-valid menu 與更新時間。
 
-## 8. 回滾
+## 8. 下一步唯一優先
 
-- 回到本次 Supply Runtime 變更前 PR #34 head。
-- 不刪 `SUPPLY_STORAGE_KEY`，避免丟失營運狀態。
-- 停用 Pages Function proxy時，保留 Firebase operational availability。
-
-## 9. 下一步唯一優先
-
-取得最新 Admin／SMT／Customer targeted execution evidence，然後部署 staging 做 SMT → SMM → Customer 雙向供應狀態閉環。
+部署 Admin＋SMT＋Customer staging，完成兩裝置＋Customer 的真實供應狀態閉環；未通過前不得標記 Production Ready。
