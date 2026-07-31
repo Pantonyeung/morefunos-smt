@@ -14,8 +14,10 @@ const params=new URLSearchParams(location.search);
 const APP_PROFILE=/mobile|smm/i.test(String(params.get('profile')||params.get('mode')||''))?'mobile':'register';
 const SUPPLY_SOURCE=APP_PROFILE==='mobile'?'smm':'smt';
 const defaultTerminal=APP_PROFILE==='mobile'?'SMM-01':'SMT-01';
-const terminalId=String(localStorage.getItem(TERMINAL_ID_STORAGE_KEY)||params.get('terminal')||defaultTerminal);
-localStorage.setItem(TERMINAL_ID_STORAGE_KEY,terminalId);
+const profileTerminalKey=`${TERMINAL_ID_STORAGE_KEY}:${APP_PROFILE}`;
+const terminalId=String(params.get('terminal')||localStorage.getItem(profileTerminalKey)||(APP_PROFILE==='register'?localStorage.getItem(TERMINAL_ID_STORAGE_KEY):'')||defaultTerminal);
+localStorage.setItem(profileTerminalKey,terminalId);
+if(APP_PROFILE==='register')localStorage.setItem(TERMINAL_ID_STORAGE_KEY,terminalId);
 document.documentElement.dataset.appProfile=APP_PROFILE;
 
 const supplyRuntime=createSupplyRuntime({source:SUPPLY_SOURCE,deviceId:terminalId,globalObject:window});
@@ -27,7 +29,7 @@ const cashPrevious=document.getElementById('opening-previous');
 const cashTotal=document.getElementById('opening-total');
 const adjustmentInput=gate?.querySelector('[name="opening-adjustment"]');
 const operatorLabel=document.getElementById('opening-operator');
-const shellOnline=document.getElementById('shell-online');
+let shellOnline=document.getElementById('shell-online');
 let operator='';
 let survivalStarted=false;
 let supplyStarted=false;
@@ -64,7 +66,9 @@ function showLogin(message=''){
 function updateCashPreview(){const {state}=openingState(),adjustment=Number(adjustmentInput?.value||0),total=Math.max(0,Number(state.previousRetained||0)+adjustment);if(cashPrevious)cashPrevious.textContent='$'+Number(state.previousRetained||0).toLocaleString('zh-HK');if(cashTotal)cashTotal.textContent='$'+total.toLocaleString('zh-HK',{maximumFractionDigits:2});if(operatorLabel)operatorLabel.textContent=operator||validSession()?.username||'Staff';}
 function showCash(username){operator=username||validSession()?.username||'Staff';const {state}=openingState();showStep('cash');if(adjustmentInput)adjustmentInput.value=String(state.adjustment||0);updateCashPreview();setError('');requestAnimationFrame(()=>adjustmentInput?.focus());}
 
+function currentShellOnline(){return document.getElementById('shell-online')||shellOnline;}
 function renderSupplyState(detail=supplyRuntime.getState()){
+  shellOnline=currentShellOnline();
   if(!shellOnline)return;
   const pending=supplyRuntime.getPending().length;
   const connected=Boolean(detail?.connected);
@@ -79,8 +83,8 @@ function renderSupplyState(detail=supplyRuntime.getState()){
   shellOnline.classList.toggle('is-ok',connected&&pending===0);
   shellOnline.dataset.supplyState=String(detail?.status||'unknown');
   shellOnline.innerHTML=`<i></i>${label}`;
-  shellOnline.title=detail?.lastError||`${SUPPLY_SOURCE.toUpperCase()}｜${terminalId}｜按此重新登入或檢查同步`;
-  shellOnline.setAttribute('aria-label',`${label}。按此開啟員工登入。`);
+  shellOnline.title=detail?.lastError||`${SUPPLY_SOURCE.toUpperCase()}｜${terminalId}｜按此檢查同步或登出`;
+  shellOnline.setAttribute('aria-label',`${label}。按此檢查同步或登出。`);
 }
 
 async function startStorageProtection(){
@@ -115,6 +119,17 @@ async function startSupplyLayer({force=false}={}){
 }
 
 function unlock(){document.documentElement.dataset.shellUnlocked='1';if(gate)gate.hidden=true;window.dispatchEvent(new CustomEvent('morefun:shell-unlocked'));void startSurvivalLayer();void startSupplyLayer();}
+function logout({confirmUser=true}={}){
+  if(confirmUser&&!window.confirm('確認登出 Staff？本機購物車、餐牌及待同步資料會保留。'))return false;
+  supplyRuntime.stopPolling();
+  supplyRuntime.logout();
+  clearShellSession();
+  operator='';
+  document.documentElement.dataset.shellUnlocked='0';
+  showLogin('已登出，請重新登入。');
+  renderSupplyState();
+  return true;
+}
 function continueAfterLogin(username){if(APP_PROFILE==='mobile'){unlock();return;}const {state}=openingState();if(state.confirmed){unlock();return;}showCash(username);}
 async function submitLogin(event){
   event.preventDefault();
@@ -157,6 +172,12 @@ window.addEventListener('message',event=>{
   if(message.storageKey===SUPPLY_STORAGE_KEY)supplyRuntime.captureLocalSnapshot(message.value||{});
 });
 
+document.addEventListener('click',event=>{
+  const target=event.target.closest?.('#shell-online,[data-staff-logout]');
+  if(!target)return;
+  if(target.matches('[data-staff-logout]')){logout();return;}
+  if(target.id==='shell-online'&&isShellUnlocked())logout();
+});
 gate?.querySelector('[data-form="login"]')?.addEventListener('submit',event=>void submitLogin(event));
 gate?.querySelector('[data-form="cash"]')?.addEventListener('submit',confirmOpening);
 adjustmentInput?.addEventListener('input',updateCashPreview);
@@ -181,4 +202,4 @@ async function initializeStartup(){
 }
 
 void initializeStartup();
-window.MoreFunStartup={unlock,showCash,showLogin,startSurvivalLayer,startSupplyLayer,supplyRuntime,clearShellSession};
+window.MoreFunStartup={unlock,logout,showCash,showLogin,startSurvivalLayer,startSupplyLayer,supplyRuntime,clearShellSession};
