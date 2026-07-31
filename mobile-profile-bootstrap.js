@@ -4,8 +4,11 @@ document.documentElement.dataset.appProfile=profile;
 
 if(profile==='mobile'){
   document.title='磨飯 SMM｜售罄管理';
-  if(location.hash!=='#/soldout')location.hash='#/soldout';
-  window.addEventListener('hashchange',()=>{
+  const enforceSoldoutRoute=()=>{
     if(location.hash!=='#/soldout')history.replaceState(null,'',`${location.pathname}${location.search}#/soldout`);
-  });
+  };
+  enforceSoldoutRoute();
+  setTimeout(enforceSoldoutRoute,0);
+  window.addEventListener('morefun:shell-unlocked',enforceSoldoutRoute);
+  window.addEventListener('hashchange',enforceSoldoutRoute);
 }
