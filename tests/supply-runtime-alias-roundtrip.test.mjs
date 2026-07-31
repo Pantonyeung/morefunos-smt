@@ -20,7 +20,7 @@ function sessionSeed(){
   });
 }
 
-test('remote aliases do not create a false restore when the UI writes the same canonical sold-out state',async()=>{
+test('remote aliases collapse to one canonical local state and cannot create a false restore',async()=>{
   const storage=createMemoryStorage({[STAFF_SESSION_STORAGE_KEY]:sessionSeed()});
   const runtime=createSupplyRuntime({
     source:'smt',deviceId:'SMT-01',storage,
@@ -48,8 +48,9 @@ test('remote aliases do not create a false restore when the UI writes the same c
 
   const refreshed=await runtime.refresh();
   assert.equal(refreshed.ok,true);
+  assert.deepEqual(Object.keys(runtime.getOverrides()),['CANON-1']);
   assert.equal(runtime.getOverrides()['CANON-1'].status,'soldout');
-  assert.equal(runtime.getOverrides()['LEGACY-1'].status,'soldout');
+  assert.equal(runtime.getOverrides()['LEGACY-1'],undefined);
 
   const captured=runtime.captureLocalSnapshot({
     'CANON-1':{status:'soldout',updatedAt:Date.now()}
@@ -59,7 +60,7 @@ test('remote aliases do not create a false restore when the UI writes the same c
   assert.deepEqual(captured.pending,[]);
 });
 
-test('removing the whole canonical group still creates one restore mutation',async()=>{
+test('removing the canonical product creates exactly one restore mutation',async()=>{
   const storage=createMemoryStorage({[STAFF_SESSION_STORAGE_KEY]:sessionSeed()});
   const runtime=createSupplyRuntime({
     source:'smt',deviceId:'SMT-01',storage,
