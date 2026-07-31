@@ -1,112 +1,71 @@
 # SMT Context Min｜新對話最小上下文
 
-你正在協助開發香港餐飲 POS「磨飯 SMT」。正式功能基準分支：`smt-functional-completeness-v1`。
+> 狀態：CURRENT / REPO HANDOFF ONLY
+> 本文件不得高於 MoreFunOS Master Authority、Development Must Read、Current Development Registry 或 Document Authority Classification。
 
-## 開工必讀
-任何 AI／Codex／Work 開始前先讀：
+## 0. 開工前先讀中央 Authority
+
+1. `Pantonyeung/morefunos/main/MOREFUNOS_MASTER_CONTROL_AUTHORITY.md`
+2. `MOREFUNOS_DEVELOPMENT_MUST_READ.md`
+3. `MOREFUNOS_CURRENT_DEVELOPMENT_REGISTRY.md`
+4. `MOREFUNOS_DOCUMENT_AUTHORITY_CLASSIFICATION.md`
+5. `MOREFUNOS_LEGACY_REFERENCE_INVENTORY.md`
+
+之後先讀本 repo：
+
 1. `AGENTS.md`
-2. `docs/SMT_DEVELOPMENT_CHARTER_V1.0.md`
-3. `docs/MFKG_STANDARD_V1.0.md`
-4. `docs/SMT_ADAPTIVE_APPLICATION_STANDARD_V1.0.md`
-5. `docs/SMT_COMPONENT_OWNERSHIP_REGISTRY_V1.0.md`
-6. `docs/SMT_EXTERNAL_ENGINEERING_REFERENCE_STANDARD_V1.0.md`
-7. `docs/qa/SMT_ENGINEERING_SUCCESS_AND_PITFALLS_V1.0.md`
-8. `SMT_CHANGE_IMPACT.md`
-9. 最新 `docs/qa/SMT_RUNTIME_PHASE3_QA.md`
-10. `docs/SMT_MAIN_CANDIDATE_INTEGRATION_LOG_V1.1.md`
-11. `MoreFunOS｜低成本 CI 與問題拆分開發強制規則 V1.0`
+2. 三份 PRIMARY STANDARD
+3. Component Ownership Registry
+4. Engineering Success & Pitfalls
+5. `SMT_CHANGE_IMPACT.md`
+6. 最新 Code Map／Decision Ledger／Implementation Status／QA
+7. active branch／PR／head evidence
 
-GitHub = 程式／工程 Authority；Google Drive = 後端／設定／歷史參考；Jade = AI 接手導航。禁止建立第二套真相。
+## 1. Repo 定位
 
-## 低成本開發硬規則｜不可覆蓋
+- Repo：`Pantonyeung/morefunos-smt`
+- SMT register／mobile 共用同一 Shared Core。
+- 舊獨立 SMM core：`SUPERSEDED AS INDEPENDENT CORE`。
+- 本 repo 文件只管理 SMT domain；不得重新定義全系統 Auth、Order、Pricing、Sync、Firebase、Worker 或 Google Sheet Authority。
 
-```text
-單一問題 → isolate → root cause → minimal fix → targeted PASS → minimum regression → integration branch → one final gate
-```
+## 2. Legacy Reference Boundary｜強制
 
-- 禁止完整 CI 反覆 debug 單一問題。
-- 文件更新使用 `[skip ci]`。
-- Browser／APK／Signing／Release Gate 預設手動。
-- 禁止 patch／override／大量 `!important`／第二套 Authority。
-- Software PASS 不等於 Hardware／Production PASS。
+以下全部預設只屬 `REFERENCE ONLY / NON-AUTHORITY / DO NOT IMPLEMENT DIRECTLY`：
 
-## 核心硬規則
-- 1920×1080 = 唯一視覺封板模板；1600×900、1440×900、1366×768、1280×800 只做同一 App Adaptive Regression。
-- 一項決策只可有一個 Authority；發現兩套 State／Domain／Visual／Payload 真相先收口再改功能。
-- 程式存在 ≠ 自動測試 PASS ≠ Browser QA PASS ≠ 實機 PASS ≠ 最終 Lock。
-- D-053：SMM 已合併入 SMT，同一 Application 內以 `register`／`mobile` Profile 共用 Shared Core。
-- D-052：APK-first。先穩定 Android Shell／Bridge／Recovery／Update／Print 底層，再逐步接 Web／UI／業務模組。
+- WORK01／WORK02／WORK03；
+- `TEST_WORK03_UNIFIED_LOGIN`、Session／Bootstrap／Push／Pull／Heartbeat／Fallback；
+- Apps Script V1.x／RegisterHub／Staff Sync runtime；
+- 舊 Google Sheet 主資料庫、即時 Order Truth、派號或同步 Authority；
+- V42／SA2／EG，包括 `分支 · V42EG 設計與開發.txt`；
+- Rebuild39／舊 A-B-C-D-E 線接手狀態；
+- 舊 branch／PR／head／CI／QA snapshot；
+- 舊 SMM independent architecture。
 
-# CURRENT｜2026-07-30 10:10 HKT
+即使文件標題包含 `MASTER`、`FINAL`、`LOCK`、`CURRENT`、`READY` 或 `AUTHORITY`，亦不可自行升級。需要重新採用內容，必須建立 Re-adoption Proposal，逐條對標現行 Authority、Code、Contract、Security、QA 及 Device evidence。
 
-## SMT Adaptive／Browser
-- SMT 自適應系統 V1.0 已完成：immutable baseline `bbecd4ce66802a9a78262abe9573615fa57bb360`。
-- Browser Matrix：`78/78 PASS`。
-- Stress Matrix：`5/5 PASS`。
-- 此證據只覆蓋 Adaptive／Browser，不代表 Firebase、API、APK production、打印或實機完成。
+## 3. Current SMT Evidence Boundary
 
-## Main Candidate｜Runtime＋APK OTA＋Native Print
-- Repository：`Pantonyeung/morefunos-smt`
-- Candidate：`smt-main-candidate-v1`
-- Base：`smt-functional-completeness-v1`
-- Draft PR：`#34`
-- Software Gate verified head：`9bad3a9c40d21a30b114824820ba3de8214a7b05`
-- Documentation head：`13060888cbc634a257d9249aab03ba2e5a726fe7`
+- Baseline：`smt-functional-completeness-v1`。
+- Main Candidate：`smt-main-candidate-v1`／PR #34。
+- Current branch／PR／head 必須每次 fresh-read；本文件內任何 SHA 只係 checkpoint，唔係永久 latest。
+- Software／Contract／Browser PASS 不等於 Device／Store／Production PASS。
+- SUNMI 實體打印、APK OTA 實機、Production signing／release E2E 未有真實證據前，維持 `DEFERRED / NOT PRODUCTION READY`。
 
-### 已完成
-- Runtime／Offline Authority clean integration。
-- APK OTA manifest／anti-replay／anti-downgrade。
-- Download staging／SHA-256／package-version-certificate continuity。
-- Package Installer coordinator／result receiver。
-- Boot／package-replaced／runtime-health recovery。
-- Native Bridge OTA／diagnostics。
-- Reflective SUNMI printer binding。
-- Manual low-cost Main Candidate Gate。
+## 4. 現役跨端方向
 
-### Gate Evidence
-- Workflow run：`30505574564`／Run #5／SUCCESS。
-- Job：`90754516056`／SUCCESS。
-- Kotlin compile：PASS。
-- Debug unit tests：PASS。
-- Artifact：`8745190934`。
-- Digest：`sha256:9e17352b81049b9c67787f17d114e3ab9812d7c56af9820a0cb7dc6e81b35b1a`。
-- 完整記錄：`docs/SMT_MAIN_CANDIDATE_INTEGRATION_LOG_V1.1.md`。
+- Firebase Auth
+- Firebase Realtime Database
+- Cloudflare Worker
+- Google Sheet V2：ledger／reporting／non-blocking mirror only
 
-### Hardware Deferred
-因 POS／SUNMI 硬件故障，以下不是 Failed，而是 `DEFERRED — HARDWARE UNAVAILABLE`：
-1. SUNMI 實機打印。
-2. Android Package Installer／APK OTA 實機安裝。
-3. Production signing／release pipeline end-to-end dry run。
+Google Sheet 不得成為即時 Order Truth、Pricing Authority、正式派號、Payment Authority 或 Print Job Authority。Apps Script 只可作 legacy adapter／migration／reference，除非新 A 級決策重新啟用。
 
-PR #34 在硬件驗收前維持 Draft，不宣稱 Production Ready。
+## 5. Targeted Failure
 
-## 今次重要踩坑
-1. verifier 掃描自己造成 false failure；只可掃 candidate config。
-2. repo 無 `android/gradlew`；Build 必須沿用 production Authority：`setup-android`＋Gradle 9.5＋`gradle -p android`。
-3. Push-event run connector不可觀察；一次性 PR trigger取得 evidence後立即移除。
-4. Compile step failure未必係 Kotlin；必須先讀第一個 fatal log。
+`單一問題 → isolate → reproduce → root cause → minimal fix → targeted verification → minimum regression → integration branch → one final gate`
 
-## 舊 WORK03 Staff Sync｜SUPERSEDED／禁止續推
+禁止用完整 CI 反覆 debug；禁止 patch／override／第二套 Runtime Authority。
 
-以下舊次序只保留歷史識別，**不得再執行**：
+## 6. 下一步判斷
 
-`TEST_WORK03_UNIFIED_LOGIN → Session／Bootstrap → Push／Pull → Heartbeat → Fallback`
-
-最新 Authority 已改為：
-- Firebase Auth。
-- Firebase Realtime Database。
-- Cloudflare Worker。
-- Google Sheet V2 ledger。
-
-Apps Script Staff Auth／Google Sheet Sync runtime 不再係現役主架構。任何下一步必須先讀最新 MoreFunOS Current Development Registry 及對應 Admin／Backend active branch，禁止由舊 WORK03 接手狀態推斷現役工作。
-
-## 備份／Rollback
-- `backup/apk-foundation-pre-android6-20260727`
-- `backup/qa-runtime-before-browser-summary-20260727`
-- 舊 APK artifacts 保留作 rollback，不可當 latest。
-- Main Candidate Gate evidence保留至 `2026-08-13`。
-
-## 下一步唯一原則
-硬件未恢復前，不反覆跑已 PASS 的 Main Candidate full Gate。選擇下一個 software-only單一 Domain時，必須以最新 Current Development Registry／active branch為準，禁止沿舊 WORK03流程。
-
-任何 checkpoint 都假設下一句可能由另一個 AI 接手。最少保留：目標、Repo／Branch／PR、latest head、完成／未完成、CI／QA 層級、已知根因、禁止倒退事項、backup／rollback、下一步唯一優先、待實機 Gate。
+所有下一步必須由中央 Current Development Registry＋本 repo active branch／PR／head evidence共同決定。禁止由 WORK03、V42EG、Rebuild39、舊 Handoff 或 Drive／Jade 摘要直接推斷現役施工順序。
