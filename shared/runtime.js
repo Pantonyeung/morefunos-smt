@@ -12,7 +12,9 @@ export function createRenderQueue(renderFn){
   let rendering=false;
   let pending=false;
   let afterRenderCallbacks=[];
+  let disposed=false;
   function run(){
+    if(disposed)return;
     if(frame){cancelAnimationFrame(frame);frame=0;}
     if(rendering){pending=true;return;}
     rendering=true;
@@ -32,14 +34,23 @@ export function createRenderQueue(renderFn){
     }
   }
   function schedule(){
-    if(frame)return;
+    if(disposed||frame)return;
     frame=requestAnimationFrame(run);
   }
   function afterRender(callback){
     if(typeof callback==='function')afterRenderCallbacks.push(callback);
     schedule();
   }
-  return {schedule,flush:run,afterRender};
+  const onDomainStateChanged=()=>schedule();
+  window.addEventListener('morefun:domain-state-changed',onDomainStateChanged);
+  function dispose(){
+    disposed=true;
+    if(frame)cancelAnimationFrame(frame);
+    frame=0;
+    afterRenderCallbacks=[];
+    window.removeEventListener('morefun:domain-state-changed',onDomainStateChanged);
+  }
+  return {schedule,flush:run,afterRender,dispose};
 }
 
 export function createStore(initialState,options={}){
