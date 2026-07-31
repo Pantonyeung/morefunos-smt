@@ -6,8 +6,10 @@ import {appendOfflineJournalEntry,getOfflineJournalStatus,recoverDurableStorageF
 import {requestPersistentStorage,subscribeStorageHealth} from './shared/storage-health.js';
 import {createSupplyRuntime} from './shared/supply-runtime.js';
 
-const SESSION_KEY='morefun:smt:daily-session';
+const SESSION_KEY='morefun:smt:staff-shell-session:v2';
+const EPHEMERAL_SESSION_KEY='morefun:smt:staff-shell-session:ephemeral:v2';
 const RECOVERY_RELOAD_KEY='morefun:smt:journal-recovery-reloaded';
+const SIX_DIGITS=/^\d{6}$/;
 const params=new URLSearchParams(location.search);
 const APP_PROFILE=/mobile|smm/i.test(String(params.get('profile')||params.get('mode')||''))?'mobile':'register';
 const SUPPLY_SOURCE=APP_PROFILE==='mobile'?'smm':'smt';
@@ -33,17 +35,34 @@ let stopStorageHealth=null;
 
 function isQaBypass(){return navigator.webdriver&&params.get('force-startup')!=='1';}
 function isShellUnlocked(){return document.documentElement.dataset.shellUnlocked==='1';}
-function credentials(){const settings=readJSON(SETTINGS_STORAGE_KEY,{}),accounts=Array.isArray(settings?.auth?.accounts)?settings.auth.accounts:[];return accounts.length?accounts:[{username:'morefun',password:'morefun',enabled:true}];}
-function session(){try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');}catch{return null;}}
-function saveSession(username,extra={}){const day=businessWindow().id;sessionStorage.setItem(SESSION_KEY,JSON.stringify({username,businessDate:day,loginAt:Date.now(),profile:APP_PROFILE,...extra}));}
-function validSession(){const row=session();return row&&row.businessDate===businessWindow().id&&row.username;}
+function credentials(){const settings=readJSON(SETTINGS_STORAGE_KEY,{}),accounts=Array.isArray(settings?.auth?.accounts)?settings.auth.accounts:[];return accounts;}
+function readSession(storage,key){try{return JSON.parse(storage.getItem(key)||'null');}catch{return null;}}
+function session(){return readSession(localStorage,SESSION_KEY)||readSession(sessionStorage,EPHEMERAL_SESSION_KEY);}
+function clearShellSession(){localStorage.removeItem(SESSION_KEY);sessionStorage.removeItem(EPHEMERAL_SESSION_KEY);}
+function saveSession(username,{remember=true,...extra}={}){
+  const row={username,businessDate:businessWindow().id,loginAt:Date.now(),profile:APP_PROFILE,remember:Boolean(remember),...extra};
+  clearShellSession();
+  (remember?localStorage:sessionStorage).setItem(remember?SESSION_KEY:EPHEMERAL_SESSION_KEY,JSON.stringify(row));
+}
+function validSession(){
+  const row=session();
+  if(!row||!SIX_DIGITS.test(String(row.username||''))||row.profile!==APP_PROFILE)return null;
+  if(row.remember===false&&row.businessDate!==businessWindow().id)return null;
+  return row;
+}
 function openingState(){const operations=readJSON(OPERATIONS_STORAGE_KEY,{});return {operations,state:buildOpeningCashState(operations.dayCloses||[],operations.openingCashAdjustments||[],businessWindow().id)};}
 function ensureDailyWorkspaceClean(){const businessDate=businessWindow().id,operations=readJSON(OPERATIONS_STORAGE_KEY,{})||{};if(operations.workspaceResetBusinessDate===businessDate)return false;localStorage.removeItem(ORDER_STORAGE_KEY);localStorage.removeItem(DRAFT_STORAGE_KEY);localStorage.removeItem(DRAFT_COUNTER_STORAGE_KEY);writeJSON(OPERATIONS_STORAGE_KEY,{...operations,workspaceResetBusinessDate:businessDate,workspaceResetAt:Date.now()});return true;}
 function setError(message=''){if(!errorBox)return;errorBox.textContent=message;errorBox.hidden=!message;}
 function showStep(name){if(!gate)return;gate.hidden=false;loginStep.hidden=name!=='login';cashStep.hidden=name!=='cash';gate.dataset.step=name;}
-function showLogin(message=''){showStep('login');setError(message);requestAnimationFrame(()=>gate?.querySelector('[data-form="login"] input[name="username"]')?.focus());}
-function updateCashPreview(){const {state}=openingState(),adjustment=Number(adjustmentInput?.value||0),total=Math.max(0,Number(state.previousRetained||0)+adjustment);if(cashPrevious)cashPrevious.textContent='$'+Number(state.previousRetained||0).toLocaleString('zh-HK');if(cashTotal)cashTotal.textContent='$'+total.toLocaleString('zh-HK',{maximumFractionDigits:2});if(operatorLabel)operatorLabel.textContent=operator||validSession()?.username||'morefun';}
-function showCash(username){operator=username||validSession()?.username||'morefun';const {state}=openingState();showStep('cash');if(adjustmentInput)adjustmentInput.value=String(state.adjustment||0);updateCashPreview();setError('');requestAnimationFrame(()=>adjustmentInput?.focus());}
+function showLogin(message=''){
+  showStep('login');setError(message);
+  const form=gate?.querySelector('[data-form="login"]');
+  const remembered=validSession();
+  if(form?.elements?.username&&!form.elements.username.value)form.elements.username.value=remembered?.username||'';
+  requestAnimationFrame(()=>form?.querySelector('input[name="username"]')?.focus());
+}
+function updateCashPreview(){const {state}=openingState(),adjustment=Number(adjustmentInput?.value||0),total=Math.max(0,Number(state.previousRetained||0)+adjustment);if(cashPrevious)cashPrevious.textContent='$'+Number(state.previousRetained||0).toLocaleString('zh-HK');if(cashTotal)cashTotal.textContent='$'+total.toLocaleString('zh-HK',{maximumFractionDigits:2});if(operatorLabel)operatorLabel.textContent=operator||validSession()?.username||'Staff';}
+function showCash(username){operator=username||validSession()?.username||'Staff';const {state}=openingState();showStep('cash');if(adjustmentInput)adjustmentInput.value=String(state.adjustment||0);updateCashPreview();setError('');requestAnimationFrame(()=>adjustmentInput?.focus());}
 
 function renderSupplyState(detail=supplyRuntime.getState()){
   if(!shellOnline)return;
@@ -85,7 +104,12 @@ async function startSupplyLayer({force=false}={}){
   if(supplyStarted&&!force)return;
   supplyStarted=true;
   if(force)await supplyRuntime.flushPending();
-  await supplyRuntime.boot();
+  const result=await supplyRuntime.boot();
+  if(!result?.session&&validSession()){
+    clearShellSession();
+    showLogin('登入已失效，請重新輸入6位員工編號及密碼。');
+    return;
+  }
   supplyRuntime.startPolling();
   renderSupplyState();
 }
@@ -94,28 +118,37 @@ function unlock(){document.documentElement.dataset.shellUnlocked='1';if(gate)gat
 function continueAfterLogin(username){if(APP_PROFILE==='mobile'){unlock();return;}const {state}=openingState();if(state.confirmed){unlock();return;}showCash(username);}
 async function submitLogin(event){
   event.preventDefault();
-  const form=event.currentTarget,button=form.querySelector('[type="submit"]'),username=String(form.elements.username?.value||'').trim(),password=String(form.elements.password?.value||'');
-  const localMatch=credentials().find(row=>row.enabled!==false&&String(row.username)===username&&String(row.password)===password);
+  const form=event.currentTarget,button=form.querySelector('[type="submit"]'),username=String(form.elements.username?.value||'').trim(),password=String(form.elements.password?.value||''),remember=form.elements.rememberLogin?.checked!==false;
+  if(!SIX_DIGITS.test(username)){setError('員工編號必須係6位數字');return;}
+  if(!SIX_DIGITS.test(password)){setError('密碼必須係6位數字');return;}
+  const localMatch=credentials().find(row=>row.enabled!==false&&String(row.username||row.staffNumber)===username&&String(row.password)===password);
   setError('');if(button){button.disabled=true;button.textContent='登入中…';}
   let remote='connected';
   try{await supplyRuntime.login({staffNumber:username,password});}
   catch(error){
     const status=Number(error?.status||0);
-    if(status===401||status===403){setError('員工帳號、密碼或權限不正確');if(button){button.disabled=false;button.textContent='登入';}return;}
+    if(status===401||status===403){clearShellSession();setError('員工編號、密碼或帳戶狀態不正確');if(button){button.disabled=false;button.textContent='登入';}return;}
     if(!localMatch){setError('暫時無法連線，而且本機未保存呢個員工帳號，請檢查網絡後再試。');if(button){button.disabled=false;button.textContent='登入';}return;}
     remote='offline-local';
     window.__MOREFUN_STAFF_LOGIN_WARNING__=Object.freeze({code:'STAFF_LOGIN_OFFLINE_FALLBACK',message:String(error?.message||error),at:new Date().toISOString()});
   }
-  saveSession(username,{staffRuntime:remote});operator=username;
+  saveSession(username,{remember,staffRuntime:remote});operator=username;
+  form.elements.password.value='';
   if(isShellUnlocked()){
     if(gate)gate.hidden=true;
     void startSupplyLayer({force:true});
   }else continueAfterLogin(username);
   if(button){button.disabled=false;button.textContent='登入';}
 }
-function confirmOpening(event){event.preventDefault();const {operations,state}=openingState(),adjustment=Number(adjustmentInput?.value||0);if(!Number.isFinite(adjustment)){setError('請輸入有效開工現金調整');return;}const openingCash=Math.max(0,Number(state.previousRetained||0)+adjustment),businessDate=businessWindow().id,rows=(operations.openingCashAdjustments||[]).filter(row=>row.businessDate!==businessDate);rows.push({businessDate,previousRetained:Number(state.previousRetained||0),adjustment,openingCash,confirmedAt:Date.now(),operator:operator||validSession()?.username||'morefun'});writeJSON(OPERATIONS_STORAGE_KEY,{...operations,workspaceResetBusinessDate:businessDate,workspaceResetAt:operations.workspaceResetAt||Date.now(),openingCashAdjustments:rows});unlock();}
+function confirmOpening(event){event.preventDefault();const {operations,state}=openingState(),adjustment=Number(adjustmentInput?.value||0);if(!Number.isFinite(adjustment)){setError('請輸入有效開工現金調整');return;}const openingCash=Math.max(0,Number(state.previousRetained||0)+adjustment),businessDate=businessWindow().id,rows=(operations.openingCashAdjustments||[]).filter(row=>row.businessDate!==businessDate);rows.push({businessDate,previousRetained:Number(state.previousRetained||0),adjustment,openingCash,confirmedAt:Date.now(),operator:operator||validSession()?.username||'Staff'});writeJSON(OPERATIONS_STORAGE_KEY,{...operations,workspaceResetBusinessDate:businessDate,workspaceResetAt:operations.workspaceResetAt||Date.now(),openingCashAdjustments:rows});unlock();}
 
-window.addEventListener('morefun:supply-runtime-state',event=>renderSupplyState(event.detail));
+window.addEventListener('morefun:supply-runtime-state',event=>{
+  renderSupplyState(event.detail);
+  if(event.detail?.status==='session-required'&&isShellUnlocked()){
+    clearShellSession();
+    showLogin('帳戶已停用、密碼已重設或登入已被撤銷，請重新登入。');
+  }
+});
 window.addEventListener('message',event=>{
   if(event.origin!==location.origin)return;
   const message=event.data||{};
@@ -140,8 +173,12 @@ async function initializeStartup(){
   sessionStorage.removeItem(RECOVERY_RELOAD_KEY);
   ensureDailyWorkspaceClean();
   renderSupplyState();
-  if(isQaBypass())unlock();else if(validSession())continueAfterLogin(validSession().username);else showLogin();
+  const remembered=validSession();
+  const runtimeSession=supplyRuntime.getSession();
+  if(isQaBypass())unlock();
+  else if(remembered&&runtimeSession)continueAfterLogin(remembered.username);
+  else {if(remembered&&!runtimeSession)clearShellSession();showLogin(remembered&&!runtimeSession?'登入已失效，請重新登入。':'');}
 }
 
 void initializeStartup();
-window.MoreFunStartup={unlock,showCash,showLogin,startSurvivalLayer,startSupplyLayer,supplyRuntime};
+window.MoreFunStartup={unlock,showCash,showLogin,startSurvivalLayer,startSupplyLayer,supplyRuntime,clearShellSession};
