@@ -1,7 +1,24 @@
 # 磨飯 SMT｜AI Start Here
 
-更新：2026-07-22｜分支：`feat/smt-order-page-v1`｜程式：`order-v1-31`
-最新自動驗證：220/220 通過｜產品狀態：歷史日期報表、渠道／付款獨立分拆、混合付款與正負差額對數、audit 異常、商品分析及本機同步資料三位每日流水已完成；跨實體終端原子派號仍待後台 API；安卓橋接、實體出紙與 iPad／Sunmi T2S 視覺待驗收
+更新：2026-07-31｜安全整合分支：`feat/g1-shared-availability-mainline-v1`｜基線：最新 `main` `4bef510524db49e4c0d503669dd97245542860de`
+
+## 2026-07-31 供應狀態 Addendum（最高優先）
+
+處理售罄、暫停供應、SMT／SMM Mobile Profile、Customer 供應狀態或離線同步前，必須先讀：
+
+- `docs/milestones/G1-F-01-mainline-shared-soldout-control.md`
+
+現行鎖定：
+
+- SMT Register 同 SMM Mobile 都可以控制 `今日售罄／暫停供應／恢復供應`。
+- SMM 係 SMT 同一應用嘅 Mobile Profile，禁止建立第二套售罄核心。
+- 兩個 Profile 共用 Staff Session、Firebase operational availability、audit、pending queue 同 Customer propagation。
+- 供應狀態 local-first；斷線仍可操作，重連後同步。
+- `soldout` 於香港時間下一個 05:00 失效；`paused` 必須明確恢復。
+- Admin 發佈／回滾餐牌不可覆蓋現場供應狀態。
+- Customer 只讀；售罄及暫停產品均不可選。
+- 舊 `feat/smt-order-page-v1` 比 main 落後 169 commits，不可部署；只可參考。
+- 程式同測試已寫入安全分支，但未執行測試、未部署、未做 Firebase／跨裝置／離線實機驗收，不可宣稱完成。
 
 ## 目標
 
@@ -22,21 +39,28 @@
 
 ## 現況
 
-- 程式及自動測試已有：真實餐牌讀取與離線快取、單一卡片、購物車分組與圖片開關、普通／快捷模式、飲品多配置、動態配對、待處理核對、付款證明、WhatsApp QR、售罄預覽、更多頁六入口、設備／線上卡、新單提示。
+- 程式及舊自動測試已有：真實餐牌讀取與離線快取、單一卡片、購物車分組與圖片開關、普通／快捷模式、飲品多配置、動態配對、待處理核對、付款證明、WhatsApp QR、售罄預覽、更多頁六入口、設備／線上卡、新單提示。
+- 供應狀態安全主線分支已加入 Root shell 同步 bridge、Register 售罄頁 Staff Runtime、SMM `/smm/` Mobile Profile、離線 queue、15 秒更新及產品 alias 正規化。
 - 更多頁日結可按港幣面額以數量／金額雙向盤點、設定提取及留底現金、以實點現金反推待核實電話／WhatsApp／App 單的現金與非現金，並以當日淨銷售 3% 觸發原因及有權人稽核授權。
 - 更多頁亦已接通報表與 CSV、備份／恢復、跨頁顯示設定、系統診斷，以及五部打印機設定、四款示範格式、預覽、打印工作、重試／改送及安卓橋接合約。
 - 報表可查今日、昨日、七日、三十日、三個月、六個月及自訂日期；營業、渠道、付款、商品、異常共用範圍並可下鑽訂單。每日顯示流水統一為早上五時重置的 `P001` 至 `P999`，永久後台識別另存。
-- 最新一輪：購物車右對齊、A–Z 動態配對、共用飲品卡、快捷飲品 150×240／344px 抽屜。
 - 堂食第一版已有獨立路由、九宮格、輪候入口、簡潔枱詳情、掃碼待確認、逐餐品付款及枱碼本機鏈路；空枱只在正式落單後開枱，取消點單可清除本次脈絡並返回堂食。
-- 不可宣稱完成：真實訂單提交 API、掃碼會話 API、付款閘道、安卓原生打印橋接、實體出紙、餐牌 API 實機驗收、iPad Safari、Sunmi T2S、產品負責人最終 Lock。
+- 不可宣稱完成：供應狀態實機閉環、真實訂單提交 API、掃碼會話 API、付款閘道、安卓原生打印橋接、實體出紙、餐牌 API 實機驗收、iPad Safari、Sunmi T2S、產品負責人最終 Lock。
 
 ## 按任務載入
 
 - UI：Current Lock + `SMT_CODE_MAP.md`
+- 售罄／SMT／SMM 同步：`docs/milestones/G1-F-01-mainline-shared-soldout-control.md`
 - Bug：`SMT_CHANGE_IMPACT.md` + 對應測試
 - 現況：`SMT_IMPLEMENTATION_STATUS.md`
 - 決策：`SMT_DECISION_LEDGER.md`
 - Chat：`SMT_AI_CONTEXT_PACK.md`
 - 機器查詢：`SMT_KNOWLEDGE_GRAPH.json`
 
-下一個安全工作單位：在 iPad／Sunmi T2S 做整體介面 review 及實機微調，再封裝 APK 接安卓打印橋接並以五部店內設備驗收；任何失敗先記為「程式有、實機失敗」。
+## 驗證
+
+```bash
+node --test tests/supply-runtime-mainline.test.mjs tests/shared-availability-mainline-wiring.test.mjs
+```
+
+下一個安全工作單位：先部署 Admin、SMT 安全主線分支、Customer，完成 SMT→SMM→Customer 供應狀態閉環同離線重連驗收；任何失敗先記為「程式有、實機失敗」。
