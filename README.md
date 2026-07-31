@@ -1,48 +1,63 @@
-# More Fun SMT Web Core V1.0
+# More Fun SMT｜Register／Mobile Shared Core
 
-基於《MoreFun SMT Web UI Slide Master Lock V1.0》建立的可操作 Web Core 第一版。
+> **Authority boundary：本 repo 只係 SMT Application＋Android Host implementation surface。**
+> 任何 AI／Codex／Work 開始前，必須先讀中央 MoreFunOS Master Authority、Must Read、Current Registry、Document Classification、Legacy Inventory，再讀本 repo `MOREFUNOS_AUTHORITY_BOUNDARY.md`、`AGENTS.md`、`SMT_CONTEXT_MIN.md`。
 
-> AI／Work 模式必須先讀 [`AGENTS.md`](./AGENTS.md)。只用手機或新 Chat 接力時，上載 [`SMT_AI_CONTEXT_PACK.md`](./SMT_AI_CONTEXT_PACK.md) 及最新 repository zip；毋須重新貼整段歷史對話。
+## 正式產品定位
 
-## 現行狀態入口
+More FunOS 只保留一個 SMT Application：
 
-- 一頁式現在真相：[`SMT_AI_START_HERE.md`](./SMT_AI_START_HERE.md)
-- Chat 最小上下文：[`SMT_CONTEXT_MIN.md`](./SMT_CONTEXT_MIN.md)
-- 程式、決策、狀態及影響圖：[`docs/ai-context/`](./docs/ai-context/)
-- 完整點單功能鎖：[`docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md`](./docs/design-lock-v1/ORDER_PAGE_CURRENT_LOCK.md)
+- `register`：收銀機／大屏 Profile；
+- `mobile`：手機／平板 Profile。
 
-## 2026-07-20 點單頁設計鎖
+兩個 Profile 共用同一 Domain、Data Model、Business Rule、Cart、Pricing、Checkout、Order、Payment、Sync、Recovery、Audit 及 Print Job Contract。
 
-最新確認的點單頁第一層規格、Decision Log、驗收清單及效果圖位於：
+舊 `morefunos-smm` 已 `SUPERSEDED AS INDEPENDENT CORE`，只作 migration／mobile UI reference。
 
-`docs/design-lock-v1/`
+## 舊文件降權
 
-請注意：「已實作」「自動測試通過」「實機通過」「產品最終 Lock」是不同狀態。最新壓縮狀態以 `docs/ai-context/SMT_IMPLEMENTATION_STATUS.md` 為準；不得因效果圖或程式存在而視為實機完成。
+以下只屬 `REFERENCE ONLY`：
 
-## 已實作
-- 橫屏 SMT Shell、頂部全局狀態、底部五項導航
-- 六套主題輪換、快速模式
-- 點單、分類、搜尋、商品卡、購物車、結帳及正式成單模擬
-- 新 App／Web 訂單彈窗、稍後處理、角標
-- 訂單30分鐘倒數視圖
-- 堂食枱位與35分鐘提示
-- 今日售罄／暫停供應／恢復
-- 更多頁六個營運入口、完整細節及高風險二次確認
-- 本機日結、營運報表／CSV、校驗備份／恢復及系統診斷
-- 五部打印機設定、四款示範格式、預覽、工作佇列、重試／改送及安卓橋接合約
-- localStorage 本機狀態保存
-- PWA manifest及service worker
+- WORK01／02／03；
+- V42／SA2／EG；
+- Rebuild39／舊 1920→1280 文件；
+- 舊 A／B／C／D／E 線接手；
+- Apps Script／Google Sheet Staff Sync／RegisterHub；
+- 舊 SMM core；
+- 舊 branch／PR／CI／artifact／handoff。
 
-## 未接入
-- Firebase 寫入端／Admin Catalog 管理介面（公開餐牌讀取已接入）
-- Room／SQLite原生層
-- 安卓打印原生服務及五部實體打印機出紙驗收
-- 真實付款核實、退款及雲端同步服務
+即使標題包含 `LOCK／FINAL／MASTER／CURRENT／READY`，都不得直接施工。舊文件只可抽取產品需求、UI 素材、migration source、contract、踩坑及成功方法；需要重新採用，必須經 re-adoption proposal。
 
-以上未接入項目已保留清楚介面邊界，應以垂直切片逐步接入，不能改動已封板UI及業務規則。
+## 現役邊界
+
+- Firebase RTDB＝Operational Authority；
+- Cloudflare Worker／Order API＝validation、repricing、idempotency、protected write；
+- Google Sheet V2＝ledger／reporting mirror；
+- SMT／mobile 不直接寫受保護 RTDB；
+- Android Host 負責設備、打印、OTA、硬件級結果；
+- Queue success 不等於實體打印 success。
+
+## 現役狀態入口
+
+- 中央 Current：`Pantonyeung/morefunos/MOREFUNOS_CURRENT_DEVELOPMENT_REGISTRY.md`
+- Repo Boundary：`MOREFUNOS_AUTHORITY_BOUNDARY.md`
+- Repo Agent：`AGENTS.md`
+- 最小上下文：`SMT_CONTEXT_MIN.md`
+- Change Impact：`SMT_CHANGE_IMPACT.md`
+- QA／Pitfalls：`docs/qa/`
+
+文件內 branch／PR／head／artifact 只係 checkpoint；必須 fresh-read GitHub，唔可以當永久最新。
+
+## Evidence
+
+`CODE_EXISTS → CONTRACT_PASS → BROWSER_PASS → DEVICE_PASS → STORE_PASS → PRODUCT_LOCKED`
+
+Browser／software PASS 不等於 Device／Hardware／Store／Production PASS。
 
 ## 本機預覽
+
 ```bash
 python3 -m http.server 8080
 ```
+
 打開 `http://localhost:8080`。
