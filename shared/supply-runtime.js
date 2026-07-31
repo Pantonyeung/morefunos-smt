@@ -78,6 +78,11 @@ function normalizeSession(value,now=Date.now()){
   if(expiresAt&&expiresAt<=now)return null;
   return {token:String(value.token),staff:clone(value.staff||null),source:String(value.source||''),deviceId:String(value.deviceId||''),expiresAt};
 }
+function sessionMatchesRuntime(session,source,deviceId){
+  if(!session)return false;
+  return session.source===source&&session.deviceId===deviceId;
+}
+function isAuthFailure(error){return [401,403].includes(Number(error?.status||0))}
 function dispatch(globalObject,name,detail){
   try{globalObject?.dispatchEvent?.(new CustomEvent(name,{detail}))}catch{}
 }
@@ -99,7 +104,9 @@ export function createSupplyRuntime(options={}){
   const deviceId=String(options.deviceId||`${source}-unknown`);
   const configuredBase=options.baseUrl??storage.getItem(OPERATIONS_API_BASE_STORAGE_KEY)??DEFAULT_API_BASE;
   const baseUrl=String(configuredBase||'').replace(/\/+$/,'');
-  let session=normalizeSession(parse(storage.getItem(STAFF_SESSION_STORAGE_KEY)));
+  const persistedSession=normalizeSession(parse(storage.getItem(STAFF_SESSION_STORAGE_KEY)));
+  let session=sessionMatchesRuntime(persistedSession,source,deviceId)?persistedSession:null;
+  if(persistedSession&&!session)storage.removeItem(STAFF_SESSION_STORAGE_KEY);
   let overrides=normalizeSupplyOverrides(parse(storage.getItem(SUPPLY_STORAGE_KEY))||{});
   let pending=mergePending([],parse(storage.getItem(SUPPLY_PENDING_STORAGE_KEY))||[]);
   let state={status:session?'idle':'session-required',connected:false,lastError:null,lastSyncAt:null,source,deviceId};
@@ -122,7 +129,18 @@ export function createSupplyRuntime(options={}){
     return clone(overrides);
   }
   function persistPending(value){pending=mergePending([],value);persist(SUPPLY_PENDING_STORAGE_KEY,pending);return clone(pending)}
-  function persistSession(value){session=normalizeSession(value);persist(STAFF_SESSION_STORAGE_KEY,session);return clone(session)}
+  function persistSession(value){
+    const next=normalizeSession(value);
+    session=sessionMatchesRuntime(next,source,deviceId)?next:null;
+    persist(STAFF_SESSION_STORAGE_KEY,session);
+    return clone(session);
+  }
+  function invalidateSession(error,reason='session-invalid'){
+    persistSession(null);
+    state={...state,status:'session-required',connected:false,lastError:String(error?.message||error||'STAFF_SESSION_REQUIRED')};
+    publish(reason);
+    return {ok:false,error:state.lastError,queued:pending.length,status:Number(error?.status||401)};
+  }
   async function request(path,{method='GET',body,token=session?.token}={}){
     if(typeof fetchImpl!=='function')throw Object.assign(new Error('SUPPLY_RUNTIME_FETCH_UNAVAILABLE'),{status:0});
     const controller=typeof AbortController==='function'?new AbortController():null;
@@ -183,6 +201,7 @@ export function createSupplyRuntime(options={}){
         publish('synced');
         return {ok:true,...payload};
       }catch(error){
+        if(isAuthFailure(error))return invalidateSession(error,'sync-auth-failed');
         state={...state,status:'offline-local',connected:false,lastError:String(error?.message||error)};
         publish('sync-failed');
         return {ok:false,error:state.lastError,queued:pending.length,status:Number(error?.status||0)};
@@ -201,6 +220,7 @@ export function createSupplyRuntime(options={}){
       publish('refreshed');
       return {ok:true,...payload,availability:Object.values(next)};
     }catch(error){
+      if(isAuthFailure(error))return {...invalidateSession(error,'refresh-auth-failed'),availability:clone(overrides)};
       state={...state,status:'offline-local',connected:false,lastError:String(error?.message||error)};
       publish('refresh-failed');
       return {ok:false,error:state.lastError,availability:clone(overrides),status:Number(error?.status||0)};
