@@ -7,7 +7,11 @@ const POLL_INTERVAL_MS=15000;
 
 const clone=value=>value==null?value:JSON.parse(JSON.stringify(value));
 const parse=value=>{try{return JSON.parse(value||'null')}catch{return null}};
-const rows=value=>Array.isArray(value)?value:value&&typeof value==='object'?Object.values(value):[];
+const supplyRows=value=>Array.isArray(value)
+  ?value
+  :value&&typeof value==='object'
+    ?Object.entries(value).map(([key,row])=>row&&typeof row==='object'?{...row,productId:row.productId||row.product_id||row.id||key}:{productId:key,status:row})
+    :[];
 const productIdOf=row=>String(row?.productId||row?.product_id||row?.id||'').trim();
 const timestamp=value=>{const number=Number(value);if(Number.isFinite(number)&&number>0)return number;const parsed=Date.parse(String(value||''));return Number.isFinite(parsed)?parsed:0};
 
@@ -20,7 +24,7 @@ export function normalizeSupplyStatus(value){
 
 export function normalizeSupplyOverrides(value){
   const output={};
-  for(const row of rows(value)){
+  for(const row of supplyRows(value)){
     const productId=productIdOf(row);
     const status=normalizeSupplyStatus(row?.status||row?.availability_status);
     if(!productId||status==='available')continue;
