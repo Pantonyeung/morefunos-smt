@@ -1,3 +1,4 @@
+const TERMINAL_ID_STORAGE_KEY='morefun:smt:terminal-id';
 const isSmmPath=/^\/smm\/?$/i.test(location.pathname);
 const params=new URLSearchParams(location.search);
 if(isSmmPath&&!/mobile|smm/i.test(String(params.get('profile')||params.get('mode')||''))){
@@ -7,6 +8,10 @@ if(isSmmPath&&!/mobile|smm/i.test(String(params.get('profile')||params.get('mode
 }
 
 const profile=isSmmPath||/mobile|smm/i.test(String(params.get('profile')||params.get('mode')||''))?'mobile':'register';
+const terminalId=String(params.get('terminal')||(profile==='mobile'?'SMM-01':'SMT-01'));
+params.set('terminal',terminalId);
+if(!location.search.includes(`terminal=${encodeURIComponent(terminalId)}`))history.replaceState(null,'',`${location.pathname}?${params.toString()}${location.hash}`);
+localStorage.setItem(TERMINAL_ID_STORAGE_KEY,terminalId);
 document.documentElement.dataset.appProfile=profile;
 document.documentElement.dataset.printAuthority=profile==='mobile'?'remote-smt':'local-host';
 
@@ -16,14 +21,15 @@ if(profile==='mobile'){
   window.__MOREFUN_APP_PROFILE__=Object.freeze({
     profile:'mobile',
     source:'smm',
-    terminalId:params.get('terminal')||'SMM-01',
+    terminalId,
     printMode:'remote-job'
   });
 }else{
+  document.documentElement.classList.remove('is-smm-profile');
   window.__MOREFUN_APP_PROFILE__=Object.freeze({
     profile:'register',
     source:'smt',
-    terminalId:params.get('terminal')||'SMT-01',
+    terminalId,
     printMode:'local-host'
   });
 }
