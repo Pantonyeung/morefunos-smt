@@ -25,10 +25,12 @@ const JOURNALED_KEYS=new Set([
 const liveDomainObjects=new Map();
 const parseJSON=(text,fallback)=>{try{return JSON.parse(text||'null')??fallback;}catch{return fallback;}};
 const isObject=value=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value);
+const cloneObject=value=>isObject(value)?JSON.parse(JSON.stringify(value)):{};
 
 function replaceObjectContents(target,value){
+  const snapshot=cloneObject(value);
   Object.keys(target).forEach(key=>delete target[key]);
-  if(isObject(value))Object.entries(value).forEach(([key,row])=>{target[key]=row;});
+  Object.entries(snapshot).forEach(([key,row])=>{target[key]=row;});
   return target;
 }
 
@@ -51,14 +53,16 @@ export function readJSON(key,fallback){
 }
 
 export function writeJSON(key,value){
-  localStorage.setItem(key,JSON.stringify(value));
+  const snapshot=key===SUPPLY_STORAGE_KEY?cloneObject(value):value;
+  localStorage.setItem(key,JSON.stringify(snapshot));
+  let publishedValue=snapshot;
   if(key===SUPPLY_STORAGE_KEY){
     const target=liveDomainObjects.get(key);
-    if(target)replaceObjectContents(target,value);
-    dispatchDomainStateChanged(key,target||value,'local-write');
+    if(target)publishedValue=replaceObjectContents(target,snapshot);
+    dispatchDomainStateChanged(key,publishedValue,'local-write');
   }
   if(JOURNALED_KEYS.has(key)){
-    const message={type:'morefun:critical-storage-written',storageKey:key,value,createdAt:Date.now()};
+    const message={type:'morefun:critical-storage-written',storageKey:key,value:snapshot,createdAt:Date.now()};
     try{window.top?.postMessage(message,location.origin);}catch(_error){try{window.postMessage(message,location.origin);}catch(_ignored){}}
   }
 }
