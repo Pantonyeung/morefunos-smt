@@ -165,7 +165,13 @@ export function createSupplyRuntime(options={}){
     persistSession({token:payload.token,staff:payload.staff||null,source,deviceId,expiresAt});
     state={...state,status:'connected',connected:true,lastError:null,lastSyncAt:new Date().toISOString()};
     publish('login');
-    if(pending.length)await flushPending();
+    if(pending.length){
+      const result=await flushPending();
+      if(!result?.ok&&[401,403].includes(Number(result?.status||0))){
+        throw Object.assign(new Error(result.error||'STAFF_SESSION_REQUIRED'),{status:Number(result.status)});
+      }
+    }
+    if(!session)throw Object.assign(new Error('STAFF_SESSION_REQUIRED'),{status:401});
     return clone(session);
   }
 
