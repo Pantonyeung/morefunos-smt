@@ -74,7 +74,12 @@ app.addEventListener('click',event=>{
   if(button.dataset.product&&button.dataset.status){setStatus([button.dataset.product],button.dataset.status);return}
   if(button.dataset.purple){setStatus(products.filter(isPurpleRice).map(product=>product.id),button.dataset.purple)}
 });
-app.addEventListener('input',event=>{if(event.target.matches('[data-search]')){query=event.target.value;render()}});
+app.addEventListener('input',event=>{
+  if(!event.target.matches('[data-search]'))return;
+  query=event.target.value;
+  render();
+  requestAnimationFrame(()=>{const input=app.querySelector('[data-search]');input?.focus();input?.setSelectionRange?.(query.length,query.length)});
+});
 
 render();
 window.parent?.postMessage?.({type:'morefun:page-ready',page:'mobile-soldout'},'*');
