@@ -18,6 +18,17 @@ test('normalizes shared SMT/SMM supply states',()=>{
   });
 });
 
+test('preserves product ids from keyed localStorage supply objects',()=>{
+  assert.deepEqual(normalizeSupplyOverrides({
+    F4:{status:'soldout',updatedAt:11},
+    R1:{status:'paused',updatedAt:12},
+    D1:{status:'available'}
+  }),{
+    F4:{status:'soldout',updatedAt:11,expiresAt:0,source:'',deviceId:''},
+    R1:{status:'paused',updatedAt:12,expiresAt:0,source:'',deviceId:''}
+  });
+});
+
 test('diffs available, soldout and paused changes',()=>{
   assert.deepEqual(diffSupplyOverrides(
     {F4:{status:'available'},R1:{status:'soldout'}},
