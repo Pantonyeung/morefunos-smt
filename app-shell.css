@@ -75,3 +75,9 @@ body {
     display: none;
   }
 }
+html[data-app-profile="mobile"] #stage {
+  display: block !important;
+}
+html[data-app-profile="mobile"] #orientation-lock {
+  display: none !important;
+}
