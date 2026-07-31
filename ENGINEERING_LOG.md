@@ -64,3 +64,42 @@ Run current-head targeted and minimum regression tests, deploy the current previ
 
 ### 下一步
 先追蹤 `shared/supply-runtime.js`、`pages/order/menu-api.js`、`pages/order/page.js`、`pages/soldout/page.js`、Shell Profile／Router 同 Print Domain，移除頁面 bridge，建立原生單一 State 流。
+
+---
+
+## 2026-07-31 23:58 HKT｜Native Supply Core＋Full Mobile Profile Implemented
+
+### Source 修改
+- `pages/order/menu-api.js` 改為直接消費 same-origin `/v1/runtime/customer`，不再讀舊 `public/catalogV1`。
+- Customer Runtime 欄位在 Menu Domain 內正規化：名稱、價格、分類、圖片、描述、排序、canonical Product ID、availability。
+- `shared/store.js` 將 `SUPPLY_STORAGE_KEY` 變成穩定共享 Domain Object；本機 mutation、跨 iframe／跨 context storage 更新都進入同一 State。
+- `shared/runtime.js` Render Queue 原生訂閱 Domain State Event，只局部 render。
+- 點單頁及售罄頁已移除 `supply-page-bridge.js`；舊 bridge 檔案已刪除。
+- `pages/soldout/page.js` 重建為原生 Supply Domain Page，單選／批量／紫米售罄／恢復全部寫同一 canonical Store。
+- 點單頁現有 `supplyStatus()`、產品卡 Disabled、售罄列表及 render key 直接讀同一 live object；恢復供應會刪除 override 並重新 render。
+- `/smm` 由同一 SMT Shell 原生啟動完整 Mobile Profile，不再強制跳售罄頁。
+- Mobile／Register 分開 terminal identity；Mobile 使用 `SMM-01`、`source=smm`、`printMode=remote-job`，Register 使用 `SMT-01`、`source=smt`、`printMode=local-host`。
+- 根入口加入 `<base href="/">`，確保 `/smm` 正確載入 Shared Shell assets。
+
+### 解決問題
+1. SMT 售罄頁與點單頁共用同一 availability State。
+2. 售罄商品卡及售罄列表可同步；恢復供應會立即解除 lock。
+3. 售罄頁及點單頁不再因供應同步 reload／閃屏。
+4. 未命名產品問題由 Menu Domain canonical mapper 解決。
+5. `/smm` 恢復為完整 SMT Mobile Profile，而非售罄頁殼。
+6. SMM 打印責任固定為建立 remote Print Job；實體打印仍屬 SMT／Android Host。
+
+### 禁止方案確認
+- 無 `fetch` monkey patch。
+- 無 capture-phase 商品攔截。
+- 無 UI `setInterval` 讀 localStorage。
+- 無供應同步 `location.reload()`。
+- 無 redirect wrapper／桌面頁硬塞手機。
+
+### Evidence boundary
+- Source implemented：PASS。
+- GitHub combined status：無 status checks 回傳；不可宣稱 CI PASS。
+- Cloudflare deployment／Browser／Mobile Device／Printer：待 Owner 驗收。
+
+### 最新 Source head
+- `cb222b2d1092a567341a3654655cfd6f6dcbec6e`（功能收口及刪除舊 bridge；其後只追加工程日誌）。
