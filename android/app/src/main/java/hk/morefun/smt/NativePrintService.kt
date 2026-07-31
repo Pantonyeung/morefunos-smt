@@ -6,14 +6,15 @@ import org.json.JSONObject
 
 class NativePrintService(
     context: Context,
-    sunmiPort: SunmiPrinterPort = UnavailableSunmiPrinterPort
+    sunmiPort: SunmiPrinterPort = ReflectiveSunmiPrinterPort(context)
 ) {
     private val printerSettings = PrinterDeviceSettings(context)
     private val printerRegistry = PrinterRegistry(context)
     private val router = PrintRouter(printerRegistry)
     private val tcpDriver = LanTcpPrintDriver(printerSettings)
+    private val sunmiDriver = SunmiPrintDriver(sunmiPort)
     private val drivers = PrintDriverRegistry(
-        listOf(tcpDriver, LabelPrintDriver(tcpDriver), SunmiPrintDriver(sunmiPort))
+        listOf(tcpDriver, LabelPrintDriver(tcpDriver), sunmiDriver)
     )
 
     fun listPrinters(): JSONObject = printerRegistry.status()
@@ -54,4 +55,7 @@ class NativePrintService(
         .put("registry", printerRegistry.status())
         .put("router", router.status())
         .put("supportedTransports", JSONArray(drivers.supportedTransports()))
+        .put("sunmiServiceAvailable", sunmiPortAvailable())
+
+    private fun sunmiPortAvailable(): Boolean = runCatching { sunmiDriver.isAvailable() }.getOrDefault(false)
 }

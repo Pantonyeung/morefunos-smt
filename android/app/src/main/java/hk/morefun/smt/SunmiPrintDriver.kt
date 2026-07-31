@@ -7,13 +7,15 @@ import java.nio.charset.Charset
 /**
  * Driver boundary for SUNMI built-in printers.
  *
- * The AIDL binding is supplied by BootstrapActivity through SunmiPrinterPort. This keeps the
- * core APK compilable on non-SUNMI devices and avoids a hard dependency on a vendor SDK.
+ * The binding is supplied through SunmiPrinterPort. The production implementation uses runtime
+ * reflection so the APK remains installable on non-SUNMI Android devices without a vendor SDK.
  */
 class SunmiPrintDriver(
     private val port: SunmiPrinterPort
 ) : PrintDriver {
     override val transport: String = "sunmi"
+
+    fun isAvailable(): Boolean = runCatching { port.isAvailable() }.getOrDefault(false)
 
     override fun print(job: JSONObject, target: JSONObject): JSONObject {
         require(port.isAvailable()) { "SUNMI 內置打印服務未連接" }

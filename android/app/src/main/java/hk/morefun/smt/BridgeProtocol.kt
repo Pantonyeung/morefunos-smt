@@ -18,6 +18,8 @@ class BridgeProtocol(
 ) {
     private val prefs = context.getSharedPreferences("morefun_smt_foundation", Context.MODE_PRIVATE)
     private val printerSettings = PrinterDeviceSettings(context)
+    private val updateManager = ReleaseUpdateManager(context, bundleStore)
+    private val apkOtaManager = ApkOtaManager(context)
     private val ioExecutor = Executors.newSingleThreadExecutor()
 
     fun handle(rawMessage: String, respond: (String) -> Unit) {
@@ -74,16 +76,36 @@ class BridgeProtocol(
                 }
                 "bundle.getStatus" -> respond(success(id, bundleStore.status()))
                 "bundle.getVault" -> respond(success(id, JSONObject().put("versions", bundleStore.vault())))
+                "bundle.update.getStatus" -> respond(success(id, JSONObject()
+                    .put("ota", updateManager.status())
+                    .put("runtimeHealth", RuntimeHealthReceiver.status(context))
+                    .put("bundle", bundleStore.status())))
                 "bundle.install" -> installBundle(id, params, respond)
                 "bundle.markHealthy" -> executeSync(id, respond, "BUNDLE_HEALTH_CONFIRM_FAILED") {
                     val version = params.optString("version", bundleStore.currentVersion() ?: "")
-                    bundleStore.markHealthy(version)
+                    val result = bundleStore.markHealthy(version)
+                    RuntimeHealthReceiver.cancel(context)
+                    result.put("healthTimeoutCancelled", true)
                 }
                 "bundle.rollback" -> executeAsync(id, respond, "BUNDLE_ROLLBACK_FAILED") {
+                    RuntimeHealthReceiver.cancel(context)
                     JSONObject()
                         .put("status", "rolled_back")
                         .put("version", bundleStore.rollback())
                         .put("requiresReload", true)
+                }
+                "apk.ota.getStatus", "apk.update.getStatus" -> respond(success(id, apkOtaManager.status()))
+                "apk.ota.getCapability", "apk.update.getCapability" -> respond(success(id, ApkInstallCapability(context).status()))
+                "apk.ota.check", "apk.update.check" -> executeAsync(id, respond, "APK_OTA_CHECK_FAILED") {
+                    apkOtaManager.check()
+                }
+                "apk.ota.installLatest", "apk.update.installLatest" -> executeAsync(id, respond, "APK_OTA_INSTALL_FAILED") {
+                    apkOtaManager.installLatest()
+                }
+                "apk.ota.install", "apk.update.install" -> executeAsync(id, respond, "APK_OTA_INSTALL_FAILED") {
+                    val envelope = params.optString("envelope")
+                    require(envelope.isNotBlank()) { "APK OTA envelope 不可為空" }
+                    apkOtaManager.install(envelope)
                 }
                 "offline.enqueue" -> executeSync(id, respond, "OFFLINE_ENQUEUE_FAILED") {
                     offlineQueue.enqueue(
@@ -136,7 +158,16 @@ class BridgeProtocol(
         add("bundle.verified.install")
         add("bundle.version-vault")
         add("bundle.health-confirm")
+        add("bundle.health-timeout")
+        add("bundle.update-status")
         add("bundle.rollback")
+        add("apk.ota.status")
+        add("apk.ota.capability")
+        add("apk.ota.check")
+        add("apk.ota.install-latest")
+        add("apk.ota.signed-install")
+        add("apk.ota.package-installer")
+        add("apk.ota.recovery")
         add("offline.queue")
         add("offline.recovery")
         add("diagnostics")
@@ -157,11 +188,13 @@ class BridgeProtocol(
                 bridgeMax = params.optString("bridgeMax"),
                 base64Zip = params.optString("base64Zip")
             )
+            RuntimeHealthReceiver.arm(context)
             JSONObject()
                 .put("status", "installed_pending_health")
                 .put("version", result.version)
                 .put("sha256", result.sha256)
                 .put("previousVersion", result.previousVersion ?: JSONObject.NULL)
+                .put("healthTimeoutArmed", true)
                 .put("requiresReload", true)
         }
     }
@@ -254,6 +287,9 @@ class BridgeProtocol(
         .put("bridgeVersion", BuildConfig.BRIDGE_VERSION)
         .put("bundledWebVersion", BuildConfig.WEB_BUNDLE_VERSION)
         .put("runtimeBundle", bundleStore.status())
+        .put("runtimeHealth", RuntimeHealthReceiver.status(context))
+        .put("otaUpdate", updateManager.status())
+        .put("apkOta", apkOtaManager.status())
         .put("offlineQueue", offlineQueue.status())
         .put("device", deviceInfo())
         .put("network", networkStatus())

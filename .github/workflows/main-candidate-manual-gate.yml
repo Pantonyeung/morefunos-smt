@@ -1,0 +1,64 @@
+name: SMT Main Candidate Manual Gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smt-main-candidate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.5.0'
+
+      - name: Run static integration gate
+        shell: bash
+        run: |
+          set -o pipefail
+          bash android/verify-main-candidate.sh | tee main-candidate-gate.log
+
+      - name: Compile Android candidate
+        run: |
+          gradle -p android --no-daemon --stacktrace \
+            :app:compileDebugKotlin \
+            :app:testDebugUnitTest
+
+      - name: Upload gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smt-main-candidate-gate-${{ github.run_number }}
+          path: |
+            main-candidate-gate.log
+            android/app/build/reports/**
+            android/app/build/test-results/**
+          if-no-files-found: warn
+          retention-days: 14

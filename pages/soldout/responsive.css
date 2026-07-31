@@ -18,3 +18,29 @@
 :root[data-responsive-profile="compact"] .group-head{height:44px}
 :root[data-responsive-profile="compact"] .supply-row{grid-template-columns:26px 48px 1fr;gap:7px;padding:7px 0}
 :root[data-responsive-profile="compact"] .supply-row-img{width:48px;height:48px}
+
+/* SMM is a mobile profile of the same Soldout feature and state authority. */
+:root[data-app-profile="mobile"] body[data-page="soldout"]{overflow:auto;background:#f8f6f2}
+:root[data-app-profile="mobile"] body[data-page="soldout"] main{min-height:100%;height:auto;overflow:visible}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .page-statusbar{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:1fr;gap:8px;padding:10px 12px;background:rgba(255,255,255,.97)}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .page-title{display:flex;align-items:center;justify-content:space-between}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .search-box{width:100%;height:44px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .status-filter{display:flex;overflow-x:auto;padding-bottom:2px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .status-filter button{flex:none;min-width:86px;min-height:44px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .workspace{padding:10px;overflow:visible}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .soldout-grid{display:flex;flex-direction:column;gap:12px;overflow:visible}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .soldout-catalog{min-height:auto;overflow:visible}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .purple-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .purple-actions span{grid-column:1/-1}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .categories{display:flex;overflow-x:auto;overscroll-behavior-inline:contain;padding:8px 10px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .categories button{flex:none;min-height:44px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .catalog-caption{display:flex;flex-wrap:wrap;gap:8px;padding:10px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .card-mode{display:none}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .products{display:grid;grid-template-columns:1fr;padding:0 10px 12px;gap:10px;overflow:visible}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .product-card{min-height:112px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .product-card.large{grid-template-columns:96px minmax(0,1fr);min-height:132px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .product-hero{min-height:112px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .supply-panel{width:100%;max-height:none;min-height:0;overflow:visible;border-radius:18px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .supply-list{max-height:none;overflow:visible}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .readonly-detail{position:fixed;inset:auto 8px calc(8px + env(safe-area-inset-bottom));width:auto;max-height:calc(100dvh - 24px);border-radius:22px}
+:root[data-app-profile="mobile"] body[data-page="soldout"] .detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
