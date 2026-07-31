@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <base href="/">
+  <title>磨飯 SMM</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/app-shell.css?v=g1-native-core-20260801a">
+  <link rel="stylesheet" href="/mobile-profile.css?v=g1-native-core-20260801a">
+  <link rel="stylesheet" href="/dev-preview-entry.css?v=qa-entry-v2">
+  <script>
+    (function(){
+      var params=new URLSearchParams(location.search);
+      params.set('profile','mobile');
+      if(!params.get('terminal'))params.set('terminal','SMM-01');
+      history.replaceState(null,'',location.pathname+'?'+params.toString()+location.hash);
+      document.documentElement.dataset.appProfile='mobile';
+      window.__MOREFUN_APP_PROFILE__=Object.freeze({profile:'mobile',source:'smm',terminalId:params.get('terminal'),printMode:'remote-job'});
+    })();
+  </script>
+</head>
+<body>
+  <main id="viewport">
+    <section id="shell-app" aria-label="磨飯 SMM">
+      <header id="global-statusbar" class="global-shell-status">
+        <div class="shell-brand"><span>磨</span><strong>磨飯 SMM</strong></div>
+        <b id="shell-terminal">SMM</b>
+        <span id="shell-online"><i></i>本機模式</span>
+        <div class="shell-route-state"><small>目前頁面</small><strong id="shell-route-label">點餐</strong></div>
+        <div class="shell-spacer"></div>
+        <div id="shell-page-actions" class="shell-page-actions" aria-label="目前頁面快捷功能"></div>
+        <div id="shell-context" class="shell-context">準備營業</div>
+      </header>
+      <section id="page-host"><section id="stage"><iframe id="page" class="shell-page is-loading" aria-hidden="true" tabindex="-1" title="磨飯 SMM"></iframe></section><div id="route-feedback" class="route-feedback" hidden><span></span><strong>切換中…</strong></div></section>
+      <nav id="global-bottom-nav" class="global-bottom-nav" aria-label="主要功能"><button class="active" data-route="order" aria-current="page"><span>▣</span><b>點餐</b></button><button data-route="orders"><span>▤</span><b>訂單</b></button><button data-route="dine"><span>⌂</span><b>堂食</b></button><button data-route="soldout"><span>⊘</span><b>售罄</b></button><button data-route="more"><span>•••</span><b>更多</b></button></nav>
+    </section>
+    <section id="startup-gate" class="startup-gate" aria-live="polite">
+      <div class="startup-card" data-startup-step="login"><div class="startup-brand"><span>磨</span><div><strong>磨飯 SMM</strong><small>員工登入</small></div></div><form data-form="login"><label>Staff 編號<input name="username" autocomplete="username" inputmode="numeric" pattern="[0-9]{3,6}" minlength="3" maxlength="6" placeholder="輸入 3–6 位 Staff 編號" required></label><label>6 位密碼<input name="password" type="password" autocomplete="current-password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="••••••" required></label><label class="startup-remember"><input name="rememberLogin" type="checkbox" checked> 記住登入（關機／重開後仍然有效）</label><p id="startup-error" class="startup-error" hidden></p><button type="submit" class="startup-primary">登入</button></form></div>
+      <div class="startup-card" data-startup-step="cash" hidden></div>
+    </section>
+    <section id="orientation-lock" aria-live="polite"><div><strong>請旋轉至橫屏使用</strong><p>SMM 支援手機橫屏操作。</p></div></section>
+  </main>
+  <script type="module" src="/mobile-profile-bootstrap.js?v=g1-native-core-20260801a"></script>
+  <script type="module" src="/shell-startup.js?v=g1-native-core-20260801a"></script>
+  <script type="module" src="/shared/supply-session-control.js?v=g1-native-core-20260801a"></script>
+  <script type="module" src="/app-loader.js?v=g1-native-core-20260801a"></script>
+  <script type="module" src="/shared/status-actions.js?v=g1-native-core-20260801a"></script>
+</body>
+</html>
