@@ -1,5 +1,11 @@
+const isSmmPath=/^\/smm\/?$/i.test(location.pathname);
 const params=new URLSearchParams(location.search);
-const profile=/mobile|smm/i.test(String(params.get('profile')||params.get('mode')||''))?'mobile':'register';
+if(isSmmPath&&!/mobile|smm/i.test(String(params.get('profile')||params.get('mode')||''))){
+  params.set('profile','mobile');
+  params.set('terminal',params.get('terminal')||'SMM-01');
+  history.replaceState(null,'',`${location.pathname}?${params.toString()}${location.hash}`);
+}
+const profile=isSmmPath||/mobile|smm/i.test(String(params.get('profile')||params.get('mode')||''))?'mobile':'register';
 document.documentElement.dataset.appProfile=profile;
 
 if(profile==='mobile'){

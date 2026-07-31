@@ -46,7 +46,7 @@ function saveSession(username,{remember=true,...extra}={}){
 }
 function validSession(){
   const row=session();
-  if(!row||!SIX_DIGITS.test(String(row.username||''))||row.profile!==APP_PROFILE)return null;
+  if(!row||!String(row.username||'').trim()||row.profile!==APP_PROFILE)return null;
   if(row.remember===false&&row.businessDate!==businessWindow().id)return null;
   return row;
 }
@@ -107,7 +107,7 @@ async function startSupplyLayer({force=false}={}){
   const result=await supplyRuntime.boot();
   if(!result?.session&&validSession()){
     clearShellSession();
-    showLogin('登入已失效，請重新輸入6位員工編號及密碼。');
+    showLogin('登入已失效，請重新輸入 Staff 編號及 6 位密碼。');
     return;
   }
   supplyRuntime.startPolling();
@@ -119,7 +119,7 @@ function continueAfterLogin(username){if(APP_PROFILE==='mobile'){unlock();return
 async function submitLogin(event){
   event.preventDefault();
   const form=event.currentTarget,button=form.querySelector('[type="submit"]'),username=String(form.elements.username?.value||'').trim(),password=String(form.elements.password?.value||''),remember=form.elements.rememberLogin?.checked!==false;
-  if(!SIX_DIGITS.test(username)){setError('員工編號必須係6位數字');return;}
+  if(!username){setError('請輸入 Staff 編號');return;}
   if(!SIX_DIGITS.test(password)){setError('密碼必須係6位數字');return;}
   const localMatch=credentials().find(row=>row.enabled!==false&&String(row.username||row.staffNumber)===username&&String(row.password)===password);
   setError('');if(button){button.disabled=true;button.textContent='登入中…';}
@@ -127,8 +127,8 @@ async function submitLogin(event){
   try{await supplyRuntime.login({staffNumber:username,password});}
   catch(error){
     const status=Number(error?.status||0);
-    if(status===401||status===403){clearShellSession();setError('員工編號、密碼或帳戶狀態不正確');if(button){button.disabled=false;button.textContent='登入';}return;}
-    if(!localMatch){setError('暫時無法連線，而且本機未保存呢個員工帳號，請檢查網絡後再試。');if(button){button.disabled=false;button.textContent='登入';}return;}
+    if(status===401||status===403){clearShellSession();setError('Staff 編號、密碼或帳戶狀態不正確');if(button){button.disabled=false;button.textContent='登入';}return;}
+    if(!localMatch){setError('暫時無法連線，而且本機未保存呢個 Staff 帳號，請檢查網絡後再試。');if(button){button.disabled=false;button.textContent='登入';}return;}
     remote='offline-local';
     window.__MOREFUN_STAFF_LOGIN_WARNING__=Object.freeze({code:'STAFF_LOGIN_OFFLINE_FALLBACK',message:String(error?.message||error),at:new Date().toISOString()});
   }
