@@ -32,6 +32,7 @@ let supplyStarted=false;
 let stopStorageHealth=null;
 
 function isQaBypass(){return navigator.webdriver&&params.get('force-startup')!=='1';}
+function isShellUnlocked(){return document.documentElement.dataset.shellUnlocked==='1';}
 function credentials(){const settings=readJSON(SETTINGS_STORAGE_KEY,{}),accounts=Array.isArray(settings?.auth?.accounts)?settings.auth.accounts:[];return accounts.length?accounts:[{username:'morefun',password:'morefun',enabled:true}];}
 function session(){try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');}catch{return null;}}
 function saveSession(username,extra={}){const day=businessWindow().id;sessionStorage.setItem(SESSION_KEY,JSON.stringify({username,businessDate:day,loginAt:Date.now(),profile:APP_PROFILE,...extra}));}
@@ -40,6 +41,7 @@ function openingState(){const operations=readJSON(OPERATIONS_STORAGE_KEY,{});ret
 function ensureDailyWorkspaceClean(){const businessDate=businessWindow().id,operations=readJSON(OPERATIONS_STORAGE_KEY,{})||{};if(operations.workspaceResetBusinessDate===businessDate)return false;localStorage.removeItem(ORDER_STORAGE_KEY);localStorage.removeItem(DRAFT_STORAGE_KEY);localStorage.removeItem(DRAFT_COUNTER_STORAGE_KEY);writeJSON(OPERATIONS_STORAGE_KEY,{...operations,workspaceResetBusinessDate:businessDate,workspaceResetAt:Date.now()});return true;}
 function setError(message=''){if(!errorBox)return;errorBox.textContent=message;errorBox.hidden=!message;}
 function showStep(name){if(!gate)return;gate.hidden=false;loginStep.hidden=name!=='login';cashStep.hidden=name!=='cash';gate.dataset.step=name;}
+function showLogin(message=''){showStep('login');setError(message);requestAnimationFrame(()=>gate?.querySelector('[data-form="login"] input[name="username"]')?.focus());}
 function updateCashPreview(){const {state}=openingState(),adjustment=Number(adjustmentInput?.value||0),total=Math.max(0,Number(state.previousRetained||0)+adjustment);if(cashPrevious)cashPrevious.textContent='$'+Number(state.previousRetained||0).toLocaleString('zh-HK');if(cashTotal)cashTotal.textContent='$'+total.toLocaleString('zh-HK',{maximumFractionDigits:2});if(operatorLabel)operatorLabel.textContent=operator||validSession()?.username||'morefun';}
 function showCash(username){operator=username||validSession()?.username||'morefun';const {state}=openingState();showStep('cash');if(adjustmentInput)adjustmentInput.value=String(state.adjustment||0);updateCashPreview();setError('');requestAnimationFrame(()=>adjustmentInput?.focus());}
 
@@ -47,10 +49,19 @@ function renderSupplyState(detail=supplyRuntime.getState()){
   if(!shellOnline)return;
   const pending=supplyRuntime.getPending().length;
   const connected=Boolean(detail?.connected);
+  const sessionRequired=detail?.status==='session-required';
+  const syncing=detail?.status==='syncing'||detail?.status==='queued';
+  let label='供應同步離線';
+  if(sessionRequired)label=pending?`重新登入｜待同步 ${pending}`:'重新登入同步';
+  else if(connected&&pending===0)label='供應同步已連線';
+  else if(connected||syncing)label=pending?`同步中 ${pending}`:'同步中';
+  else if(pending)label=`離線待同步 ${pending}`;
   shellOnline.classList.toggle('is-warning',!connected||pending>0);
   shellOnline.classList.toggle('is-ok',connected&&pending===0);
-  shellOnline.innerHTML=`<i></i>${connected?(pending?`同步中 ${pending}`:'供應同步'):(pending?`離線待同步 ${pending}`:'本機模式')}`;
-  shellOnline.title=detail?.lastError||`${SUPPLY_SOURCE.toUpperCase()}｜${terminalId}`;
+  shellOnline.dataset.supplyState=String(detail?.status||'unknown');
+  shellOnline.innerHTML=`<i></i>${label}`;
+  shellOnline.title=detail?.lastError||`${SUPPLY_SOURCE.toUpperCase()}｜${terminalId}｜按此重新登入或檢查同步`;
+  shellOnline.setAttribute('aria-label',`${label}。按此開啟員工登入。`);
 }
 
 async function startStorageProtection(){
@@ -85,17 +96,21 @@ async function submitLogin(event){
   event.preventDefault();
   const form=event.currentTarget,button=form.querySelector('[type="submit"]'),username=String(form.elements.username?.value||'').trim(),password=String(form.elements.password?.value||'');
   const localMatch=credentials().find(row=>row.enabled!==false&&String(row.username)===username&&String(row.password)===password);
-  if(!localMatch){setError('帳號或密碼不正確');return;}
   setError('');if(button){button.disabled=true;button.textContent='登入中…';}
   let remote='connected';
   try{await supplyRuntime.login({staffNumber:username,password});}
   catch(error){
     const status=Number(error?.status||0);
     if(status===401||status===403){setError('員工帳號、密碼或權限不正確');if(button){button.disabled=false;button.textContent='登入';}return;}
+    if(!localMatch){setError('暫時無法連線，而且本機未保存呢個員工帳號，請檢查網絡後再試。');if(button){button.disabled=false;button.textContent='登入';}return;}
     remote='offline-local';
     window.__MOREFUN_STAFF_LOGIN_WARNING__=Object.freeze({code:'STAFF_LOGIN_OFFLINE_FALLBACK',message:String(error?.message||error),at:new Date().toISOString()});
   }
-  saveSession(username,{staffRuntime:remote});operator=username;continueAfterLogin(username);
+  saveSession(username,{staffRuntime:remote});operator=username;
+  if(isShellUnlocked()){
+    if(gate)gate.hidden=true;
+    void startSupplyLayer({force:true});
+  }else continueAfterLogin(username);
   if(button){button.disabled=false;button.textContent='登入';}
 }
 function confirmOpening(event){event.preventDefault();const {operations,state}=openingState(),adjustment=Number(adjustmentInput?.value||0);if(!Number.isFinite(adjustment)){setError('請輸入有效開工現金調整');return;}const openingCash=Math.max(0,Number(state.previousRetained||0)+adjustment),businessDate=businessWindow().id,rows=(operations.openingCashAdjustments||[]).filter(row=>row.businessDate!==businessDate);rows.push({businessDate,previousRetained:Number(state.previousRetained||0),adjustment,openingCash,confirmedAt:Date.now(),operator:operator||validSession()?.username||'morefun'});writeJSON(OPERATIONS_STORAGE_KEY,{...operations,workspaceResetBusinessDate:businessDate,workspaceResetAt:operations.workspaceResetAt||Date.now(),openingCashAdjustments:rows});unlock();}
@@ -112,7 +127,7 @@ window.addEventListener('message',event=>{
 gate?.querySelector('[data-form="login"]')?.addEventListener('submit',event=>void submitLogin(event));
 gate?.querySelector('[data-form="cash"]')?.addEventListener('submit',confirmOpening);
 adjustmentInput?.addEventListener('input',updateCashPreview);
-window.addEventListener('online',()=>{if(document.documentElement.dataset.shellUnlocked==='1'){void startSurvivalLayer({force:true});void startSupplyLayer({force:true});}});
+window.addEventListener('online',()=>{if(isShellUnlocked()){void startSurvivalLayer({force:true});void startSupplyLayer({force:true});}});
 window.addEventListener('pagehide',()=>{stopStorageHealth?.();stopStorageHealth=null;supplyRuntime.stopPolling();},{once:true});
 
 async function initializeStartup(){
@@ -125,8 +140,8 @@ async function initializeStartup(){
   sessionStorage.removeItem(RECOVERY_RELOAD_KEY);
   ensureDailyWorkspaceClean();
   renderSupplyState();
-  if(isQaBypass())unlock();else if(validSession())continueAfterLogin(validSession().username);else showStep('login');
+  if(isQaBypass())unlock();else if(validSession())continueAfterLogin(validSession().username);else showLogin();
 }
 
 void initializeStartup();
-window.MoreFunStartup={unlock,showCash,startSurvivalLayer,startSupplyLayer,supplyRuntime};
+window.MoreFunStartup={unlock,showCash,showLogin,startSurvivalLayer,startSupplyLayer,supplyRuntime};
