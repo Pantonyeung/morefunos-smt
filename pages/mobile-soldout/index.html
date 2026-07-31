@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-HK">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#f8f4ee" />
+    <title>磨飯 SMM｜售罄管理</title>
+    <link rel="stylesheet" href="page.css?v=g1-shared-availability-mainline-v1" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { bootSupplyRuntimeBridge } from '../../shared/supply-runtime.js?v=g1-shared-availability-mainline-v1';
+      await bootSupplyRuntimeBridge({ surface: 'soldout', source: 'smm' });
+      await import('./page.js?v=g1-shared-availability-mainline-v1');
+    </script>
+  </body>
+</html>
