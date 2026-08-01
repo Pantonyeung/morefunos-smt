@@ -5,6 +5,7 @@ import {readUnsyncedJournalEntries,markJournalEntriesSynced,getOfflineJournalSta
 
 const REQUIRED_SECTIONS=Object.freeze(['catalog','categories','optionGroups','combos','pricing','runtime','printing','settings','operations']);
 const SYNC_STATE_KEY='morefun:smt:offline-sync-state:v1';
+const SW_RELOAD_GUARD='morefun:smt:sw-controller-reloaded:v1';
 
 function cloneJson(value){return JSON.parse(JSON.stringify(value??null));}
 function localJson(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback));}catch{return fallback;}}
@@ -100,8 +101,24 @@ export async function flushOfflineJournal({adapter=null,batchSize=200}={}){
 
 export async function registerOfflineServiceWorker(){
   if(!('serviceWorker' in navigator))return {ok:false,error:'service_worker_unsupported'};
-  try{const registration=await navigator.serviceWorker.register('./service-worker.js',{scope:'./'});return {ok:true,registration};}
-  catch(error){return {ok:false,error:String(error?.message||error)};}
+  try{
+    let controllerChanged=false;
+    const onControllerChange=()=>{
+      if(controllerChanged)return;
+      controllerChanged=true;
+      if(sessionStorage.getItem(SW_RELOAD_GUARD)==='1'){
+        sessionStorage.removeItem(SW_RELOAD_GUARD);
+        return;
+      }
+      sessionStorage.setItem(SW_RELOAD_GUARD,'1');
+      location.reload();
+    };
+    navigator.serviceWorker.addEventListener('controllerchange',onControllerChange,{once:true});
+    const registration=await navigator.serviceWorker.register('./service-worker.js?v=20260801d',{scope:'./',updateViaCache:'none'});
+    await registration.update().catch(()=>null);
+    if(registration.waiting)registration.waiting.postMessage({type:'morefun:activate-current-worker'});
+    return {ok:true,registration};
+  }catch(error){return {ok:false,error:String(error?.message||error)};}
 }
 
 export async function refreshOfflineAssets(){
