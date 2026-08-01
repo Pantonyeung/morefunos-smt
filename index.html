@@ -6,11 +6,12 @@
   <base href="/">
   <title>磨飯 SMT Master V1.0</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="app-shell.css?v=g1-native-core-20260801d">
-  <link rel="stylesheet" href="mobile-profile.css?v=g1-native-core-20260801d">
-  <link rel="stylesheet" href="dev-preview-entry.css?v=g1-native-core-20260801d">
+  <link rel="stylesheet" href="app-shell.css?v=g1-native-core-20260801e">
+  <link rel="stylesheet" href="mobile-profile.css?v=g1-native-core-20260801e">
+  <link rel="stylesheet" href="dev-preview-entry.css?v=g1-native-core-20260801e">
   <script>
     (function(){
+      localStorage.setItem('morefun:operations-api-base-url','https://morefunos-admin.pages.dev');
       var isSmm=/^\/smm\/?$/i.test(location.pathname);
       var params=new URLSearchParams(location.search);
       var requested=String(params.get('profile')||params.get('mode')||'');
@@ -47,11 +48,11 @@
     </section>
     <section id="orientation-lock" aria-live="polite"><div><strong>請旋轉至橫屏使用</strong><p>SMT iPhone 版只支援橫屏操作。</p></div></section>
   </main>
-  <script src="mobile-profile-bootstrap.js?v=g1-native-core-20260801d"></script>
-  <script type="module" src="shell-startup.js?v=g1-native-core-20260801d"></script>
-  <script type="module" src="shared/supply-session-control.js?v=g1-native-core-20260801d"></script>
-  <script type="module" src="app-loader.js?v=g1-native-core-20260801d"></script>
-  <script type="module" src="shared/status-actions.js?v=g1-native-core-20260801d"></script>
-  <script src="dev-preview-entry.js?v=g1-native-core-20260801d"></script>
+  <script src="mobile-profile-bootstrap.js?v=g1-native-core-20260801e"></script>
+  <script type="module" src="shell-startup.js?v=g1-native-core-20260801e"></script>
+  <script type="module" src="shared/supply-session-control.js?v=g1-native-core-20260801e"></script>
+  <script type="module" src="app-loader.js?v=g1-native-core-20260801e"></script>
+  <script type="module" src="shared/status-actions.js?v=g1-native-core-20260801e"></script>
+  <script src="dev-preview-entry.js?v=g1-native-core-20260801e"></script>
 </body>
 </html>
