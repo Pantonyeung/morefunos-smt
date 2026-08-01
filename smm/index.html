@@ -6,9 +6,10 @@
   <base href="/">
   <title>磨飯 SMM</title>
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/smm/mobile-app.css?v=smm-mobile-core-20260801d">
+  <link rel="stylesheet" href="/smm/mobile-app.css?v=smm-mobile-core-20260801e">
   <script>
     (function(){
+      localStorage.setItem('morefun:operations-api-base-url','https://morefunos-admin.pages.dev');
       var params=new URLSearchParams(location.search);
       params.set('profile','mobile');
       if(!params.get('terminal'))params.set('terminal','SMM-01');
@@ -33,7 +34,7 @@
     </div>
     <div class="startup-card" data-startup-step="cash" hidden></div>
   </section>
-  <script type="module" src="/shell-startup.js?v=smm-mobile-core-20260801d"></script>
-  <script type="module" src="/smm/mobile-app.js?v=smm-mobile-core-20260801d"></script>
+  <script type="module" src="/shell-startup.js?v=smm-mobile-core-20260801e"></script>
+  <script type="module" src="/smm/mobile-app.js?v=smm-mobile-core-20260801e"></script>
 </body>
 </html>
