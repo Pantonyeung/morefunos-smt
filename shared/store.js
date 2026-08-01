@@ -47,6 +47,19 @@ function readLiveDomainObject(key,fallback){
   return replaceObjectContents(target,current);
 }
 
+function syncSupplyWithRuntime(snapshot){
+  let runtime=null;
+  try{runtime=window.top?.MoreFunStartup?.supplyRuntime||window.MoreFunStartup?.supplyRuntime||null;}catch(_error){}
+  if(!runtime?.captureLocalSnapshot)return;
+  const result=runtime.captureLocalSnapshot(snapshot);
+  if(!result?.updates?.length)return;
+  Promise.resolve(runtime.flushPending?.()).then(sync=>{
+    try{window.dispatchEvent(new CustomEvent('morefun:supply-write-result',{detail:sync||{ok:false,error:'SUPPLY_SYNC_NO_RESULT'}}));}catch(_error){}
+  }).catch(error=>{
+    try{window.dispatchEvent(new CustomEvent('morefun:supply-write-result',{detail:{ok:false,error:String(error?.message||error)}}));}catch(_ignored){}
+  });
+}
+
 export function readJSON(key,fallback){
   if(key===SUPPLY_STORAGE_KEY)return readLiveDomainObject(key,fallback||{});
   return parseJSON(localStorage.getItem(key),fallback);
@@ -60,9 +73,10 @@ export function writeJSON(key,value){
     const target=liveDomainObjects.get(key);
     if(target)publishedValue=replaceObjectContents(target,snapshot);
     dispatchDomainStateChanged(key,publishedValue,'local-write');
+    syncSupplyWithRuntime(snapshot);
   }
   if(JOURNALED_KEYS.has(key)){
-    const message={type:'morefun:critical-storage-written',storageKey:key,value:snapshot,createdAt:Date.now()};
+    const message={type:'morefun:critical-storage-written',storageKey:key,value:snapshot,createdAt:Date.now(),runtimeCaptured:key===SUPPLY_STORAGE_KEY};
     try{window.top?.postMessage(message,location.origin);}catch(_error){try{window.postMessage(message,location.origin);}catch(_ignored){}}
   }
 }
