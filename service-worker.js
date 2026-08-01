@@ -1,7 +1,8 @@
-const CACHE='morefun-smt-shell-v2-20260729';
+const CACHE='morefun-smt-shell-v3-20260801';
 const CORE=[
   './','./index.html','./manifest.webmanifest','./app-shell.css','./app-loader.js','./shell-startup.js',
-  './shared/store.js','./shared/components.js','./shared/shell.js','./shared/page-base.css','./shared/responsive-pages.css','./shared/page-bridge.js','./shared/responsive.js','./shared/status-actions.js',
+  './smm/','./smm/index.html','./smm/mobile-app.js','./smm/mobile-app.css',
+  './shared/store.js','./shared/components.js','./shared/shell.js','./shared/page-base.css','./shared/responsive-pages.css','./shared/page-bridge.js','./shared/responsive.js','./shared/status-actions.js','./shared/supply-runtime.js',
   './shared/runtime-contract.js','./shared/runtime-local-adapter.js','./shared/runtime-controller.js','./shared/runtime-bootstrap.js','./shared/runtime-lifecycle.js','./shared/runtime-status.js','./shared/runtime-diagnostics.js','./shared/runtime-snapshot-store.js','./shared/push-queue.js','./shared/health-state.js',
   './shared/offline-package-store.js','./shared/offline-survival.js','./shared/offline-journal.js','./shared/storage-health.js','./shared/offline-endurance-self-test.js',
   './pages/order/index.html','./pages/order/page.js','./pages/order/page.css','./pages/order/responsive.css',
@@ -23,12 +24,16 @@ self.addEventListener('activate',event=>{
 });
 
 function isSameOrigin(request){try{return new URL(request.url).origin===self.location.origin;}catch{return false;}}
+function isCodeAsset(request){const path=new URL(request.url).pathname;return /\.(?:js|css|mjs)$/.test(path);}
 
 self.addEventListener('fetch',event=>{
   const request=event.request;
   if(request.method!=='GET'||!isSameOrigin(request))return;
-  if(request.mode==='navigate'){
-    event.respondWith(fetch(request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(request,copy));return response;}).catch(async()=>await caches.match(request)||await caches.match('./index.html')));
+  if(request.mode==='navigate'||isCodeAsset(request)){
+    event.respondWith(fetch(request).then(response=>{
+      if(response&&response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(request,copy));}
+      return response;
+    }).catch(async()=>await caches.match(request)||await caches.match('./index.html')));
     return;
   }
   event.respondWith(caches.match(request).then(cached=>{
