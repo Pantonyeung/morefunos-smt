@@ -1,42 +1,50 @@
 # MoreFunOS SMT｜Current Domain Authority
 
 > Status: CURRENT / SINGLE DOMAIN AUTHORITY
-> Updated: 2026-07-31 HKT
+> Updated: 2026-08-01 HKT
 > Global authority: `Pantonyeung/morefunos/main/MOREFUNOS_MASTER_KNOWLEDGE_AUTHORITY.md`
+> Approved design: `Pantonyeung/morefunos/main/docs/superpowers/specs/2026-08-01-unified-menu-authority-design.md`
+> Approved implementation plan: `Pantonyeung/morefunos/main/docs/superpowers/plans/2026-08-01-unified-menu-authority-implementation.md`
 
 ## Scope
-SMT Application and Hardware Plane only: Register UI, Mobile Profile, shared cart/pricing/order/supply domains, offline queue/recovery, Pages Functions proxy, Android Host, APK OTA, SUNMI/ESC-POS/TSPL printing and device diagnostics.
+SMT Application and Hardware Plane only: Register UI, Mobile Profile, shared cart/pricing/order/menu domains, offline queue/recovery, Android Host, Print Job and device diagnostics.
 
-## Current development line
-- Active branch: `smt-main-candidate-v1`
-- Active PR: #34
-- Current observed head: `879443a21de5bb34e798d1d4a3c773f14b3168f2`
-- Baseline: `smt-functional-completeness-v1`
-- Evidence boundary: shared supply Runtime and targeted contracts exist; latest-head full regression, deployment, mobile/device, Android and hardware acceptance remain pending.
+## Unified Menu Authority
+- 全系統只存在一份 Unified Menu 及一個 canonical Product ID。
+- SMT／SMM 必須讀取同一份 Product；禁止本機 catalog、availability map 或 SMM menu 成為正式 Authority。
+- SMT／SMM Staff 只可修改：
+  - `status`: `available | soldout | paused`；
+  - `presentation.operations`: `visible/categoryId/categoryOrder/productOrder`。
+- SMT／SMM 禁止新增／刪除產品、改價、改產品規則、改 Customer presentation、永久停用或修改產品打印配置核心。
+- SMM 完全跟隨 SMT operations presentation，不得建立第三套分類或排序。
 
-## Locked authority
-- Register and Mobile are two UI profiles of one SMT shared core.
-- Old `morefunos-smm` is migration/history only and must not become a second core.
-- SMT and Mobile share one Supply Runtime, Staff API, availability authority, cart, pricing, order, sync, permission, audit and recovery model.
-- Mobile may create Print Job/Command but must not directly control a physical printer.
-- Android Host owns native hardware execution and reports `printed | failed | retry`.
-- Adaptive layout is not whole-page scaling; no second UI truth.
-- Browser/software evidence must not be promoted to device/store evidence.
+## Product Consumption
+每款產品由同一 Product 提供：
+- core／options／status；
+- operations presentation；
+- 內部簡稱；
+- 製作單、打包單、飯團標籤、外賣標籤打印指令資料；
+- reporting tags。
 
-## Native Core Only｜SMT／Mobile 強制規則
-- Register 同 Mobile 必須共用同一 Domain、Store、Runtime、Router、Cart、Pricing、Order、Supply、Permission、Audit、Recovery 同 Print Job Contract；Mobile 只在 Profile／Layout／硬件能力邊界不同。
-- SMM／Mobile 必須係真正 Mobile Profile／Mobile Shell；禁止 iframe、redirect wrapper、跳轉殼或將桌面 SMT 版面硬塞入手機。
-- Catalog、Availability、Cart、Order 同 Print 必須直接接入原生 `menu-api`、Domain、Store、Page State、Router、Supply Runtime 同 Print Domain。
-- 禁止額外 bridge／guard／compatibility script、monkey patch、覆寫 fetch／全域函數、capture-phase 點擊攔截或模擬第二次 click。
-- 禁止 MutationObserver／DOM 掃描／文字反推去補自己已有 State；禁止 `setInterval` 輪詢 DOM／localStorage 作 UI 同步。
-- 禁止 `location.reload()`、iframe reload、整頁重建或重新初始化所有 Page 作 Runtime 同步；Availability 更新必須由 Store subscription 局部 Render。
-- 點單頁、售罄頁、售罄列表同產品卡必須使用同一 canonical product ID 同 availability State；恢復供應後由同一 Store 原生解除鎖定。
-- SMT Mobile 打印必須建立 Print Job／Command，由 SMT Android Host／Register-side Print Runtime 靜默執行並回報狀態；Mobile 不得直接連接打印機。
-- 發現兩個 Layer 同時擁有同一狀態或行為決定權時立即 STOP，先收口 Authority；第一個 Fix 無效時禁止疊第二層 Patch。
-- 發現既有補丁時先回退／移除，再做內核修正。
+展示分類只影響操作畫面位置，不可改變 productType、選項、套餐、價格或打印規則。
+
+## Offline Boundary
+- 本機只保存最近一次完整有效菜單、version、checksum、updatedAt 及 Pending Queue。
+- 無效、半套、checksum 錯誤資料不得覆蓋 Last Known Good。
+- 離線 status／operations mutation 必須持久保存；重連及重新登入後經 Worker 自動同步。
+- version conflict 不得靜默覆蓋 Admin 新資料，必須停止並要求重新套用。
+
+## Official Order Boundary
+Customer 網站／WhatsApp 只係落單意向。SMT 必須重新檢查最新 Unified Menu、價格、供應、選項及套餐，再建立正式 Order。
+
+## Native Core Only
+- Register 與 Mobile 共用同一 Domain、Store、Menu Runtime、Router、Cart、Pricing、Order、Permission、Audit、Recovery 及 Print Job Contract。
+- 禁止 iframe、redirect wrapper、桌面 UI 硬塞手機、bridge、guard、monkey patch、DOM scan、capture interception、UI polling、reload 或第二套 State。
+- 點單頁、售罄頁、產品卡、購物車 validator 必須讀同一 Unified Menu Store。
+- Mobile 只建立 Print Job；實體打印由 Android Host／Register Print Runtime 執行。
 
 ## Current next gate
-Run latest-head targeted and minimum repository/browser regression, deploy current Pages Functions/Main Candidate preview, verify SMT→Mobile→Customer availability propagation and offline queue/re-login/token revoke, then complete real-device mobile, Android installer and SUNMI/printing acceptance when hardware is available.
+依照 approved implementation plan 執行 Shared Unified Menu Core、Operations mutation、Last Known Good／Queue、SMM shared profile，再做四端 staging／device acceptance。
 
 ## Documentation rule
-This file is the only CURRENT SMT authority. All progress, pitfalls, successful methods, evidence, failures and remaining gaps must be appended only to `ENGINEERING_LOG.md`. Do not create new milestone, handoff, progress, pitfall, success, latest, final or checklist authority files. Existing documents and open domain PRs are reference/evidence only unless explicitly re-adopted here.
+本文件係唯一 CURRENT SMT Authority。進度、踩坑、成功方法、證據、失敗及未完成邊界只可追加到 `ENGINEERING_LOG.md`；禁止新增平行 milestone／handoff／latest／final authority 文件。
