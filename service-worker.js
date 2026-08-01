@@ -1,10 +1,10 @@
-const CACHE='morefun-smt-shell-v3-20260801';
+const CACHE='morefun-smt-shell-v4-20260801';
 const CORE=[
   './','./index.html','./manifest.webmanifest','./app-shell.css','./app-loader.js','./shell-startup.js',
   './smm/','./smm/index.html','./smm/mobile-app.js','./smm/mobile-app.css',
-  './shared/store.js','./shared/components.js','./shared/shell.js','./shared/page-base.css','./shared/responsive-pages.css','./shared/page-bridge.js','./shared/responsive.js','./shared/status-actions.js','./shared/supply-runtime.js',
+  './shared/store.js','./shared/components.js','./shared/shell.js','./shared/page-base.css','./shared/responsive-pages.css','./shared/page-bridge.js','./shared/responsive.js','./shared/status-actions.js','./shared/supply-runtime.js','./shared/offline-survival.js',
   './shared/runtime-contract.js','./shared/runtime-local-adapter.js','./shared/runtime-controller.js','./shared/runtime-bootstrap.js','./shared/runtime-lifecycle.js','./shared/runtime-status.js','./shared/runtime-diagnostics.js','./shared/runtime-snapshot-store.js','./shared/push-queue.js','./shared/health-state.js',
-  './shared/offline-package-store.js','./shared/offline-survival.js','./shared/offline-journal.js','./shared/storage-health.js','./shared/offline-endurance-self-test.js',
+  './shared/offline-package-store.js','./shared/offline-journal.js','./shared/storage-health.js','./shared/offline-endurance-self-test.js',
   './pages/order/index.html','./pages/order/page.js','./pages/order/page.css','./pages/order/responsive.css',
   './pages/checkout/index.html','./pages/checkout/page.js','./pages/checkout/page.css','./pages/checkout/responsive.css',
   './pages/orders/index.html','./pages/orders/page.js','./pages/orders/page.css','./pages/orders/responsive.css',
@@ -43,5 +43,9 @@ self.addEventListener('fetch',event=>{
 });
 
 self.addEventListener('message',event=>{
+  if(event.data?.type==='morefun:activate-current-worker'){
+    event.waitUntil(self.skipWaiting());
+    return;
+  }
   if(event.data?.type==='morefun:offline-cache-refresh')event.waitUntil(caches.open(CACHE).then(cache=>Promise.allSettled(CORE.map(url=>cache.add(url)))));
 });
